@@ -17,6 +17,8 @@ node_modules/
 .env.test.local
 .env.production.local
 .env.production
+server/.env
+server/.env.*
 
 # Logs
 npm-debug.log*
@@ -42,6 +44,10 @@ logs
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Server files (since we're only deploying frontend)
+/server/
+/api/
 
 # Temporary files
 *.tmp
