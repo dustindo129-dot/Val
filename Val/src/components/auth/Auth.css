@@ -1,0 +1,241 @@
+/**
+ * Auth.css
+ * 
+ * Styles for the authentication components including login and signup forms.
+ * Provides a clean, modern interface for user authentication with proper
+ * form validation and responsive design.
+ * 
+ * Features:
+ * - Clean form layout
+ * - Input validation styles
+ * - Error message display
+ * - Loading states
+ * - Responsive design
+ * - Dark mode support
+ */
+
+/* Auth container styles */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background-color: #f5f5f5;
+}
+
+/* Dark mode styles for auth container */
+:root.dark-mode .auth-container {
+  background-color: #1a1a1a;
+}
+
+/* Main form container styles */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Form group container for input fields */
+.form-group {
+  position: relative;
+}
+
+/* Label styles for form inputs */
+.form-group label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Input field styles */
+.auth-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+/* Input focus state */
+.auth-input:focus {
+  border-color: #0099ff;
+  outline: none;
+}
+
+/* Container for form options like remember me and forgot password */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+/* Remember me checkbox container */
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* Remember me checkbox input */
+.remember-me input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Forgot password link styles */
+.forgot-password-link {
+  color: #ff0000;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
+/* Submit button styles */
+.submit-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0099ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Submit button hover and disabled states */
+.submit-button:hover:not(:disabled) {
+  background-color: #007acc;
+}
+
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Error message styles */
+.error-message {
+  color: #ff0000;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* Success message styles */
+.success-message {
+  text-align: center;
+  color: #00a854;
+  padding: 1rem;
+  border: 1px solid #b7eb8f;
+  border-radius: 4px;
+  background-color: #f6ffed;
+}
+
+.success-message h3 {
+  margin: 0 0 0.5rem;
+  color: #00a854;
+}
+
+/* Form description styles */
+.form-description {
+  color: #666;
+  font-size: 0.9rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* Back to login button styles */
+.back-to-login {
+  background: none;
+  border: none;
+  color: #0099ff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.back-to-login:hover {
+  text-decoration: underline;
+}
+
+/* Auth footer styles */
+.auth-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+/* Dark mode styles */
+:root.dark-mode .auth-form {
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+:root.dark-mode .auth-input {
+  background-color: #333;
+  border-color: #444;
+  color: #fff;
+}
+
+:root.dark-mode .form-description {
+  color: #999;
+}
+
+:root.dark-mode .success-message {
+  background-color: #162312;
+  border-color: #274916;
+  color: #73d13d;
+}
+
+:root.dark-mode .success-message h3 {
+  color: #73d13d;
+}
+
+/* Responsive styles */
+@media (max-width: 480px) {
+  .auth-form {
+    padding: 0.75rem;
+  }
+}
+
+/* Login and signup link styles */
+.login-link,
+.sign-up-link {
+  color: #0099ff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.login-link:hover,
+.sign-up-link:hover {
+  text-decoration: underline;
+}
+
+/* reCAPTCHA container */
+.recaptcha-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+/* Modal title styles */
+.modal-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+} 

@@ -1,0 +1,101 @@
+/**
+ * SecondaryNavbar.css
+ * 
+ * Styles for the secondary navigation bar component.
+ * Features:
+ * - Category navigation links
+ * - Theme toggle button
+ * - Active state indicators
+ * - Dark theme support
+ * - Hover effects
+ */
+
+/* Main secondary navbar container */
+.secondary-navbar {
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.5rem 0;
+}
+
+/* Navigation container for flex layout */
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Container for navigation links */
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  padding-left: 2rem;
+}
+
+/* Individual navigation link */
+.nav-link {
+  color: #000;
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+
+/* Navigation link hover state */
+.nav-link:hover {
+  color: #ff4545;
+}
+
+/* Active navigation link state */
+.nav-link.active {
+  color: #ff4545;
+  font-weight: 500;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background-color: #1e293b;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  margin-right: 2rem;
+}
+
+/* Theme toggle button hover state */
+.theme-toggle:hover {
+  background-color: #334155;
+}
+
+/* Dark theme styles */
+:root.dark-mode .secondary-navbar {
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #2d2d2d;
+}
+
+/* Dark theme navigation links */
+:root.dark-mode .nav-link {
+  color: #e5e7eb;
+}
+
+/* Dark theme navigation link hover and active states */
+:root.dark-mode .nav-link:hover,
+:root.dark-mode .nav-link.active {
+  color: #ff4545;
+}
+
+/* Dark theme toggle button */
+:root.dark-mode .theme-toggle {
+  background-color: #e5e7eb;
+  color: #1a1a1a;
+}
+
+/* Dark theme toggle button hover state */
+:root.dark-mode .theme-toggle:hover {
+  background-color: #f3f4f6;
+} 
