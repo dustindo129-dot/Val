@@ -197,7 +197,7 @@ const Navbar = () => {
                     <div className="search-result-info">
                       <div className="search-result-title">{novel.title}</div>
                       <div className="search-result-details">
-                        <span>Latest chapter: {novel.chapters?.length || 0}</span>
+                        <span>Latest chapter: {novel.chapters?.length || 0}</span>{' '}
                         <span>{novel.status}</span>
                       </div>
                     </div>
