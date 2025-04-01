@@ -1,0 +1,446 @@
+/**
+ * CommentSection.css
+ * 
+ * Styles for the CommentSection component that provides a comprehensive
+ * comment system with nested replies and interactive features.
+ * 
+ * Features:
+ * - Nested comment threading
+ * - Like/dislike functionality
+ * - Reply system
+ * - Comment sorting
+ * - User avatars
+ * - Time-ago formatting
+ * - Responsive design
+ */
+
+/* Main container styles */
+.comment-section {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Header section styles */
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.author-block-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comment-author {
+  font-weight: 500;
+  color: #333;
+}
+
+.block-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: transform 0.2s;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.comment-time {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.comment-count {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Sort buttons styles */
+.sort-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.sort-btn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.sort-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* Comment form styles */
+.comment-form {
+  margin-bottom: 30px;
+}
+
+.comment-form .tox-tinymce {
+  border-radius: 4px !important;
+  border-color: #ddd !important;
+}
+
+.comment-form .tox .tox-toolbar__group {
+  padding: 0 5px !important;
+}
+
+.comment-form .tox .tox-tbtn {
+  margin: 0 2px !important;
+}
+
+.comment-form button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Comments list styles */
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Individual comment styles */
+.comment {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+/* Avatar styles */
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.comment-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Comment content styles */
+.comment-content {
+  flex: 1;
+}
+
+.comment-text {
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+  color: #333;
+}
+
+.comment-text p {
+  margin: 0 0 10px 0;
+}
+
+.comment-text p:last-child {
+  margin-bottom: 0;
+}
+
+.comment-text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.comment-text blockquote {
+  margin: 10px 0;
+  padding: 10px 15px;
+  border-left: 4px solid #ddd;
+  background-color: #f8f9fa;
+}
+
+.comment-text pre {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.comment-text code {
+  background-color: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.comment-text ul, 
+.comment-text ol {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.comment-text li {
+  margin: 5px 0;
+}
+
+.comment-text a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.comment-text a:hover {
+  text-decoration: underline;
+}
+
+/* Comment actions styles */
+.comment-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #f1f1f1;
+}
+
+.action-btn.active {
+  background-color: #e3f2fd;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.action-icon {
+  font-size: 1.1rem;
+}
+
+.action-count {
+  font-size: 0.9rem;
+}
+
+/* Reply form styles */
+.reply-form {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 4px;
+}
+
+.reply-form textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.form-actions button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+.form-actions button[type="button"] {
+  background: none;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+/* Login prompt styles */
+.login-prompt {
+  text-align: center;
+  padding: 15px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  color: #856404;
+  margin-bottom: 20px;
+}
+
+.login-prompt button {
+  margin-left: 10px;
+  padding: 4px 8px;
+  background: none;
+  border: 1px solid #856404;
+  border-radius: 4px;
+  color: #856404;
+  cursor: pointer;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .comment {
+    padding: 10px;
+  }
+
+  .comment-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .comment-actions {
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    padding: 3px 6px;
+    font-size: 0.9rem;
+  }
+
+  .block-btn {
+    font-size: 0.9rem;
+  }
+}
+
+/* Dark theme support */
+:root.dark-mode .comment-section {
+  background: #1a1a1a;
+}
+
+:root.dark-mode .comment-count {
+  color: #fff;
+}
+:root.dark-mode .comment-author,
+:root.dark-mode .comment-text {
+  color: #000;
+}
+
+:root.dark-mode .sort-btn,
+:root.dark-mode .comment-time,
+:root.dark-mode .action-btn {
+  color: #999;
+}
+
+:root.dark-mode .sort-btn:hover,
+:root.dark-mode .action-btn:hover {
+  color: #fff;
+}
+
+:root.dark-mode .comment-form textarea,
+:root.dark-mode .reply-form textarea {
+  background: #2d2d2d;
+  border-color: #444;
+  color: #fff;
+}
+
+:root.dark-mode .reply-form {
+  background: #2d2d2d;
+}
+
+:root.dark-mode .form-actions button[type="button"] {
+  background-color: #444;
+  color: #fff;
+}
+
+:root.dark-mode .form-actions button[type="button"]:hover {
+  background-color: #555;
+}
+
+.action-btn.delete-btn {
+  color: #dc3545;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.action-btn.delete-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+@media (max-width: 768px) {
+  .comment-section {
+    padding: 1rem;
+  }
+
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .sort-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .comment {
+    flex-direction: column;
+  }
+
+  .comment-avatar {
+    margin-bottom: 0.5rem;
+  }
+
+  .comment-actions {
+    justify-content: space-between;
+  }
+}
+
+:root.dark-mode .comment-text blockquote {
+  background-color: #2d2d2d;
+  border-left-color: #444;
+}
+
+:root.dark-mode .comment-text pre,
+:root.dark-mode .comment-text code {
+  background-color: #2d2d2d;
+}
+
+:root.dark-mode .comment-text a {
+  color: #66b0ff;
+}
+
+/* Dark theme support */
+:root.dark-mode .comment-author {
+  color: #fff;
+}
+
+:root.dark-mode .comment-time {
+  color: #999;
+} 
