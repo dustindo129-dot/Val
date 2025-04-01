@@ -21,7 +21,7 @@
     "eslint-plugin-react": "^7.37.1",
     "globals": "15.9.0",
     "prettier": "3.3.3",
-    "vite": "^6.2.2"
+    "vite": "^5.2.0"
   },
   "dependencies": {
     "@tinymce/tinymce-react": "^6.0.0",
