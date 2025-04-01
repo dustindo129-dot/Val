@@ -72,7 +72,8 @@ const HotNovels = () => {
       try {
         const response = await axios.get(`${config.backendUrl}/api/novels/hot`);
         if (mounted) {
-          setHotNovels(response.data);
+          // Access the novels array from the response data
+          setHotNovels(response.data.novels || []);
           setLoading(false);
         }
       } catch (err) {
