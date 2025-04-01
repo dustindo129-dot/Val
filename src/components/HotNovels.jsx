@@ -16,8 +16,9 @@
  * - Error handling
  */
 
-import { useState, useEffect, memo } from 'react';
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import '../styles/components/HotNovels.css';
 import config from '../config/config';
@@ -60,45 +61,20 @@ const NovelCard = memo(({ novel }) => {
  * Sidebar component that displays trending or popular novels
  */
 const HotNovels = () => {
-  const [hotNovels, setHotNovels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['hotNovels'],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/novels/hot`);
+      return response.data.novels || [];
+    },
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    cacheTime: 1000 * 60 * 10, // Cache for 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: 1000 * 60 * 5 // Only refetch every 5 minutes
+  });
 
-  useEffect(() => {
-    let mounted = true;
-    let refreshInterval;
-
-    const fetchHotNovels = async () => {
-      try {
-        const response = await axios.get(`${config.backendUrl}/api/novels/hot`);
-        if (mounted) {
-          // Access the novels array from the response data
-          setHotNovels(response.data.novels || []);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError('Failed to fetch hot novels');
-          setLoading(false);
-        }
-      }
-    };
-
-    // Initial fetch
-    fetchHotNovels();
-
-    // Refresh every 30 seconds instead of 5 seconds
-    refreshInterval = setInterval(fetchHotNovels, 30000);
-
-    return () => {
-      mounted = false;
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
-    };
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="hot-novels">
         <h2 className="hot-novels-title">
@@ -120,7 +96,7 @@ const HotNovels = () => {
           HOT NOVEL
           <span className="hot-icon">★</span>
         </h2>
-        <div className="hot-novels-error">{error}</div>
+        <div className="hot-novels-error">Failed to load hot novels</div>
       </div>
     );
   }
@@ -132,7 +108,7 @@ const HotNovels = () => {
         <span className="hot-icon">★</span>
       </h2>
       <div className="hot-novels-list">
-        {hotNovels.map((novel) => (
+        {data?.map((novel) => (
           <NovelCard key={novel._id} novel={novel} />
         ))}
       </div>

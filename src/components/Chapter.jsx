@@ -26,6 +26,7 @@ import CommentSection from './CommentSection';
 import config from '../config/config';
 import DOMPurify from 'dompurify';
 import { Editor } from '@tinymce/tinymce-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
  * Chapter Component
@@ -35,19 +36,13 @@ import { Editor } from '@tinymce/tinymce-react';
  * @param {Object} props - No props required, uses URL parameters
  */
 const Chapter = () => {
-  // Get novel and chapter IDs from URL parameters
   const { novelId, chapterId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // State management for chapter data and UI
-  const [chapter, setChapter] = useState(null);
-  const [novel, setNovel] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [fontSize, setFontSize] = useState(16);
-
-  // Add new state for edit modal
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [editedTitle, setEditedTitle] = useState('');
@@ -55,63 +50,45 @@ const Chapter = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  /**
-   * Fetches chapter and novel data when component mounts or parameters change
-   */
-  useEffect(() => {
-    const fetchChapterAndNovel = async () => {
-      try {
-        if (!chapterId) {
-          console.error('No chapterId provided');
-          setError('Invalid chapter ID');
-          setLoading(false);
-          navigate(`/novel/${novelId}`);
-          return;
+  // Query for chapter data with its context
+  const { data: chapterData, error: chapterError, isLoading } = useQuery({
+    queryKey: ['chapter', chapterId],
+    queryFn: async () => {
+      const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}`);
+      return chapterRes.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: !!chapterId
+  });
+
+  // Query for comments with proper caching
+  const { data: comments = [], isLoading: isCommentsLoading } = useQuery({
+    queryKey: ['comments', `${novelId}-${chapterId}`],
+    queryFn: async () => {
+      const res = await axios.get(`${config.backendUrl}/api/comments`, {
+        params: {
+          contentType: 'chapters',
+          contentId: `${novelId}-${chapterId}`,
+          isDeleted: { $ne: true }
         }
+      });
+      return res.data;
+    },
+    staleTime: 1000 * 60, // 1 minute
+    cacheTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
+  });
 
-        // Fetch novel data first
-        const novelRes = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
-        setNovel(novelRes.data);
-        
-        // Fetch the specific chapter directly
-        const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}`);
-        
-        if (!chapterRes.data) {
-          setError('Chapter not found');
-          setLoading(false);
-          navigate(`/novel/${novelId}`);
-          return;
-        }
+  // Extract chapter from query data
+  const chapter = chapterData?.chapter;
+  const novel = { title: chapter?.novelId?.title };
 
-        const currentChapter = chapterRes.data;
-        
-        // Fetch all chapters from the same module to determine prev/next
-        const moduleChaptersRes = await axios.get(`${config.backendUrl}/api/chapters/module/${currentChapter.moduleId}`);
-        const moduleChapters = moduleChaptersRes.data.sort((a, b) => a.order - b.order);
-        
-        // Find current chapter index
-        const currentIndex = moduleChapters.findIndex(ch => ch._id === chapterId);
-        
-        // Set chapter data with prev/next information
-        setChapter({
-          ...currentChapter,
-          prevChapter: currentIndex > 0 ? moduleChapters[currentIndex - 1] : null,
-          nextChapter: currentIndex < moduleChapters.length - 1 ? moduleChapters[currentIndex + 1] : null
-        });
-
-        setLoading(false);
-        setIsNavigating(false);
-      } catch (err) {
-        console.error('Error fetching chapter:', err);
-        setError(err.response?.data?.message || 'Failed to load chapter');
-        setLoading(false);
-        setIsNavigating(false);
-        navigate(`/novel/${novelId}`);
-      }
-    };
-
-    fetchChapterAndNovel();
-  }, [novelId, chapterId, navigate]);
+  // State management for error handling
+  const [error, setError] = useState(null);
 
   /**
    * Safely renders HTML content with sanitization
@@ -145,23 +122,30 @@ const Chapter = () => {
   };
 
   /**
-   * Navigates to the previous chapter if available
+   * Handles navigation with query cache
    */
   const handlePrevChapter = async () => {
     if (chapter?.prevChapter) {
       setIsNavigating(true);
       await scrollToTop();
+      // Prefetch next chapter data
+      await queryClient.prefetchQuery({
+        queryKey: ['chapter', chapter.prevChapter._id],
+        queryFn: () => axios.get(`${config.backendUrl}/api/chapters/${chapter.prevChapter._id}`)
+      });
       navigate(`/novel/${novelId}/chapter/${chapter.prevChapter._id}`);
     }
   };
 
-  /**
-   * Navigates to the next chapter if available
-   */
   const handleNextChapter = async () => {
     if (chapter?.nextChapter) {
       setIsNavigating(true);
       await scrollToTop();
+      // Prefetch next chapter data
+      await queryClient.prefetchQuery({
+        queryKey: ['chapter', chapter.nextChapter._id],
+        queryFn: () => axios.get(`${config.backendUrl}/api/chapters/${chapter.nextChapter._id}`)
+      });
       navigate(`/novel/${novelId}/chapter/${chapter.nextChapter._id}`);
     }
   };
@@ -235,11 +219,13 @@ const Chapter = () => {
     }
   };
 
-  // Add new function to handle chapter edit
+  /**
+   * Handles chapter edit with optimistic updates
+   */
   const handleEditChapter = async () => {
     try {
       setIsSaving(true);
-      await axios.put(
+      const updatedChapter = await axios.put(
         `${config.backendUrl}/api/chapters/${chapterId}`,
         {
           title: editedTitle,
@@ -252,11 +238,15 @@ const Chapter = () => {
         }
       );
 
-      // Refresh chapter data
-      const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}`);
-      if (chapterRes.data) {
-        setChapter(chapterRes.data);
-      }
+      // Update query cache with new data
+      queryClient.setQueryData(['chapter', chapterId], {
+        ...chapterData,
+        chapter: {
+          ...chapterData.chapter,
+          title: editedTitle,
+          content: editorRef.current.getContent()
+        }
+      });
 
       setIsEditing(false);
     } catch (err) {
@@ -275,13 +265,11 @@ const Chapter = () => {
     }
   }, [isEditing, chapter]);
 
-  // Show loading state while fetching data
-  if (loading) return <div className="loading">Loading chapter...</div>;
-  
-  // Show error state if something went wrong
-  if (error) return <div className="error">{error}</div>;
-  
-  // Show error if chapter or novel data is missing
+  // Show loading and error states
+  if (isLoading) return <div className="loading">Loading chapter...</div>;
+  if (chapterError) {
+    return <div className="error">{chapterError.message}</div>;
+  }
   if (!chapter || !novel) return <div className="error">Chapter not found</div>;
 
   return (
@@ -354,14 +342,14 @@ const Chapter = () => {
       <div className="chapter-navigation">
         <button 
           onClick={handlePrevChapter} 
-          disabled={!chapter?.prevChapter || isNavigating}
+          disabled={!chapter?.prevChapter || isNavigating || isEditing}
           className="nav-button"
         >
           {isNavigating ? 'Loading...' : '← Previous Chapter'}
         </button>
         <button 
           onClick={handleNextChapter}
-          disabled={!chapter?.nextChapter || isNavigating}
+          disabled={!chapter?.nextChapter || isNavigating || isEditing}
           className="nav-button"
         >
           {isNavigating ? 'Loading...' : 'Next Chapter →'}
@@ -444,14 +432,14 @@ const Chapter = () => {
       <div className="chapter-navigation bottom">
         <button 
           onClick={handlePrevChapter} 
-          disabled={!chapter?.prevChapter || isNavigating}
+          disabled={!chapter?.prevChapter || isNavigating || isEditing}
           className="nav-button"
         >
           {isNavigating ? 'Loading...' : '← Previous Chapter'}
         </button>
         <button 
           onClick={handleNextChapter}
-          disabled={!chapter?.nextChapter || isNavigating}
+          disabled={!chapter?.nextChapter || isNavigating || isEditing}
           className="nav-button"
         >
           {isNavigating ? 'Loading...' : 'Next Chapter →'}
@@ -460,7 +448,12 @@ const Chapter = () => {
 
       {/* Comments section */}
       <div className="chapter-comments">
-        <CommentSection contentId={`${novelId}-${chapterId}`} contentType="chapters" />
+        <CommentSection 
+          contentId={`${novelId}-${chapterId}`} 
+          contentType="chapters"
+          initialComments={comments}
+          isLoading={isCommentsLoading}
+        />
       </div>
     </div>
   );

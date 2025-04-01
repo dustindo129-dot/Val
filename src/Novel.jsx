@@ -11,8 +11,9 @@
  * - Responsive layout
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import HotNovels from './components/HotNovels';
 import './Novel.css';
@@ -51,17 +52,27 @@ const truncateHTML = (html, maxLength) => {
 
 // Novel component with optional search query prop
 const Novel = ({ searchQuery = "" }) => {
-  // State management for novels, loading, error, and pagination
-  const [novels, setNovels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState({});
-  
-  // Get current page from URL params and setup navigation
   const { page } = useParams();
   const navigate = useNavigate();
   const currentPage = parseInt(page) || 1;
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['novels', currentPage],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}`);
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    cacheTime: 1000 * 60 * 10, // Cache for 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: 1000 * 60 * 5, // Only refetch every 5 minutes
+    keepPreviousData: true // Keep showing previous page data while loading next page
+  });
+
+  const novels = data?.novels || [];
+  const pagination = data?.pagination;
 
   // Toggle description expansion for a specific novel
   const toggleDescription = (novelId) => {
@@ -84,39 +95,6 @@ const Novel = ({ searchQuery = "" }) => {
       </i>
     );
   };
-
-  // Fetch novels data from API
-  useEffect(() => {
-    const fetchNovels = async () => {
-      try {
-        // Remove sortBy and order since sorting is now handled in the backend
-        const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}`);
-        
-        // Sort novels by latestActivity timestamp
-        const sortedNovels = response.data.novels.sort((a, b) => {
-          const aTime = a.latestActivity;
-          const bTime = b.latestActivity;
-          return bTime - aTime;
-        });
-
-        setNovels(sortedNovels);
-        setPagination(response.data.pagination);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch novels');
-        setLoading(false);
-      }
-    };
-
-    fetchNovels();
-    
-    // Refresh data every 5 seconds to catch updates
-    const refreshInterval = setInterval(fetchNovels, 5000);
-    
-    return () => {
-      clearInterval(refreshInterval);
-    };
-  }, [currentPage, searchQuery]);
 
   // Filter novels based on search query
   const filteredNovels = useMemo(() => {
@@ -190,10 +168,10 @@ const Novel = ({ searchQuery = "" }) => {
   };
 
   // Show loading state
-  if (loading) return <div className="loading">Loading novels...</div>;
+  if (isLoading) return <div className="loading">Loading novels...</div>;
   
   // Show error state
-  if (error) return <div className="error">{error}</div>;
+  if (error) return <div className="error">{error.message}</div>;
 
   // Show no results message for search
   if (filteredNovels.length === 0 && searchQuery) {

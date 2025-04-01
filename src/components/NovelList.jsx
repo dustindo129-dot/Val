@@ -19,6 +19,7 @@
 
 import { useState, useEffect, memo, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import HotNovels from './HotNovels';
 import '../styles/NovelList.css';
@@ -89,43 +90,30 @@ const NovelImage = memo(({ src, alt, status, novelId }) => {
  */
 const NovelList = () => {
   const navigate = useNavigate();
-  const { page } = useParams(); // Get page from URL params
-  const [novels, setNovels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { page } = useParams();
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
-  const [pagination, setPagination] = useState({
+  const currentPage = parseInt(page) || 1;
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['novels', currentPage],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}&limit=20`);
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    cacheTime: 1000 * 60 * 10, // Cache for 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: 1000 * 60 * 5, // Only refetch every 5 minutes
+    keepPreviousData: true // Keep showing previous page data while loading next page
+  });
+
+  const novels = data?.novels || [];
+  const pagination = data?.pagination || {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0
-  });
-
-  const currentPage = parseInt(page) || 1;
-  const cachedNovels = useMemo(() => novels, [novels]);
-
-  useEffect(() => {
-    const fetchNovels = async () => {
-      try {
-        const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}&limit=20`);
-        setNovels(response.data.novels || []);
-        setPagination(response.data.pagination);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch novels');
-        setLoading(false);
-        console.error('Error fetching novels:', err);
-      }
-    };
-
-    fetchNovels();
-    
-    // Refresh data every 5 seconds to catch updates
-    const refreshInterval = setInterval(fetchNovels, 5000);
-    
-    return () => {
-      clearInterval(refreshInterval);
-    };
-  }, [currentPage]);
+  };
 
   // Add scroll to top effect when page changes
   useEffect(() => {
@@ -277,9 +265,9 @@ const NovelList = () => {
   };
 
   // Loading and error states
-  if (loading) return <div className="loading">Loading novels...</div>;
-  if (error) return <div className="error">{error}</div>;
-  if (!cachedNovels || cachedNovels.length === 0) return <div className="loading">No novels available.</div>;
+  if (isLoading) return <div className="loading">Loading novels...</div>;
+  if (error) return <div className="error">{error.message}</div>;
+  if (!novels || novels.length === 0) return <div className="loading">No novels available.</div>;
 
   return (
     <>
@@ -292,7 +280,7 @@ const NovelList = () => {
             </div>
             {/* Novel grid */}
             <div className="novel-grid">
-              {cachedNovels.map(novel => {
+              {novels.map(novel => {
                 const shouldShowReadMore = novel.description && 
                   ((novel.description.replace(/<[^>]*>/g, '').length || 0) > 150);
                 

@@ -24,6 +24,7 @@ import axios from 'axios';
 import '../styles/components/ChapterDashboard.css';
 import config from '../config/config';
 import { Editor } from '@tinymce/tinymce-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * ChapterDashboard Component
@@ -40,6 +41,7 @@ const ChapterDashboard = () => {
   const moduleId = searchParams.get('moduleId');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // State management for novel data and form inputs
   const [novel, setNovel] = useState(null);
@@ -104,8 +106,6 @@ const ChapterDashboard = () => {
     try {
       // Get content from TinyMCE editor and clean it
       const content = editorRef.current.getContent();
-      console.log('Got content from editor, length:', content.length);
-      console.log('Module ID:', moduleId);
       
       // Basic HTML cleaning while preserving important formatting
       const cleanedContent = content
@@ -116,9 +116,6 @@ const ChapterDashboard = () => {
       
       // Log sizes for debugging
       const contentSizeMB = (cleanedContent.length / (1024 * 1024)).toFixed(2);
-      console.log('Content size:', contentSizeMB, 'MB');
-      console.log('Chapter title:', chapterTitle);
-
       if (cleanedContent.length > 40 * 1024 * 1024) {
         setError('Content is too large. Please reduce formatting or split into multiple chapters.');
         setLoading(false);
@@ -126,7 +123,6 @@ const ChapterDashboard = () => {
       }
       
       // Create the chapter with moduleId
-      console.log('Sending request to create chapter...');
       const chapterResponse = await axios.post(
         `${config.backendUrl}/api/chapters`,
         {
@@ -142,14 +138,21 @@ const ChapterDashboard = () => {
           }
         }
       );
-      console.log('Chapter created successfully:', chapterResponse.data);
 
-      // Navigate back to the novel detail page
-      navigate(`/novel/${novelId}`);
+      // Invalidate both the modules query and the specific module query
+      await queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
+      
+      // Navigate back with state and replace to avoid history issues
+      navigate(`/novel/${novelId}`, {
+        replace: true,
+        state: { 
+          from: 'addChapter',
+          shouldRefetch: true,
+          timestamp: Date.now()
+        }
+      });
     } catch (err) {
       console.error('Error details:', err);
-      console.error('Response data:', err.response?.data);
-      console.error('Status code:', err.response?.status);
       setError(err.response?.data?.message || err.message || 'Failed to create chapter. Please try again.');
     } finally {
       setLoading(false);
