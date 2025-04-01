@@ -105,7 +105,7 @@ const AdminDashboard = () => {
    */
   const fetchNovels = async () => {
     try {
-      const response = await fetch(`${config.backendUrl}/api/novels`);
+      const response = await fetch(`${config.backendUrl}/api/novels?limit=1000`);
       const data = await response.json();
       setNovels(data.novels);
     } catch (err) {
