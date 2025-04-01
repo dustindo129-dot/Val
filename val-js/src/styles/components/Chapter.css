@@ -1,0 +1,488 @@
+/**
+ * Chapter.css
+ * 
+ * Styles for the Chapter component that displays novel chapter content
+ * with reading controls and navigation.
+ * 
+ * Features:
+ * - Chapter content display
+ * - Navigation controls
+ * - Font size controls
+ * - Reading progress tracking
+ * - Responsive layout
+ * - Dark mode support
+ */
+
+/* Main container styles */
+.chapter-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Chapter header styles */
+.chapter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chapter-navigation-header {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 1;
+}
+
+.title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chapter-navigation-header a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.2em;
+  line-height: 1.4;
+}
+
+.chapter-navigation-header a:hover {
+  text-decoration: underline;
+}
+
+.chapter-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chapter-date-section {
+  color: #6b7280;
+  font-size: 0.9em;
+  margin-left: auto;
+  padding-left: 20px;
+}
+
+/* Reading options styles */
+.reading-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.font-button {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #374151;
+  transition: all 0.2s;
+}
+
+.font-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* Delete chapter button styles */
+.delete-chapter-btn {
+  padding: 8px 16px;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  align-self: flex-start;
+  font-size: 0.9em;
+  width: fit-content;
+}
+
+.delete-chapter-btn:hover {
+  background-color: #b91c1c;
+}
+
+/* Chapter navigation styles */
+.chapter-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  gap: 15px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.nav-button {
+  padding: 10px 20px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+  max-width: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.nav-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.nav-button:disabled:not(:hover) {
+  opacity: 0.7;
+}
+
+/* Dark theme support for navigation buttons */
+:root.dark-mode .nav-button {
+  background-color: #3b82f6;
+}
+
+:root.dark-mode .nav-button:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+:root.dark-mode .nav-button:disabled {
+  background-color: #4b5563;
+}
+
+/* Chapter content styles */
+.chapter-content {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  line-height: 1.6;
+  color: #333;
+  width: 100%;
+}
+
+/* Word document specific styles */
+.chapter-content .WordSection1 {
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.chapter-content h1,
+.chapter-content h2,
+.chapter-content h3,
+.chapter-content h4,
+.chapter-content h5,
+.chapter-content h6 {
+  font-family: 'Times New Roman', serif;
+  line-height: 1.4;
+  margin: 1.5em 0 0.5em;
+  color: #222;
+}
+
+.chapter-content p {
+  margin: 1em 0;
+  text-align: justify;
+}
+
+.chapter-content .MsoNormal,
+.chapter-content .MsoBodyText {
+  margin: 1em 0;
+  line-height: 1.6;
+}
+
+/* Preserve Word document indentation */
+.chapter-content [style*="text-indent"] {
+  text-indent: inherit !important;
+}
+
+/* Preserve Word document alignment */
+.chapter-content [style*="text-align"] {
+  text-align: inherit !important;
+}
+
+/* Preserve Word document margins */
+.chapter-content [style*="margin"] {
+  margin: inherit !important;
+}
+
+/* Preserve Word document line height */
+.chapter-content [style*="line-height"] {
+  line-height: inherit !important;
+}
+
+/* Preserve Word document font styles */
+.chapter-content [style*="font-family"],
+.chapter-content [style*="font-size"],
+.chapter-content [style*="font-weight"],
+.chapter-content [style*="font-style"] {
+  font: inherit !important;
+}
+
+/* Add spacing between sections */
+.chapter-content > div {
+  margin-bottom: 1.5em;
+}
+
+/* Style strong and emphasis tags */
+.chapter-content strong,
+.chapter-content b {
+  font-weight: bold;
+  color: #222;
+}
+
+.chapter-content em,
+.chapter-content i {
+  font-style: italic;
+}
+
+/* Add responsive padding */
+@media (max-width: 768px) {
+  .chapter-content {
+    padding: 0 0.5rem;
+  }
+}
+
+.chapter-navigation.bottom {
+  margin-top: 30px;
+}
+
+/* Chapter comments styles */
+.chapter-comments {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Loading and error states */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+.error {
+  text-align: center;
+  padding: 40px;
+  color: #dc2626;
+  background-color: #fee2e2;
+  border-radius: 8px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .chapter-container {
+    padding: 15px;
+  }
+
+  .chapter-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .chapter-navigation {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nav-button {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Dark theme support */
+:root.dark-mode .chapter-container {
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+:root.dark-mode .chapter-header {
+  background-color: #2a2a2a;
+}
+
+:root.dark-mode .chapter-content {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+:root.dark-mode .chapter-content h1,
+:root.dark-mode .chapter-content h2,
+:root.dark-mode .chapter-content h3,
+:root.dark-mode .chapter-content h4,
+:root.dark-mode .chapter-content h5,
+:root.dark-mode .chapter-content h6 {
+  font-family: 'Times New Roman', serif;
+  line-height: 1.4;
+  margin: 1.5em 0 0.5em;
+  color: #fff;
+}
+
+:root.dark-mode .chapter-content strong,
+:root.dark-mode .chapter-content b {
+  font-weight: bold;
+  color: #fff;
+}
+
+:root.dark-mode .chapter-container .chapter-title,
+:root.dark-mode .font-button {
+  color: #e5e7eb;
+}
+
+:root.dark-mode .font-button {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+:root.dark-mode .font-button:hover {
+  background-color: #4b5563;
+}
+
+:root.dark-mode .chapter-comments {
+  border-color: #374151;
+}
+
+/* Admin Actions */
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: 20px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-chapter-btn,
+.delete-chapter-btn,
+.save-btn,
+.cancel-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.edit-chapter-btn:disabled,
+.delete-chapter-btn:disabled,
+.save-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.edit-chapter-btn {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.edit-chapter-btn:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+.delete-chapter-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-chapter-btn:hover:not(:disabled) {
+  background-color: #c0392b;
+}
+
+.save-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.save-btn:hover:not(:disabled) {
+  background-color: #27ae60;
+}
+
+.cancel-btn {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background-color: #7f8c8d;
+}
+
+/* Editor container styles */
+.editor-container {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 20px;
+  margin: 20px 0;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.chapter-title-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1.1em;
+  color: #374151;
+  background-color: white;
+}
+
+.chapter-title-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Dark theme support for editor */
+:root.dark-mode .editor-container {
+  background-color: #2a2a2a;
+  border-color: #4b5563;
+}
+
+:root.dark-mode .chapter-title-input {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+:root.dark-mode .chapter-title-input:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .admin-actions {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .edit-actions {
+    flex-direction: column;
+  }
+
+  .edit-chapter-btn,
+  .delete-chapter-btn,
+  .save-btn,
+  .cancel-btn {
+    width: 100%;
+  }
+} 

@@ -1,0 +1,474 @@
+/**
+ * Navbar.css
+ * 
+ * Styles for the main navigation bar component.
+ * Features:
+ * - Sticky positioning
+ * - Search functionality
+ * - Authentication buttons
+ * - Dark theme support
+ * - Responsive design
+ * - Search results dropdown
+ */
+
+/* Main navbar container */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Left section with logo and title */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.navbar-left:hover {
+  opacity: 0.9;
+}
+
+/* Logo image styling */
+.navbar-logo {
+  height: 40px;
+  margin-right: 1rem;
+}
+
+/* Site title text */
+.navbar-title {
+  color: #333;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+/* Search functionality container */
+.search-container {
+  flex: 1;
+  max-width: 600px;
+  margin: 0 2rem;
+}
+
+/* Search form wrapper */
+.search-form {
+  position: relative;
+}
+
+/* Search input container */
+.search-input-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+/* Search input field */
+.search-input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 24px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input::placeholder {
+  color: #333;
+  opacity: 0.7;
+}
+
+/* Search input focus state */
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Clear search button */
+.clear-search {
+  position: absolute;
+  right: 40px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Search submit button */
+.search-button {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Search error message */
+.search-error {
+  position: absolute;
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f8d7da;
+  z-index: 1000;
+}
+
+/* Right section with auth buttons */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Authentication buttons container */
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Base styles for auth buttons */
+.auth-button {
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+
+/* Profile button and Login button styles */
+.auth-button.profile-btn,
+.auth-button.login {
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+}
+
+.auth-button.profile-btn:hover,
+.auth-button.login:hover {
+  background-color: #34495e;
+}
+
+/* Logout button and Sign up button styles */
+.auth-button.logout-btn,
+.auth-button.sign-up {
+  background-color: #1a252f;
+  color: white;
+  border: none;
+}
+
+.auth-button.logout-btn:hover,
+.auth-button.sign-up:hover {
+  background-color: #2c3e50;
+}
+
+/* Dark theme styles */
+:root.dark-mode .auth-button.profile-btn,
+:root.dark-mode .auth-button.login {
+  background-color: #2c3e50;
+  color: #fff;
+}
+
+:root.dark-mode .auth-button.profile-btn:hover,
+:root.dark-mode .auth-button.login:hover {
+  background-color: #34495e;
+}
+
+:root.dark-mode .auth-button.logout-btn,
+:root.dark-mode .auth-button.sign-up {
+  background-color: #2c3e50;
+  color: #fff;
+}
+
+:root.dark-mode .auth-button.logout-btn:hover,
+:root.dark-mode .auth-button.sign-up:hover {
+  background-color: #34495e;
+}
+
+/* Bookmark button specific styles */
+.auth-button.bookmark-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #4a90e2;
+}
+
+.auth-button.bookmark-btn:hover {
+  background-color: #357abd;
+}
+
+/* Bookmark icon animation */
+.bookmark-icon {
+  transition: transform 0.2s;
+}
+
+.auth-button.bookmark-btn:hover .bookmark-icon {
+  transform: scale(1.1);
+}
+
+/* User avatar styles */
+.user-avatar {
+  display: flex;
+  align-items: center;
+  margin: 0 0.5rem;
+}
+
+.avatar-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #4a90e2;
+}
+
+/* Search results dropdown */
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* Individual search result item */
+.search-result-item {
+  display: flex;
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Search result cover image */
+.search-result-cover {
+  width: 60px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 1rem;
+}
+
+/* Search result information container */
+.search-result-info {
+  flex: 1;
+}
+
+/* Search result title */
+.search-result-title {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+/* Search result details */
+.search-result-details {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+/* Dark theme styles */
+:root.dark-mode .navbar {
+  background-color: #1a1a1a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+:root.dark-mode .navbar-title {
+  color: #fff;
+}
+
+:root.dark-mode .search-input {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: #fff;
+}
+
+:root.dark-mode .search-input::placeholder {
+  color: #fff;
+  opacity: 0.7;
+}
+
+:root.dark-mode .search-input:focus {
+  outline: none;
+  border-color: #0056b3;
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+}
+
+:root.dark-mode .clear-search,
+:root.dark-mode .search-button {
+  color: #999;
+}
+
+:root.dark-mode .auth-button {
+  color: #fff;
+}
+
+:root.dark-mode .auth-button:hover {
+  background-color: #2a2a2a;
+}
+
+:root.dark-mode .auth-button.profile-btn {
+  border-color: #fff;
+  color: #fff;
+}
+
+:root.dark-mode .auth-button.profile-btn:hover {
+  background-color: #fff;
+  color: #1a1a1a;
+}
+
+:root.dark-mode .auth-button.bookmark-btn {
+  background-color: #5c9ee6;
+}
+
+:root.dark-mode .auth-button.bookmark-btn:hover {
+  background-color: #4a90e2;
+}
+
+:root.dark-mode .search-results {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+:root.dark-mode .search-result-item {
+  border-color: #444;
+}
+
+:root.dark-mode .search-result-item:hover {
+  background-color: #333;
+}
+
+:root.dark-mode .search-result-title {
+  color: #fff;
+}
+
+:root.dark-mode .search-result-details {
+  color: #999;
+}
+
+:root.dark-mode .avatar-image {
+  border-color: #5c9ee6;
+}
+
+:root.dark-mode .search-error {
+  background-color: rgba(26, 26, 26, 0.95);
+  color: #ff6b6b;
+  border-color: #dc3545;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  /* Adjust navbar layout for mobile */
+  .navbar {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* Move search bar below logo and buttons */
+  .search-container {
+    order: 3;
+    width: 100%;
+    margin: 1rem 0;
+  }
+
+  /* Adjust logo size for mobile */
+  .navbar-logo {
+    height: 32px;
+  }
+
+  /* Adjust title size for mobile */
+  .navbar-title {
+    font-size: 1.25rem;
+  }
+
+  /* Adjust auth buttons for mobile */
+  .auth-button {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Adjust modal content for mobile */
+  .modal-content {
+    width: 90%;
+    max-width: none;
+  }
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.beta-tag {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.2);
+  margin-left: 8px;
+}
+
+/* Logout button specific styles */
+.auth-button.logout-btn {
+  background-color: #1a252f;
+  color: white;
+  border: none;
+}
+
+.auth-button.logout-btn:hover {
+  background-color: #2c3e50;
+}
+
+/* Dark theme styles for logout button */
+:root.dark-mode .auth-button.logout-btn {
+  background-color: #2c3e50;
+  color: #fff;
+}
+
+:root.dark-mode .auth-button.logout-btn:hover {
+  background-color: #34495e;
+} 

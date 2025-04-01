@@ -1,0 +1,140 @@
+/**
+ * Login.css
+ * 
+ * Styles for the Login component that handles user authentication.
+ * 
+ * Features:
+ * - Centered login form layout
+ * - Clean and modern design
+ * - Form validation styles
+ * - Loading state styles
+ * - Error message display
+ * - Responsive design
+ * - Dark mode support
+ */
+
+/* Main container styles - Centers the login form vertically and horizontally */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* Login box styles - Creates a white card with shadow for the form */
+.login-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Login title styles */
+.login-box h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+/* Form group styles - Spacing and layout for form elements */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Label styles - Styling for form labels */
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: bold;
+}
+
+/* Input field styles - Styling for form inputs */
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Button styles - Primary action button styling */
+button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+/* Button hover state */
+button:hover {
+  background: #0056b3;
+}
+
+/* Button disabled state */
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Error message styles - Display for form validation errors */
+.error {
+  color: #dc3545;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* Dark mode support */
+:root.dark-mode .login-container {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .login-box {
+  background: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .login-box h2,
+:root.dark-mode .form-group label {
+  color: #fff;
+}
+
+:root.dark-mode .form-group input {
+  background: #1a1a1a;
+  border-color: #444;
+  color: #fff;
+}
+
+:root.dark-mode .form-group input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+:root.dark-mode button {
+  background: #007bff;
+}
+
+:root.dark-mode button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+:root.dark-mode button:disabled {
+  background: #444;
+  color: #666;
+}
+
+/* Responsive styles */
+@media (max-width: 480px) {
+  .login-box {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+} 
