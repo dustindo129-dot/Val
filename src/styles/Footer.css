@@ -1,0 +1,38 @@
+/**
+ * Footer.css
+ * 
+ * Styles for the footer component
+ */
+
+.footer {
+  background-color: #fff;
+  padding: 1rem 0;
+  text-align: center;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+  border-top: 1px solid #dee2e6;
+  font-weight: bold;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.footer p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Dark mode support */
+:root.dark-mode .footer {
+  background-color: #1a1a1a;
+  border-top-color: #2d2d2d;
+}
+
+:root.dark-mode .footer p {
+  color: #a1a1a1;
+} 

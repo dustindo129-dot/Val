@@ -5,6 +5,7 @@ import { NovelStatusProvider } from './context/NovelStatusContext';
 import { NovelProvider } from './context/NovelContext';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
+import Footer from './components/Footer';
 import AppRoutes from './routes/AppRoutes';
 import './styles/shared/App.css';
 
@@ -27,6 +28,7 @@ const App = () => {
                 <main className="main-content">
                   <AppRoutes />
                 </main>
+                <Footer />
               </div>
             </BookmarkProvider>
           </NovelStatusProvider>
