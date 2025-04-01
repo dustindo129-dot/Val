@@ -189,14 +189,13 @@ export const AuthProvider = ({ children }) => {
    * Handles user login
    * @param {string} username - User's username
    * @param {string} password - User's password
-   * @param {string} recaptchaToken - Recaptcha token
    * @returns {Promise<Object>} Response data from login API
    */
-  const login = async (username, password, recaptchaToken) => {
+  const login = async (username, password) => {
     try {
       setError(null);
       const response = await axios.post(`${config.backendUrl}/api/auth/login`,
-        { username, password, recaptchaToken },
+        { username, password },
         { 
           headers: {
             'Content-Type': 'application/json'

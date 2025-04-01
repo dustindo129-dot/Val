@@ -224,11 +224,9 @@
   text-decoration: underline;
 }
 
-/* reCAPTCHA container */
+/* Remove recaptcha styles */
 .recaptcha-container {
-  display: flex;
-  justify-content: center;
-  margin: 1rem 0;
+  display: none;
 }
 
 /* Modal title styles */

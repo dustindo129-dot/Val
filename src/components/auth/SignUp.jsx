@@ -14,7 +14,7 @@
  * - Login link
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Auth.css';
 
@@ -37,19 +37,6 @@ const SignUp = ({ onClose }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [recaptchaToken, setRecaptchaToken] = useState(null);
-
-  // Load reCAPTCHA script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js?render=${import.meta.env.VITE_RECAPTCHA_SITE_KEY}`;
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   /**
    * Handles input changes in the form
@@ -90,12 +77,8 @@ const SignUp = ({ onClose }) => {
 
     setLoading(true);
     try {
-      // Get reCAPTCHA token
-      const token = await window.grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY, { action: 'signup' });
-      setRecaptchaToken(token);
-
-      // Attempt to create new account with recaptcha token
-      await signUp(formData.username, formData.email, formData.password, token);
+      // Attempt to create new account
+      await signUp(formData.username, formData.email, formData.password);
       onClose(); // Close modal on successful signup
     } catch (err) {
       // Handle specific error cases
@@ -103,8 +86,6 @@ const SignUp = ({ onClose }) => {
         setError('Username already exists. Please choose a different username.');
       } else if (err.response?.data?.message?.includes('email')) {
         setError('Email already exists. Please use a different email.');
-      } else if (err.response?.data?.message?.includes('reCAPTCHA')) {
-        setError('Failed to verify reCAPTCHA. Please try again.');
       } else {
         setError(err.response?.data?.message || 'Failed to create account');
       }
