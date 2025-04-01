@@ -8,7 +8,7 @@ const config = {
       comment: import.meta.env.VITE_CLOUDINARY_COMMENT_UPLOAD_PRESET
     }
   },
-  tinymceApiKey: '22xls70o8iwqefp6s06bpnm5efessylgsoqj93g48lwvyy6pj'
+  tinymceApiKey: '2xls70o8iwqefp6s06bpnm5efessylgsoqj93g48lwvyy6pj'
 };
 
 export default config; 
