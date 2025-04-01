@@ -19,7 +19,7 @@ const App = () => {
                 <div 
                   className="background-container"
                   style={{
-                    backgroundImage: `url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1743127584/482259247_634103582665702_1134185038594170678_n_k97kfr.jpg')` // Replace this with your actual image URL when you have it
+                    backgroundImage: `url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1743447317/482259247_634103582665702_1134185038594170678_n_d1ip2v.jpg')` // Replace this with your actual image URL when you have it
                   }}
                 />
                 <Navbar />
