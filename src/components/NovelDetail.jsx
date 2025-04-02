@@ -171,9 +171,10 @@ const ModuleChapters = memo(({
   user, 
   handleChapterReorder 
 }) => (
-  <div className="module-chapters">
+  <div className="chapter-list">
     {chapters.map((chapter, chapterIndex, chapterArray) => (
       <div key={chapter._id} className="chapter-item">
+        <div className="chapter-number">{chapter.order !== undefined ? chapter.order : chapterIndex}</div>
         {user?.role === 'admin' && (
           <div className="chapter-reorder-buttons">
             <button 
@@ -915,13 +916,10 @@ const NovelDetail = () => {
           // Chapters list
           <div className="chapters-list">
             <div className="chapters-header">
-              <h3>{(() => {
-                const moduleChapters = modules.reduce((total, module) => total + (module.chapters?.length || 0), 0);
-                return moduleChapters;
-              })()} Chapter(s)</h3>
-              <div className="chapter-controls">
-                {user?.role === 'admin' && (
-                  <button onClick={() => {
+              <h3>{totalChapters} Chapter(s)</h3>
+              {user?.role === 'admin' && (
+                <button 
+                  onClick={() => {
                     setShowModuleForm(true);
                     setModuleForm({
                       title: '',
@@ -930,12 +928,13 @@ const NovelDetail = () => {
                       error: ''
                     });
                     setEditingModule(null);
-                  }} className="add-module-btn">
-                    <span className="plus-icon">+</span>
-                    Add Module
-                  </button>
-                )}
-              </div>
+                  }} 
+                  className="add-module-btn"
+                >
+                  <span className="plus-icon">+</span>
+                  Add Module
+                </button>
+              )}
             </div>
 
             {/* Modules Section */}
@@ -953,84 +952,81 @@ const NovelDetail = () => {
 
               <div className="modules-list">
                 {sortedModules.map((module, index) => (
-                  <div key={module._id} className="module-wrapper">
-                    {user?.role === 'admin' && (
-                      <div className="reorder-buttons">
-                        {index !== 0 && (
-                          <button
-                            className="reorder-btn up"
-                            onClick={() => handleChapterReorder(module._id, module.chapters[0]._id, 'up')}
-                            title="Move up"
-                          >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M12 19V5M12 5L5 12M12 5L19 12" />
-                            </svg>
-                          </button>
-                        )}
-                        {index !== modules.length - 1 && (
-                          <button
-                            className="reorder-btn down"
-                            onClick={() => handleChapterReorder(module._id, module.chapters[module.chapters.length - 1]._id, 'down')}
-                            title="Move down"
-                          >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M12 5V19M12 19L5 12M12 19L19 12" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    <div className="module-container">
-                      <div className="module-info">
-                        <img 
-                          src={module.coverImage || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
-                          alt={module.title} 
-                          className="module-cover"
-                        />
+                  <div key={module._id} className="module-container">
+                    <div className="module-left">
+                      <img 
+                        src={module.coverImage || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
+                        alt={module.title} 
+                        className="module-cover"
+                      />
+                      {user?.role === 'admin' && (
+                        <div className="module-reorder-buttons">
+                          {index !== 0 && (
+                            <button
+                              className="reorder-btn up"
+                              onClick={() => handleChapterReorder(module._id, module.chapters[0]?._id, 'up')}
+                              title="Move module up"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M18 15l-6-6-6 6"/>
+                              </svg>
+                            </button>
+                          )}
+                          {index !== sortedModules.length - 1 && (
+                            <button
+                              className="reorder-btn down"
+                              onClick={() => handleChapterReorder(module._id, module.chapters[module.chapters.length - 1]?._id, 'down')}
+                              title="Move module down"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M6 9l6 6 6-6"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="module-right">
+                      <div className="module-header">
                         <h3>{module.title}</h3>
-                      </div>
-                      
-                      <div className="module-content">
                         {user?.role === 'admin' && (
-                          <div className="module-header">
-                            <div className="module-controls">
-                              <button
-                                onClick={() => {
-                                  setEditingModule(module);
-                                  setShowModuleForm(true);
-                                }}
-                                className="edit-module-btn"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleModuleDelete(module._id)}
-                                className="delete-module-btn"
-                              >
-                                Delete
-                              </button>
-                              <Link
-                                to={`/novel/${novelId}/chapter/add?moduleId=${module._id}`}
-                                className="add-chapter-btn"
-                                state={{ returnTo: location.pathname }}
-                              >
-                                + Add Chapter
-                              </Link>
-                            </div>
+                          <div className="module-controls">
+                            <button
+                              onClick={() => {
+                                setEditingModule(module);
+                                setShowModuleForm(true);
+                              }}
+                              className="edit-module-btn"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleModuleDelete(module._id)}
+                              className="delete-module-btn"
+                            >
+                              Delete
+                            </button>
+                            <Link
+                              to={`/novel/${novelId}/chapter/add?moduleId=${module._id}`}
+                              className="add-chapter-btn"
+                              state={{ returnTo: location.pathname }}
+                            >
+                              + Add Chapter
+                            </Link>
                           </div>
                         )}
+                      </div>
 
-                        <div className="module-chapters">
-                          {module.chapters && module.chapters.length > 0 && (
-                            <ModuleChapters
-                              chapters={module.chapters}
-                              novelId={novelId}
-                              moduleId={module._id}
-                              user={user}
-                              handleChapterReorder={handleChapterReorder}
-                            />
-                          )}
-                                  </div>
+                      <div className="module-chapters">
+                        {module.chapters && module.chapters.length > 0 && (
+                          <ModuleChapters
+                            chapters={module.chapters}
+                            novelId={novelId}
+                            moduleId={module._id}
+                            user={user}
+                            handleChapterReorder={handleChapterReorder}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

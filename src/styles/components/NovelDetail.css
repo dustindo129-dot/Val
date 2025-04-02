@@ -278,11 +278,21 @@
   gap: 10px;
 }
 
+/* Chapters header */
 .chapters-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chapters-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 /* Add chapter button styles (admin only) */
@@ -302,367 +312,303 @@
 /* Chapter item styles - Individual chapter display */
 .chapter-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f8f9fa;
+  padding: 10px;
+  background-color: #f9fafb;
   border-radius: 4px;
   transition: background-color 0.2s;
-  margin-bottom: 0.5rem;
-  position: relative;
+  margin-bottom: 8px;
 }
 
 .chapter-item:hover {
-  background: #e9ecef;
+  background-color: #f3f4f6;
 }
 
-.chapter-item a {
-  color: #333;
-  text-decoration: none;
-  font-weight: 500;
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.chapter-item .chapter-date {
-  color: #666;
-  font-size: 0.875rem;
-  font-style: italic;
-  margin: 0 1rem;
-}
-
-.remove-chapter-btn {
-  padding: 0.25rem 0.75rem;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-left: 0.5rem;
-  font-weight: 500;
-}
-
-.remove-chapter-btn:hover {
-  background-color: #c82333;
-}
-
-.new-tag {
-  background-color: #ff3860;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  margin-left: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  animation: pulse 2s infinite;
-  display: inline-flex;
-  align-items: center;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-/* Dark theme support */
-:root.dark-mode {
-  .chapter-item {
-    background: #1a1a1a;
-  }
-
-  .chapter-item:hover {
-    background: #2a2a2a;
-  }
-
-  .chapter-item a {
-    color: #fff;
-  }
-
-  .chapter-item .chapter-date {
-    color: #999;
-  }
-
-  .remove-chapter-btn {
-    background-color: #ef4444;
-  }
-
-  .remove-chapter-btn:hover {
-    background-color: #dc2626;
-  }
-
-  .module-container {
-    background: #1a1a1a;
-    border: 1px solid #333;
-  }
-
-  .module-form {
-    background-color: #1a1a1a;
-    border-color: #333;
-  }
-
-  .module-form h4 {
-    color: #fff;
-  }
-
-  .form-group label {
-    color: #ccc;
-  }
-
-  .form-group input[type="text"] {
-    background-color: #2a2a2a;
-    border-color: #333;
-    color: #fff;
-  }
-
-  .upload-btn {
-    background-color: #2a2a2a;
-    border-color: #333;
-    color: #ccc;
-  }
-
-  .upload-btn:hover {
-    background-color: #333;
-  }
-
-  .form-actions button[type="button"] {
-    background-color: #2a2a2a;
-    border-color: #333;
-    color: #ccc;
-  }
-
-  .form-actions button[type="button"]:hover {
-    background-color: #333;
-  }
-
-  .novel-module {
-    background-color: #1a1a1a;
-    border-color: #333;
-  }
-
-  .module-header {
-    border-bottom-color: #333;
-  }
-
-  .module-header h4 {
-    color: #fff;
-  }
-
-  .edit-module-btn {
-    background-color: #2a2a2a;
-    border-color: #333;
-    color: #ccc;
-  }
-
-  .edit-module-btn:hover {
-    background-color: #333;
-  }
-
-  .show-more-btn {
-    background-color: white;
-    color: #1a1a1a;
-  }
-
-  .show-more-btn:hover {
-    background-color: #f1f5f9;
-  }
-
-  .modules-header {
-    border-color: #333;
-  }
-
-  .chapters-header h3 {
-    color: #333;
-  }
-}
-
-/* Bookmark notice styles - Toast notification for bookmark actions */
-.bookmark-notice {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 10px 20px;
-  border-radius: 4px;
-  color: white;
-  animation: slideIn 0.3s ease-out;
-}
-
-.bookmark-notice.success {
-  background-color: #28a745;
-}
-
-.bookmark-notice.error {
-  background-color: #dc3545;
-}
-
-/* Responsive styles - Mobile layout adjustments */
-@media (max-width: 768px) {
-  .novel-info-section {
-    grid-template-columns: 1fr;
-  }
-
-  .novel-cover-section {
-    max-width: 300px;
-    margin: 0 auto;
-  }
-
-  .novel-title {
-    font-size: 2rem;
-  }
-
-  .detail-row {
-    flex-direction: column;
-  }
-
-  .label {
-    min-width: auto;
-  }
-}
-
-/* Animations - Slide-in effect for notifications */
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* Module reordering styles */
-.modules-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.module-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.reorder-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.reorder-btn {
+.chapter-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: #f8f9fa;
+  width: 30px;
+  height: 30px;
+  background-color: #3b82f6;
+  color: white;
   border-radius: 4px;
-  cursor: pointer;
-  color: #666;
-  transition: all 0.2s;
-  opacity: 0;
+  font-weight: 600;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
-.module-wrapper:hover .reorder-btn {
-  opacity: 1;
-}
-
-.reorder-btn:hover {
-  background: #e9ecef;
-  color: #333;
-  transform: scale(1.1);
-}
-
-.reorder-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.module-container {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin: 0;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  gap: 1.5rem;
+.chapter-item a {
   flex: 1;
-}
-
-/* Dark theme support */
-:root.dark-mode {
-  .module-container {
-    background-color: #1a1a1a;
-    border-color: #333;
-  }
-
-  .reorder-btn {
-    background: #2a2a2a;
-    color: #999;
-  }
-
-  .reorder-btn:hover {
-    background: #333;
-    color: #fff;
-  }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .reorder-buttons {
-    flex-direction: row;
-  }
-
-  .module-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .reorder-buttons {
-    align-self: center;
-    margin-bottom: 0.5rem;
-  }
-}
-
-/* Module general styles */
-.module-container {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin: 1rem 0;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
   display: flex;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 10px;
 }
 
-.module-info {
+.chapter-item .new-tag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  background-color: #ff3860;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.chapter-date {
+  color: #6b7280;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Modules list */
+.modules-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  width: 120px;
-  order: -1;
+  gap: 20px;
 }
 
-.module-info h3 {
-  color: #333;
-  margin: 0;
+/* Dark mode support */
+:root.dark-mode .module-container {
+  background-color: #1f2937;
+}
+
+:root.dark-mode .chapter-item {
+  background-color: #374151;
+}
+
+:root.dark-mode .chapter-item:hover {
+  background-color: #4b5563;
+}
+
+:root.dark-mode .chapter-item a {
+  color: #f9fafb;
+}
+
+:root.dark-mode .chapter-date {
+  color: #d1d5db;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .chapter-item {
+    flex-wrap: wrap;
+  }
+  
+  .chapter-date {
+    margin-left: 45px;
+    margin-top: 5px;
+  }
+}
+
+/* Add module button */
+.add-module-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.add-module-btn:hover {
+  background-color: #2563eb;
+}
+
+/* Module form */
+.module-form {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.module-form h4 {
+  margin: 0 0 20px;
+  color: #1f2937;
   font-size: 1.2rem;
-  text-align: center;
-  order: -1;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.cover-upload {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.cover-preview {
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.upload-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #4b5563;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.upload-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.form-actions button[type="submit"]:hover {
+  background-color: #2563eb;
+}
+
+.form-actions button[type="button"] {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+.form-actions button[type="button"]:hover {
+  background-color: #e5e7eb;
+}
+
+/* Dark mode support for forms and headers */
+:root.dark-mode .module-form {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+:root.dark-mode .module-form h4 {
+  color: #f9fafb;
+}
+
+:root.dark-mode .form-group label {
+  color: #d1d5db;
+}
+
+:root.dark-mode .form-group input[type="text"] {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+:root.dark-mode .upload-btn {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+:root.dark-mode .upload-btn:hover {
+  background-color: #4b5563;
+}
+
+:root.dark-mode .form-actions button[type="button"] {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+:root.dark-mode .form-actions button[type="submit"] {
+  background-color: #3b82f6;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .chapters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .add-module-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .module-controls {
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  
+  .edit-module-btn,
+  .delete-module-btn,
+  .add-chapter-btn {
+    flex: 1;
+  }
+}
+
+/* Module container styles */
+.module-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  margin: 1rem 0;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  display: flex;
+  gap: 20px;
+}
+
+.module-left {
+  width: 120px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.module-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .module-cover {
@@ -671,49 +617,164 @@
   object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
 }
 
-.module-cover:hover {
-  transform: scale(1.02);
-}
-
-.module-content {
-  flex: 1;
+.module-reorder-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  justify-content: center;
+  gap: 8px;
 }
 
-.module-header {
+.module-reorder-buttons .reorder-btn {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
-  gap: 0.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 1rem;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.module-reorder-buttons .reorder-btn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.module-reorder-buttons .reorder-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Chapter item styling to match the target design */
+.chapter-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #f9fafb;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  margin-bottom: 8px;
+}
+
+.chapter-item:hover {
+  background-color: #f3f4f6;
+}
+
+.chapter-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.chapter-reorder-buttons {
+  display: flex;
+  gap: 4px;
+  margin-right: 10px;
+}
+
+.chapter-reorder-buttons .reorder-btn {
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.chapter-reorder-buttons .reorder-btn.hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.chapter-reorder-buttons .reorder-btn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.chapter-reorder-buttons .reorder-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.chapter-item a {
+  flex: 1;
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chapter-item .new-tag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  background-color: #ff3860;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.chapter-date {
+  color: #6b7280;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Module header styles */
+.module-header {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.module-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .module-controls {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  gap: 8px;
 }
 
 .edit-module-btn,
 .delete-module-btn,
 .add-chapter-btn {
-  padding: 0.5rem 1rem;
+  padding: 6px 12px;
   border-radius: 4px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 0.8rem;
+  border: none;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  border: none;
+  justify-content: center;
 }
 
 .edit-module-btn {
@@ -745,337 +806,98 @@
 }
 
 /* Dark theme support */
-:root.dark-mode {
-  .module-header {
-    border-bottom-color: #333;
-  }
+:root.dark-mode .module-container {
+  background-color: #1f2937;
+}
 
-  .edit-module-btn {
-    background-color: #3b82f6;
-  }
+:root.dark-mode .module-header {
+  border-bottom-color: #374151;
+}
 
-  .edit-module-btn:hover {
-    background-color: #2563eb;
-  }
+:root.dark-mode .module-header h3 {
+  color: #f9fafb;
+}
 
-  .delete-module-btn {
-    background-color: #ef4444;
-  }
+:root.dark-mode .chapter-item {
+  background-color: #374151;
+}
 
-  .delete-module-btn:hover {
-    background-color: #dc2626;
-  }
+:root.dark-mode .chapter-item:hover {
+  background-color: #4b5563;
+}
 
-  .add-chapter-btn {
-    background-color: #10b981;
-  }
+:root.dark-mode .chapter-item a {
+  color: #f9fafb;
+}
 
-  .add-chapter-btn:hover {
-    background-color: #059669;
-  }
+:root.dark-mode .chapter-date {
+  color: #d1d5db;
+}
 
-  .module-info h3 {
-    color: #fff;
-  }
+:root.dark-mode .chapter-reorder-buttons .reorder-btn,
+:root.dark-mode .module-reorder-buttons .reorder-btn {
+  background-color: #4b5563;
+  color: #d1d5db;
+}
+
+:root.dark-mode .chapter-reorder-buttons .reorder-btn:hover,
+:root.dark-mode .module-reorder-buttons .reorder-btn:hover {
+  background-color: #6b7280;
+  color: #f9fafb;
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-  .module-controls {
+  .module-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .module-left {
+    width: 100%;
+    align-items: center;
+  }
+  
+  .module-right {
+    width: 100%;
+  }
+  
+  .module-cover {
+    max-width: 120px;
+  }
+  
+  .chapter-item {
     flex-wrap: wrap;
   }
-
+  
+  .chapter-date {
+    margin-left: 45px;
+    margin-top: 5px;
+    width: 100%;
+  }
+  
+  .module-controls {
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  
   .edit-module-btn,
   .delete-module-btn,
   .add-chapter-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
+    flex: 1;
   }
 }
 
-/* Module styles */
-.add-module-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.add-module-btn:hover {
-  background-color: #1d4ed8;
-}
-
-.module-form {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 20px;
-  margin: 20px 0;
-}
-
-.module-form h4 {
-  margin: 0 0 20px;
-  color: #1e293b;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #475569;
-  font-weight: 500;
-}
-
-.form-group input[type="text"] {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.cover-upload {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.cover-preview {
-  width: 120px;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.upload-btn {
-  display: inline-block;
-  padding: 8px 16px;
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #475569;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.upload-btn:hover {
-  background-color: #e2e8f0;
-}
-
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.form-actions button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.form-actions button[type="submit"] {
-  background-color: #2563eb;
-  color: white;
-  border: none;
-}
-
-.form-actions button[type="submit"]:hover {
-  background-color: #1d4ed8;
-}
-
-.form-actions button[type="button"] {
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-}
-
-.form-actions button[type="button"]:hover {
-  background-color: #e2e8f0;
-}
-
-.novel-module {
-  background-color: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  margin: 20px 0;
-  overflow: hidden;
-}
-
-.module-header h4 {
-  margin: 0;
-  color: #1e293b;
-  font-size: 1.1rem;
-}
-
-.module-chapters {
-  flex: 1;
-}
-
-.show-more-btn {
-  align-self: flex-start;
-  padding: 0.5rem 1rem;
-  background-color: #1a1a1a;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.show-more-btn:hover {
-  background-color: #333;
-}
-
-/* Dark theme support */
-:root.dark-mode {
-  .show-more-btn {
-    background-color: white;
-    color: #1a1a1a;
-  }
-
-  .show-more-btn:hover {
-    background-color: #f1f5f9;
-  }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .show-more-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.875rem;
-  }
-}
-
-/* Chapter reorder buttons styles */
-.chapter-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f8f9fa;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  margin-bottom: 0.5rem;
-  position: relative;
-}
-
-.chapter-reorder-buttons {
-  display: flex;
-  gap: 4px;
-  margin-right: 8px;
-  opacity: 0;
-  transition: opacity 0.2s;
-  width: 56px; /* Fixed width to maintain consistent spacing */
-  justify-content: flex-end;
-}
-
-.chapter-item:hover .chapter-reorder-buttons {
-  opacity: 1;
-}
-
-.chapter-reorder-buttons .reorder-btn {
-  width: 24px;
-  height: 24px;
-  padding: 4px;
-  background: #f0f0f0;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  transition: all 0.2s;
-}
-
-.chapter-reorder-buttons .reorder-btn.hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.chapter-reorder-buttons .reorder-btn:hover {
-  background: #e0e0e0;
-  color: #333;
-  transform: scale(1.1);
-}
-
-.chapter-reorder-buttons .reorder-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* Dark theme support */
-:root.dark-mode .chapter-reorder-buttons .reorder-btn {
-  background: #2a2a2a;
-  color: #999;
-}
-
-:root.dark-mode .chapter-reorder-buttons .reorder-btn:hover {
-  background: #333;
-  color: #fff;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .chapter-reorder-buttons {
+/* Pulse animation for NEW tag */
+@keyframes pulse {
+  0% {
     opacity: 1;
-    width: 48px; /* Slightly smaller on mobile */
   }
-  
-  .chapter-reorder-buttons .reorder-btn {
-    width: 20px;
-    height: 20px;
-    padding: 2px;
+  50% {
+    opacity: 0.7;
   }
-  
-  .chapter-reorder-buttons .reorder-btn svg {
-    width: 12px;
-    height: 12px;
-  }
-}
-
-.header-content h1 {
-  margin: 0;
-  color: #333;
-  font-size: 1.8rem;
-}
-
-.header-content h2 {
-  margin: 5px 0 0 0;
-  color: #666;
-  font-size: 1.2rem;
-}
-
-.header-content .module-title {
-  margin: 5px 0 0 0;
-  color: #333;
-  font-size: 1.2rem;
-  font-weight: 500;
-}
-
-/* Dark theme support */
-:root.dark-mode {
-  .header-content .module-title {
-    color: #333; /* Keep the original color in dark mode */
+  100% {
+    opacity: 1;
   }
 }
 

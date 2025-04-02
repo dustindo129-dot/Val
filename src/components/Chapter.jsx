@@ -90,7 +90,7 @@ const Chapter = () => {
 
   // Extract chapter from query data
   const chapter = chapterData?.chapter;
-  const novel = { title: chapter?.novelId?.title };
+  const novel = chapter?.novel || { title: "Novel" };
 
   // State management for error handling
   const [error, setError] = useState(null);
@@ -314,7 +314,6 @@ const Chapter = () => {
       <div className="chapter-header">
         <div className="chapter-navigation-header">
           <div className="title-section">
-            <Link to={`/novel/${novelId}`}>{novel.title}</Link>
             {user?.role === 'admin' && (
               <div className="admin-actions">
                 {!isEditing ? (
@@ -350,6 +349,10 @@ const Chapter = () => {
             )}
           </div>
           <div className="chapter-info">
+            <div className="novel-title">
+              <Link to={`/novel/${novelId}`}>{novel.title}</Link>
+
+            </div>
             {isEditing ? (
               <input
                 type="text"
