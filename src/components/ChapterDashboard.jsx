@@ -68,7 +68,7 @@ const ChapterDashboard = () => {
 
         // Fetch module data if moduleId exists
         if (moduleId) {
-          const moduleResponse = await fetch(`${config.backendUrl}/api/novels/${novelId}/modules/${moduleId}`);
+          const moduleResponse = await fetch(`${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}`);
           if (!moduleResponse.ok) {
             throw new Error('Module not found');
           }
@@ -139,8 +139,14 @@ const ChapterDashboard = () => {
         }
       );
 
-      // Invalidate both the modules query and the specific module query
+      console.log('Chapter created successfully:', chapterResponse.data);
+
+      // Invalidate all relevant cache queries to ensure UI updates
+      await queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
       await queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
+      
+      // Force a direct refetch of the novel data
+      await queryClient.refetchQueries({ queryKey: ['novel', novelId] });
       
       // Navigate back with state and replace to avoid history issues
       navigate(`/novel/${novelId}`, {

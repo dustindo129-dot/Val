@@ -9,11 +9,12 @@
  * - Latest chapters display
  * - Status indicators
  * - Responsive layout
+ * - Real-time updates via SSE
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import HotNovels from './components/HotNovels';
 import './Novel.css';
@@ -56,18 +57,120 @@ const Novel = ({ searchQuery = "" }) => {
   const navigate = useNavigate();
   const currentPage = parseInt(page) || 1;
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const queryClient = useQueryClient();
+  const eventSourceRef = useRef(null);
+
+  // Set up SSE connection for real-time updates
+  useEffect(() => {
+    // Close any existing connections
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    console.log('Setting up SSE connection...');
+    // Create new EventSource connection
+    const eventSource = new EventSource(`${config.backendUrl}/api/novels/sse`);
+    eventSourceRef.current = eventSource;
+
+    // Handle connection open
+    eventSource.onopen = () => {
+      console.log('SSE connection established');
+    };
+
+    // Handle general messages
+    eventSource.onmessage = (event) => {
+      console.log('SSE message received:', event.data);
+    };
+
+    // Handle update events (any change to novels or chapters)
+    eventSource.addEventListener('update', (event) => {
+      console.log('Novel update event received');
+      // Force immediate data refresh
+      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
+      queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
+      queryClient.refetchQueries({ queryKey: ['hotNovels'] });
+    });
+
+    // Handle novel deletion events
+    eventSource.addEventListener('novel_deleted', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log(`Novel deleted: "${data.title}" (ID: ${data.id})`);
+        
+        // Force immediate data refresh
+        queryClient.invalidateQueries({ queryKey: ['novels'] });
+        queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
+        queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
+        queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
+      } catch (error) {
+        console.error('Error processing novel deletion event:', error);
+      }
+    });
+
+    // Handle refresh events (manual refresh)
+    eventSource.addEventListener('refresh', (event) => {
+      console.log('Full refresh requested from server');
+      // Force immediate data refresh
+      queryClient.invalidateQueries();
+      queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
+      queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
+    });
+
+    // Handle new novel events
+    eventSource.addEventListener('new_novel', (event) => {
+      console.log('New novel added:', event.data);
+      // Force refetch of novel data
+      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
+    });
+
+    // Handle new chapter events
+    eventSource.addEventListener('new_chapter', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log(`New chapter "${data.chapterTitle}" added to "${data.novelTitle}"`);
+        
+        // Force refetch of novel data
+        queryClient.invalidateQueries({ queryKey: ['novels'] });
+        queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
+      } catch (error) {
+        console.error('Error parsing chapter event data:', error);
+      }
+    });
+
+    // Handle connection errors
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+      // Try to reconnect after a delay
+      setTimeout(() => {
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
+      }, 5000);
+    };
+
+    // Clean up on component unmount
+    return () => {
+      console.log('Closing SSE connection');
+      eventSource.close();
+    };
+  }, [currentPage, queryClient]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['novels', currentPage],
     queryFn: async () => {
-      const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}`);
+      // Add cache-busting parameter to ensure fresh data
+      const cacheBuster = new Date().getTime();
+      const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}&_cb=${cacheBuster}`);
       return response.data;
     },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    cacheTime: 1000 * 60 * 10, // Cache for 10 minutes
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchInterval: 1000 * 60 * 5, // Only refetch every 5 minutes
+    staleTime: 0, // Data is immediately stale
+    cacheTime: 1000 * 60, // Only cache for 1 minute max
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchInterval: 10000, // Refresh every 30 seconds if tab stays open
     keepPreviousData: true // Keep showing previous page data while loading next page
   });
 

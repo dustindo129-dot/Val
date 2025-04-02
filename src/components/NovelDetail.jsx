@@ -133,9 +133,9 @@ const ModuleForm = memo(({
       <div className="form-group">
         <label>Cover Image:</label>
         <div className="cover-upload">
-          {moduleForm.coverImage && (
+          {moduleForm.illustration && (
             <img
-              src={moduleForm.coverImage}
+              src={moduleForm.illustration}
               alt="Cover preview"
               className="cover-preview"
             />
@@ -169,7 +169,8 @@ const ModuleChapters = memo(({
   novelId, 
   moduleId, 
   user, 
-  handleChapterReorder 
+  handleChapterReorder,
+  handleChapterDelete
 }) => (
   <div className="chapter-list">
     {chapters.map((chapter, chapterIndex, chapterArray) => (
@@ -197,10 +198,19 @@ const ModuleChapters = memo(({
             </button>
           </div>
         )}
-        <Link to={`/novel/${novelId}/chapter/${chapter._id}`}>
+        <Link to={`/novel/${novelId}/chapter/${chapter._id}`} className="chapter-title-link">
           {chapter.title}
           {isChapterNew(chapter.createdAt) && <span className="new-tag">NEW</span>}
         </Link>
+        {user?.role === 'admin' && (
+          <button 
+            onClick={() => handleChapterDelete(moduleId, chapter._id)} 
+            className="delete-chapter-btn"
+            title="Delete chapter"
+          >
+            Delete
+          </button>
+        )}
         <span className="chapter-date">
           {formatDateUtil(chapter.createdAt)}
         </span>
@@ -268,11 +278,39 @@ const processDescription = (description, maxLength) => {
 // API functions
 const api = {
   fetchNovelWithModules: async (novelId) => {
-    const response = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
-    if (!response.data) {
-      throw new Error('No data received');
+    try {
+      console.log(`Fetching novel data for ID: ${novelId}`);
+      const response = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
+      
+      if (!response.data) {
+        throw new Error('No data received');
+      }
+      
+      console.log('Novel data received:', {
+        novelTitle: response.data.novel?.title,
+        moduleCount: response.data.modules?.length || 0
+      });
+      
+      // If we don't have modules, try fetching them separately
+      if (!response.data.modules || response.data.modules.length === 0) {
+        try {
+          console.log('Fetching modules separately');
+          const modulesResponse = await axios.get(`${config.backendUrl}/api/modules/${novelId}/modules-with-chapters`);
+          
+          if (modulesResponse.data && Array.isArray(modulesResponse.data)) {
+            console.log(`Retrieved ${modulesResponse.data.length} modules separately`);
+            response.data.modules = modulesResponse.data;
+          }
+        } catch (moduleError) {
+          console.error('Failed to fetch modules separately:', moduleError);
+        }
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching novel with modules:', error);
+      throw error;
     }
-    return response.data;
   },
 
   checkBookmarkStatus: async (username, novelId) => {
@@ -316,59 +354,142 @@ const api = {
     }
   },
 
-  reorderChapter: async ({ moduleId, chapterId, direction }) => {
-    const response = await axios.put(
-      `${config.backendUrl}/api/novels/${novelId}/modules/${moduleId}/chapters/reorder`,
-      {
-        chapterId,
-        direction
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+  reorderChapter: async ({ novelId, moduleId, chapterId, direction }) => {
+    console.log('Reordering chapter:', { novelId, moduleId, chapterId, direction });
+    try {
+      // Use the correct API endpoint path
+      const response = await axios.put(
+        `${config.backendUrl}/api/${novelId}/modules/${moduleId}/chapters/${chapterId}/reorder`,
+        {
+          direction
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        );
-    return response.data;
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Chapter reordering error:', error);
+      throw error;
+    }
   },
 
   createModule: async (novelId, moduleData) => {
-        const response = await axios.post(
-      `${config.backendUrl}/api/novels/${novelId}/modules`,
-      moduleData,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/modules/${novelId}/modules`,
+        {
+          title: moduleData.title,
+          illustration: moduleData.illustration
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        );
-    return response.data;
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create module:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   updateModule: async (novelId, moduleId, moduleData) => {
-    const response = await axios.put(
-      `${config.backendUrl}/api/novels/${novelId}/modules/${moduleId}`,
-      moduleData,
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+    try {
+      const response = await axios.put(
+        `${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}`,
+        {
+          title: moduleData.title,
+          illustration: moduleData.illustration
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
         }
-      }
-    );
-    return response.data;
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update module:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   uploadModuleCover: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', 'val-js'); // Your Cloudinary upload preset
+    formData.append('upload_preset', config.cloudinary.uploadPresets.illustration);
+    formData.append('folder', 'novel-illustrations');
 
     const response = await axios.post(
-      'https://api.cloudinary.com/v1_1/your-cloud-name/image/upload',
+      `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`,
       formData
     );
     return response.data.secure_url;
-  }
+  },
+
+  updateChapterOrder: async ({ novelId, moduleId, chapterId, newOrder }) => {
+    try {
+      // Try the direct chapter update endpoint
+      const response = await axios.put(
+        `${config.backendUrl}/api/chapters/${chapterId}`,
+        {
+          order: newOrder,
+          moduleId: moduleId  // Include moduleId as it might be required
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update chapter order via chapters API:', error.response?.data || error.message);
+      
+      // Try an alternative endpoint as fallback
+      try {
+        const alternativeResponse = await axios.put(
+          `${config.backendUrl}/api/novels/${novelId}/chapters/${chapterId}`,
+          {
+            order: newOrder,
+            moduleId: moduleId
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        return alternativeResponse.data;
+      } catch (altError) {
+        console.error('Failed with alternative endpoint too:', altError.response?.data || altError.message);
+        throw altError;
+      }
+    }
+  },
+
+  deleteChapter: async (chapterId) => {
+    try {
+      const response = await axios.delete(
+        `${config.backendUrl}/api/chapters/${chapterId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete chapter:', error);
+      throw error;
+    }
+  },
 };
 
 // Handlers moved outside component
@@ -376,7 +497,7 @@ const handleModuleFormToggle = (setShowModuleForm, setModuleForm, setEditingModu
   setShowModuleForm(prev => !prev);
     setModuleForm({
       title: '',
-      coverImage: '',
+      illustration: '',
       loading: false,
       error: ''
     });
@@ -408,32 +529,38 @@ const NovelDetail = () => {
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [moduleForm, setModuleForm] = useState({
     title: '',
-    coverImage: '',
-      loading: false,
-      error: ''
-    });
+    illustration: '',
+    loading: false,
+    error: ''
+  });
   const [editingModule, setEditingModule] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     description: false,
     announcement: false
   });
 
-  // Single query for both novel and modules data
-  const { 
-    data: novelData,
-    isLoading,
-    error
-  } = useQuery({
+  // Fetch novel data with modules
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['novel', novelId],
-    queryFn: () => api.fetchNovelWithModules(novelId),
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    cacheTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
-    refetchOnMount: 'always', // Always refetch on mount
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    queryFn: async () => {
+      // Add cache-busting parameter to prevent browser caching
+      const cacheBuster = new Date().getTime();
+      const response = await axios.get(
+        `${config.backendUrl}/api/novels/${novelId}?_cb=${cacheBuster}`,
+        {
+          headers: {
+            Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '',
+          },
+        }
+      );
+      return response.data;
+    },
+    staleTime: 10000, // 10 seconds
+    refetchOnMount: true
   });
 
-  const novel = novelData?.novel;
-  const modules = novelData?.modules || [];
+  const novel = data?.novel;
+  const modules = data?.modules || [];
 
   const {
     data: isBookmarked,
@@ -470,10 +597,10 @@ const NovelDetail = () => {
     }
   });
 
-  // Chapter reorder mutation
-  const chapterReorderMutation = useMutation({
-    mutationFn: api.reorderChapter,
-    onMutate: async ({ moduleId, chapterId, direction }) => {
+  // Direct chapter update mutation
+  const updateChapterOrderMutation = useMutation({
+    mutationFn: api.updateChapterOrder,
+    onMutate: async ({ novelId, moduleId, chapterId, newOrder }) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['modules', novelId] });
 
@@ -487,22 +614,18 @@ const NovelDetail = () => {
         return old.map(module => {
           if (module._id === moduleId) {
             const chapters = [...module.chapters];
-          const currentIndex = chapters.findIndex(ch => ch._id === chapterId);
-          const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-
-          if (currentIndex === -1 || newIndex < 0 || newIndex >= chapters.length) {
-              return module;
-          }
-
-          // Swap chapters
-          [chapters[currentIndex], chapters[newIndex]] = [chapters[newIndex], chapters[currentIndex]];
-          
-          // Update prev/next references
-          chapters.forEach((chapter, index) => {
-            chapter.prevChapter = index > 0 ? chapters[index - 1] : null;
-            chapter.nextChapter = index < chapters.length - 1 ? chapters[index + 1] : null;
-          });
-
+            const chapterIndex = chapters.findIndex(ch => ch._id === chapterId);
+            
+            if (chapterIndex !== -1) {
+              chapters[chapterIndex] = {
+                ...chapters[chapterIndex],
+                order: newOrder
+              };
+              
+              // Sort chapters by order
+              chapters.sort((a, b) => a.order - b.order);
+            }
+            
             return { ...module, chapters };
           }
           return module;
@@ -512,30 +635,62 @@ const NovelDetail = () => {
       return { previousModules };
     },
     onError: (err, variables, context) => {
-      // Revert back to the previous value if there's an error
-      queryClient.setQueryData(['modules', novelId], context.previousModules);
-      console.error('Failed to reorder chapters:', err);
+      console.error('Failed to update chapter order:', err);
+      // Revert to previous state on error
+      if (context?.previousModules) {
+        queryClient.setQueryData(['modules', variables.novelId], context.previousModules);
+      }
     },
-    onSettled: () => {
+    onSettled: (data, error, variables) => {
       // Refetch to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
+      if (variables && variables.novelId) {
+        queryClient.invalidateQueries({ queryKey: ['modules', variables.novelId] });
+      }
     },
   });
 
   // Module mutations
   const createModuleMutation = useMutation({
     mutationFn: (moduleData) => api.createModule(novelId, moduleData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['modules', novelId]);
+    onSuccess: (data) => {
+      console.log('Module created successfully:', data);
+      
+      // First update the modules cache with the new module
+      queryClient.setQueryData(['novel', novelId], (oldData) => {
+        if (!oldData) return oldData;
+        
+        // Create a copy of the current modules and add the new one
+        const updatedModules = oldData.modules ? [...oldData.modules] : [];
+        
+        // Add the new module to the list, ensuring it has an empty chapters array
+        const newModule = {
+          ...data,
+          chapters: []
+        };
+        updatedModules.push(newModule);
+        
+        return {
+          ...oldData,
+          modules: updatedModules
+        };
+      });
+      
+      // Then invalidate the query to fetch fresh data
+      queryClient.invalidateQueries(['novel', novelId]);
+      
+      // Hide the form
       setShowModuleForm(false);
+      
+      // Reset form data
       setModuleForm({
         title: '',
-        coverImage: '',
+        illustration: '',
         loading: false,
         error: ''
       });
     },
     onError: (error) => {
+      console.error('Failed to create module:', error);
       setModuleForm(prev => ({
         ...prev,
         error: error.response?.data?.message || 'Failed to create module'
@@ -545,18 +700,64 @@ const NovelDetail = () => {
 
   const updateModuleMutation = useMutation({
     mutationFn: ({ moduleId, moduleData }) => api.updateModule(novelId, moduleId, moduleData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['modules', novelId]);
-      setShowModuleForm(false);
-    setModuleForm({
-        title: '',
-        coverImage: '',
-      loading: false,
-      error: ''
-    });
-      setEditingModule(null);
+    onMutate: async ({ moduleId, moduleData }) => {
+      // Cancel any outgoing refetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['novel', novelId] });
+      
+      // Snapshot the previous value
+      const previousNovelData = queryClient.getQueryData(['novel', novelId]);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['novel', novelId], (oldData) => {
+        if (!oldData) return oldData;
+        
+        // Update the module in the cache
+        const updatedModules = oldData.modules?.map(module => {
+          if (module._id === moduleId) {
+            return { 
+              ...module, 
+              title: moduleData.title,
+              illustration: moduleData.illustration || module.illustration
+            };
+          }
+          return module;
+        }) || [];
+        
+        return {
+          ...oldData,
+          modules: updatedModules
+        };
+      });
+      
+      return { previousNovelData };
     },
-    onError: (error) => {
+    onSuccess: (data, variables) => {
+      console.log(`Module ${variables.moduleId} updated successfully:`, data);
+      
+      // Clear the form and close it
+      setShowModuleForm(false);
+      setModuleForm({
+        title: '',
+        illustration: '',
+        loading: false,
+        error: ''
+      });
+      setEditingModule(null);
+      
+      // Force a refetch to ensure data is fresh
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+        queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+      }, 300);
+    },
+    onError: (error, variables, context) => {
+      console.error('Failed to update module:', error);
+      
+      // Revert to previous state on error
+      if (context?.previousNovelData) {
+        queryClient.setQueryData(['novel', novelId], context.previousNovelData);
+      }
+      
       setModuleForm(prev => ({
         ...prev,
         error: error.response?.data?.message || 'Failed to update module'
@@ -574,7 +775,7 @@ const NovelDetail = () => {
       const imageUrl = await api.uploadModuleCover(file);
       setModuleForm(prev => ({
         ...prev,
-        coverImage: imageUrl,
+        illustration: imageUrl,
         loading: false
       }));
     } catch (error) {
@@ -601,7 +802,7 @@ const NovelDetail = () => {
 
     const moduleData = {
       title: moduleForm.title,
-      coverImage: moduleForm.coverImage
+      illustration: moduleForm.illustration
     };
 
     try {
@@ -613,18 +814,22 @@ const NovelDetail = () => {
       } else {
         await createModuleMutation.mutateAsync(moduleData);
       }
+      
+      // Force a manual refetch of the novel data to ensure UI is up to date
+      await queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+      
     } catch (error) {
       console.error('Error submitting module:', error);
       // Error handling is done in mutation callbacks
     }
-  }, [moduleForm, editingModule, createModuleMutation, updateModuleMutation]);
+  }, [moduleForm, editingModule, createModuleMutation, updateModuleMutation, novelId, queryClient]);
 
   // Handler for module form toggle
   const handleModuleFormToggle = useCallback(() => {
     setShowModuleForm(prev => !prev);
     setModuleForm({
       title: '',
-      coverImage: '',
+      illustration: '',
       loading: false,
       error: ''
     });
@@ -636,7 +841,7 @@ const NovelDetail = () => {
     setEditingModule(module);
     setModuleForm({
       title: module.title,
-      coverImage: module.coverImage,
+      illustration: module.illustration,
       loading: false,
       error: ''
     });
@@ -650,8 +855,20 @@ const NovelDetail = () => {
     }
 
     try {
+      // Optimistically update UI by removing the module immediately
+      queryClient.setQueryData(['novel', novelId], (oldData) => {
+        if (!oldData) return oldData;
+        
+        return {
+          ...oldData,
+          modules: oldData.modules.filter(module => module._id !== moduleId)
+        };
+      });
+
+      // Then delete from the server with cache busting
+      const cacheBuster = new Date().getTime();
       await axios.delete(
-        `${config.backendUrl}/api/novels/${novelId}/modules/${moduleId}`,
+        `${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}?_cb=${cacheBuster}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -659,21 +876,23 @@ const NovelDetail = () => {
         }
       );
 
-      // Immediately remove the deleted module from the cache
-      queryClient.setQueryData(['modules', novelId], (old) => {
-        if (!old) return old;
-        return old.filter(module => module._id !== moduleId);
-      });
-
-      // Then invalidate to refetch fresh data
-      await queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
-      await queryClient.refetchQueries({ queryKey: ['modules', novelId] });
+      console.log(`Module ${moduleId} deleted successfully`);
+      
+      // Force a refetch to ensure data is fresh
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+        refetch();
+      }, 300);
 
     } catch (error) {
       console.error('Error deleting module:', error);
       alert('Failed to delete module');
+      
+      // Refresh data on error to ensure UI is in sync
+      queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      refetch();
     }
-  }, [novelId, queryClient]);
+  }, [novelId, queryClient, refetch]);
 
   // Memoized values with optimized sorting
   const sortedModules = useMemo(() => {
@@ -714,16 +933,135 @@ const NovelDetail = () => {
   // Handler for chapter reordering
   const handleChapterReorder = useCallback(async (moduleId, chapterId, direction) => {
     try {
-      await chapterReorderMutation.mutateAsync({
-        moduleId,
-        chapterId,
-        direction,
-        novelId // Add this to the mutation variables
+      // Find the module and chapter
+      const module = sortedModules.find(m => m._id === moduleId);
+      if (!module || !module.chapters) {
+        console.error('Module or chapters not found');
+        return;
+      }
+      
+      const chapters = [...module.chapters];
+      const currentIndex = chapters.findIndex(ch => ch._id === chapterId);
+      if (currentIndex === -1) {
+        console.error('Chapter not found');
+        return;
+      }
+      
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= chapters.length) {
+        console.error('Invalid target index', targetIndex);
+        return;
+      }
+      
+      // Get the current and target chapters
+      const currentChapter = chapters[currentIndex];
+      const targetChapter = chapters[targetIndex];
+      
+      // Set orders based on index if not defined
+      const currentOrder = currentChapter.order !== undefined ? currentChapter.order : currentIndex;
+      const targetOrder = targetChapter.order !== undefined ? targetChapter.order : targetIndex;
+      
+      // Update UI immediately for better feedback
+      const tempModules = [...sortedModules];
+      tempModules.forEach(m => {
+        if (m._id === moduleId) {
+          const tempChapters = [...m.chapters];
+          const currentChapterIndex = tempChapters.findIndex(ch => ch._id === currentChapter._id);
+          const targetChapterIndex = tempChapters.findIndex(ch => ch._id === targetChapter._id);
+          
+          if (currentChapterIndex !== -1 && targetChapterIndex !== -1) {
+            // Swap values
+            [tempChapters[currentChapterIndex].order, tempChapters[targetChapterIndex].order] = 
+              [tempChapters[targetChapterIndex].order, tempChapters[currentChapterIndex].order];
+            
+            // Resort chapters
+            tempChapters.sort((a, b) => {
+              const orderA = a.order !== undefined ? a.order : 0;
+              const orderB = b.order !== undefined ? b.order : 0;
+              return orderA - orderB;
+            });
+            
+            m.chapters = tempChapters;
+          }
+        }
       });
+      
+      // Optimistically update UI
+      queryClient.setQueryData(['modules', novelId], tempModules);
+      
+      // Update the current chapter's order
+      await updateChapterOrderMutation.mutateAsync({
+        novelId,
+        moduleId,
+        chapterId: currentChapter._id,
+        newOrder: targetOrder
+      });
+      
+      // Update the target chapter's order
+      await updateChapterOrderMutation.mutateAsync({
+        novelId,
+        moduleId,
+        chapterId: targetChapter._id,
+        newOrder: currentOrder
+      });
+      
+      // Refetch data to ensure we have the latest
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
+      }, 500);
+      
     } catch (err) {
       console.error('Failed to reorder chapter:', err);
+      // Refresh data on error to ensure UI is in sync
+      queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
     }
-  }, [chapterReorderMutation]);
+  }, [sortedModules, novelId, updateChapterOrderMutation, queryClient]);
+
+  // Handler for chapter delete
+  const handleChapterDelete = useCallback(async (moduleId, chapterId) => {
+    if (!window.confirm('Are you sure you want to delete this chapter?')) {
+      return;
+    }
+
+    try {
+      // Update UI immediately for better feedback
+      queryClient.setQueryData(['novel', novelId], (oldData) => {
+        if (!oldData) return oldData;
+        
+        // Create a copy of the modules and remove the chapter
+        const updatedModules = oldData.modules?.map(module => {
+          if (module._id === moduleId) {
+            return {
+              ...module,
+              chapters: module.chapters.filter(ch => ch._id !== chapterId)
+            };
+          }
+          return module;
+        }) || [];
+        
+        return {
+          ...oldData,
+          modules: updatedModules
+        };
+      });
+      
+      // Delete the chapter from the server
+      await api.deleteChapter(chapterId);
+      
+      // After successful deletion, invalidate and refetch
+      queryClient.invalidateQueries(['novel', novelId]);
+      setTimeout(() => {
+        queryClient.refetchQueries(['novel', novelId]);
+      }, 300);
+
+    } catch (error) {
+      console.error('Error deleting chapter:', error);
+      alert('Failed to delete chapter');
+      // Refresh data on error to ensure UI is in sync
+      queryClient.invalidateQueries(['novel', novelId]);
+      queryClient.refetchQueries(['novel', novelId]);
+    }
+  }, [novelId, queryClient]);
 
   // Render methods
   const renderDescription = useMemo(() => {
@@ -923,7 +1261,7 @@ const NovelDetail = () => {
                     setShowModuleForm(true);
                     setModuleForm({
                       title: '',
-                      coverImage: '',
+                      illustration: '',
                       loading: false,
                       error: ''
                     });
@@ -955,7 +1293,7 @@ const NovelDetail = () => {
                   <div key={module._id} className="module-container">
                     <div className="module-left">
                       <img 
-                        src={module.coverImage || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
+                        src={module.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
                         alt={module.title} 
                         className="module-cover"
                       />
@@ -1025,6 +1363,7 @@ const NovelDetail = () => {
                             moduleId={module._id}
                             user={user}
                             handleChapterReorder={handleChapterReorder}
+                            handleChapterDelete={handleChapterDelete}
                           />
                         )}
                       </div>

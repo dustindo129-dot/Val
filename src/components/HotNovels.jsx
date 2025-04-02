@@ -64,14 +64,16 @@ const HotNovels = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['hotNovels'],
     queryFn: async () => {
-      const response = await axios.get(`${config.backendUrl}/api/novels/hot`);
+      // Add cache busting parameter to force fresh data
+      const cacheBuster = new Date().getTime();
+      const response = await axios.get(`${config.backendUrl}/api/novels/hot?_cb=${cacheBuster}`);
       return response.data.novels || [];
     },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    cacheTime: 1000 * 60 * 10, // Cache for 10 minutes
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchInterval: 1000 * 60 * 5 // Only refetch every 5 minutes
+    staleTime: 0, // Data is immediately stale
+    cacheTime: 0, // Don't cache at all
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchInterval: 10000 // Refresh every 10 seconds
   });
 
   if (isLoading) {

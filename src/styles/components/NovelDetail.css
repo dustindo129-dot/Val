@@ -83,7 +83,6 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  text-align: center;
   text-decoration: none;
 }
 
@@ -312,12 +311,14 @@
 /* Chapter item styles - Individual chapter display */
 .chapter-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   padding: 10px;
   background-color: #f9fafb;
   border-radius: 4px;
   transition: background-color 0.2s;
   margin-bottom: 8px;
+  position: relative;
 }
 
 .chapter-item:hover {
@@ -338,15 +339,20 @@
   flex-shrink: 0;
 }
 
-.chapter-item a {
+.chapter-item .chapter-title-link {
   flex: 1;
+  min-width: 0; /* Allow link to shrink below its content size */
   color: #1f2937;
   text-decoration: none;
   font-weight: 500;
   font-size: 1rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  padding-right: 10px;
+  white-space: normal; /* Allow text to wrap */
+  word-break: break-word; /* Break words if needed */
 }
 
 .chapter-item .new-tag {
@@ -357,12 +363,61 @@
   background-color: #ff3860;
   color: white;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.delete-chapter-btn {
+  margin-left: auto;
+  margin-right: 10px;
+  padding: 4px 8px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  flex-shrink: 0;
+  width: 60px;
+  text-align: center;
+}
+
+.delete-chapter-btn:hover {
+  background-color: #dc2626;
 }
 
 .chapter-date {
   color: #6b7280;
   font-size: 0.9rem;
   white-space: nowrap;
+  flex-shrink: 0;
+  width: 100px;
+  text-align: right;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .chapter-item {
+    flex-wrap: wrap;
+  }
+  
+  .chapter-item .chapter-title-link {
+    order: 1;
+    width: 100%;
+    margin: 8px 0;
+  }
+  
+  .delete-chapter-btn {
+    order: 2;
+    margin-left: 45px;
+  }
+  
+  .chapter-date {
+    order: 3;
+    margin-left: auto;
+    margin-right: 0;
+    width: auto;
+  }
 }
 
 /* Modules list */
@@ -395,13 +450,26 @@
 
 /* Responsive styles */
 @media (max-width: 768px) {
-  .chapter-item {
-    flex-wrap: wrap;
+  .chapters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
   
-  .chapter-date {
-    margin-left: 45px;
-    margin-top: 5px;
+  .add-module-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .module-controls {
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  
+  .edit-module-btn,
+  .delete-module-btn,
+  .add-chapter-btn {
+    flex: 1;
   }
 }
 
@@ -649,98 +717,6 @@
   height: 18px;
 }
 
-/* Chapter item styling to match the target design */
-.chapter-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  background-color: #f9fafb;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  margin-bottom: 8px;
-}
-
-.chapter-item:hover {
-  background-color: #f3f4f6;
-}
-
-.chapter-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background-color: #3b82f6;
-  color: white;
-  border-radius: 4px;
-  font-weight: 600;
-  margin-right: 8px;
-  flex-shrink: 0;
-}
-
-.chapter-reorder-buttons {
-  display: flex;
-  gap: 4px;
-  margin-right: 10px;
-}
-
-.chapter-reorder-buttons .reorder-btn {
-  width: 24px;
-  height: 24px;
-  padding: 4px;
-  background-color: #f3f4f6;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
-  transition: all 0.2s;
-}
-
-.chapter-reorder-buttons .reorder-btn.hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.chapter-reorder-buttons .reorder-btn:hover {
-  background-color: #e5e7eb;
-  color: #374151;
-}
-
-.chapter-reorder-buttons .reorder-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-.chapter-item a {
-  flex: 1;
-  color: #1f2937;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.chapter-item .new-tag {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  background-color: #ff3860;
-  color: white;
-  animation: pulse 2s infinite;
-}
-
-.chapter-date {
-  color: #6b7280;
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
 /* Module header styles */
 .module-header {
   margin-bottom: 15px;
@@ -748,7 +724,7 @@
   padding-bottom: 10px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .module-header h3 {
@@ -756,11 +732,20 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #1f2937;
+  max-width: 70%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
 .module-controls {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
+  min-width: 180px;
+  justify-content: flex-end;
+  margin-top: 5px;
 }
 
 .edit-module-btn,
@@ -899,6 +884,43 @@
   100% {
     opacity: 1;
   }
+}
+
+/* Chapter reorder buttons */
+.chapter-reorder-buttons {
+  display: flex;
+  gap: 4px;
+  margin-right: 10px;
+}
+
+.chapter-reorder-buttons .reorder-btn {
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.chapter-reorder-buttons .reorder-btn.hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.chapter-reorder-buttons .reorder-btn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.chapter-reorder-buttons .reorder-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 
