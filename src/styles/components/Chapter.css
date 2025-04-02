@@ -485,4 +485,19 @@
   .cancel-btn {
     width: 100%;
   }
+}
+
+/* Add this to the existing styles */
+.nav-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #999;
+  background-color: #f0f0f0;
+}
+
+/* Add a hover effect for disabled buttons */
+.nav-button-disabled:hover {
+  background-color: #f0f0f0;
+  transform: none;
+  box-shadow: none;
 } 

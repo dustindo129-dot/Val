@@ -18,7 +18,7 @@
  * - Role-based access control
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../styles/components/AdminDashboard.css';
@@ -27,7 +27,7 @@ import { Editor } from '@tinymce/tinymce-react';
 import { Link } from 'react-router-dom';
 import { useNovelStatus } from '../context/NovelStatusContext';
 import { useNovel } from '../context/NovelContext';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 /**
  * AdminDashboard Component
@@ -41,6 +41,37 @@ const AdminDashboard = () => {
   const { updateNovelStatus } = useNovelStatus();
   const { updateNovel } = useNovel();
   const queryClient = useQueryClient();
+
+  // Clear cache on component mount (page refresh)
+  useEffect(() => {
+    // First, completely clear the novels cache
+    queryClient.removeQueries(['novels']);
+    
+    // Manually fetch fresh data
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch novels');
+        }
+        
+        const data = await response.json();
+        const novelsList = Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
+        
+        // Update the cache with fresh data
+        queryClient.setQueryData(['novels'], novelsList);
+      } catch (error) {
+        console.error('Error fetching novels:', error);
+      }
+    };
+    
+    fetchData();
+  }, [queryClient]);
 
   // Genre categories and options
   const genreCategories = {
@@ -70,13 +101,12 @@ const AdminDashboard = () => {
   };
 
   // State management for novels
-  const [novels, setNovels] = useState([]);
   const [selectedNovel, setSelectedNovel] = useState(null);
   const [newNovel, setNewNovel] = useState({ 
     title: '', 
     alternativeTitles: '',
     author: '', 
-    staff: '',  // Ensure staff has initial empty string
+    staff: '',
     genres: [],
     description: '',
     note: '',
@@ -97,32 +127,28 @@ const AdminDashboard = () => {
   const editorRef = useRef(null);
   const noteEditorRef = useRef(null);
 
-  // Fetch novels on component mount
-  useEffect(() => {
-    fetchNovels();
-  }, []);
-
-  /**
-   * Fetches all novels from the API
-   */
-  const fetchNovels = async () => {
-    try {
-      const response = await fetch(`${config.backendUrl}/api/novels?limit=1000`);
+  // Fetch novels using React Query
+  const { data: novels = [] } = useQuery({
+    queryKey: ['novels'],
+    queryFn: async () => {
+      const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&t=${Date.now()}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
       if (!response.ok) {
         throw new Error('Failed to fetch novels');
       }
+      
       const data = await response.json();
-      if (Array.isArray(data.novels)) {
-        setNovels(data.novels);
-      } else {
-        console.error('Invalid novels data:', data);
-        setError('Invalid response format from server');
-      }
-    } catch (err) {
-      console.error('Error fetching novels:', err);
-      setError('Failed to fetch novels');
-    }
-  };
+      return Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
+    },
+    staleTime: 0, // Data is considered stale immediately
+    cacheTime: 0, // Disable caching completely
+    refetchOnMount: 'always', // Always refetch on mount
+    refetchOnWindowFocus: true
+  });
 
   /**
    * Fetches chapters for a specific novel
@@ -409,24 +435,31 @@ const AdminDashboard = () => {
 
       const responseData = await response.json();
       
-      // Update the novels list immediately
-      if (editingNovel) {
-        // Update existing novel
-        setNovels(prevNovels => 
-          prevNovels.map(novel => 
-            novel._id === editingNovel._id ? responseData : novel
-          )
-        );
-        updateNovel(editingNovel._id, responseData);
-        queryClient.invalidateQueries(['novel', editingNovel._id]);
-      } else {
-        // Add new novel to the list
-        setNovels(prevNovels => [...prevNovels, responseData]);
-      }
-      
-      // Refresh the full list from server
-      await fetchNovels();
+      // Reset form first
       resetForm();
+      
+      // Force clear and refetch to ensure UI is in sync
+      // We use remove and refetch instead of invalidate to ensure fresh data
+      queryClient.removeQueries(['novels']);
+      
+      // Manually fetch fresh data to update the UI immediately
+      try {
+        const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json();
+          const novelsList = Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
+          
+          // Update cache with fresh data that includes the new novel
+          queryClient.setQueryData(['novels'], novelsList);
+        }
+      } catch (fetchError) {
+        console.error('Error fetching latest novels:', fetchError);
+      }
     } catch (err) {
       console.error('Error submitting novel:', err);
       setError(err.message);
@@ -472,6 +505,18 @@ const AdminDashboard = () => {
     if (!window.confirm('Are you sure you want to delete this novel?')) return;
 
     try {
+      // Get current cache data
+      const previousData = queryClient.getQueryData(['novels']) || [];
+      
+      // Create updated list without the deleted novel
+      const updatedNovels = Array.isArray(previousData) 
+        ? previousData.filter(novel => novel._id !== id) 
+        : [];
+      
+      // Immediately update the cache
+      queryClient.setQueryData(['novels'], updatedNovels);
+      
+      // Perform the actual deletion
       const response = await fetch(`${config.backendUrl}/api/novels/${id}`, {
         method: 'DELETE',
         headers: {
@@ -479,10 +524,27 @@ const AdminDashboard = () => {
         }
       });
 
-      if (!response.ok) throw new Error('Failed to delete novel');
+      if (!response.ok) {
+        // Revert cache if deletion failed
+        queryClient.setQueryData(['novels'], previousData);
+        throw new Error('Failed to delete novel');
+      }
+
+      // If the deleted novel was selected, clear the selection
+      if (selectedNovel?._id === id) {
+        setSelectedNovel(null);
+        setChapters([]);
+      }
+
+      // Remove all cached data related to this novel
+      queryClient.removeQueries(['novel', id]);
       
-      await fetchNovels();
+      // Lock in our updated novels list - this is the key to making the deletion stick
+      queryClient.setQueryData(['novels'], updatedNovels);
+      
+      setError('');
     } catch (err) {
+      console.error('Error deleting novel:', err);
       setError(err.message);
     }
   };
@@ -518,11 +580,14 @@ const AdminDashboard = () => {
    */
   const handleStatusChange = async (id, status) => {
     try {
-      // Optimistically update UI first
-      setNovels(prevNovels => 
-        prevNovels.map(novel => 
-          novel._id === id ? { ...novel, status } : novel
-        )
+      // Get current cache data
+      const previousData = queryClient.getQueryData(['novels']);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['novels'], old => 
+        Array.isArray(old) 
+          ? old.map(novel => novel._id === id ? { ...novel, status } : novel)
+          : []
       );
 
       if (selectedNovel?._id === id) {
@@ -532,7 +597,7 @@ const AdminDashboard = () => {
       // Update the status in the context
       updateNovelStatus(id, status);
 
-      // Then send request to server
+      // Send request to server
       const response = await fetch(`${config.backendUrl}/api/novels/${id}`, {
         method: 'PUT',
         headers: {
@@ -543,34 +608,28 @@ const AdminDashboard = () => {
       });
 
       if (!response.ok) {
+        // If update failed, revert the cache to previous state
+        queryClient.setQueryData(['novels'], previousData);
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update novel status');
       }
       
-      // Fetch updated novel data to ensure we have the latest state
+      // Get updated novel data
       const updatedNovel = await response.json();
       
-      // Update state with the complete novel data from server
-      setNovels(prevNovels => 
-        prevNovels.map(novel => 
-          novel._id === id ? { ...novel, ...updatedNovel } : novel
-        )
+      // Update cache with complete novel data
+      queryClient.setQueryData(['novels'], old => 
+        Array.isArray(old) 
+          ? old.map(novel => novel._id === id ? { ...novel, ...updatedNovel } : novel)
+          : []
       );
 
       if (selectedNovel?._id === id) {
         setSelectedNovel(prev => ({ ...prev, ...updatedNovel }));
       }
     } catch (err) {
-      // Revert optimistic update on error
-      setNovels(prevNovels => 
-        prevNovels.map(novel => 
-          novel._id === id ? { ...novel, status: novel.status } : novel
-        )
-      );
-
-      if (selectedNovel?._id === id) {
-        setSelectedNovel(prev => ({ ...prev, status: prev.status }));
-      }
+      // Revert cache on error
+      queryClient.setQueryData(['novels'], previousData);
 
       console.error('Error updating status:', err);
       setError(err.message);

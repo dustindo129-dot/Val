@@ -50,6 +50,11 @@ const Chapter = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Reset isNavigating when chapterId changes (after successful navigation)
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [chapterId]);
+
   // Query for chapter data with its context
   const { data: chapterData, error: chapterError, isLoading } = useQuery({
     queryKey: ['chapter', chapterId],
@@ -72,7 +77,7 @@ const Chapter = () => {
         params: {
           contentType: 'chapters',
           contentId: `${novelId}-${chapterId}`,
-          isDeleted: { $ne: true }
+          includeDeleted: false
         }
       });
       return res.data;
@@ -125,28 +130,54 @@ const Chapter = () => {
    * Handles navigation with query cache
    */
   const handlePrevChapter = async () => {
-    if (chapter?.prevChapter) {
+    if (chapter?.prevChapter && chapter.prevChapter._id) {
+      console.log('Navigating to previous chapter:', chapter.prevChapter);
       setIsNavigating(true);
       await scrollToTop();
-      // Prefetch next chapter data
-      await queryClient.prefetchQuery({
-        queryKey: ['chapter', chapter.prevChapter._id],
-        queryFn: () => axios.get(`${config.backendUrl}/api/chapters/${chapter.prevChapter._id}`)
-      });
-      navigate(`/novel/${novelId}/chapter/${chapter.prevChapter._id}`);
+      try {
+        // Prefetch next chapter data
+        await queryClient.prefetchQuery({
+          queryKey: ['chapter', chapter.prevChapter._id],
+          queryFn: async () => {
+            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.prevChapter._id}`);
+            return response.data;
+          }
+        });
+        navigate(`/novel/${novelId}/chapter/${chapter.prevChapter._id}`);
+      } catch (error) {
+        console.error('Error navigating to previous chapter:', error);
+        setError('Failed to navigate to previous chapter.');
+        setIsNavigating(false);
+      }
+    } else {
+      console.warn('No previous chapter available:', chapter?.prevChapter);
+      setIsNavigating(false);
     }
   };
 
   const handleNextChapter = async () => {
-    if (chapter?.nextChapter) {
+    if (chapter?.nextChapter && chapter.nextChapter._id) {
+      console.log('Navigating to next chapter:', chapter.nextChapter);
       setIsNavigating(true);
       await scrollToTop();
-      // Prefetch next chapter data
-      await queryClient.prefetchQuery({
-        queryKey: ['chapter', chapter.nextChapter._id],
-        queryFn: () => axios.get(`${config.backendUrl}/api/chapters/${chapter.nextChapter._id}`)
-      });
-      navigate(`/novel/${novelId}/chapter/${chapter.nextChapter._id}`);
+      try {
+        // Prefetch next chapter data
+        await queryClient.prefetchQuery({
+          queryKey: ['chapter', chapter.nextChapter._id],
+          queryFn: async () => {
+            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.nextChapter._id}`);
+            return response.data;
+          }
+        });
+        navigate(`/novel/${novelId}/chapter/${chapter.nextChapter._id}`);
+      } catch (error) {
+        console.error('Error navigating to next chapter:', error);
+        setError('Failed to navigate to next chapter.');
+        setIsNavigating(false);
+      }
+    } else {
+      console.warn('No next chapter available:', chapter?.nextChapter);
+      setIsNavigating(false);
     }
   };
 
@@ -211,8 +242,13 @@ const Chapter = () => {
         }
       );
       
+      // Invalidate relevant queries
+      await queryClient.invalidateQueries(['chapter', chapterId]);
+      await queryClient.invalidateQueries(['novel', novelId]);
+      await queryClient.invalidateQueries(['modules', novelId]);
+      
       // Navigate back to novel page after deletion
-      navigate(`/novel/${novelId}`);
+      navigate(`/novel/${novelId}`, { replace: true });
     } catch (err) {
       console.error('Failed to delete chapter:', err);
       setError('Failed to delete chapter. Please try again.');
@@ -338,21 +374,23 @@ const Chapter = () => {
         </div>
       </div>
 
-      {/* Top chapter navigation */}
+      {/* Chapter navigation */}
       <div className="chapter-navigation">
         <button 
           onClick={handlePrevChapter} 
           disabled={!chapter?.prevChapter || isNavigating || isEditing}
-          className="nav-button"
+          className={`nav-button ${!chapter?.prevChapter ? 'nav-button-disabled' : ''}`}
+          title={chapter?.prevChapter ? `Previous: ${chapter.prevChapter.title}` : 'No previous chapter available'}
         >
-          {isNavigating ? 'Loading...' : '← Previous Chapter'}
+          {isNavigating ? 'Loading...' : (chapter?.prevChapter ? '← Previous Chapter' : 'No Previous Chapter')}
         </button>
         <button 
           onClick={handleNextChapter}
           disabled={!chapter?.nextChapter || isNavigating || isEditing}
-          className="nav-button"
+          className={`nav-button ${!chapter?.nextChapter ? 'nav-button-disabled' : ''}`}
+          title={chapter?.nextChapter ? `Next: ${chapter.nextChapter.title}` : 'No next chapter available'}
         >
-          {isNavigating ? 'Loading...' : 'Next Chapter →'}
+          {isNavigating ? 'Loading...' : (chapter?.nextChapter ? 'Next Chapter →' : 'No Next Chapter')}
         </button>
       </div>
 
@@ -433,16 +471,18 @@ const Chapter = () => {
         <button 
           onClick={handlePrevChapter} 
           disabled={!chapter?.prevChapter || isNavigating || isEditing}
-          className="nav-button"
+          className={`nav-button ${!chapter?.prevChapter ? 'nav-button-disabled' : ''}`}
+          title={chapter?.prevChapter ? `Previous: ${chapter.prevChapter.title}` : 'No previous chapter available'}
         >
-          {isNavigating ? 'Loading...' : '← Previous Chapter'}
+          {isNavigating ? 'Loading...' : (chapter?.prevChapter ? '← Previous Chapter' : 'No Previous Chapter')}
         </button>
         <button 
           onClick={handleNextChapter}
           disabled={!chapter?.nextChapter || isNavigating || isEditing}
-          className="nav-button"
+          className={`nav-button ${!chapter?.nextChapter ? 'nav-button-disabled' : ''}`}
+          title={chapter?.nextChapter ? `Next: ${chapter.nextChapter.title}` : 'No next chapter available'}
         >
-          {isNavigating ? 'Loading...' : 'Next Chapter →'}
+          {isNavigating ? 'Loading...' : (chapter?.nextChapter ? 'Next Chapter →' : 'No Next Chapter')}
         </button>
       </div>
 
