@@ -66,13 +66,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: var(--bg-secondary);
+  background: #f0f4ff;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .bookmark-item:hover {
   background: var(--bg-hover);
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Novel link styling */
@@ -204,6 +207,7 @@
 
   .bookmark-item:hover {
     background: #4a5568;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 
   .remove-bookmark {

@@ -27,6 +27,7 @@ import { Editor } from '@tinymce/tinymce-react';
 import { Link } from 'react-router-dom';
 import { useNovelStatus } from '../context/NovelStatusContext';
 import { useNovel } from '../context/NovelContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * AdminDashboard Component
@@ -39,6 +40,7 @@ import { useNovel } from '../context/NovelContext';
 const AdminDashboard = () => {
   const { updateNovelStatus } = useNovelStatus();
   const { updateNovel } = useNovel();
+  const queryClient = useQueryClient();
 
   // Genre categories and options
   const genreCategories = {
@@ -62,7 +64,7 @@ const AdminDashboard = () => {
       'Super Power', 'Wars', 'Workplace'
     ],
     'Format & Origin': [
-      'Chinese Novel', 'English Novel', 'Korean Novel', 'Vietnamese Novel',
+      'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
       'Web Novel', 'One shot'
     ]
   };
@@ -74,7 +76,7 @@ const AdminDashboard = () => {
     title: '', 
     alternativeTitles: '',
     author: '', 
-    staff: '',
+    staff: '',  // Ensure staff has initial empty string
     genres: [],
     description: '',
     note: '',
@@ -106,9 +108,18 @@ const AdminDashboard = () => {
   const fetchNovels = async () => {
     try {
       const response = await fetch(`${config.backendUrl}/api/novels?limit=1000`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch novels');
+      }
       const data = await response.json();
-      setNovels(data.novels);
+      if (Array.isArray(data.novels)) {
+        setNovels(data.novels);
+      } else {
+        console.error('Invalid novels data:', data);
+        setError('Invalid response format from server');
+      }
     } catch (err) {
+      console.error('Error fetching novels:', err);
       setError('Failed to fetch novels');
     }
   };
@@ -398,11 +409,22 @@ const AdminDashboard = () => {
 
       const responseData = await response.json();
       
-      // If editing, update the novel in context
+      // Update the novels list immediately
       if (editingNovel) {
+        // Update existing novel
+        setNovels(prevNovels => 
+          prevNovels.map(novel => 
+            novel._id === editingNovel._id ? responseData : novel
+          )
+        );
         updateNovel(editingNovel._id, responseData);
+        queryClient.invalidateQueries(['novel', editingNovel._id]);
+      } else {
+        // Add new novel to the list
+        setNovels(prevNovels => [...prevNovels, responseData]);
       }
       
+      // Refresh the full list from server
       await fetchNovels();
       resetForm();
     } catch (err) {
@@ -418,14 +440,26 @@ const AdminDashboard = () => {
    * @param {Object} novel - Novel to edit
    */
   const handleEdit = (novel) => {
-    setEditingNovel(novel);
-    setNewNovel(novel);
-    // Set the editor content when editing
+    const novelWithDefaults = {
+      ...novel,
+      title: novel.title || '',
+      alternativeTitles: novel.alternativeTitles || '',
+      author: novel.author || '',
+      staff: novel.staff || '',
+      genres: novel.genres || [],
+      description: novel.description || '',
+      note: novel.note || '',
+      illustration: novel.illustration || ''
+    };
+    
+    setEditingNovel(novelWithDefaults);
+    setNewNovel(novelWithDefaults);
+    
     if (editorRef.current) {
-      editorRef.current.setContent(novel.description || '');
+      editorRef.current.setContent(novelWithDefaults.description);
     }
     if (noteEditorRef.current) {
-      noteEditorRef.current.setContent(novel.note || '');
+      noteEditorRef.current.setContent(novelWithDefaults.note);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -461,7 +495,7 @@ const AdminDashboard = () => {
       title: '', 
       alternativeTitles: '',
       author: '', 
-      staff: '',
+      staff: '',  // Ensure staff has empty string when resetting
       genres: [],
       description: '',
       note: '',
@@ -469,7 +503,6 @@ const AdminDashboard = () => {
     });
     setEditingNovel(null);
     setLoading(false);
-    // Reset the editor content
     if (editorRef.current) {
       editorRef.current.setContent('');
     }
@@ -581,8 +614,9 @@ const AdminDashboard = () => {
               type="text"
               name="staff"
               placeholder="Staff (e.g. Editor, Translator, etc.)"
-              value={editingNovel ? editingNovel.staff : newNovel.staff}
+              value={(editingNovel ? editingNovel.staff : newNovel.staff) || ''}
               onChange={handleInputChange}
+              required
             />
             
             {/* Genres Section */}

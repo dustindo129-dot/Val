@@ -40,7 +40,7 @@
 /* Logo image styling */
 .navbar-logo {
   height: 40px;
-  margin-right: 1rem;
+  width: auto;
 }
 
 /* Site title text */
@@ -471,4 +471,9 @@
 
 :root.dark-mode .auth-button.logout-btn:hover {
   background-color: #34495e;
+}
+
+/* Dark theme styles */
+:root.dark-mode .navbar-logo {
+  stroke: white;
 } 

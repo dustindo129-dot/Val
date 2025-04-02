@@ -69,9 +69,33 @@ const UserBookmarks = () => {
         );
         
         if (isMounted) {
-          const bookmarks = response.data || [];
-          setBookmarks(bookmarks);
-          setTotalBookmarks(bookmarks.length);
+          // Fetch additional novel details for each bookmark
+          const bookmarksWithDetails = await Promise.all(
+            response.data.map(async (bookmark) => {
+              try {
+                const novelResponse = await axios.get(`${config.backendUrl}/api/novels/${bookmark._id}`);
+                const novelData = novelResponse.data;
+                
+                // Get the latest chapter from the first module
+                const latestChapter = novelData.modules?.[0]?.chapters?.[0];
+                
+                return {
+                  ...bookmark,
+                  illustration: novelData.novel.illustration,
+                  latestChapter: latestChapter ? {
+                    title: latestChapter.title,
+                    number: latestChapter.order + 1
+                  } : null
+                };
+              } catch (err) {
+                console.error(`Failed to fetch details for novel ${bookmark._id}:`, err);
+                return bookmark;
+              }
+            })
+          );
+          
+          setBookmarks(bookmarksWithDetails);
+          setTotalBookmarks(bookmarksWithDetails.length);
           setLoading(false);
         }
       } catch (err) {
@@ -195,11 +219,15 @@ const UserBookmarks = () => {
                 src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
                 alt={novel.title} 
                 className="bookmark-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png';
+                }}
               />
               <div className="bookmark-info">
                 <span className="bookmark-title">{novel.title}</span>
                 <span className="bookmark-latest-chapter">
-                  Latest: Chapter {novel.chapters?.length || 0}
+                  {novel.latestChapter ? `Latest: Chapter ${novel.latestChapter.number} - ${novel.latestChapter.title}` : 'No chapters yet'}
                 </span>
               </div>
             </Link>

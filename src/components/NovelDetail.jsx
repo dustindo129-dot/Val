@@ -425,10 +425,10 @@ const NovelDetail = () => {
   } = useQuery({
     queryKey: ['novel', novelId],
     queryFn: () => api.fetchNovelWithModules(novelId),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
-    refetchOnMount: false,
-    refetchOnWindowFocus: false
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    cacheTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
+    refetchOnMount: 'always', // Always refetch on mount
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   const novel = novelData?.novel;
@@ -812,9 +812,9 @@ const NovelDetail = () => {
             }}
           />
           <div className="novel-actions">
-            {novel.chapters && novel.chapters.length > 0 ? (
+            {sortedModules.length > 0 && sortedModules[0].chapters.length > 0 ? (
               <Link 
-                to={`/novel/${novelId}/chapter/${novel.chapters[0]._id}`}
+                to={`/novel/${novelId}/chapter/${sortedModules[0].chapters[0]._id}`}
                 className="first-chapter-btn"
               >
                 ⯈ First Chapter
