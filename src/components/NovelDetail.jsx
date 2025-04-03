@@ -45,28 +45,10 @@ const truncateHTML = (html, maxLength) => {
   const text = div.textContent || div.innerText || '';
   
   if (text.length <= maxLength) {
-    return html;
+    return text;  // Return plain text instead of HTML
   }
 
-  let truncated = '';
-  let currentLength = 0;
-  const words = html.split(/(<[^>]*>|\s+)/);
-
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    const wordLength = word.replace(/<[^>]*>/g, '').length;
-
-    if (currentLength + wordLength > maxLength) {
-      break;
-    }
-
-    truncated += word;
-    if (!word.match(/<[^>]*>/)) {
-      currentLength += wordLength;
-    }
-  }
-
-  return truncated + '...';
+  return text.substring(0, maxLength) + '...';  // Simple text truncation
 };
 
 /**

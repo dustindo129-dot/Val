@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { processDescription } from '../../utils/helpers';
 import { BookmarkIcon, BookmarkActiveIcon, HeartIcon, HeartFilledIcon, ViewsIcon, StarIcon } from './NovelIcons';
 import api from '../../services/api';
+import RatingModal from '../../components/RatingModal';
 
 const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML }) => {
   const queryClient = useQueryClient();
@@ -21,21 +22,21 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   // Check if we have a nested novel object
   const novelData = novel?.novel || novel;
   const novelTitle = novelData?.title;
+  const novelId = novelData?._id;  // Get the ID directly
   
   // Fallback ID mechanism - use a ref to keep track of a valid ID
   const novelIdRef = useRef(novel?._id);
   
   // Update ref if we get a valid ID
   useEffect(() => {
-    if (novel?._id) {
-      novelIdRef.current = novel._id;
+    if (novelId) {
+      novelIdRef.current = novelId;
     }
-  }, [novel]);
+  }, [novelId]);
   
   // Mutations for bookmark and like toggling
   const bookmarkMutation = useMutation({
     mutationFn: () => {
-      const novelId = novelIdRef.current;
       if (!novelId) {
         throw new Error("Cannot bookmark: Novel ID is missing");
       }
@@ -44,7 +45,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
     onSuccess: () => {
       // Only invalidate relevant queries, not reading progress
       queryClient.invalidateQueries({
-        queryKey: ['novel', novelIdRef.current],
+        queryKey: ['novel', novelId],
         refetchType: 'active'
       });
     },
@@ -56,7 +57,6 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   
   const likeMutation = useMutation({
     mutationFn: () => {
-      const novelId = novelIdRef.current;
       if (!novelId) {
         throw new Error("Cannot like: Novel ID is missing");
       }
@@ -64,7 +64,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
     },
     onSuccess: (response) => {
       // Immediately update the like count in the cache
-      queryClient.setQueryData(['novel', novelIdRef.current], (oldData) => {
+      queryClient.setQueryData(['novel', novelId], (oldData) => {
         if (!oldData) return oldData;
         
         // Create a deep copy to avoid mutating the cache directly
@@ -82,7 +82,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
       });
       
       // Also directly update the user interaction data in the cache
-      queryClient.setQueryData(['userInteraction', user?.username, novelIdRef.current], 
+      queryClient.setQueryData(['userInteraction', user?.username, novelId], 
         (oldData) => {
           // If we don't have old data, create a new object
           const baseData = oldData || { liked: false, rating: null };
@@ -98,12 +98,12 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
       // Don't refetch immediately - this prevents overriding our cache updates
       // Just invalidate to ensure fresh data on next fetch
       queryClient.invalidateQueries({
-        queryKey: ['novel', novelIdRef.current],
+        queryKey: ['novel', novelId],
         refetchType: 'none'
       });
       
       queryClient.invalidateQueries({
-        queryKey: ['userInteraction', user?.username, novelIdRef.current],
+        queryKey: ['userInteraction', user?.username, novelId],
         refetchType: 'none'
       });
     },
@@ -130,13 +130,12 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
     }
     
     // Check if we have a novel ID
-    if (!novelIdRef.current) {
+    if (!novelId) {
       console.error("Cannot like: Novel ID is missing");
       alert("Error: Cannot identify the novel. Please try refreshing the page.");
       return;
     }
-    
-    console.log("Toggling like for novel:", novelIdRef.current);
+
     likeMutation.mutate();
   };
   
@@ -157,13 +156,13 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
     }
     
     // Check if we have a novel ID
-    if (!novelIdRef.current) {
+    if (!novelId) {
       console.error("Cannot bookmark: Novel ID is missing");
       alert("Error: Cannot identify the novel. Please try refreshing the page.");
       return;
     }
     
-    console.log("Toggling bookmark for novel:", novelIdRef.current);
+    console.log("Toggling bookmark for novel:", novelId);
     bookmarkMutation.mutate();
   };
   
@@ -182,14 +181,6 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
     setIsDescriptionExpanded(!isDescriptionExpanded);
   };
   
-  if (isLoading) {
-    return <div className="novel-info-section loading">Loading novel information...</div>;
-  }
-
-  if (!novel) {
-    return <div className="novel-info-section error">Novel not found</div>;
-  }
-
   // Calculate average rating
   const averageRating = novelData.ratings?.total > 0 
     ? (novelData.ratings.value / novelData.ratings.total).toFixed(1) 
@@ -206,6 +197,50 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
         day: 'numeric' 
       })
     : 'Never';
+
+  // Handle successful rating update
+  const handleRatingSuccess = (response) => {
+    // Update the novel data in the cache
+    queryClient.setQueryData(['novel', novelId], (oldData) => {
+      if (!oldData) return oldData;
+      
+      // Create a deep copy to avoid mutating the cache directly
+      const newData = JSON.parse(JSON.stringify(oldData));
+      
+      // Update the ratings
+      if (newData.novel) {
+        newData.novel.ratings = {
+          total: response.ratingsCount,
+          value: response.ratingsCount * parseFloat(response.averageRating)
+        };
+      } else if (newData._id) {
+        newData.ratings = {
+          total: response.ratingsCount,
+          value: response.ratingsCount * parseFloat(response.averageRating)
+        };
+      }
+      
+      return newData;
+    });
+    
+    // Update user interaction in cache
+    queryClient.setQueryData(['userInteraction', user?.username, novelId], 
+      (oldData) => ({
+        ...oldData,
+        rating: response.rating
+      })
+    );
+    
+    setIsRatingModalOpen(false);
+  };
+
+  if (isLoading) {
+    return <div className="novel-info-section loading">Loading novel information...</div>;
+  }
+
+  if (!novel) {
+    return <div className="novel-info-section error">Novel not found</div>;
+  }
 
   return (
     <>
@@ -377,7 +412,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
             
             {/* Bookmark Button */}
             <button 
-              className={`action-button bookmark-btn ${novelData.isBookmarked ? 'active' : ''}`}
+              className={`action-button novel-bookmark-btn ${novelData.isBookmarked ? 'active' : ''}`}
               onClick={toggleBookmark}
             >
               {novelData.isBookmarked ? (
@@ -514,8 +549,14 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
         </div>
       </div>
 
-      {/* Rating Modal should be rendered by parent */}
-      {isRatingModalOpen && setIsRatingModalOpen(false)}
+      {/* Rating Modal */}
+      <RatingModal 
+        novelId={novelId}
+        isOpen={isRatingModalOpen}
+        onClose={() => setIsRatingModalOpen(false)}
+        currentRating={safeUserInteraction.rating || 0}
+        onRatingSuccess={handleRatingSuccess}
+      />
     </>
   );
 };

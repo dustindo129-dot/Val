@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import config from '../config/config';
+import { useAuth } from '../context/AuthContext';
 
-const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0 }) => {
+const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSuccess }) => {
   const [selectedRating, setSelectedRating] = useState(currentRating);
   const queryClient = useQueryClient();
+  const { user } = useAuth();  // Get the current user
   
   // API calls for rating
   const rateNovel = async (rating) => {
@@ -46,28 +48,33 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0 }) => {
   // Mutations
   const rateMutation = useMutation({
     mutationFn: (rating) => rateNovel(rating),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['novel', novelId]);
-      queryClient.invalidateQueries(['userInteraction', novelId]);
-      onClose();
+    onSuccess: (response) => {
+      if (onRatingSuccess) {
+        onRatingSuccess(response);
+      }
     }
   });
   
   const removeRatingMutation = useMutation({
     mutationFn: () => removeRating(),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['novel', novelId]);
-      queryClient.invalidateQueries(['userInteraction', novelId]);
-      onClose();
+    onSuccess: (response) => {
+      if (onRatingSuccess) {
+        onRatingSuccess(response);
+      }
     }
   });
   
   // Submit handler
-  const handleSubmit = () => {
-    if (selectedRating === 0) {
-      removeRatingMutation.mutate();
-    } else {
-      rateMutation.mutate(selectedRating);
+  const handleSubmit = async () => {
+    try {
+      if (selectedRating === 0) {
+        await removeRatingMutation.mutateAsync();
+      } else {
+        await rateMutation.mutateAsync(selectedRating);
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      // You might want to show an error message to the user here
     }
   };
   
