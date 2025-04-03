@@ -42,37 +42,6 @@ const AdminDashboard = () => {
   const { updateNovel } = useNovel();
   const queryClient = useQueryClient();
 
-  // Clear cache on component mount (page refresh)
-  useEffect(() => {
-    // First, completely clear the novels cache
-    queryClient.removeQueries(['novels']);
-    
-    // Manually fetch fresh data
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&t=${Date.now()}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch novels');
-        }
-        
-        const data = await response.json();
-        const novelsList = Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
-        
-        // Update the cache with fresh data
-        queryClient.setQueryData(['novels'], novelsList);
-      } catch (error) {
-        console.error('Error fetching novels:', error);
-      }
-    };
-    
-    fetchData();
-  }, [queryClient]);
-
   // Genre categories and options
   const genreCategories = {
     'Main Genres': [
@@ -154,10 +123,10 @@ const AdminDashboard = () => {
       const data = await response.json();
       return Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
     },
-    staleTime: 0, // Data is considered stale immediately
-    cacheTime: 0, // Disable caching completely
-    refetchOnMount: 'always', // Always refetch on mount
-    refetchOnWindowFocus: true
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    cacheTime: 60000, // Cache for 1 minute
+    refetchOnMount: true, // Only refetch on mount if data is stale
+    refetchOnWindowFocus: false // Don't refetch on window focus
   });
 
   // Sort novels by updatedAt timestamp (most recent first)
@@ -525,21 +494,22 @@ const AdminDashboard = () => {
    * @param {Object} novel - Novel to edit
    */
   const handleEdit = (novel) => {
+    // Ensure staff arrays are properly initialized with empty arrays if undefined
     const novelWithDefaults = {
       ...novel,
       title: novel.title || '',
-      alternativeTitles: novel.alternativeTitles || '',
+      alternativeTitles: novel.alternativeTitles || [],
       author: novel.author || '',
       illustrator: novel.illustrator || '',
-      active: novel.active || {
-        translator: [],
-        editor: [],
-        proofreader: []
+      active: {
+        translator: novel.active?.translator || [],
+        editor: novel.active?.editor || [],
+        proofreader: novel.active?.proofreader || []
       },
-      inactive: novel.inactive || {
-        translator: [],
-        editor: [],
-        proofreader: []
+      inactive: {
+        translator: novel.inactive?.translator || [],
+        editor: novel.inactive?.editor || [],
+        proofreader: novel.inactive?.proofreader || []
       },
       genres: novel.genres || [],
       description: novel.description || '',

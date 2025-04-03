@@ -496,8 +496,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               <div className="staff-row">
                 <div className="staff-label">Translator:</div>
                 <div className="staff-members">
-                  {novelData.activeStaff?.translator && novelData.activeStaff.translator.length > 0 ? (
-                    novelData.activeStaff.translator.map((translator, index) => (
+                  {novelData.active?.translator && novelData.active.translator.length > 0 ? (
+                    novelData.active.translator.map((translator, index) => (
                       <span className="staff-name" key={`translator-${translator}-${index}`}>{translator}</span>
                     ))
                   ) : (
@@ -509,8 +509,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               <div className="staff-row">
                 <div className="staff-label">Editor:</div>
                 <div className="staff-members">
-                  {novelData.activeStaff?.editor && novelData.activeStaff.editor.length > 0 ? (
-                    novelData.activeStaff.editor.map((editor, index) => (
+                  {novelData.active?.editor && novelData.active.editor.length > 0 ? (
+                    novelData.active.editor.map((editor, index) => (
                       <span className="staff-name" key={`editor-${editor}-${index}`}>{editor}</span>
                     ))
                   ) : (
@@ -522,8 +522,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               <div className="staff-row">
                 <div className="staff-label">Proofreader:</div>
                 <div className="staff-members">
-                  {novelData.activeStaff?.proofreader && novelData.activeStaff.proofreader.length > 0 ? (
-                    novelData.activeStaff.proofreader.map((proofreader, index) => (
+                  {novelData.active?.proofreader && novelData.active.proofreader.length > 0 ? (
+                    novelData.active.proofreader.map((proofreader, index) => (
                       <span className="staff-name" key={`proofreader-${proofreader}-${index}`}>{proofreader}</span>
                     ))
                   ) : (
@@ -540,8 +540,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               <div className="staff-row">
                 <div className="staff-label">Translator:</div>
                 <div className="staff-members">
-                  {novelData.inactiveStaff?.translator && novelData.inactiveStaff.translator.length > 0 ? (
-                    novelData.inactiveStaff.translator.map((translator, index) => (
+                  {novelData.inactive?.translator && novelData.inactive.translator.length > 0 ? (
+                    novelData.inactive.translator.map((translator, index) => (
                       <span className="staff-name" key={`inactive-translator-${translator}-${index}`}>{translator}</span>
                     ))
                   ) : (
@@ -553,8 +553,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               <div className="staff-row">
                 <div className="staff-label">Editor:</div>
                 <div className="staff-members">
-                  {novelData.inactiveStaff?.editor && novelData.inactiveStaff.editor.length > 0 ? (
-                    novelData.inactiveStaff.editor.map((editor, index) => (
+                  {novelData.inactive?.editor && novelData.inactive.editor.length > 0 ? (
+                    novelData.inactive.editor.map((editor, index) => (
                       <span className="staff-name" key={`inactive-editor-${editor}-${index}`}>{editor}</span>
                     ))
                   ) : (
@@ -566,8 +566,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               <div className="staff-row">
                 <div className="staff-label">Proofreader:</div>
                 <div className="staff-members">
-                  {novelData.inactiveStaff?.proofreader && novelData.inactiveStaff.proofreader.length > 0 ? (
-                    novelData.inactiveStaff.proofreader.map((proofreader, index) => (
+                  {novelData.inactive?.proofreader && novelData.inactive.proofreader.length > 0 ? (
+                    novelData.inactive.proofreader.map((proofreader, index) => (
                       <span className="staff-name" key={`inactive-proofreader-${proofreader}-${index}`}>{proofreader}</span>
                     ))
                   ) : (
