@@ -1,14 +1,24 @@
 import axios from 'axios';
 import config from '../config/config';
+import { queryClient } from '../lib/react-query';
 
 const api = {
-  fetchNovelWithModules: async (novelId, forceRefresh = false) => {
+  fetchNovelWithModules: async (novelId, forceRefresh = false, countView = false) => {
     try {
-      // Add a cache-busting timestamp when forceRefresh is true
-      const url = forceRefresh 
-        ? `${config.backendUrl}/api/novels/${novelId}?_t=${Date.now()}` 
-        : `${config.backendUrl}/api/novels/${novelId}`;
-        
+      // Add skipViewTracking parameter when forceRefresh is true (coming from add chapter)
+      const params = new URLSearchParams();
+      if (forceRefresh) {
+        params.append('_t', Date.now());
+      }
+      // Only track views when explicitly requested
+      if (!countView) {
+        params.append('skipViewTracking', 'true');
+      } else {
+        // When counting views, use a single atomic operation
+        params.append('singleOperation', 'true');
+      }
+      
+      const url = `${config.backendUrl}/api/novels/${novelId}${params.toString() ? '?' + params.toString() : ''}`;
       const response = await axios.get(url);
       
       if (!response.data) {
@@ -20,8 +30,8 @@ const api = {
         try {
           // Also add cache-busting to the modules endpoint
           const modulesUrl = forceRefresh
-            ? `${config.backendUrl}/api/modules/${novelId}/modules-with-chapters?_t=${Date.now()}`
-            : `${config.backendUrl}/api/modules/${novelId}/modules-with-chapters`;
+            ? `${config.backendUrl}/api/modules/${novelId}/modules-with-chapters?_t=${Date.now()}&skipViewTracking=true`
+            : `${config.backendUrl}/api/modules/${novelId}/modules-with-chapters?skipViewTracking=true`;
             
           const modulesResponse = await axios.get(modulesUrl);
           
@@ -59,23 +69,57 @@ const api = {
   toggleBookmark: async (novelId) => {
     try {
       if (!novelId) {
-        console.error("toggleBookmark called with missing novelId");
         throw new Error("Novel ID is required");
       }
       
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error("toggleBookmark called with missing token");
         throw new Error("Authentication token missing");
       }
+
+      // Get user info from token payload
+      let payload;
+      try {
+        payload = JSON.parse(atob(token.split('.')[1]));
+      } catch (e) {
+        throw new Error("Invalid token format");
+      }
       
-      console.log(`Making API call to toggle bookmark for novel ${novelId}`);
+      if (!payload.userId) {
+        throw new Error("Invalid token: missing user ID");
+      }
+
+      let username = payload.username;
+      
+      // If username is not in token, fetch it from profile
+      if (!username) {
+        try {
+          const userResponse = await axios.get(
+            `${config.backendUrl}/api/users/${payload.userId}/profile`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          
+          if (!userResponse.data.username) {
+            throw new Error("Could not determine username");
+          }
+          
+          username = userResponse.data.username;
+        } catch (e) {
+          throw new Error("Failed to get username from profile");
+        }
+      }
+
       const response = await axios.post(
-        `${config.backendUrl}/api/novels/${novelId}/bookmark`,
-        {},
+        `${config.backendUrl}/api/users/${username}/bookmarks`,
+        { novelId },
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
       );
@@ -88,9 +132,8 @@ const api = {
 
   reorderChapter: async ({ novelId, moduleId, chapterId, direction }) => {
     try {
-      // Use the correct API endpoint path
       const response = await axios.put(
-        `${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}/chapters/${chapterId}/reorder`,
+        `${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}/chapters/${chapterId}/reorder?skipUpdateTimestamp=true`,
         {
           direction
         },
@@ -100,6 +143,11 @@ const api = {
           }
         }
       );
+
+      if (!response.data || !response.data.chapters) {
+        throw new Error('Invalid response from server');
+      }
+
       return response.data;
     } catch (error) {
       console.error('Chapter reordering error:', error);
@@ -109,16 +157,12 @@ const api = {
 
   createModule: async (novelId, moduleData) => {
     try {
-      console.log(`Making API call to create module in novel ${novelId}`, moduleData);
-      
       if (!novelId) {
-        console.error('Missing required parameter for createModule:', { novelId });
         throw new Error("Novel ID is required");
       }
       
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error("createModule called with missing token");
         throw new Error("Authentication token missing");
       }
       
@@ -136,26 +180,20 @@ const api = {
         }
       );
       
-      console.log('Module creation API response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Module creation error:', error.response?.data || error.message);
       throw error;
     }
   },
 
   updateModule: async (novelId, moduleId, moduleData) => {
     try {
-      console.log(`Making API call to update module ${moduleId} in novel ${novelId}`, moduleData);
-      
       if (!novelId || !moduleId) {
-        console.error('Missing required parameters for updateModule:', { novelId, moduleId });
         throw new Error("Novel ID and Module ID are required");
       }
       
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error("updateModule called with missing token");
         throw new Error("Authentication token missing");
       }
       
@@ -173,10 +211,8 @@ const api = {
         }
       );
       
-      console.log('Module update API response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Module update error:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -240,7 +276,7 @@ const api = {
   deleteChapter: async (chapterId) => {
     try {
       const response = await axios.delete(
-        `${config.backendUrl}/api/chapters/${chapterId}`,
+        `${config.backendUrl}/api/chapters/${chapterId}?skipViewTracking=true`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -275,7 +311,7 @@ const api = {
     try {
       // Use the correct API endpoint path for module reordering
       const response = await axios.put(
-        `${config.backendUrl}/api/modules/${novelId}/modules/reorder`,
+        `${config.backendUrl}/api/modules/${novelId}/modules/reorder?skipUpdateTimestamp=true`,
         {
           moduleId,
           direction

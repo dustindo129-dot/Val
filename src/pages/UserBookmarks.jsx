@@ -15,7 +15,7 @@
  * - Responsive grid layout
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -49,81 +49,49 @@ const UserBookmarks = () => {
     );
   }
 
-  /**
-   * Fetch user's bookmarked novels when component mounts or user changes
-   */
+  // Memoize fetchBookmarks to prevent unnecessary recreations
+  const fetchBookmarks = useCallback(async () => {
+    if (!user || user.username !== username) return;
+    
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/users/${username}/bookmarks`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      
+      const bookmarksData = response.data;
+      setBookmarks(bookmarksData);
+      setTotalBookmarks(bookmarksData.length);
+      setBookmarkedNovels(bookmarksData.map(bookmark => bookmark._id));
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch bookmarks');
+      setLoading(false);
+    }
+  }, [username, user, setBookmarkedNovels]);
+
+  // Effect for initial load and username/user changes
   useEffect(() => {
     let isMounted = true;
     
-    const fetchBookmarks = async () => {
-      if (!user || user.username !== username) return;
-      
-      try {
-        const response = await axios.get(
-          `${config.backendUrl}/api/users/${username}/bookmarks`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
-        
-        if (isMounted) {
-          // Fetch additional novel details for each bookmark
-          const bookmarksWithDetails = await Promise.all(
-            response.data.map(async (bookmark) => {
-              try {
-                const novelResponse = await axios.get(`${config.backendUrl}/api/novels/${bookmark._id}`);
-                const novelData = novelResponse.data;
-                
-                // Get the latest chapter from the first module
-                const latestChapter = novelData.modules?.[0]?.chapters?.[0];
-                
-                return {
-                  ...bookmark,
-                  illustration: novelData.novel.illustration,
-                  latestChapter: latestChapter ? {
-                    title: latestChapter.title,
-                    number: latestChapter.order + 1
-                  } : null
-                };
-              } catch (err) {
-                console.error(`Failed to fetch details for novel ${bookmark._id}:`, err);
-                return bookmark;
-              }
-            })
-          );
-          
-          setBookmarks(bookmarksWithDetails);
-          setTotalBookmarks(bookmarksWithDetails.length);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError('Failed to fetch bookmarks');
-          setLoading(false);
-        }
+    const initializeBookmarks = async () => {
+      if (isMounted) {
+        await fetchBookmarks();
       }
     };
 
-    fetchBookmarks();
+    initializeBookmarks();
     
     return () => {
       isMounted = false;
     };
-  }, [username, user, bookmarkedNovels]);
+  }, [fetchBookmarks]);
 
-  // Update bookmarkedNovels in context when bookmarks change
-  useEffect(() => {
-    if (bookmarks.length > 0) {
-      setBookmarkedNovels(bookmarks.map(bookmark => bookmark._id));
-    }
-  }, [bookmarks, setBookmarkedNovels]);
-
-  /**
-   * Removes a novel from user's bookmarks
-   * @param {string} novelId - ID of the novel to remove from bookmarks
-   */
+  // Optimized remove bookmark handler
   const handleRemoveBookmark = async (novelId, event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -138,32 +106,19 @@ const UserBookmarks = () => {
         }
       );
       
-      // Update local state
+      // Update local state immediately for better UX
       setBookmarks(prev => prev.filter(bookmark => bookmark._id !== novelId));
       setTotalBookmarks(prev => prev - 1);
-      
-      // Update bookmark context
       updateBookmarkStatus(novelId, false);
     } catch (err) {
       console.error('Failed to remove bookmark:', err);
-      // Refresh the bookmarks list to ensure consistency
-      const response = await axios.get(
-        `${config.backendUrl}/api/users/${username}/bookmarks`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
-      const bookmarks = response.data || [];
-      setBookmarks(bookmarks);
-      setTotalBookmarks(bookmarks.length);
-      setBookmarkedNovels(bookmarks.map(bookmark => bookmark._id));
+      // Only refetch on error
+      fetchBookmarks();
     }
   };
 
   // Show empty state immediately if we know there are no bookmarks
-  if (totalBookmarks === 0) {
+  if (totalBookmarks === 0 && !loading) {
     return (
       <div className="bookmarks-container">
         <div className="bookmarks-header">
@@ -196,7 +151,7 @@ const UserBookmarks = () => {
       <div className="bookmarks-container">
         <div className="error">
           <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="retry-btn">
+          <button onClick={fetchBookmarks} className="retry-btn">
             Retry
           </button>
         </div>

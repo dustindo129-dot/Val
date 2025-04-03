@@ -32,6 +32,8 @@ import ModuleChapters from './novel-detail/ModuleChapters';
 import ModuleForm from './novel-detail/ModuleForm';
 import NovelInfo from './novel-detail/NovelInfo';
 import api from '../services/api';
+import sseService from '../services/sseService';
+import ModuleList from './novel-detail/ModuleList';
 
 // Lazy load components that exist as separate files
 const Login = lazy(() => import('./auth/Login'));
@@ -96,30 +98,132 @@ const NovelDetail = () => {
     if (!user || user.role !== 'admin') return;
     
     try {
-      const response = await api.reorderModule({ 
-        novelId, 
-        moduleId, 
-        direction 
-      });
+      // Get current data for optimistic update
+      const currentData = queryClient.getQueryData(['novel', novelId]);
+      const previousData = currentData ? JSON.parse(JSON.stringify(currentData)) : null;
+      
+      // Create a deep copy of the modules with their chapters
+      const moduleWithChaptersMap = {};
+      if (currentData?.modules) {
+        currentData.modules.forEach(module => {
+          // Store the full module including its chapters
+          moduleWithChaptersMap[module._id] = JSON.parse(JSON.stringify(module));
+        });
+      }
+      
+      if (currentData?.modules) {
+        // Find the module and its index
+        const moduleIndex = currentData.modules.findIndex(m => m._id === moduleId);
+        if (moduleIndex !== -1) {
+          const targetIndex = direction === 'up' ? moduleIndex - 1 : moduleIndex + 1;
+          
+          // Validate move is possible
+          if (targetIndex < 0 || targetIndex >= currentData.modules.length) {
+            throw new Error('Cannot move module further in that direction');
+          }
 
-      // Immediately update the cache with the new order
-      queryClient.setQueryData(['novel', novelId], (oldData) => {
-        if (!oldData) return oldData;
+          // Cancel any pending queries for this novel
+          await queryClient.cancelQueries({ queryKey: ['novel', novelId] });
+          
+          // Get the modules that will be swapped
+          const sourceModuleId = currentData.modules[moduleIndex]._id;
+          const targetModuleId = currentData.modules[targetIndex]._id;
+          
+          // Get the full modules with their chapters
+          const sourceModule = moduleWithChaptersMap[sourceModuleId];
+          const targetModule = moduleWithChaptersMap[targetModuleId];
+          
+          // Create a new array with all modules
+          const newModules = [...currentData.modules];
+          
+          // Swap the order values while preserving all other properties
+          const tempOrder = sourceModule.order;
+          sourceModule.order = targetModule.order;
+          targetModule.order = tempOrder;
+          
+          // Update the modules in the array
+          newModules[moduleIndex] = targetModule;
+          newModules[targetIndex] = sourceModule;
+          
+          // Sort the modules by order
+          newModules.sort((a, b) => a.order - b.order);
+          
+          // Ensure each module has its original chapters
+          const updatedModules = newModules.map(module => {
+            const originalModule = moduleWithChaptersMap[module._id];
+            return {
+              ...module,
+              chapters: originalModule.chapters || []
+            };
+          });
+          
+          // Update cache immediately with the updated modules
+          queryClient.setQueryData(['novel', novelId], {
+            ...currentData,
+            modules: updatedModules
+          });
 
-        return {
-          ...oldData,
-          modules: response.modules
-        };
-      });
-
-      // Then invalidate to ensure we get fresh data on next fetch
-      queryClient.invalidateQueries(['novel', novelId], {
-        refetchType: 'none' // Don't refetch immediately since we updated the cache
-      });
+          try {
+            // Make API call
+            const response = await api.reorderModule({ 
+              novelId,
+              moduleId, 
+              direction 
+            });
+            
+            if (response?.modules) {
+              // Map to store the server returned module structure (order, etc.)
+              const serverModulesMap = {};
+              response.modules.forEach(module => {
+                serverModulesMap[module._id] = module;
+              });
+              
+              // Create updated modules array that preserves chapters but uses server order
+              const finalModules = updatedModules.map(module => {
+                const serverModule = serverModulesMap[module._id];
+                return {
+                  ...module,
+                  // Take server values for these properties
+                  order: serverModule?.order ?? module.order,
+                  updatedAt: serverModule?.updatedAt ?? module.updatedAt,
+                  // Keep the chapter data we already have
+                  chapters: module.chapters || []
+                };
+              });
+              
+              // Sort by the server-provided order
+              finalModules.sort((a, b) => a.order - b.order);
+              
+              // Update the cache with the final, sorted modules
+              queryClient.setQueryData(['novel', novelId], {
+                ...currentData,
+                modules: finalModules,
+                updatedAt: new Date().toISOString()
+              });
+            } else {
+              // If response has no modules, use the already updated modules
+              // but still force a background refresh for consistency
+              queryClient.invalidateQueries({ 
+                queryKey: ['novel', novelId],
+                refetchType: 'inactive'  // Background refresh only
+              });
+            }
+          } catch (error) {
+            // On error, revert to previous state
+            if (previousData) {
+              queryClient.setQueryData(['novel', novelId], previousData);
+            }
+            throw error;
+          }
+        }
+      }
     } catch (error) {
       console.error('Failed to reorder module:', error);
+      // Force a refetch to ensure we're in sync with server
+      await queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      await queryClient.refetchQueries({ queryKey: ['novel', novelId], type: 'active' });
     }
-  }, [user, novelId, queryClient]);
+  }, [user, novelId, queryClient, api]);
 
   // Handler for toggling the module form
   const handleModuleFormToggle = useCallback(() => {
@@ -161,8 +265,6 @@ const NovelDetail = () => {
       
       let response;
       if (editingModule) {
-        console.log('Updating module:', editingModule, moduleForm);
-        
         // Optimistically update the cache before API call
         if (currentNovelData?.modules) {
           const updatedModules = currentNovelData.modules.map(module => 
@@ -188,16 +290,11 @@ const NovelDetail = () => {
           title: moduleForm.title,
           illustration: moduleForm.illustration
         });
-        
-        console.log('Module updated successfully:', response);
       } else {
-        console.log('Creating new module:', moduleForm);
         response = await api.createModule(novelId, {
           title: moduleForm.title,
           illustration: moduleForm.illustration
         });
-        
-        console.log('Module created successfully:', response);
         
         // If we have current data and a successful response, optimistically add the new module
         if (currentNovelData?.modules && response) {
@@ -253,11 +350,32 @@ const NovelDetail = () => {
       // Check if we need to force a fresh fetch from the server
       const needsFreshData = location.state?.from === 'addChapter' && location.state?.shouldRefetch;
       
+      // Check if novel was viewed in the last 8 hours
+      const viewKey = `novel_${novelId}_last_viewed`;
+      const lastViewed = localStorage.getItem(viewKey);
+      const now = Date.now();
+      const eightHours = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+      
+      // Only count view if:
+      // 1. Never viewed before, or
+      // 2. Last viewed more than 8 hours ago
+      const shouldCountView = !needsFreshData && 
+        !queryClient.getQueryData(['novel', novelId]) && 
+        (!lastViewed || (now - parseInt(lastViewed, 10)) > eightHours);
+      
       // Use forceRefresh when coming from chapter creation
-      const response = await api.fetchNovelWithModules(novelId, needsFreshData);
+      const response = await api.fetchNovelWithModules(novelId, needsFreshData, shouldCountView);
+      
+      // Update last viewed timestamp if we counted a view
+      if (shouldCountView) {
+        localStorage.setItem(viewKey, now.toString());
+      }
+      
       return response;
     },
-    staleTime: 1000 * 60 * 5 // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false // Prevent refetch on window focus
   });
   
   // Check if we're coming from chapter creation and need to refetch
@@ -321,16 +439,59 @@ const NovelDetail = () => {
     if (!user || user.role !== 'admin') return;
     
     try {
-      await api.reorderChapter({ 
-        novelId,
-        moduleId,
-        chapterId, 
-        direction 
-      });
-      // Refresh the data
-      queryClient.invalidateQueries(['novel', novelId]);
+      // Get current data for optimistic update
+      const currentData = queryClient.getQueryData(['novel', novelId]);
+      const previousData = currentData ? JSON.parse(JSON.stringify(currentData)) : null;
+      
+      if (currentData?.modules) {
+        // Find the module and its chapters
+        const moduleIndex = currentData.modules.findIndex(m => m._id === moduleId);
+        if (moduleIndex !== -1) {
+          const module = currentData.modules[moduleIndex];
+          const chapters = [...module.chapters];
+          const currentIndex = chapters.findIndex(c => c._id === chapterId);
+          const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+          
+          // Validate move is possible
+          if (targetIndex < 0 || targetIndex >= chapters.length) {
+            throw new Error('Cannot move chapter further in that direction');
+          }
+
+          // Cancel any pending queries for this novel
+          await queryClient.cancelQueries(['novel', novelId]);
+          
+          // Swap chapters for optimistic update
+          [chapters[currentIndex], chapters[targetIndex]] = [chapters[targetIndex], chapters[currentIndex]];
+          
+          // Update cache immediately
+          queryClient.setQueryData(['novel', novelId], {
+            ...currentData,
+            modules: currentData.modules.map((m, i) => 
+              i === moduleIndex ? { ...m, chapters } : m
+            )
+          });
+
+          try {
+            // Make API call
+            await api.reorderChapter({ 
+              novelId,
+              moduleId,
+              chapterId, 
+              direction 
+            });
+          } catch (error) {
+            // On error, revert to previous state
+            if (previousData) {
+              queryClient.setQueryData(['novel', novelId], previousData);
+            }
+            throw error;
+          }
+        }
+      }
     } catch (error) {
       console.error('Failed to reorder chapter:', error);
+      // Force a refetch to ensure we're in sync with server
+      queryClient.invalidateQueries(['novel', novelId]);
     }
   }, [user, novelId, queryClient]);
   
@@ -349,7 +510,6 @@ const NovelDetail = () => {
   }, [user, novelId, queryClient]);
   
   const handleEditModule = useCallback((module) => {
-    console.log('Edit module clicked:', module);
     // First make sure to show the form before setting other data
     setShowModuleForm(true);
     // Then set the editing module data
@@ -360,7 +520,6 @@ const NovelDetail = () => {
       loading: false,
       error: ''
     });
-    console.log('showModuleForm should now be true');
     
     // Scroll to where the form should be to ensure visibility
     setTimeout(() => {
@@ -368,14 +527,7 @@ const NovelDetail = () => {
       const container = document.querySelector('.chapter-list-container');
       if (container) {
         container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        console.log('Scrolled to chapter list container');
       }
-      
-      console.log('Current state values:', {
-        editingModule: module._id,
-        showModuleForm: true,
-        moduleFormTitle: module.title
-      });
     }, 100);
   }, []);
 
@@ -398,6 +550,45 @@ const NovelDetail = () => {
     }
   }, []);
 
+  // Set up SSE connection for real-time updates
+  useEffect(() => {
+    const handleUpdate = async () => {
+      await queryClient.invalidateQueries(['novel', novelId]);
+      await queryClient.refetchQueries(['novel', novelId]); // Force immediate refetch
+    };
+
+    const handleStatusChange = (data) => {
+      if (data.id === novelId) {
+        queryClient.invalidateQueries(['novel', novelId]);
+      }
+    };
+
+    const handleNovelDelete = (data) => {
+      if (data.id === novelId) {
+        // Navigate away if the current novel is deleted
+        navigate('/');
+      }
+    };
+
+    const handleNewChapter = (data) => {
+      queryClient.invalidateQueries(['novel', novelId]);
+    };
+
+    // Add event listeners
+    sseService.addEventListener('update', handleUpdate);
+    sseService.addEventListener('novel_status_changed', handleStatusChange);
+    sseService.addEventListener('novel_deleted', handleNovelDelete);
+    sseService.addEventListener('new_chapter', handleNewChapter);
+
+    // Clean up on unmount
+    return () => {
+      sseService.removeEventListener('update', handleUpdate);
+      sseService.removeEventListener('novel_status_changed', handleStatusChange);
+      sseService.removeEventListener('novel_deleted', handleNovelDelete);
+      sseService.removeEventListener('new_chapter', handleNewChapter);
+    };
+  }, [novelId, queryClient, navigate]);
+
   return (
     <div className="novel-detail-page">
       {isLoading ? (
@@ -414,6 +605,7 @@ const NovelDetail = () => {
             setIsRatingModalOpen={setIsRatingModalOpen}
             handleModuleFormToggle={handleModuleFormToggle}
             truncateHTML={truncateHTML}
+            chaptersData={chaptersData}
           />
           
           <div className="chapter-list-container">
@@ -471,90 +663,17 @@ const NovelDetail = () => {
               />
             )}
             
-            {data.modules && data.modules.length > 0 ? (
-              data.modules.map((module, moduleIndex, moduleArray) => (
-                <div key={module._id} className="module-container">
-                  <div className="module-content">
-                    <div className="module-cover">
-                      <img 
-                        src={module.illustration || "https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png"} 
-                        alt={`${module.title} cover`}
-                        className="module-cover-image"
-                      />
-                      {user?.role === 'admin' && (
-                        <div className="module-reorder-buttons">
-                            <button
-                            className={`reorder-btn ${moduleIndex === 0 ? 'disabled' : ''}`}
-                            onClick={() => handleModuleReorder(module._id, 'up')}
-                            disabled={moduleIndex === 0}
-                              title="Move module up"
-                            >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                <path d="M18 15l-6-6-6 6"/>
-                              </svg>
-                            </button>
-                            <button
-                            className={`reorder-btn ${moduleIndex === moduleArray.length - 1 ? 'disabled' : ''}`}
-                            onClick={() => handleModuleReorder(module._id, 'down')}
-                            disabled={moduleIndex === moduleArray.length - 1}
-                              title="Move module down"
-                            >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                <path d="M6 9l6 6 6-6"/>
-                              </svg>
-                            </button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="module-details">
-                      <div className="module-header">
-                        <div className="module-title-area">
-                          <h3 className="module-title">{module.title}</h3>
-                        </div>
-                        
-                        {user?.role === 'admin' && (
-                          <div className="module-actions">
-                            <button
-                              className="edit-module-btn"
-                              onClick={() => handleEditModule(module)}
-                              title="Edit module"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="delete-module-btn"
-                              onClick={() => handleDeleteModule(module._id)}
-                              title="Delete module"
-                            >
-                              Delete
-                            </button>
-                            <Link
-                              to={`/novel/${novelId}/module/${module._id}/add-chapter`}
-                              className="add-chapter-btn"
-                              title="Add chapter to this module"
-                            >
-                              Add Chapter
-                            </Link>
-                          </div>
-                        )}
-                      </div>
-
-                      <ModuleChapters
-                        chapters={module.chapters || []}
-                        novelId={novelId}
-                        moduleId={module._id}
-                        user={user}
-                        handleChapterReorder={handleChapterReorder}
-                        handleChapterDelete={handleChapterDelete}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="no-chapters-message">
-                No chapters available yet.
-              </div>
+            {data?.modules && (
+              <ModuleList
+                modules={data.modules}
+                novelId={novelId}
+                user={user}
+                handleModuleReorder={handleModuleReorder}
+                handleModuleDelete={handleDeleteModule}
+                handleEditModule={handleEditModule}
+                handleChapterReorder={handleChapterReorder}
+                handleChapterDelete={handleChapterDelete}
+              />
             )}
           </div>
 

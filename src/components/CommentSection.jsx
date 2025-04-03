@@ -16,6 +16,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
   const [error, setError] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   // Fetch comments on component mount
   useEffect(() => {
@@ -93,6 +94,40 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       alert('Failed to post comment. Please try again.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Handle comment deletion
+  const handleDelete = async (commentId) => {
+    if (!isAuthenticated || deleting) return;
+    
+    if (!window.confirm('Are you sure you want to delete this comment?')) {
+      return;
+    }
+    
+    setDeleting(true);
+    
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete comment');
+      }
+      
+      // Remove the comment from the list
+      setComments(prevComments => 
+        prevComments.filter(comment => comment._id !== commentId)
+      );
+    } catch (err) {
+      console.error('Error deleting comment:', err);
+      alert('Failed to delete comment. Please try again.');
+    } finally {
+      setDeleting(false);
     }
   };
   
@@ -178,8 +213,14 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
                     <span className="like-icon">❤️</span>
                     <span className="like-count">{comment.likes.length}</span>
                   </button>
-                  {user && user.username === comment.user.username && (
-                    <button className="delete-button">Delete</button>
+                  {user && (user.username === comment.user.username || user.role === 'admin') && (
+                    <button 
+                      className="delete-button"
+                      onClick={() => handleDelete(comment._id)}
+                      disabled={deleting}
+                    >
+                      {deleting ? 'Deleting...' : 'Delete'}
+                    </button>
                   )}
                 </div>
               </div>

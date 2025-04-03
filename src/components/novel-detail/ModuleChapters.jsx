@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // Helper function for date formatting
@@ -47,58 +47,120 @@ const ModuleChapters = memo(({
   novelId, 
   moduleId, 
   user, 
-  handleChapterReorder,
-  handleChapterDelete
-}) => (
-  <div className="chapter-list">
-    {chapters.map((chapter, chapterIndex, chapterArray) => (
-      <div key={chapter._id} className="chapter-item">
-        <div className="chapter-number">{typeof chapter.order === 'number' ? chapter.order : chapter.order || 0}</div>
-        
-        {user?.role === 'admin' && (
-          <div className="chapter-reorder-buttons">
-            <button 
-              className={`reorder-btn ${chapterIndex === 0 ? 'disabled' : ''}`}
-              onClick={() => handleChapterReorder(moduleId, chapter._id, 'up')}
-              disabled={chapterIndex === 0}
-              title="Move chapter up"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                <path d="M18 15l-6-6-6 6"/>
-              </svg>
-            </button>
-            <button 
-              className={`reorder-btn ${chapterIndex === chapterArray.length - 1 ? 'disabled' : ''}`}
-              onClick={() => handleChapterReorder(moduleId, chapter._id, 'down')}
-              disabled={chapterIndex === chapterArray.length - 1}
-              title="Move chapter down"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                <path d="M6 9l6 6 6-6"/>
-              </svg>
-            </button>
-          </div>
-        )}
-        
-        <Link to={`/novel/${novelId}/chapter/${chapter._id}`} className="chapter-title-link">
-          {chapter.title}
-          {isChapterNew(chapter.createdAt) && <span className="new-tag">NEW</span>}
-        </Link>
-        {user?.role === 'admin' && (
-          <button 
-            onClick={() => handleChapterDelete(moduleId, chapter._id)} 
-            className="delete-chapter-btn"
-            title="Delete chapter"
-          >
-            Delete
-          </button>
-        )}
-        <span className="chapter-date">
-          {formatDateUtil(chapter.createdAt)}
-        </span>
-      </div>
-    ))}
-  </div>
-));
+  handleChapterReorder, 
+  handleChapterDelete 
+}) => {
+  const [isReordering, setIsReordering] = useState(false);
+
+  const handleReorderClick = useCallback(async (chapterId, direction) => {
+    if (isReordering) return; // Prevent concurrent reordering
+    
+    try {
+      setIsReordering(true);
+      await handleChapterReorder(moduleId, chapterId, direction);
+    } finally {
+      // Add a small delay before allowing next reorder
+      setTimeout(() => {
+        setIsReordering(false);
+      }, 500);
+    }
+  }, [moduleId, handleChapterReorder, isReordering]);
+
+  return (
+    <div className="module-chapters">
+      {chapters && chapters.length > 0 ? (
+        <div className="chapters-list">
+          {chapters.map((chapter, index) => {
+            const chapterId = chapter._id || `index-${index}`;
+            return (
+              <div 
+                key={`chapter-item-${chapterId}`}
+                className={`chapter-item ${isReordering ? 'reordering' : ''}`}
+                style={{ transition: 'all 0.3s ease' }}
+              >
+                <div className="chapter-content" key={`chapter-content-${chapterId}`}>
+                  <div className="chapter-number" key={`chapter-number-${chapterId}`}>
+                    {typeof chapter.order === 'number' ? chapter.order : chapter.order || 0}
+                  </div>
+                  <Link 
+                    to={`/novel/${novelId}/chapter/${chapterId}`} 
+                    className="chapter-title-link"
+                    key={`chapter-link-${chapterId}`}
+                  >
+                    {chapter.title}
+                    {isChapterNew(chapter.createdAt) && (
+                      <span className="new-tag" key={`new-tag-${chapterId}`}>NEW</span>
+                    )}
+                  </Link>
+                </div>
+                
+                {user?.role === 'admin' && (
+                  <div className="chapter-actions" key={`chapter-actions-${chapterId}`}>
+                    <button
+                      className={`reorder-btn ${index === 0 ? 'disabled' : ''}`}
+                      onClick={() => handleReorderClick(chapterId, 'up')}
+                      disabled={index === 0 || isReordering}
+                      title="Move chapter up"
+                    >
+                      <svg 
+                        key={`up-${chapterId}`}
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        width="16" 
+                        height="16"
+                      >
+                        <path key={`path-up-${chapterId}`} d="M18 15l-6-6-6 6"/>
+                      </svg>
+                    </button>
+                    <button
+                      className={`reorder-btn ${index === chapters.length - 1 ? 'disabled' : ''}`}
+                      onClick={() => handleReorderClick(chapterId, 'down')}
+                      disabled={index === chapters.length - 1 || isReordering}
+                      title="Move chapter down"
+                    >
+                      <svg 
+                        key={`down-${chapterId}`}
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        width="16" 
+                        height="16"
+                      >
+                        <path key={`path-down-${chapterId}`} d="M6 9l6 6 6-6"/>
+                      </svg>
+                    </button>
+                    <button
+                      className="delete-chapter-btn"
+                      onClick={() => handleChapterDelete(moduleId, chapterId)}
+                      title="Delete chapter"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+                <span className="chapter-date">
+                  {formatDateUtil(chapter.createdAt)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="no-chapters">No chapters in this module yet.</div>
+      )}
+    </div>
+  );
+});
+
+ModuleChapters.displayName = 'ModuleChapters';
 
 export default ModuleChapters; 

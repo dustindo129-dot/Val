@@ -6,10 +6,12 @@ import { processDescription } from '../../utils/helpers';
 import { BookmarkIcon, BookmarkActiveIcon, HeartIcon, HeartFilledIcon, ViewsIcon, StarIcon } from './NovelIcons';
 import api from '../../services/api';
 import RatingModal from '../../components/RatingModal';
+import { useBookmarks } from '../../context/BookmarkContext';
 
 const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { updateBookmarkStatus } = useBookmarks();
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   
@@ -42,12 +44,40 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
       }
       return api.toggleBookmark(novelId);
     },
-    onSuccess: () => {
-      // Only invalidate relevant queries, not reading progress
+    onSuccess: (response) => {
+      // Immediately update the novel data in the cache
+      queryClient.setQueryData(['novel', novelId], (oldData) => {
+        if (!oldData) return oldData;
+        
+        // Create a deep copy to avoid mutating the cache directly
+        const newData = JSON.parse(JSON.stringify(oldData));
+        
+        // Update the isBookmarked status based on the response
+        if (newData.novel) {
+          newData.novel.isBookmarked = response.isBookmarked;
+        } else if (newData._id) {
+          newData.isBookmarked = response.isBookmarked;
+        }
+        
+        return newData;
+      });
+
+      // Update the bookmark context
+      updateBookmarkStatus(novelId, response.isBookmarked);
+      
+      // Invalidate queries to ensure fresh data on next fetch
       queryClient.invalidateQueries({
         queryKey: ['novel', novelId],
-        refetchType: 'active'
+        refetchType: 'none'
       });
+
+      // Also invalidate the user's bookmarks list
+      if (user?.username) {
+        queryClient.invalidateQueries({
+          queryKey: ['bookmarks', user.username],
+          refetchType: 'none'
+        });
+      }
     },
     onError: (error) => {
       console.error("Bookmark error:", error);
@@ -162,7 +192,6 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
       return;
     }
     
-    console.log("Toggling bookmark for novel:", novelId);
     bookmarkMutation.mutate();
   };
   
@@ -302,7 +331,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                     {novelData.genres.map((genre, index) => (
                       <Link 
                         to={`/novels?genre=${encodeURIComponent(genre)}`} 
-                        key={index} 
+                        key={`genre-${genre}-${index}`}
                         className="genre-tag"
                       >
                         {genre}
@@ -467,7 +496,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="staff-members">
                   {novelData.activeStaff?.translator && novelData.activeStaff.translator.length > 0 ? (
                     novelData.activeStaff.translator.map((translator, index) => (
-                      <span className="staff-name" key={index}>{translator}</span>
+                      <span className="staff-name" key={`translator-${translator}-${index}`}>{translator}</span>
                     ))
                   ) : (
                     <span className="staff-empty">None</span>
@@ -480,7 +509,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="staff-members">
                   {novelData.activeStaff?.editor && novelData.activeStaff.editor.length > 0 ? (
                     novelData.activeStaff.editor.map((editor, index) => (
-                      <span className="staff-name" key={index}>{editor}</span>
+                      <span className="staff-name" key={`editor-${editor}-${index}`}>{editor}</span>
                     ))
                   ) : (
                     <span className="staff-empty">None</span>
@@ -493,7 +522,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="staff-members">
                   {novelData.activeStaff?.proofreader && novelData.activeStaff.proofreader.length > 0 ? (
                     novelData.activeStaff.proofreader.map((proofreader, index) => (
-                      <span className="staff-name" key={index}>{proofreader}</span>
+                      <span className="staff-name" key={`proofreader-${proofreader}-${index}`}>{proofreader}</span>
                     ))
                   ) : (
                     <span className="staff-empty">None</span>
@@ -511,7 +540,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="staff-members">
                   {novelData.inactiveStaff?.translator && novelData.inactiveStaff.translator.length > 0 ? (
                     novelData.inactiveStaff.translator.map((translator, index) => (
-                      <span className="staff-name" key={index}>{translator}</span>
+                      <span className="staff-name" key={`inactive-translator-${translator}-${index}`}>{translator}</span>
                     ))
                   ) : (
                     <span className="staff-empty">None</span>
@@ -524,7 +553,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="staff-members">
                   {novelData.inactiveStaff?.editor && novelData.inactiveStaff.editor.length > 0 ? (
                     novelData.inactiveStaff.editor.map((editor, index) => (
-                      <span className="staff-name" key={index}>{editor}</span>
+                      <span className="staff-name" key={`inactive-editor-${editor}-${index}`}>{editor}</span>
                     ))
                   ) : (
                     <span className="staff-empty">None</span>
@@ -537,7 +566,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="staff-members">
                   {novelData.inactiveStaff?.proofreader && novelData.inactiveStaff.proofreader.length > 0 ? (
                     novelData.inactiveStaff.proofreader.map((proofreader, index) => (
-                      <span className="staff-name" key={index}>{proofreader}</span>
+                      <span className="staff-name" key={`inactive-proofreader-${proofreader}-${index}`}>{proofreader}</span>
                     ))
                   ) : (
                     <span className="staff-empty">None</span>

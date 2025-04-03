@@ -27,6 +27,7 @@ import config from '../config/config';
 import DOMPurify from 'dompurify';
 import { Editor } from '@tinymce/tinymce-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { CommentIcon, LockIcon } from './novel-detail/NovelIcons';
 
 /**
  * Chapter Component
@@ -49,6 +50,7 @@ const Chapter = () => {
   const editorRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
   // Reset isNavigating when chapterId changes (after successful navigation)
   useEffect(() => {
@@ -558,14 +560,32 @@ const Chapter = () => {
         </button>
       </div>
 
-      {/* Comments section */}
-      <div className="chapter-comments">
-        <CommentSection 
-          contentId={`${novelId}-${chapterId}`} 
-          contentType="chapters"
-          initialComments={comments}
-          isLoading={isCommentsLoading}
-        />
+      {/* Comments section with toggle */}
+      <div className="novel-comments-section">
+        <button
+          className="comments-toggle-btn" 
+          onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+        >
+          {isCommentsOpen ? (
+            <>
+              <LockIcon size={18} style={{ marginRight: '8px' }} />
+              Hide Comments
+            </>
+          ) : (
+            <>
+              <CommentIcon size={18} style={{ marginRight: '8px' }} />
+              Show Comments
+            </>
+          )}
+        </button>
+        
+        {isCommentsOpen && (
+          <CommentSection 
+            novelId={`${novelId}-${chapterId}`}
+            user={user}
+            isAuthenticated={!!user}
+          />
+        )}
       </div>
     </div>
   );

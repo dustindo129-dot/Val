@@ -10,8 +10,7 @@ const ModuleForm = memo(({
 }) => {
   // Log when component mounts or editingModule changes
   useEffect(() => {
-    console.log('ModuleForm rendered with editingModule:', editingModule);
-    console.log('moduleForm state:', moduleForm);
+    // Removed console.log statements
   }, [editingModule, moduleForm]);
 
   return (

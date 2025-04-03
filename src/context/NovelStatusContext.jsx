@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import config from '../config/config';
+import sseService from '../services/sseService';
 
 const NovelStatusContext = createContext(null);
 
@@ -15,39 +16,20 @@ export const NovelStatusProvider = ({ children }) => {
   
   // Set up SSE connection for real-time status updates
   useEffect(() => {
-    let eventSource = null;
-    
-    try {
-      eventSource = new EventSource(`${config.backendUrl}/api/novels/sse`);
-      
-      // Handle novel status change events
-      eventSource.addEventListener('novel_status_changed', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          updateNovelStatus(data.id, data.status);
-        } catch (error) {
-          console.error('Error processing novel status change event:', error);
-        }
-      });
-      
-      // Handle connection errors
-      eventSource.onerror = (error) => {
-        if (eventSource) {
-          eventSource.close();
-          setTimeout(() => {
-            eventSource = new EventSource(`${config.backendUrl}/api/novels/sse`);
-          }, 5000);
-        }
-      };
-    } catch (error) {
-      console.error('Error setting up SSE connection:', error);
-    }
-    
-    // Clean up the SSE connection on unmount
-    return () => {
-      if (eventSource) {
-        eventSource.close();
+    const handleStatusChange = (data) => {
+      try {
+        updateNovelStatus(data.id, data.status);
+      } catch (error) {
+        console.error('Error processing novel status change event:', error);
       }
+    };
+    
+    // Add event listener
+    sseService.addEventListener('novel_status_changed', handleStatusChange);
+    
+    // Clean up on unmount
+    return () => {
+      sseService.removeEventListener('novel_status_changed', handleStatusChange);
     };
   }, []);
 

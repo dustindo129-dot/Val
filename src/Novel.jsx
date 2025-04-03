@@ -19,6 +19,7 @@ import axios from 'axios';
 import HotNovels from './components/HotNovels';
 import './Novel.css';
 import config from '../config/config';
+import sseService from './services/sseService';
 
 // Function to truncate HTML content safely
 const truncateHTML = (html, maxLength) => {
@@ -58,119 +59,69 @@ const Novel = ({ searchQuery = "" }) => {
   const currentPage = parseInt(page) || 1;
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const queryClient = useQueryClient();
-  const eventSourceRef = useRef(null);
 
   // Set up SSE connection for real-time updates
   useEffect(() => {
-    // Close any existing connections
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
-
-    console.log('Setting up SSE connection...');
-    // Create new EventSource connection
-    const eventSource = new EventSource(`${config.backendUrl}/api/novels/sse`);
-    eventSourceRef.current = eventSource;
-
-    // Handle connection open
-    eventSource.onopen = () => {
-      console.log('SSE connection established');
-    };
-
-    // Handle general messages
-    eventSource.onmessage = (event) => {
-      console.log('SSE message received:', event.data);
-    };
-
-    // Handle update events (any change to novels or chapters)
-    eventSource.addEventListener('update', (event) => {
+    // Define event handlers
+    const handleUpdate = () => {
       console.log('Novel update event received');
-      // Force immediate data refresh
       queryClient.invalidateQueries({ queryKey: ['novels'] });
       queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
       queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
       queryClient.refetchQueries({ queryKey: ['hotNovels'] });
-    });
+    };
 
-    // Handle novel status change events
-    eventSource.addEventListener('novel_status_changed', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log(`Novel status changed: "${data.title}" to "${data.status}"`);
-        
-        // Force immediate data refresh
-        queryClient.invalidateQueries({ queryKey: ['novels'] });
-        queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
-        queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
-        queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
-      } catch (error) {
-        console.error('Error processing novel status change event:', error);
-      }
-    });
+    const handleStatusChange = (data) => {
+      console.log(`Novel status changed: "${data.title}" to "${data.status}"`);
+      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
+      queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
+      queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
+    };
 
-    // Handle novel deletion events
-    eventSource.addEventListener('novel_deleted', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log(`Novel deleted: "${data.title}" (ID: ${data.id})`);
-        
-        // Force immediate data refresh
-        queryClient.invalidateQueries({ queryKey: ['novels'] });
-        queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
-        queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
-        queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
-      } catch (error) {
-        console.error('Error processing novel deletion event:', error);
-      }
-    });
+    const handleNovelDelete = (data) => {
+      console.log(`Novel deleted: "${data.title}" (ID: ${data.id})`);
+      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
+      queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
+      queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
+    };
 
-    // Handle refresh events (manual refresh)
-    eventSource.addEventListener('refresh', (event) => {
+    const handleRefresh = () => {
       console.log('Full refresh requested from server');
-      // Force immediate data refresh
       queryClient.invalidateQueries();
       queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
       queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
-    });
-
-    // Handle new novel events
-    eventSource.addEventListener('new_novel', (event) => {
-      console.log('New novel added:', event.data);
-      // Force refetch of novel data
-      queryClient.invalidateQueries({ queryKey: ['novels'] });
-      queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
-    });
-
-    // Handle new chapter events
-    eventSource.addEventListener('new_chapter', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log(`New chapter "${data.chapterTitle}" added to "${data.novelTitle}"`);
-        
-        // Force refetch of novel data
-        queryClient.invalidateQueries({ queryKey: ['novels'] });
-        queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
-      } catch (error) {
-        console.error('Error parsing chapter event data:', error);
-      }
-    });
-
-    // Handle connection errors
-    eventSource.onerror = (error) => {
-      console.error('SSE connection error:', error);
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
-      }, 5000);
     };
 
-    // Clean up on component unmount
+    const handleNewNovel = () => {
+      console.log('New novel added');
+      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
+    };
+
+    const handleNewChapter = (data) => {
+      console.log(`New chapter "${data.chapterTitle}" added to "${data.novelTitle}"`);
+      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
+    };
+
+    // Add event listeners
+    sseService.addEventListener('update', handleUpdate);
+    sseService.addEventListener('novel_status_changed', handleStatusChange);
+    sseService.addEventListener('novel_deleted', handleNovelDelete);
+    sseService.addEventListener('refresh', handleRefresh);
+    sseService.addEventListener('new_novel', handleNewNovel);
+    sseService.addEventListener('new_chapter', handleNewChapter);
+
+    // Clean up on unmount
     return () => {
-      console.log('Closing SSE connection');
-      eventSource.close();
+      sseService.removeEventListener('update', handleUpdate);
+      sseService.removeEventListener('novel_status_changed', handleStatusChange);
+      sseService.removeEventListener('novel_deleted', handleNovelDelete);
+      sseService.removeEventListener('refresh', handleRefresh);
+      sseService.removeEventListener('new_novel', handleNewNovel);
+      sseService.removeEventListener('new_chapter', handleNewChapter);
     };
   }, [currentPage, queryClient]);
 

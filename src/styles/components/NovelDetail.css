@@ -604,64 +604,85 @@
 /* Chapter item styles - Individual chapter display */
 .chapter-item {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   padding: 10px;
-  background-color: #f9fafb;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  margin-bottom: 8px;
-  position: relative;
+  border-bottom: 1px solid #eee;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  background: white;
+  gap: 10px;
 }
 
-.chapter-item:hover {
-  background-color: #f3f4f6;
+.chapter-item.reordering {
+  opacity: 0.7;
+  transform: scale(0.98);
 }
 
-.chapter-number {
+.chapter-content {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background-color: #3b82f6;
-  color: white;
-  border-radius: 4px;
-  font-weight: 600;
-  margin-right: 8px;
-  flex-shrink: 0;
 }
 
-.chapter-item .chapter-title-link {
+.chapter-title-link {
   flex: 1;
-  min-width: 0; /* Allow link to shrink below its content size */
   color: #1f2937;
   text-decoration: none;
   font-weight: 500;
-  font-size: 1rem;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  padding-right: 10px;
-  white-space: normal; /* Allow text to wrap */
-  word-break: break-word; /* Break words if needed */
+  gap: 8px;
 }
 
-.chapter-item .new-tag {
+.new-tag {
+  display: inline-block;
   padding: 2px 8px;
+  background-color: #ef4444;
+  color: white;
   border-radius: 12px;
   font-size: 0.7rem;
   font-weight: bold;
-  background-color: #ff3860;
-  color: white;
   animation: pulse 2s infinite;
-  flex-shrink: 0;
+}
+
+.chapter-date {
+  color: #6b7280;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  margin-left: auto;
+  padding-left: 10px;
+}
+
+.chapter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.reorder-btn {
+  padding: 4px;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.reorder-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.reorder-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .delete-chapter-btn {
-  margin-left: auto;
-  margin-right: 10px;
   padding: 4px 8px;
   background-color: #ef4444;
   color: white;
@@ -670,22 +691,36 @@
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 500;
-  flex-shrink: 0;
-  width: 60px;
-  text-align: center;
 }
 
 .delete-chapter-btn:hover {
   background-color: #dc2626;
 }
 
-.chapter-date {
-  color: #6b7280;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  flex-shrink: 0;
-  width: 100px;
-  text-align: right;
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Dark mode support */
+.dark-mode .chapter-item {
+  background-color: #1f2937;
+  border-bottom-color: #374151;
+}
+
+.dark-mode .chapter-title-link {
+  color: #f9fafb;
+}
+
+.dark-mode .chapter-date {
+  color: #9ca3af;
 }
 
 /* Responsive styles */
@@ -694,22 +729,21 @@
     flex-wrap: wrap;
   }
   
-  .chapter-item .chapter-title-link {
-    order: 1;
+  .chapter-content {
     width: 100%;
-    margin: 8px 0;
+    order: 1;
   }
   
-  .delete-chapter-btn {
+  .chapter-actions {
     order: 2;
-    margin-left: 45px;
+    margin-left: auto;
   }
   
   .chapter-date {
     order: 3;
-    margin-left: auto;
-    margin-right: 0;
-    width: auto;
+    margin-left: 0;
+    width: 100%;
+    text-align: right;
   }
 }
 
@@ -948,30 +982,45 @@
 
 /* Module container and content */
 .module-container {
-  background-color: #fff;
+  margin-bottom: 2rem;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-  padding: 1rem;
   overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  background: white;
 }
 
-.dark-mode .module-container {
-  background-color: #2d3748;
+.module-container.reordering {
+  opacity: 0.7;
+  transform: scale(0.98);
 }
 
 .module-content {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
+  padding: 1rem;
 }
 
-/* Module cover image */
+.module-reorder-buttons {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px;
+  border-radius: 4px;
+  margin-top: 8px;
+  transition: opacity 0.2s ease;
+}
+
 .module-cover {
   flex-shrink: 0;
   width: 120px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  position: relative;
 }
 
 .module-cover-image {
@@ -980,49 +1029,6 @@
   object-fit: cover;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Module reorder buttons */
-.module-reorder-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.reorder-btn {
-  background: none;
-  border: 1px solid #cbd5e0;
-  border-radius: 4px;
-  color: #4a5568;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.reorder-btn:hover:not(.disabled) {
-  background-color: #e2e8f0;
-  border-color: #a0aec0;
-}
-
-.reorder-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dark-mode .reorder-btn {
-  border-color: #4a5568;
-  color: #cbd5e0;
-}
-
-.dark-mode .reorder-btn:hover:not(.disabled) {
-  background-color: #4a5568;
-  border-color: #cbd5e0;
 }
 
 /* Module details (right side) */
@@ -1090,17 +1096,21 @@
 }
 
 .chapter-number {
-  flex-shrink: 0;
-  width: 50px;
-  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #3182ce;
+  width: 30px;
+  height: 30px;
+  background-color: #3b82f6;
   color: white;
-  font-weight: 600;
   border-radius: 4px;
-  margin-right: 0.75rem;
+  font-weight: 600;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.dark-mode .chapter-number {
+  background-color: #2563eb;
 }
 
 .chapter-title-link {
@@ -1589,6 +1599,48 @@
 @media (max-width: 768px) {
   .novel-content-row {
     flex-direction: column;
+  }
+}
+
+/* Update reorder button styles for vertical layout */
+.reorder-btn {
+  padding: 4px;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+/* Remove the SVG rotation so arrows point up/down */
+.reorder-btn svg {
+  transform: none;  /* Remove the rotation */
+}
+
+/* Dark mode support for reorder buttons */
+:root.dark-mode .module-reorder-buttons {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:root.dark-mode .reorder-btn {
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .reorder-btn:hover:not(:disabled) {
+  background: rgba(74, 85, 104, 0.7);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .module-reorder-buttons {
+    width: 100%;
+    justify-content: center;
   }
 }
 
