@@ -296,7 +296,7 @@ const NovelList = () => {
                     {/* Novel content */}
                     <div className="novel-content">
                       <div className="novel-header">
-                        <Link to={`/novel/${novel._id}`} className="novel-title-link">
+                        <Link to={`/novel/${novel._id}`} className="novel-list-title-link">
                           <h3 className="novel-title">{novel.title}</h3>
                         </Link>
                         <Link to={`/novel/${novel._id}/chapter/1`} className="first-chapter">
@@ -327,7 +327,10 @@ const NovelList = () => {
                       </div>
                       {/* Latest chapters list */}
                       <div className="chapter-list">
-                        {(novel.chapters || []).map(chapter => (
+                        {(novel.chapters || [])
+                          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by newest first
+                          .slice(0, 3) // Ensure we only show at most 3 chapters
+                          .map(chapter => (
                           <Link 
                             key={chapter._id} 
                             to={`/novel/${novel._id}/chapter/${chapter._id}`}

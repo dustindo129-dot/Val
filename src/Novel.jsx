@@ -92,6 +92,22 @@ const Novel = ({ searchQuery = "" }) => {
       queryClient.refetchQueries({ queryKey: ['hotNovels'] });
     });
 
+    // Handle novel status change events
+    eventSource.addEventListener('novel_status_changed', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log(`Novel status changed: "${data.title}" to "${data.status}"`);
+        
+        // Force immediate data refresh
+        queryClient.invalidateQueries({ queryKey: ['novels'] });
+        queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
+        queryClient.refetchQueries({ queryKey: ['novels', currentPage] }, { force: true });
+        queryClient.refetchQueries({ queryKey: ['hotNovels'] }, { force: true });
+      } catch (error) {
+        console.error('Error processing novel status change event:', error);
+      }
+    });
+
     // Handle novel deletion events
     eventSource.addEventListener('novel_deleted', (event) => {
       try {
@@ -366,6 +382,8 @@ const Novel = ({ searchQuery = "" }) => {
                   {/* Latest chapters list */}
                   <div className="latest-chapters">
                     {(novel.chapters || [])
+                      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by newest first
+                      .slice(0, 3) // Ensure we only show at most 3 chapters
                       .map((chapter, index) => (
                       <div key={index} className="chapter-link-container">
                         <Link 

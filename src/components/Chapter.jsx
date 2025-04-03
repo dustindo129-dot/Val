@@ -233,8 +233,41 @@ const Chapter = () => {
     }
 
     try {
-      await axios.delete(
-        `${config.backendUrl}/api/chapters/${chapter._id}`,
+      // Store chapter and novel IDs for reference
+      const currentChapterId = chapter._id;
+      const currentNovelId = chapter.novelId;
+      
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['chapter', chapterId] });
+      
+      // Remove chapter from cache immediately for instant UI feedback
+      queryClient.removeQueries(['chapter', chapterId]);
+      
+      // Optimistically update novel data if it's in the cache
+      const novelData = queryClient.getQueryData(['novel', novelId]);
+      if (novelData) {
+        const optimisticNovelData = {...novelData};
+        
+        // Remove the chapter from any modules that might contain it
+        if (optimisticNovelData.modules) {
+          optimisticNovelData.modules = optimisticNovelData.modules.map(module => {
+            if (module.chapters && module.chapters.some(c => c._id === currentChapterId)) {
+              return {
+                ...module,
+                chapters: module.chapters.filter(c => c._id !== currentChapterId)
+              };
+            }
+            return module;
+          });
+          
+          // Update the cache with optimistic data
+          queryClient.setQueryData(['novel', novelId], optimisticNovelData);
+        }
+      }
+
+      // Make the actual delete API call
+      const response = await axios.delete(
+        `${config.backendUrl}/api/chapters/${currentChapterId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -242,16 +275,19 @@ const Chapter = () => {
         }
       );
       
-      // Invalidate relevant queries
-      await queryClient.invalidateQueries(['chapter', chapterId]);
-      await queryClient.invalidateQueries(['novel', novelId]);
-      await queryClient.invalidateQueries(['modules', novelId]);
+      // On successful deletion, invalidate relevant queries without forcing refetches
+      queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
       
-      // Navigate back to novel page after deletion
+      // Navigate back to novel page
       navigate(`/novel/${novelId}`, { replace: true });
     } catch (err) {
       console.error('Failed to delete chapter:', err);
       setError('Failed to delete chapter. Please try again.');
+      
+      // On error, refetch to ensure data consistency
+      queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+      queryClient.refetchQueries({ queryKey: ['modules', novelId] });
     }
   };
 
@@ -261,12 +297,41 @@ const Chapter = () => {
   const handleEditChapter = async () => {
     try {
       setIsSaving(true);
-      const updatedChapter = await axios.put(
+      
+      // Get updated content from the editor
+      const updatedTitle = editedTitle;
+      const updatedContent = editorRef.current.getContent();
+      
+      // Create update data object
+      const updateData = {
+        title: updatedTitle,
+        content: updatedContent
+      };
+      
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['chapter', chapterId] });
+      
+      // Get the current data from the cache
+      const previousChapterData = queryClient.getQueryData(['chapter', chapterId]);
+      
+      // Optimistically update UI with new data
+      queryClient.setQueryData(['chapter', chapterId], {
+        ...chapterData,
+        chapter: {
+          ...chapterData.chapter,
+          title: updatedTitle,
+          content: updatedContent,
+          updatedAt: new Date().toISOString()
+        }
+      });
+
+      // Set relevant novel query data as stale to ensure it refreshes on next access
+      queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      
+      // Make the actual API call
+      const { data } = await axios.put(
         `${config.backendUrl}/api/chapters/${chapterId}`,
-        {
-          title: editedTitle,
-          content: editorRef.current.getContent()
-        },
+        updateData,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -274,20 +339,24 @@ const Chapter = () => {
         }
       );
 
-      // Update query cache with new data
+      // On success, set isEditing to false
+      setIsEditing(false);
+      
+      // Update the cache with the server data to ensure consistency
       queryClient.setQueryData(['chapter', chapterId], {
-        ...chapterData,
+        ...previousChapterData,
         chapter: {
-          ...chapterData.chapter,
-          title: editedTitle,
-          content: editorRef.current.getContent()
+          ...previousChapterData.chapter,
+          ...data
         }
       });
-
-      setIsEditing(false);
+      
     } catch (err) {
       console.error('Failed to update chapter:', err);
       setError('Failed to update chapter. Please try again.');
+      
+      // On error, refetch from server to ensure data consistency
+      queryClient.refetchQueries({ queryKey: ['chapter', chapterId] });
     } finally {
       setIsSaving(false);
     }

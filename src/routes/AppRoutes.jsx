@@ -48,6 +48,15 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      {/* New route for adding chapter to specific module */}
+      <Route 
+        path="/novel/:novelId/module/:moduleId/add-chapter" 
+        element={
+          <ProtectedRoute>
+            <ChapterDashboard />
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   );
 }

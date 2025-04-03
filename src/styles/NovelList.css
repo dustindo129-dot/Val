@@ -73,7 +73,7 @@
 }
 
 /* Link wrapper for novel title */
-.novel-title-link {
+.novel-list-title-link {
   text-decoration: none;
   color: inherit;
   width: 100%;
@@ -157,7 +157,7 @@
 }
 
 /* Novel title hover effect */
-.novel-title-link:hover .novel-title {
+.novel-list-title-link:hover .novel-title {
   text-decoration: none;
 }
 

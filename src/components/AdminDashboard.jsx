@@ -18,7 +18,7 @@
  * - Role-based access control
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../styles/components/AdminDashboard.css';
@@ -106,7 +106,17 @@ const AdminDashboard = () => {
     title: '', 
     alternativeTitles: '',
     author: '', 
-    staff: '',
+    illustrator: '',
+    active: {
+      translator: [],
+      editor: [],
+      proofreader: []
+    },
+    inactive: {
+      translator: [],
+      editor: [],
+      proofreader: []
+    },
     genres: [],
     description: '',
     note: '',
@@ -149,6 +159,20 @@ const AdminDashboard = () => {
     refetchOnMount: 'always', // Always refetch on mount
     refetchOnWindowFocus: true
   });
+
+  // Sort novels by updatedAt timestamp (most recent first)
+  const sortedNovels = useMemo(() => {
+    if (!novels || novels.length === 0) return [];
+    
+    return [...novels].sort((a, b) => {
+      // Get the timestamp for each novel
+      const timestampA = new Date(a.updatedAt || a.createdAt).getTime();
+      const timestampB = new Date(b.updatedAt || b.createdAt).getTime();
+      
+      // Sort descending (newest first)
+      return timestampB - timestampA;
+    });
+  }, [novels]);
 
   /**
    * Fetches chapters for a specific novel
@@ -336,6 +360,32 @@ const AdminDashboard = () => {
   };
 
   /**
+   * Handles staff input change for translator, editor, proofreader arrays
+   * @param {string} status - 'active' or 'inactive'
+   * @param {string} role - 'translator', 'editor', or 'proofreader'
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event
+   */
+  const handleStaffInputChange = (status, role, e) => {
+    const target = editingNovel ? editingNovel : newNovel;
+    // Convert comma-separated names into an array
+    const names = e.target.value.split(',').map(name => name.trim()).filter(name => name);
+    
+    const updatedNovel = {
+      ...target,
+      [status]: {
+        ...target[status],
+        [role]: names
+      }
+    };
+    
+    if (editingNovel) {
+      setEditingNovel(updatedNovel);
+    } else {
+      setNewNovel(updatedNovel);
+    }
+  };
+
+  /**
    * Handles illustration file upload
    * @param {React.ChangeEvent<HTMLInputElement>} e - File input change event
    */
@@ -411,7 +461,9 @@ const AdminDashboard = () => {
         title: editingNovel ? editingNovel.title : newNovel.title,
         alternativeTitles: editingNovel ? editingNovel.alternativeTitles : newNovel.alternativeTitles,
         author: editingNovel ? editingNovel.author : newNovel.author,
-        staff: editingNovel ? editingNovel.staff : newNovel.staff,
+        illustrator: editingNovel ? editingNovel.illustrator : newNovel.illustrator,
+        active: editingNovel ? editingNovel.active : newNovel.active,
+        inactive: editingNovel ? editingNovel.inactive : newNovel.inactive,
         genres: editingNovel ? editingNovel.genres : newNovel.genres,
         description: editorRef.current.getContent(),
         note: noteEditorRef.current.getContent(),
@@ -478,7 +530,17 @@ const AdminDashboard = () => {
       title: novel.title || '',
       alternativeTitles: novel.alternativeTitles || '',
       author: novel.author || '',
-      staff: novel.staff || '',
+      illustrator: novel.illustrator || '',
+      active: novel.active || {
+        translator: [],
+        editor: [],
+        proofreader: []
+      },
+      inactive: novel.inactive || {
+        translator: [],
+        editor: [],
+        proofreader: []
+      },
       genres: novel.genres || [],
       description: novel.description || '',
       note: novel.note || '',
@@ -557,7 +619,17 @@ const AdminDashboard = () => {
       title: '', 
       alternativeTitles: '',
       author: '', 
-      staff: '',  // Ensure staff has empty string when resetting
+      illustrator: '',
+      active: {
+        translator: [],
+        editor: [],
+        proofreader: []
+      },
+      inactive: {
+        translator: [],
+        editor: [],
+        proofreader: []
+      },
       genres: [],
       description: '',
       note: '',
@@ -583,15 +655,18 @@ const AdminDashboard = () => {
       // Get current cache data
       const previousData = queryClient.getQueryData(['novels']);
       
+      // Create a timestamp for consistent optimistic updates
+      const updatedAt = new Date().toISOString();
+      
       // Optimistically update the cache
       queryClient.setQueryData(['novels'], old => 
         Array.isArray(old) 
-          ? old.map(novel => novel._id === id ? { ...novel, status } : novel)
+          ? old.map(novel => novel._id === id ? { ...novel, status, updatedAt } : novel)
           : []
       );
 
       if (selectedNovel?._id === id) {
-        setSelectedNovel(prev => ({ ...prev, status }));
+        setSelectedNovel(prev => ({ ...prev, status, updatedAt }));
       }
 
       // Update the status in the context
@@ -604,7 +679,11 @@ const AdminDashboard = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ 
+          status,
+          // Explicitly request to update the timestamp
+          updatedAt 
+        })
       });
 
       if (!response.ok) {
@@ -623,6 +702,10 @@ const AdminDashboard = () => {
           ? old.map(novel => novel._id === id ? { ...novel, ...updatedNovel } : novel)
           : []
       );
+
+      // Also invalidate novel list and hot novels queries to ensure they're updated
+      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
 
       if (selectedNovel?._id === id) {
         setSelectedNovel(prev => ({ ...prev, ...updatedNovel }));
@@ -671,12 +754,54 @@ const AdminDashboard = () => {
             />
             <input
               type="text"
-              name="staff"
-              placeholder="Staff (e.g. Editor, Translator, etc.)"
-              value={(editingNovel ? editingNovel.staff : newNovel.staff) || ''}
+              name="illustrator"
+              placeholder="Illustrator(s)"
+              value={editingNovel ? editingNovel.illustrator : newNovel.illustrator}
               onChange={handleInputChange}
-              required
             />
+            
+            {/* Staff Section */}
+            <div className="staff-section">
+              <h4>Active Staff</h4>
+              <input
+                type="text"
+                placeholder="Translators (comma-separated)"
+                value={editingNovel ? editingNovel.active?.translator?.join(', ') || '' : newNovel.active?.translator?.join(', ') || ''}
+                onChange={(e) => handleStaffInputChange('active', 'translator', e)}
+              />
+              <input
+                type="text"
+                placeholder="Editors (comma-separated)"
+                value={editingNovel ? editingNovel.active?.editor?.join(', ') || '' : newNovel.active?.editor?.join(', ') || ''}
+                onChange={(e) => handleStaffInputChange('active', 'editor', e)}
+              />
+              <input
+                type="text"
+                placeholder="Proofreaders (comma-separated)"
+                value={editingNovel ? editingNovel.active?.proofreader?.join(', ') || '' : newNovel.active?.proofreader?.join(', ') || ''}
+                onChange={(e) => handleStaffInputChange('active', 'proofreader', e)}
+              />
+              
+              <h4>Inactive Staff</h4>
+              <input
+                type="text"
+                placeholder="Translators (comma-separated)"
+                value={editingNovel ? editingNovel.inactive?.translator?.join(', ') || '' : newNovel.inactive?.translator?.join(', ') || ''}
+                onChange={(e) => handleStaffInputChange('inactive', 'translator', e)}
+              />
+              <input
+                type="text"
+                placeholder="Editors (comma-separated)"
+                value={editingNovel ? editingNovel.inactive?.editor?.join(', ') || '' : newNovel.inactive?.editor?.join(', ') || ''}
+                onChange={(e) => handleStaffInputChange('inactive', 'editor', e)}
+              />
+              <input
+                type="text"
+                placeholder="Proofreaders (comma-separated)"
+                value={editingNovel ? editingNovel.inactive?.proofreader?.join(', ') || '' : newNovel.inactive?.proofreader?.join(', ') || ''}
+                onChange={(e) => handleStaffInputChange('inactive', 'proofreader', e)}
+              />
+            </div>
             
             {/* Genres Section */}
             <div className="genres-section">
@@ -830,7 +955,7 @@ const AdminDashboard = () => {
         <div className="novel-list">
           <h3 className="section-title">Novel List</h3>
           <ul>
-            {novels.map(novel => (
+            {sortedNovels.map(novel => (
               <li 
                 key={novel._id} 
                 className={selectedNovel?._id === novel._id ? 'selected' : ''}

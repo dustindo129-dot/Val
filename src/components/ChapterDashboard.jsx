@@ -35,10 +35,13 @@ import { useQueryClient } from '@tanstack/react-query';
  * @param {Object} props - No props required, uses URL parameters
  */
 const ChapterDashboard = () => {
-  // Get novel ID from URL parameters and module ID from query parameters
-  const { novelId } = useParams();
+  // Get novel ID from URL parameters and module ID from route params or query parameters
+  const { novelId, moduleId: urlModuleId } = useParams();
   const [searchParams] = useSearchParams();
-  const moduleId = searchParams.get('moduleId');
+  const queryModuleId = searchParams.get('moduleId');
+  // Use moduleId from URL params first, then fall back to query params
+  const moduleId = urlModuleId || queryModuleId;
+  
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -114,7 +117,7 @@ const ChapterDashboard = () => {
         .replace(/>\s+</g, '><') // Remove spaces between HTML tags
         .trim();
       
-      // Log sizes for debugging
+      // Check content size
       const contentSizeMB = (cleanedContent.length / (1024 * 1024)).toFixed(2);
       if (cleanedContent.length > 40 * 1024 * 1024) {
         setError('Content is too large. Please reduce formatting or split into multiple chapters.');
@@ -122,15 +125,60 @@ const ChapterDashboard = () => {
         return;
       }
       
-      // Create the chapter with moduleId
+      // Create the chapter data object
+      const chapterData = {
+        novelId: novelId,
+        moduleId: moduleId,
+        title: chapterTitle,
+        content: cleanedContent
+      };
+      
+      // Cancel any outgoing refetches for the novel
+      await queryClient.cancelQueries({ queryKey: ['novel', novelId] });
+      
+      // Get current novel data for optimistic update
+      const currentNovelData = queryClient.getQueryData(['novel', novelId]);
+      
+      // Optimistically update the UI before the API call completes
+      if (currentNovelData) {
+        // Add a temporary optimistic chapter to the novel's chapters list
+        const optimisticNovel = {...currentNovelData};
+        const timestamp = new Date().toISOString();
+        
+        // Find the target module and add chapter to it
+        if (optimisticNovel.modules) {
+          const targetModule = optimisticNovel.modules.find(m => m._id === moduleId);
+          if (targetModule) {
+            // Create optimistic chapter with temporary ID
+            const optimisticChapter = {
+              _id: `temp-${Date.now()}`,
+              title: chapterTitle,
+              content: cleanedContent,
+              novelId,
+              moduleId,
+              createdAt: timestamp,
+              updatedAt: timestamp
+            };
+            
+            // Add to module's chapters if it exists
+            if (!targetModule.chapters) {
+              targetModule.chapters = [];
+            }
+            targetModule.chapters.push(optimisticChapter);
+            
+            // Update the novel's update timestamp
+            optimisticNovel.updatedAt = timestamp;
+            
+            // Set the optimistic data in cache
+            queryClient.setQueryData(['novel', novelId], optimisticNovel);
+          }
+        }
+      }
+      
+      // Make the actual API call
       const chapterResponse = await axios.post(
         `${config.backendUrl}/api/chapters`,
-        {
-          novelId: novelId,
-          moduleId: moduleId,
-          title: chapterTitle,
-          content: cleanedContent
-        },
+        chapterData,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -138,28 +186,34 @@ const ChapterDashboard = () => {
           }
         }
       );
-
-      console.log('Chapter created successfully:', chapterResponse.data);
-
-      // Invalidate all relevant cache queries to ensure UI updates
-      await queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
-      await queryClient.invalidateQueries({ queryKey: ['modules', novelId] });
       
-      // Force a direct refetch of the novel data
-      await queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+      // More aggressively invalidate ALL related queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['novel', novelId] }),
+        queryClient.invalidateQueries({ queryKey: ['modules', novelId] }),
+        queryClient.invalidateQueries({ queryKey: ['chapters'] }),
+        // Remove any stale data
+        queryClient.removeQueries({ queryKey: ['novel', novelId], exact: false, stale: true })
+      ]);
       
-      // Navigate back with state and replace to avoid history issues
+      // Force complete cache reset for this novel
+      queryClient.resetQueries({ queryKey: ['novel', novelId] });
+      
+      // Navigate back to the novel page
       navigate(`/novel/${novelId}`, {
         replace: true,
         state: { 
           from: 'addChapter',
-          shouldRefetch: true,
+          shouldRefetch: true, // Force a refetch to ensure data is up-to-date
           timestamp: Date.now()
         }
       });
     } catch (err) {
       console.error('Error details:', err);
       setError(err.response?.data?.message || err.message || 'Failed to create chapter. Please try again.');
+      
+      // On error, refetch to ensure data consistency
+      queryClient.refetchQueries({ queryKey: ['novel', novelId] });
     } finally {
       setLoading(false);
     }

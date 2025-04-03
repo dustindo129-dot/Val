@@ -113,12 +113,6 @@
   line-height: 1.4;
 }
 
-.novel-title-link {
-  color: #18ce0f;
-  text-decoration: none;
-  font-weight: 600;
-}
-
 .novel-title-link:hover {
   text-decoration: none;
 }

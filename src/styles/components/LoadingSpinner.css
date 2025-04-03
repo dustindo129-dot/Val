@@ -1,0 +1,36 @@
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.loading-spinner {
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #1e3a8a; /* Default color - matches the navy blue theme */
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+/* Dark mode support */
+:root.dark-mode .loading-spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: #3b82f6; /* Lighter blue for dark mode */
+}
+
+:root.dark-mode .loading-text {
+  color: #d1d5db;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+} 
