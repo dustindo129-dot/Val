@@ -462,9 +462,11 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
           <div className="description-box">
             <h2>Description</h2>
             <div className="novel-description">
-              {isDescriptionExpanded 
-                ? novelData.description 
-                : truncateHTML(novelData.description, 300)}
+              <div dangerouslySetInnerHTML={{ 
+                __html: isDescriptionExpanded 
+                  ? novelData.description 
+                  : truncateHTML(novelData.description, 300)
+              }} />
               {novelData.description && novelData.description.length > 300 && (
                 <button className="read-more-btn" onClick={toggleDescription}>
                   {isDescriptionExpanded ? 'Show Less' : 'Read More'}

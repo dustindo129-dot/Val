@@ -299,9 +299,14 @@ const NovelList = () => {
                         <Link to={`/novel/${novel._id}`} className="novel-list-title-link">
                           <h3 className="novel-title">{novel.title}</h3>
                         </Link>
-                        <Link to={`/novel/${novel._id}/chapter/1`} className="first-chapter">
-                          First Chapter
-                        </Link>
+                        {novel.chapters && novel.chapters.length > 0 && (
+                          <Link 
+                            to={`/novel/${novel._id}/chapter/${novel.chapters[0]._id}`} 
+                            className="first-chapter"
+                          >
+                            First Chapter
+                          </Link>
+                        )}
                       </div>
                       {/* Update timestamp */}
                       <span className="update-time">
