@@ -487,7 +487,7 @@ const Chapter = () => {
               plugins: [
                 'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                'insertdatetime', 'media', 'table', 'help', 'wordcount', 'paste'
               ],
               toolbar: 'undo redo | formatselect | ' +
                 'bold italic underline strikethrough | ' +
@@ -502,6 +502,20 @@ const Chapter = () => {
               branding: false,
               promotion: false,
               paste_data_images: true,
+              paste_enable_default_filters: true,
+              paste_word_valid_elements: 'p,b,strong,i,em,h1,h2,h3,h4,h5,h6,ul,ol,li',
+              paste_remove_styles_if_webkit: true,
+              paste_remove_styles: true,
+              paste_retain_style_properties: 'font-size,font-style,font-weight,color',
+              paste_merge_formats: true,
+              paste_webkit_styles: 'none',
+              paste_as_text: false,
+              paste_filter_drop: false,
+              paste_preprocess: function(plugin, args) {
+                // Normalize content during paste
+                args.content = args.content.replace(/<!--Section Break-->/g, '<br clear="all">');
+                args.content = args.content.replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">');
+              },
               images_upload_handler: (blobInfo) => {
                 return new Promise((resolve, reject) => {
                   const formData = new FormData();

@@ -182,60 +182,95 @@
 }
 
 /* Word document specific styles */
-.chapter-content .WordSection1 {
+.chapter-content .WordSection1,
+.chapter-content .WordSection2,
+.chapter-content .WordSection3,
+.chapter-content .WordSection4,
+.chapter-content .WordSection5 {
   margin: 0 auto;
   max-width: 100%;
+  width: 100% !important;
 }
 
-.chapter-content h1,
-.chapter-content h2,
-.chapter-content h3,
-.chapter-content h4,
-.chapter-content h5,
-.chapter-content h6 {
-  font-family: 'Times New Roman', serif;
-  line-height: 1.4;
-  margin: 1.5em 0 0.5em;
-  color: #222;
+.chapter-content br[clear="all"] {
+  display: block;
+  margin: 1em 0;
+  content: "";
+  clear: both;
 }
 
+/* Force consistent text alignment and prevent side scrolling */
 .chapter-content p {
   margin: 1em 0;
   text-align: justify;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: 100% !important;
 }
 
 .chapter-content .MsoNormal,
 .chapter-content .MsoBodyText {
   margin: 1em 0;
   line-height: 1.6;
+  width: 100% !important;
 }
 
-/* Preserve Word document indentation */
+/* Override any problematic Word styles */
+.chapter-content [style*="text-indent"],
+.chapter-content [style*="margin-left"],
+.chapter-content [style*="margin-right"] {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Reset problematic section formatting */
+.chapter-content div[style*="width"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Preserve Word document indentation but limit it */
 .chapter-content [style*="text-indent"] {
-  text-indent: inherit !important;
+  text-indent: 2em !important;
 }
 
-/* Preserve Word document alignment */
+/* Preserve Word document alignment but unify it */
 .chapter-content [style*="text-align"] {
-  text-align: inherit !important;
+  text-align: justify !important;
 }
 
-/* Preserve Word document margins */
+/* Reset Word document margins */
 .chapter-content [style*="margin"] {
-  margin: inherit !important;
+  margin: 1em 0 !important;
 }
 
-/* Preserve Word document line height */
+/* Standardize Word document line height */
 .chapter-content [style*="line-height"] {
-  line-height: inherit !important;
+  line-height: 1.6 !important;
 }
 
-/* Preserve Word document font styles */
+/* Reset Word document font styles but keep some properties */
 .chapter-content [style*="font-family"],
 .chapter-content [style*="font-size"],
 .chapter-content [style*="font-weight"],
 .chapter-content [style*="font-style"] {
-  font: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* Preserve bold and italic */
+.chapter-content strong,
+.chapter-content b {
+  font-weight: bold;
+  color: #222;
+}
+
+.chapter-content em,
+.chapter-content i {
+  font-style: italic;
 }
 
 /* Add spacing between sections */
