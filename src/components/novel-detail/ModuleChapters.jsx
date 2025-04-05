@@ -78,7 +78,7 @@ const ModuleChapters = memo(({
                 className={`chapter-item ${isReordering ? 'reordering' : ''}`}
                 style={{ transition: 'all 0.3s ease' }}
               >
-                <div className="chapter-content" key={`chapter-content-${chapterId}`}>
+                <div className="chapter-list-content" key={`chapter-content-${chapterId}`}>
                   <div className="chapter-number" key={`chapter-number-${chapterId}`}>
                     {typeof chapter.order === 'number' ? chapter.order : chapter.order || 0}
                   </div>
