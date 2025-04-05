@@ -617,12 +617,6 @@
   transform: scale(0.98);
 }
 
-.chapter-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
 .chapter-title-link {
   flex: 1;
   color: #1f2937;

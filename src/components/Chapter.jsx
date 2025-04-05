@@ -98,19 +98,46 @@ const Chapter = () => {
   const [error, setError] = useState(null);
 
   /**
-   * Safely renders HTML content with sanitization
+   * Safely renders HTML content with minimal processing
    * @param {string} content - HTML content to render
    * @returns {string} Sanitized HTML
    */
   const getSafeHtml = (content) => {
+    if (!content) return { __html: '' };
+    
+    // Create a minimal sanitizer configuration
     return {
       __html: DOMPurify.sanitize(content, {
         ALLOWED_TAGS: ['div', 'p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u', 'br', 'i', 'b', 'img'],
-        ALLOWED_ATTR: ['style', 'class', 'src', 'alt', 'width', 'height'],
-        FORBID_TAGS: ['script', 'iframe'],
-        FORBID_ATTR: ['onerror', 'onload', 'onclick']
+        ALLOWED_ATTR: ['style', 'class', 'src', 'alt', 'width', 'height', 'id', 'data-pm-slice'],
+        // Only remove truly dangerous elements
+        FORBID_TAGS: ['script', 'iframe', 'object', 'embed'],
+        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+        ALLOW_DATA_ATTR: true, // Allow data attributes from ProseMirror
+        WHOLE_DOCUMENT: false,
+        SANITIZE_DOM: true
       })
     };
+  };
+
+  /**
+   * Unescapes HTML entities and converts them back to HTML tags
+   * This function is now only used when needed for legacy content
+   * @param {string} html - HTML string with escaped entities
+   * @returns {string} Unescaped HTML
+   */
+  const unescapeHtml = (html) => {
+    if (!html) return '';
+    
+    // Create a textarea to use browser's built-in HTML entity decoding
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = html
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+    return textarea.value;
   };
 
   /**
@@ -300,9 +327,12 @@ const Chapter = () => {
     try {
       setIsSaving(true);
       
-      // Get updated content from the editor
+      // Get raw HTML content directly from TinyMCE editor
       const updatedTitle = editedTitle;
-      const updatedContent = editorRef.current.getContent();
+      const updatedContent = editorRef.current.getContent({
+        format: 'html',  // Get as HTML
+        raw: true       // Get raw unprocessed HTML
+      });
       
       // Create update data object
       const updateData = {
@@ -316,13 +346,13 @@ const Chapter = () => {
       // Get the current data from the cache
       const previousChapterData = queryClient.getQueryData(['chapter', chapterId]);
       
-      // Optimistically update UI with new data
+      // Optimistically update UI with new data - raw HTML is preserved
       queryClient.setQueryData(['chapter', chapterId], {
         ...chapterData,
         chapter: {
           ...chapterData.chapter,
           title: updatedTitle,
-          content: updatedContent,
+          content: updatedContent, // Raw HTML preserved in cache
           updatedAt: new Date().toISOString()
         }
       });
@@ -330,13 +360,14 @@ const Chapter = () => {
       // Set relevant novel query data as stale to ensure it refreshes on next access
       queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
       
-      // Make the actual API call
+      // Make the API call - axios will automatically set the correct content-type
       const { data } = await axios.put(
         `${config.backendUrl}/api/chapters/${chapterId}`,
         updateData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json' // Ensure proper content type
           }
         }
       );
@@ -368,7 +399,8 @@ const Chapter = () => {
   useEffect(() => {
     if (isEditing && chapter) {
       setEditedTitle(chapter.title);
-      setEditedContent(chapter.content);
+      // Unescape HTML before setting editor content
+      setEditedContent(unescapeHtml(chapter.content || ''));
     }
   }, [isEditing, chapter]);
 
@@ -475,7 +507,10 @@ const Chapter = () => {
             apiKey={config.tinymceApiKey}
             onInit={(evt, editor) => {
               editorRef.current = editor;
-              editor.setContent(chapter.content);
+              // Set raw HTML content directly
+              if (chapter?.content) {
+                editor.setContent(chapter.content, { format: 'raw' });
+              }
             }}
             value={editedContent}
             onEditorChange={(content) => {
@@ -484,16 +519,22 @@ const Chapter = () => {
             init={{
               height: 500,
               menubar: false,
+              entity_encoding: 'raw',
+              encoding: 'html',
+              convert_urls: false,
+              verify_html: false,
+              cleanup: false,
               plugins: [
                 'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                'insertdatetime', 'media', 'table', 'help', 'wordcount', 'paste'
+                'insertdatetime', 'media', 'table', 'help', 'wordcount',
+                'preview'
               ],
               toolbar: 'undo redo | formatselect | ' +
                 'bold italic underline strikethrough | ' +
                 'alignleft aligncenter alignright alignjustify | ' +
                 'bullist numlist outdent indent | ' +
-                'link image | removeformat | help',
+                'link image | code preview | removeformat | help',
               content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
               skin: 'oxide',
               content_css: 'default',
@@ -502,45 +543,59 @@ const Chapter = () => {
               branding: false,
               promotion: false,
               paste_data_images: true,
-              paste_enable_default_filters: true,
-              paste_word_valid_elements: 'p,b,strong,i,em,h1,h2,h3,h4,h5,h6,ul,ol,li',
-              paste_remove_styles_if_webkit: true,
-              paste_remove_styles: true,
-              paste_retain_style_properties: 'font-size,font-style,font-weight,color',
-              paste_merge_formats: true,
-              paste_webkit_styles: 'none',
+              smart_paste: true,
               paste_as_text: false,
-              paste_filter_drop: false,
               paste_preprocess: function(plugin, args) {
-                // Normalize content during paste
-                args.content = args.content.replace(/<!--Section Break-->/g, '<br clear="all">');
-                args.content = args.content.replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">');
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = args.content;
+
+                // First remove all Word-specific tags and junk
+                wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
+                
+                // Remove empty and problematic spans
+                wrapper.querySelectorAll('span').forEach(span => {
+                  if (!span.textContent.trim()) {
+                    span.remove(); // Remove empty spans
+                  } else {
+                    // Replace nested spans with their content
+                    const text = document.createTextNode(span.textContent);
+                    span.replaceWith(text);
+                  }
+                });
+                
+                // Strip unnecessary div wrappers that might cause layout issues
+                wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
+                  if (div.children.length === 0 || div.textContent.trim() === '') {
+                    div.remove();
+                  } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
+                    // Unwrap divs that just contain a single paragraph
+                    div.replaceWith(div.children[0]);
+                  }
+                });
+
+                // Clean up section breaks and format as proper breaks
+                args.content = wrapper.innerHTML
+                  .replace(/<!--Section Break-->/g, '<br clear="all">')
+                  .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
+                  // Replace multiple consecutive breaks with a single one
+                  .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
               },
-              images_upload_handler: (blobInfo) => {
-                return new Promise((resolve, reject) => {
-                  const formData = new FormData();
-                  formData.append('file', blobInfo.blob(), blobInfo.filename());
-                  formData.append('upload_preset', config.cloudinary.uploadPresets.illustration);
-                  formData.append('folder', 'novel-illustrations');
-
-                  const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`;
-
-                  fetch(cloudinaryUrl, {
-                    method: 'POST',
-                    body: formData
-                  })
-                  .then(response => response.json())
-                  .then(result => {
-                    if (result.secure_url) {
-                      resolve(result.secure_url);
-                    } else {
-                      reject('Image upload failed');
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Cloudinary upload error:', error);
-                    reject('Image upload failed');
-                  });
+              paste_postprocess: function(plugin, args) {
+                // Additional cleanup after paste
+                args.node.querySelectorAll('span').forEach(span => {
+                  span.style.display = 'inline';
+                  span.style.wordBreak = 'normal';
+                  span.style.whiteSpace = 'normal';
+                });
+              },
+              setup: function(editor) {
+                editor.on('BeforeSetContent', function(e) {
+                  // Ensure content is treated as raw HTML
+                  e.format = 'raw';
+                });
+                editor.on('GetContent', function(e) {
+                  // Ensure we get raw HTML when retrieving content
+                  e.format = 'raw';
                 });
               }
             }}

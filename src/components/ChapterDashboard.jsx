@@ -284,13 +284,14 @@ const ChapterDashboard = () => {
                 plugins: [
                   'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                   'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                  'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                  'insertdatetime', 'media', 'table', 'help', 'wordcount',
+                  'preview'
                 ],
                 toolbar: 'undo redo | formatselect | ' +
                   'bold italic underline strikethrough | ' +
                   'alignleft aligncenter alignright alignjustify | ' +
                   'bullist numlist outdent indent | ' +
-                  'link image | removeformat | help',
+                  'link image | code preview | removeformat | help',
                 content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                 skin: 'oxide',
                 content_css: 'default',
@@ -300,6 +301,51 @@ const ChapterDashboard = () => {
                 branding: false,
                 promotion: false,
                 paste_data_images: true,
+                paste_as_text: false,
+                smart_paste: true,
+                paste_preprocess: function(plugin, args) {
+                  const wrapper = document.createElement('div');
+                  wrapper.innerHTML = args.content;
+
+                  // First remove all Word-specific tags and junk
+                  wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
+                  
+                  // Remove empty and problematic spans
+                  wrapper.querySelectorAll('span').forEach(span => {
+                    if (!span.textContent.trim()) {
+                      span.remove(); // Remove empty spans
+                    } else {
+                      // Replace nested spans with their content
+                      const text = document.createTextNode(span.textContent);
+                      span.replaceWith(text);
+                    }
+                  });
+                  
+                  // Strip unnecessary div wrappers that might cause layout issues
+                  wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
+                    if (div.children.length === 0 || div.textContent.trim() === '') {
+                      div.remove();
+                    } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
+                      // Unwrap divs that just contain a single paragraph
+                      div.replaceWith(div.children[0]);
+                    }
+                  });
+
+                  // Clean up section breaks and format as proper breaks
+                  args.content = wrapper.innerHTML
+                    .replace(/<!--Section Break-->/g, '<br clear="all">')
+                    .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
+                    // Replace multiple consecutive breaks with a single one
+                    .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
+                },
+                paste_postprocess: function(plugin, args) {
+                  // Additional cleanup after paste
+                  args.node.querySelectorAll('span').forEach(span => {
+                    span.style.display = 'inline';
+                    span.style.wordBreak = 'normal';
+                    span.style.whiteSpace = 'normal';
+                  });
+                },
                 images_upload_handler: (blobInfo) => {
                   return new Promise((resolve, reject) => {
                     const formData = new FormData();
