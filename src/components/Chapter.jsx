@@ -677,6 +677,7 @@ const Chapter = () => {
         decreaseFontSize={decreaseFontSize}
         increaseFontSize={increaseFontSize}
         setShowSettingsModal={setShowSettingsModal}
+        user={user}
       />
 
       {/* Navigation */}

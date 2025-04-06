@@ -17,14 +17,15 @@ const ChapterHeader = ({
   formatDate, 
   decreaseFontSize, 
   increaseFontSize, 
-  setShowSettingsModal 
+  setShowSettingsModal,
+  user
 }) => {
   return (
     <div className="chapter-header">
       <div className="chapter-navigation-header">
         <div className="title-section">
           {/* Admin actions */}
-          {novel.isAuthor && (
+          {user?.role === 'admin' && (
             <div className="admin-actions">
               {!isEditing ? (
                 <button onClick={() => setIsEditing(true)} className="edit-chapter-btn">
