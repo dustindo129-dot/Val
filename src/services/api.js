@@ -68,64 +68,51 @@ const api = {
 
   toggleBookmark: async (novelId) => {
     try {
-      if (!novelId) {
-        throw new Error("Novel ID is required");
-      }
-      
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error("Authentication token missing");
-      }
-
-      // Get user info from token payload
-      let payload;
-      try {
-        payload = JSON.parse(atob(token.split('.')[1]));
-      } catch (e) {
-        throw new Error("Invalid token format");
-      }
-      
-      if (!payload.userId) {
-        throw new Error("Invalid token: missing user ID");
-      }
-
-      let username = payload.username;
-      
-      // If username is not in token, fetch it from profile
-      if (!username) {
-        try {
-          const userResponse = await axios.get(
-            `${config.backendUrl}/api/users/${payload.userId}/profile`,
-            {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            }
-          );
-          
-          if (!userResponse.data.username) {
-            throw new Error("Could not determine username");
-          }
-          
-          username = userResponse.data.username;
-        } catch (e) {
-          throw new Error("Failed to get username from profile");
-        }
-      }
-
       const response = await axios.post(
-        `${config.backendUrl}/api/users/${username}/bookmarks`,
+        `${config.backendUrl}/api/usernovelinteractions/bookmark`,
         { novelId },
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         }
       );
       return response.data;
     } catch (error) {
-      console.error("Bookmark toggle error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getBookmarkedChapter: async (novelId) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/userchapterinteractions/bookmark/${novelId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching bookmarked chapter:', error);
+      return { bookmarkedChapter: null };
+    }
+  },
+
+  toggleChapterBookmark: async (chapterId) => {
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/userchapterinteractions/bookmark`,
+        { chapterId },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
       throw error;
     }
   },
@@ -331,28 +318,17 @@ const api = {
 
   toggleLike: async (novelId) => {
     try {
-      if (!novelId) {
-        throw new Error("Novel ID is required");
-      }
-      
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error("Authentication token missing");
-      }
-      
       const response = await axios.post(
-        `${config.backendUrl}/api/novels/${novelId}/like`,
-        {},
+        `${config.backendUrl}/api/usernovelinteractions/like`,
+        { novelId },
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         }
       );
-      
       return response.data;
     } catch (error) {
-      console.error("Like toggle error:", error.response?.data || error.message);
       throw error;
     }
   },
@@ -360,8 +336,8 @@ const api = {
   rateNovel: async (novelId, rating) => {
     try {
       const response = await axios.post(
-        `${config.backendUrl}/api/novels/${novelId}/rate`,
-        { rating },
+        `${config.backendUrl}/api/usernovelinteractions/rate`,
+        { novelId, rating },
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -377,7 +353,7 @@ const api = {
   removeRating: async (novelId) => {
     try {
       const response = await axios.delete(
-        `${config.backendUrl}/api/novels/${novelId}/rate`,
+        `${config.backendUrl}/api/usernovelinteractions/rate/${novelId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -394,11 +370,11 @@ const api = {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        return { liked: false, rating: null };
+        return { liked: false, rating: null, bookmarked: false };
       }
       
       const response = await axios.get(
-        `${config.backendUrl}/api/novels/${novelId}/interaction`,
+        `${config.backendUrl}/api/usernovelinteractions/user/${novelId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -410,7 +386,19 @@ const api = {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
       }
-      return { liked: false, rating: null };
+      return { liked: false, rating: null, bookmarked: false };
+    }
+  },
+
+  getNovelStats: async (novelId) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/usernovelinteractions/stats/${novelId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching novel stats:", error);
+      return { totalLikes: 0, totalRatings: 0, averageRating: '0.0' };
     }
   },
 };

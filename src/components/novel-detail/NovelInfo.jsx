@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import { processDescription } from '../../utils/helpers';
 import { BookmarkIcon, BookmarkActiveIcon, HeartIcon, HeartFilledIcon, ViewsIcon, StarIcon } from './NovelIcons';
@@ -18,13 +18,30 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   // Create a safe local copy of userInteraction with defaults
   const safeUserInteraction = {
     liked: userInteraction?.liked || false,
-    rating: userInteraction?.rating || null
+    rating: userInteraction?.rating || null,
+    bookmarked: userInteraction?.bookmarked || false
   };
   
   // Check if we have a nested novel object
   const novelData = novel?.novel || novel;
   const novelTitle = novelData?.title;
   const novelId = novelData?._id;  // Get the ID directly
+  
+  // Query for novel stats
+  const { data: novelStats = { totalLikes: 0, totalRatings: 0, averageRating: '0.0' } } = useQuery({
+    queryKey: ['novel-stats', novelId],
+    queryFn: () => api.getNovelStats(novelId),
+    enabled: !!novelId,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
+  
+  // Query for bookmarked chapter
+  const { data: bookmarkData } = useQuery({
+    queryKey: ['bookmarked-chapter', novelId, user?.id],
+    queryFn: () => api.getBookmarkedChapter(novelId),
+    enabled: !!novelId && !!user,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
   
   // Fallback ID mechanism - use a ref to keep track of a valid ID
   const novelIdRef = useRef(novel?._id);
@@ -210,11 +227,6 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
     setIsDescriptionExpanded(!isDescriptionExpanded);
   };
   
-  // Calculate average rating
-  const averageRating = novelData.ratings?.total > 0 
-    ? (novelData.ratings.value / novelData.ratings.total).toFixed(1) 
-    : '0.0';
-    
   // Calculate total chapter count
   const totalChapters = novelData.modules?.reduce((sum, module) => sum + (module.chapters?.length || 0), 0) || 0;
   
@@ -273,6 +285,30 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
 
   return (
     <>
+      <style>
+        {`
+          .continue-reading-btn {
+            background-color: #4a90e2;
+            color: white;
+            transition: all 0.3s ease;
+          }
+          
+          .continue-reading-btn:hover:not(:disabled) {
+            background-color: #357abd;
+          }
+          
+          .continue-reading-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+          }
+          
+          .continue-reading-btn svg {
+            margin-right: 8px;
+          }
+        `}
+      </style>
+
       {/* Novel title and status header */}
       <div className="novel-header-wrapper">
         <h1 className="detail-page-novel-title">
@@ -375,7 +411,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                   className="stat-value"
                   data-testid="likes-count"
                 >
-                  {novelData.likes !== undefined ? novelData.likes : 0}
+                  {novelStats.totalLikes}
                 </div>
                 <div className="stat-label">Likes</div>
               </div>
@@ -388,9 +424,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               </div>
               <div className="stat-content">
                 <div className="stat-value">
-                  {averageRating} <span className="rating-max">/ 5</span>
+                  {novelStats.averageRating} <span className="rating-max">/ 5</span>
                 </div>
-                <div className="stat-label">{novelData.ratings?.total || 0} Ratings</div>
+                <div className="stat-label">{novelStats.totalRatings} Ratings</div>
               </div>
             </div>
           </div>
@@ -419,19 +455,29 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               </button>
             )}
             
-            {/* Latest Chapter */}
+            {/* Continue Reading / Latest Chapter */}
             {chaptersData?.chapters && chaptersData.chapters.length > 0 ? (
-              <Link 
-                to={`/novel/${novelData._id}/chapter/${chaptersData.chapters[chaptersData.chapters.length - 1]?._id}`} 
-                className="action-button latest-chapter-btn"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-                Latest Chapter
-              </Link>
+              bookmarkData?.bookmarkedChapter ? (
+                <Link 
+                  to={`/novel/${novelData._id}/chapter/${bookmarkData.bookmarkedChapter.id}`} 
+                  className="action-button continue-reading-btn"
+                  title={`Continue from: ${bookmarkData.bookmarkedChapter.title}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  Continue Reading
+                </Link>
+              ) : (
+                <button className="action-button continue-reading-btn" disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  Continue Reading
+                </button>
+              )
             ) : (
-              <button className="action-button latest-chapter-btn" disabled>
+              <button className="action-button continue-reading-btn" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>

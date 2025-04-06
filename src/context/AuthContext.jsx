@@ -23,7 +23,7 @@ import config from '../config/config';
 const AuthContext = createContext(null);
 
 // Session timeout duration (10 minutes)
-const SESSION_TIMEOUT = 10 * 60 * 1000;
+const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 // Add constants for storage keys and events
 const AUTH_LOGOUT_EVENT = 'authLogout';
