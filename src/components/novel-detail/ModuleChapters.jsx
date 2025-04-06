@@ -1,5 +1,7 @@
 import React, { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLock } from '@fortawesome/free-solid-svg-icons';
 
 // Helper function for date formatting
 const formatDateUtil = (date) => {
@@ -66,16 +68,38 @@ const ModuleChapters = memo(({
     }
   }, [moduleId, handleChapterReorder, isReordering]);
 
+  // Function to determine if a chapter should be visible based on its mode
+  const isChapterVisible = (chapter) => {
+    if (!chapter.mode || chapter.mode === 'published' || chapter.mode === 'protected') {
+      return true; // These modes are visible to everyone
+    }
+    
+    if (chapter.mode === 'draft' && user?.role === 'admin') {
+      return true; // Draft is only visible to admin
+    }
+    
+    return false; // Not visible for other modes/user combinations
+  };
+
   return (
     <div className="module-chapters">
       {chapters && chapters.length > 0 ? (
         <div className="chapters-list">
           {chapters.map((chapter, index) => {
             const chapterId = chapter._id || `index-${index}`;
+            
+            // Skip rendering if chapter should not be visible to current user
+            if (!isChapterVisible(chapter)) {
+              return null;
+            }
+            
+            // Determine CSS classes based on chapter mode
+            const chapterModeClass = chapter.mode === 'draft' ? 'chapter-mode-draft' : '';
+            
             return (
               <div 
                 key={`chapter-item-${chapterId}`}
-                className={`chapter-item ${isReordering ? 'reordering' : ''}`}
+                className={`chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''}`}
                 style={{ transition: 'all 0.3s ease' }}
               >
                 <div className="chapter-list-content" key={`chapter-content-${chapterId}`}>
@@ -84,12 +108,15 @@ const ModuleChapters = memo(({
                   </div>
                   <Link 
                     to={`/novel/${novelId}/chapter/${chapterId}`} 
-                    className="chapter-title-link"
+                    className={`chapter-title-link ${chapterModeClass}`}
                     key={`chapter-link-${chapterId}`}
                   >
                     {chapter.title}
                     {isChapterNew(chapter.createdAt) && (
                       <span className="new-tag" key={`new-tag-${chapterId}`}>NEW</span>
+                    )}
+                    {chapter.mode === 'protected' && (
+                      <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
                     )}
                   </Link>
                 </div>
@@ -145,6 +172,13 @@ const ModuleChapters = memo(({
                     >
                       Delete
                     </button>
+                    <span className="chapter-mode-indicator">
+                      {chapter.mode && chapter.mode !== 'published' && (
+                        <span className={`mode-tag mode-${chapter.mode}`}>
+                          {chapter.mode.toUpperCase()}
+                        </span>
+                      )}
+                    </span>
                   </div>
                 )}
                 <span className="chapter-date">

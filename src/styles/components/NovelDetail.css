@@ -623,16 +623,6 @@
   align-items: center;
 }
 
-.chapter-title-link {
-  flex: 1;
-  color: #1f2937;
-  text-decoration: none;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .new-tag {
   display: inline-block;
   padding: 2px 8px;
@@ -1643,5 +1633,7 @@
     justify-content: center;
   }
 }
+
+
 
 

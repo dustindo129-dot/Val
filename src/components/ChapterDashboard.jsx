@@ -61,8 +61,8 @@ const ChapterDashboard = () => {
   const [success, setSuccess] = useState('');
   const [moduleError, setModuleError] = useState(false);
 
-  // State for status selection
-  const [status, setStatus] = useState('published'); // Default to published
+  // State for mode selection
+  const [mode, setMode] = useState('published'); // Default to published
 
   // State for staff selection
   const [translator, setTranslator] = useState('');
@@ -214,7 +214,7 @@ const ChapterDashboard = () => {
 
       setChapterTitle(chapterData.title || '');
       setChapterContent(chapterData.content || '');
-      setStatus(chapterData.status || 'published');
+      setMode(chapterData.mode || 'published');
       setTranslator(chapterData.translator || '');
       setEditor(chapterData.editor || '');
       setProofreader(chapterData.proofreader || '');
@@ -370,7 +370,7 @@ const ChapterDashboard = () => {
         moduleId: moduleId,
         title: chapterTitle,
         content: cleanedContent,
-        status: status,
+        mode: mode,
         translator: translator,
         editor: editor,
         proofreader: proofreader,
@@ -415,7 +415,7 @@ const ChapterDashboard = () => {
                 content: cleanedContent,
                 novelId,
                 moduleId,
-                status,
+                mode,
                 translator,
                 editor,
                 proofreader,
@@ -559,16 +559,16 @@ const ChapterDashboard = () => {
                     required
                 />
               </div>
-              <div className="chapter-status-input">
-                <label>Chapter Status:</label>
+              <div className="chapter-mode-input">
+                <label>Chapter Mode:</label>
                 <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="status-dropdown"
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value)}
+                    className="mode-dropdown"
                 >
-                  <option value="published">Published</option>
-                  <option value="draft">Draft</option>
-                  <option value="protected">Protected</option>
+                  <option value="published">Published (Visible to everyone)</option>
+                  <option value="draft">Draft (Admin only)</option>
+                  <option value="protected">Protected (Login required)</option>
                   <option value="paid">Paid Content</option>
                 </select>
               </div>
@@ -582,7 +582,7 @@ const ChapterDashboard = () => {
               <div className="form-group">
                 <label className="form-label">Translator:</label>
                 <select
-                    className="staff-dropdown"
+                    className="staff-dropdown mode-dropdown"
                     value={translator}
                     onChange={(e) => setTranslator(e.target.value)}
                 >
@@ -599,7 +599,7 @@ const ChapterDashboard = () => {
               <div className="form-group">
                 <label className="form-label">Editor:</label>
                 <select
-                    className="staff-dropdown"
+                    className="staff-dropdown mode-dropdown"
                     value={editor}
                     onChange={(e) => setEditor(e.target.value)}
                 >
@@ -616,7 +616,7 @@ const ChapterDashboard = () => {
               <div className="form-group">
                 <label className="form-label">Proofreader:</label>
                 <select
-                    className="staff-dropdown"
+                    className="staff-dropdown mode-dropdown"
                     value={proofreader}
                     onChange={(e) => setProofreader(e.target.value)}
                 >

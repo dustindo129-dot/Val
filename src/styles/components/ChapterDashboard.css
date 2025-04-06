@@ -139,25 +139,21 @@
 /* Chapter Title and Status Styling */
 .chapter-title-status-group {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
+  gap: 15px;
   width: 100%;
 }
 
 .chapter-title-input {
-  display: flex;
-  flex-direction: column;
-  flex: 2;
+  width: 100%;
 }
 
-.chapter-status-input {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+.chapter-mode-input {
+  width: 100%;
 }
 
 .chapter-title-input input,
-.chapter-status-input select {
+.chapter-mode-input label {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
@@ -170,56 +166,7 @@
   font-weight: 600;
 }
 
-.status-dropdown {
-  appearance: none;
-  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M1 4l5 5 5-5z' fill='%23999'/%3E%3C/svg%3E") no-repeat right 8px center;
-  background-size: 12px;
-  padding-right: 25px;
-}
-
-/* Staff selection styles */
-.staff-section {
-  margin-bottom: 1px;
-  padding: 5px 0;
-  background-color: #f8f9fa;
-  border-radius: var(--border-radius);
-  border: 1px solid #e9ecef;
-}
-
-.staff-section .form-group {
-  margin-bottom: 0; /* Loại bỏ margin dưới của form-group */
-}
-
-.staff-dropdown {
-  display: block;
-  width: 100%;
-  padding: 10px 15px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: white;
-  font-size: 1rem;
-  color: var(--secondary-color);
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 15px;
-}
-
-.staff-dropdown:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--secondary-color);
-  font-weight: 500;
-}
-
-/* Status selection styles */
+/* Status section styles - Remove since we're not using status anymore */
 .status-section {
   margin-bottom: 30px;
   padding: 20px;
@@ -553,7 +500,7 @@
   }
 
   .chapter-title-input,
-  .chapter-status-input {
+  .chapter-mode-input {
     width: 100%;
   }
 
@@ -588,5 +535,50 @@
   .cancel-btn {
     max-width: none;
     width: 100%;
+  }
+}
+
+/* Add these styles for the chapter mode dropdown */
+
+.mode-dropdown {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+}
+
+/* Option labels with color indicators */
+.mode-dropdown option[value="published"] {
+  color: #2ecc71;
+}
+
+.mode-dropdown option[value="draft"] {
+  color: #f39c12;
+}
+
+.mode-dropdown option[value="protected"] {
+  color: #e74c3c;
+}
+
+.mode-dropdown option[value="paid"] {
+  color: #3498db;
+}
+
+/* Responsive adjustments for larger screens */
+@media (min-width: 768px) {
+  .chapter-title-status-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .chapter-title-input {
+    flex: 2;
+    margin-right: 15px;
+  }
+  
+  .chapter-mode-input {
+    flex: 1;
   }
 }

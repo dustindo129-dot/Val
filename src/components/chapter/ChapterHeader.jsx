@@ -11,7 +11,7 @@ const ChapterHeader = ({
   editedTitle, 
   setEditedTitle, 
   handleEditChapter, 
-  handleDeleteChapter, 
+  handleDeleteChapter,
   isSaving, 
   setIsEditing, 
   formatDate, 

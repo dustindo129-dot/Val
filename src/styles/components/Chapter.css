@@ -1314,3 +1314,79 @@
   width: 100% !important;
   box-sizing: border-box !important;
 }
+
+/* Add these styles for the restricted content message */
+
+.restricted-content-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 40px 20px;
+  margin: 20px auto;
+  text-align: center;
+  max-width: 90%;
+  min-height: 300px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.protected-content,
+.draft-content,
+.paid-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.protected-content svg,
+.draft-content svg,
+.paid-content svg {
+  color: #e74c3c;
+  margin-bottom: 10px;
+}
+
+.protected-content h3,
+.draft-content h3,
+.paid-content h3 {
+  font-size: 24px;
+  margin: 0;
+  color: #333;
+}
+
+.protected-content p,
+.draft-content p,
+.paid-content p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.login-button {
+  padding: 10px 20px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.login-button:hover {
+  background-color: #c0392b;
+}
+
+/* Draft content specific styles */
+.draft-content svg {
+  color: #f39c12;
+}
+
+/* Paid content specific styles */
+.paid-content svg {
+  color: #3498db;
+}

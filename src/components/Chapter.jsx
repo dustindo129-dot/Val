@@ -378,9 +378,23 @@ const Chapter = () => {
         format: 'html',  // Get as HTML
         raw: true       // Get raw unprocessed HTML
       });
+      
+      // Find the hidden input that contains the editedMode value
+      const modeInputs = document.querySelectorAll('input[type="hidden"]');
+      let updatedMode = chapter.mode;
+      
+      // Look through any hidden inputs for one with a getMode function
+      for (const input of modeInputs) {
+        if (typeof input.getMode === 'function') {
+          updatedMode = input.getMode();
+          break;
+        }
+      }
+      
       const updateData = {
         title: updatedTitle,
-        content: updatedContent
+        content: updatedContent,
+        mode: updatedMode
       };
 
       // Optimistic UI update
@@ -394,6 +408,7 @@ const Chapter = () => {
           ...chapterData.chapter,
           title: updatedTitle,
           content: updatedContent, // Raw HTML preserved in cache
+          mode: updatedMode,
           updatedAt: new Date().toISOString()
         }
       });
@@ -636,6 +651,62 @@ const Chapter = () => {
     window.open(shareUrl, 'ShareWindow', 'height=450, width=550, toolbar=0, menubar=0');
   };
 
+  // Check if user has access to chapter content based on mode
+  const canAccessChapterContent = (chapter, user) => {
+    if (!chapter || !chapter.mode) return true; // Default to accessible if no mode specified
+    
+    switch (chapter.mode) {
+      case 'published':
+        return true; // Published is accessible to everyone
+      case 'protected':
+        return !!user; // Protected requires user to be logged in
+      case 'draft':
+        return user?.role === 'admin'; // Draft is admin only
+      case 'paid':
+        // TODO: Implement paid content check
+        return user?.role === 'admin'; // For now, only admin access
+      default:
+        return true;
+    }
+  };
+
+  // Handle mode change
+  const handleModeChange = async (newMode) => {
+    console.log(`Changing chapter mode to: ${newMode}`);
+    try {
+      // Update UI immediately for better perceived performance
+      queryClient.setQueryData(['chapter', chapterId], old => ({
+        ...old,
+        chapter: { ...old.chapter, mode: newMode }
+      }));
+
+      // Make API call
+      const response = await axios.put(
+        `${config.backendUrl}/api/chapters/${chapterId}`,
+        { mode: newMode },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      
+      console.log('Chapter mode updated successfully:', response.data);
+      
+      // Invalidate queries to ensure fresh data
+      queryClient.invalidateQueries(['chapter', chapterId]);
+    } catch (error) {
+      console.error('Failed to update chapter mode:', error);
+      
+      // Revert optimistic update if request failed
+      queryClient.invalidateQueries(['chapter', chapterId]);
+      
+      // Display error to user (optional)
+      setError('Failed to update chapter mode. Please try again.');
+    }
+  };
+
   // Show loading state with animation
   if (isLoading) {
     return (
@@ -716,17 +787,46 @@ const Chapter = () => {
       </div>
 
       {/* Chapter Content */}
-      <ChapterContent
-        chapter={chapter}
-        isEditing={isEditing}
-        editedContent={editedContent}
-        setEditedContent={setEditedContent}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        lineHeight={lineHeight}
-        editorRef={editorRef}
-        getSafeHtml={getSafeHtml}
-      />
+      {!canAccessChapterContent(chapter, user) ? (
+        <div className="restricted-content-message">
+          {chapter?.mode === 'protected' && (
+            <div className="protected-content">
+              <FontAwesomeIcon icon={faLock} size="3x" />
+              <h3>Protected Content</h3>
+              <p>Please log in to read this chapter.</p>
+              <Link to="/login" className="login-button">Log In</Link>
+            </div>
+          )}
+          {chapter?.mode === 'draft' && (
+            <div className="draft-content">
+              <FontAwesomeIcon icon={faCog} size="3x" />
+              <h3>Draft Content</h3>
+              <p>This chapter is still in draft mode and not available for public viewing.</p>
+            </div>
+          )}
+          {chapter?.mode === 'paid' && (
+            <div className="paid-content">
+              <FontAwesomeIcon icon={faLock} size="3x" />
+              <h3>Premium Content</h3>
+              <p>This chapter is premium content. Feature coming soon.</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <ChapterContent
+          chapter={chapter}
+          isEditing={isEditing}
+          editedContent={editedContent}
+          setEditedContent={setEditedContent}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+          lineHeight={lineHeight}
+          editorRef={editorRef}
+          getSafeHtml={getSafeHtml}
+          onModeChange={handleModeChange}
+          isAdmin={user?.role === 'admin'}
+        />
+      )}
 
       {/* Chapter Bottom Actions */}
       <div className="chapter-bottom-actions">

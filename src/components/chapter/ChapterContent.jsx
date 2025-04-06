@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import DOMPurify from 'dompurify';
 import config from '../../config/config';
@@ -12,13 +12,57 @@ const ChapterContent = ({
   fontFamily,
   lineHeight,
   editorRef,
-  getSafeHtml
+  getSafeHtml,
+  onModeChange,
+  isAdmin
 }) => {
   const contentRef = useRef(null);
+  const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
+  
+  // Update local state when chapter prop changes or edit mode is toggled
+  useEffect(() => {
+    setEditedMode(chapter.mode || 'published');
+  }, [chapter.mode, isEditing]);
 
   return (
     <div className="chapter-card">
-      <h2 className="chapter-title-banner">{chapter.title}</h2>
+      <div className="chapter-header">
+        <h2 className="chapter-title-banner">{chapter.title}</h2>
+        {isAdmin && isEditing && (
+          <div className="chapter-controls" style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '10px',
+            backgroundColor: '#f0f9ff', 
+            borderRadius: '8px',
+            marginTop: '10px',
+            marginBottom: '10px',
+            border: '1px solid #bae6fd'
+          }}>
+            <label style={{ marginRight: '10px', fontWeight: 'bold' }}>Chapter Mode:</label>
+            <select
+              value={editedMode}
+              onChange={(e) => setEditedMode(e.target.value)}
+              className="mode-dropdown"
+              style={{
+                marginRight: '10px',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '2px solid #3b82f6',
+                backgroundColor: '#f8fafc',
+                fontWeight: 'bold',
+                width: 'auto',
+                minWidth: '150px'
+              }}
+            >
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="protected">Protected</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+        )}
+      </div>
 
       {isEditing ? (
         <div className="chapter-content editor-container">
@@ -99,6 +143,16 @@ const ChapterContent = ({
               automatic_uploads: true
             }}
           />
+          {/* Add function to expose edited mode to parent component */}
+          {isAdmin && <input 
+            type="hidden" 
+            value={editedMode} 
+            ref={(input) => {
+              if (input) {
+                input.getMode = () => editedMode;
+              }
+            }} 
+          />}
         </div>
       ) : (
         <div
