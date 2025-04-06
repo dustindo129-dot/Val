@@ -512,6 +512,11 @@ const Chapter = () => {
       queryClient.invalidateQueries({
         queryKey: ['user-interactions', chapterId, user?.id]
       });
+      
+      // Also invalidate the bookmarked chapter query
+      queryClient.invalidateQueries({
+        queryKey: ['bookmarked-chapter', novelId, user?.id]
+      });
     } catch (err) {
       console.error('Failed to bookmark/unbookmark chapter:', err);
       // Revert optimistic update on error
