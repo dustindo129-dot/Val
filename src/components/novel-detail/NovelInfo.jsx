@@ -519,15 +519,15 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 </button>
               )}
             </div>
+
+            {/* Note Section */}
+            {novelData.note && (
+              <div className="note-section">
+                <h2 className="mt-4">Announcement</h2>
+                <div className="novel-note">{processDescription(novelData.note)}</div>
+              </div>
+            )}
           </div>
-          
-          {/* Announcement Box */}
-          {novelData.announcement && (
-            <div className="announcement-box">
-              <h2>Announcement</h2>
-              <div className="novel-announcement">{processDescription(novelData.announcement)}</div>
-            </div>
-          )}
         </div>
         
         {/* Right column with staff info */}
