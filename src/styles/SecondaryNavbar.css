@@ -15,6 +15,9 @@
   background-color: #fff;
   border-bottom: 1px solid #e5e7eb;
   padding: 0.5rem 0;
+  position: relative;
+  z-index: 2;
+  width: 100%;
 }
 
 /* Navigation container for flex layout */

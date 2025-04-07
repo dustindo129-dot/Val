@@ -12,13 +12,6 @@
  * - Responsive design
  */
 
-/* Common container layouts */
-.novels-container,
-.novel-list-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 /* Grid layout */
 .content-layout,
 .novels-container {
@@ -26,11 +19,6 @@
   grid-template-columns: 1fr 300px;
   gap: 1.5rem;
   align-items: flex-start;
-}
-
-/* Main content area */
-.main-content {
-  min-width: 0;
 }
 
 /* Common novel card styles */

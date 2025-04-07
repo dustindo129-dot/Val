@@ -35,7 +35,7 @@ const App = () => {
                   <div 
                     className="background-container"
                     style={{
-                      backgroundImage: `url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1743447317/482259247_634103582665702_1134185038594170678_n_d1ip2v.jpg')` // Replace this with your actual image URL when you have it
+                      backgroundImage: `url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1743985759/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif')` // Replace this with your actual image URL when you have it
                     }}
                   />
                   <Navbar />

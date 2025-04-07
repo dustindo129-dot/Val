@@ -48,7 +48,7 @@ html {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.15; /* Adjust this value to control the background opacity */
+  opacity: 1; /* Adjust this value to control the background opacity */
   pointer-events: none; /* Allows clicking through the background */
 }
 
@@ -56,8 +56,8 @@ html {
 .main-content {
   position: relative;
   z-index: 1;
-  padding: 2rem;
-  max-width: 1200px;
+  padding: 40px 0 20px;
+  max-width: 1400px;
   margin: 0 auto;
   flex: 1 0 auto; /* This ensures the footer stays at the bottom */
   width: 100%;
