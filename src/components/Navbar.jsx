@@ -45,9 +45,34 @@ const Navbar = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   
+  // Add state for navbar visibility
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  
   // Authentication context and navigation
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  // Add scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY < 60) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(currentScrollY < lastScrollY);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [lastScrollY]);
 
   /**
    * Handles the search input changes and fetches results
@@ -135,7 +160,7 @@ const Navbar = () => {
   return (
     <>
       {/* Main navigation bar */}
-      <nav className="navbar">
+      <nav className={`navbar ${isVisible ? 'navbar-visible' : 'navbar-hidden'}`}>
         {/* Left section with logo and site title */}
         <Link to="/" className="navbar-left">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" stroke="black" className="navbar-logo">
@@ -209,7 +234,7 @@ const Navbar = () => {
                     <div className="search-result-info">
                       <div className="search-result-title">{novel.title}</div>
                       <div className="search-result-details">
-                        <span>Latest chapter: {novel.chapters?.length || 0}</span>{' '}
+                        <span>Total chapters: {novel.totalChapters || 0}</span>{' '}
                         <span>{novel.status}</span>
                       </div>
                     </div>

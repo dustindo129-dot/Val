@@ -100,12 +100,12 @@ const NovelList = () => {
       const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}&limit=20`);
       return response.data;
     },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    cacheTime: 1000 * 60 * 10, // Cache for 10 minutes
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    refetchInterval: 1000 * 60 * 5, // Only refetch every 5 minutes
-    keepPreviousData: true // Keep showing previous page data while loading next page
+    refetchInterval: 1000 * 60 * 5,
+    keepPreviousData: true
   });
 
   const novels = data?.novels || [];
@@ -300,9 +300,9 @@ const NovelList = () => {
                           <h3 className="novel-title">{novel.title}</h3>
                         </Link>
                         <div className="novel-meta">
-                          {novel.chapters && novel.chapters.length > 0 && (
+                          {novel.firstChapter && (
                             <Link 
-                              to={`/novel/${novel._id}/chapter/${novel.chapters[0]._id}`} 
+                              to={`/novel/${novel._id}/chapter/${novel.firstChapter._id}`}
                               className="first-chapter"
                             >
                               First Chapter

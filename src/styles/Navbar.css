@@ -19,9 +19,26 @@
   padding: 1rem 2rem;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
+  transition: transform 0.3s ease;
+}
+
+/* Navbar visibility classes */
+.navbar-visible {
+  transform: translateY(0);
+}
+
+.navbar-hidden {
+  transform: translateY(-100%);
+}
+
+/* Add padding to body to prevent content from being hidden under navbar */
+body {
+  padding-top: 72px; /* Adjust this value based on your navbar height */
 }
 
 /* Left section with logo and title */

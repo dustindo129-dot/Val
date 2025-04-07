@@ -228,7 +228,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   };
   
   // Calculate total chapter count
-  const totalChapters = novelData.modules?.reduce((sum, module) => sum + (module.chapters?.length || 0), 0) || 0;
+  const totalChapters = chaptersData?.chapters?.length || 0;
   
   // Format last updated date
   const lastUpdated = novelData.updatedAt 
