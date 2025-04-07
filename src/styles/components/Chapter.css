@@ -69,6 +69,31 @@
   box-shadow: var(--box-shadow);
 }
 
+.chapter-header-novel-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.chapter-header-novel-title a {
+  color: #1a1a1a;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.chapter-header-novel-title a:hover {
+  color: #0066cc;
+}
+
+/* Dark mode support */
+:root.dark-mode .chapter-header-novel-title a {
+  color: #e9ecef;
+}
+
+:root.dark-mode .chapter-header-novel-title a:hover {
+  color: #66b0ff;
+}
+
 .chapter-navigation-header {
   display: flex;
   flex-direction: column;
@@ -263,6 +288,16 @@
   height: 20px;
   background-color: #f39c12;
   margin-right: 10px;
+}
+
+/* Dark mode support */
+:root.dark-mode .chapter-title-banner {
+  background-color: #1a1a1a;
+  color: #e9ecef;
+}
+
+:root.dark-mode .chapter-title-banner::before {
+  background-color: #f39c12;
 }
 
 .chapter-content {
@@ -1098,7 +1133,7 @@
 }
 
 :root.dark-mode .stat-item {
-  color: #f0f0f0;
+  color: #1a1a1a;
 }
 
 :root.dark-mode .font-button {

@@ -51,47 +51,30 @@ const ForgotPassword = ({ onClose, onBack }) => {
     }
   };
 
-  if (success) {
-    return (
-      <div className="auth-form">
-        <div className="success-message">
-          <h3>Reset Email Sent!</h3>
-          <p>
-            If an account exists with the email {email}, you will receive password
-            reset instructions shortly.
-          </p>
-        </div>
-        <button 
-          type="button" 
-          className="submit-button"
-          onClick={onClose}
-        >
-          Close
-        </button>
-      </div>
-    );
-  }
-
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      <h2>Reset Password</h2>
-      <p className="form-description">
-        Enter your email address and we'll send you instructions to reset your password.
-      </p>
+      {/* Success message */}
+      {success && (
+        <div className="success-message">
+          <h3>Reset Link Sent!</h3>
+          <p>Please check your email for password reset instructions.</p>
+        </div>
+      )}
 
       {/* Email input field */}
       <div className="form-group">
         <input
           type="email"
+          name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email address"
+          placeholder="Email (*)"
           className="auth-input"
           required
         />
       </div>
 
-      {/* Error message display */}
+      {/* Error message */}
       {error && <div className="error-message">{error}</div>}
 
       {/* Submit button */}
@@ -100,13 +83,13 @@ const ForgotPassword = ({ onClose, onBack }) => {
         className="submit-button" 
         disabled={loading}
       >
-        {loading ? 'Sending...' : 'Send Reset Instructions'}
+        {loading ? 'Sending...' : 'Send Reset Link'}
       </button>
 
-      {/* Back to login button */}
+      {/* Back to login link */}
       <button 
         type="button"
-        className="back-to-login"
+        className="back-to-login" 
         onClick={onBack}
       >
         Back to Login

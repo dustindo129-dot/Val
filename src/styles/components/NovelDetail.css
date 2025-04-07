@@ -60,6 +60,12 @@
   align-items: center;
   gap: 15px;
   flex-wrap: wrap;
+  color: #1a1a1a;
+}
+
+/* Dark mode support */
+:root.dark-mode .detail-page-novel-title {
+  color: #1a1a1a;
 }
 
 .status-tag-inline {
@@ -335,6 +341,13 @@
   background-color: #e9ecef;
   border-radius: 4px;
   font-size: 0.9rem;
+  color: #1a1a1a;
+}
+
+/* Dark mode support */
+:root.dark-mode .staff-name {
+  background-color: #374151;
+  color: #e9ecef;
 }
 
 .staff-empty {

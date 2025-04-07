@@ -61,7 +61,7 @@ const ChapterHeader = ({
         </div>
 
         <div className="chapter-info">
-          <div className="novel-title">
+          <div className="chapter-header-novel-title">
             <Link to={`/novel/${novelId}`}>{novel.title}</Link>
           </div>
 

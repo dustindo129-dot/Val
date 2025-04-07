@@ -25,6 +25,7 @@ import SignUp from './auth/SignUp';
 import axios from 'axios';
 import '../styles/Navbar.css';
 import config from '../config/config';
+import Modal from './auth/Modal';
 
 /**
  * Navbar Component
@@ -276,24 +277,22 @@ const Navbar = () => {
       </nav>
 
       {/* Login modal */}
-      {showLogin && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="modal-close" onClick={handleCloseModals}>×</button>
-            <Login onClose={handleCloseModals} onSignUp={handleSignUpClick} />
-          </div>
-        </div>
-      )}
+      <Modal 
+        isOpen={showLogin} 
+        onClose={handleCloseModals}
+        title="Login"
+      >
+        <Login onClose={handleCloseModals} onSignUp={handleSignUpClick} />
+      </Modal>
 
       {/* Signup modal */}
-      {showSignUp && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="modal-close" onClick={handleCloseModals}>×</button>
-            <SignUp onClose={handleCloseModals} onLogin={handleLoginClick} />
-          </div>
-        </div>
-      )}
+      <Modal 
+        isOpen={showSignUp} 
+        onClose={handleCloseModals}
+        title="Sign Up"
+      >
+        <SignUp onClose={handleCloseModals} onLogin={handleLoginClick} />
+      </Modal>
     </>
   );
 };
