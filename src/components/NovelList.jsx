@@ -282,7 +282,7 @@ const NovelList = () => {
             <div className="novel-grid">
               {novels.map(novel => {
                 const shouldShowReadMore = novel.description && 
-                  ((novel.description.replace(/<[^>]*>/g, '').length || 0) > 150);
+                  ((novel.description.replace(/<[^>]*>/g, '').length || 0) > 450);
                 
                 return (
                   <div key={novel._id} className="novel-card">
@@ -299,29 +299,30 @@ const NovelList = () => {
                         <Link to={`/novel/${novel._id}`} className="novel-list-title-link">
                           <h3 className="novel-title">{novel.title}</h3>
                         </Link>
-                        {novel.chapters && novel.chapters.length > 0 && (
-                          <Link 
-                            to={`/novel/${novel._id}/chapter/${novel.chapters[0]._id}`} 
-                            className="first-chapter"
-                          >
-                            First Chapter
-                          </Link>
-                        )}
+                        <div className="novel-meta">
+                          {novel.chapters && novel.chapters.length > 0 && (
+                            <Link 
+                              to={`/novel/${novel._id}/chapter/${novel.chapters[0]._id}`} 
+                              className="first-chapter"
+                            >
+                              First Chapter
+                            </Link>
+                          )}
+                          <span className="update-time">
+                            Updated {formatDate(novel.updatedAt || new Date())}
+                          </span>
+                        </div>
                       </div>
-                      {/* Update timestamp */}
-                      <span className="update-time">
-                        Updated {formatDate(novel.updatedAt || new Date())}
-                      </span>
                       {/* Novel description with expand/collapse */}
                       <div className="novel-description">
                         <div dangerouslySetInnerHTML={{ 
                           __html: expandedDescriptions[novel._id]
                             ? novel.description
                             : shouldShowReadMore
-                              ? truncateHTML(novel.description, 150)
+                              ? truncateHTML(novel.description, 500)
                               : novel.description
                         }} />
-                        {shouldShowReadMore && (
+                        {novel.description?.length > 450 && (
                           <button 
                             className="read-more"
                             onClick={() => toggleDescription(novel._id)}
@@ -339,9 +340,9 @@ const NovelList = () => {
                           <Link 
                             key={chapter._id} 
                             to={`/novel/${novel._id}/chapter/${chapter._id}`}
-                            className="chapter-item"
+                            className="novel-chapter-item"
                           >
-                            <span className="chapter-title">
+                            <span className="novel-chapter-title">
                               {chapter.title}
                             </span>
                             <span className="chapter-date">

@@ -82,25 +82,6 @@
   gap: 10px;
 }
 
-.novel-title {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--secondary-color);
-  margin-bottom: 8px;
-  display: block;
-}
-
-.novel-title a {
-  text-decoration: none;
-  color: inherit;
-  transition: color 0.2s ease;
-}
-
-.novel-title a:hover {
-  color: var(--primary-color);
-}
-
 .chapter-title {
   font-family: 'Montserrat', sans-serif;
   font-size: 1.3rem;
@@ -762,12 +743,6 @@
   margin: 0;
 }
 
-.chapter-item {
-  padding: 8px 15px;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.2s ease;
-}
-
 .chapter-item:hover {
   background-color: #f5f5f5;
 }
@@ -1110,14 +1085,6 @@
 
 :root.dark-mode .chapter-title {
   color: #e5e7eb;
-}
-
-:root.dark-mode .novel-title a {
-  color: #3b82f6;
-}
-
-:root.dark-mode .novel-title a:hover {
-  color: #60a5fa;
 }
 
 :root.dark-mode .action-btn {

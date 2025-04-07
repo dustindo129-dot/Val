@@ -72,6 +72,14 @@
   width: 100%;
 }
 
+/* Novel meta information row */
+.novel-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
 /* Link wrapper for novel title */
 .novel-list-title-link {
   text-decoration: none;
@@ -85,8 +93,10 @@
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
-  margin-top: 0.25rem;
-  display: inline-block;
+}
+
+.first-chapter:hover {
+  text-decoration: underline;
 }
 
 /* Update time text */
@@ -94,6 +104,7 @@
   color: #666;
   font-size: 0.875rem;
   font-style: italic;
+  margin-left: auto;
 }
 
 /* Read more button */
@@ -124,16 +135,16 @@
 }
 
 /* Individual chapter item */
-.chapter-item {
+.novel-chapter-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 8px 0;
   text-decoration: none;
-  gap: 1rem;
 }
 
 /* Chapter title text */
-.chapter-title {
+.novel-chapter-title {
   color: #333;
   font-size: 1.1rem;
   font-weight: 500;
@@ -143,7 +154,7 @@
   flex: 1;
 }
 
-.chapter-title:hover {
+.novel-chapter-title:hover {
   color: #009fdf;
   text-decoration: none;
 }
@@ -161,7 +172,7 @@
   text-decoration: none;
 }
 
-:root.dark-mode .chapter-title {
+:root.dark-mode .novel-chapter-title {
   color: #fff;
 }
 

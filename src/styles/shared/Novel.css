@@ -12,18 +12,6 @@
   margin-bottom: 1.25rem;
 }
 
-/* Section title with decorative underline */
-.section-title {
-  font-size: 1.25rem;
-  color: #333;
-  margin: 0;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #ff4444;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 /* Decorative icon in section title */
 .title-icon {
   color: #ff4444;
@@ -44,17 +32,6 @@
   flex-wrap: wrap;
 }
 
-/* Update time display */
-.update-time {
-  color: #666;
-  margin-left: 1rem;
-  font-size: 0.9rem;
-}
-
-.update-time i {
-  font-style: italic;
-}
-
 /* First chapter link */
 .first-chapter-link {
   color: #009fdf;
@@ -63,28 +40,6 @@
 }
 
 .first-chapter-link:hover {
-  text-decoration: underline;
-}
-
-/* Latest chapters section */
-.latest-chapters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #ebebeb;
-}
-
-/* Chapter link styling */
-.chapter-link {
-  color: #009fdf;
-  text-decoration: none;
-  font-size: 0.9375rem;
-  transition: color 0.2s ease;
-}
-
-.chapter-link:hover {
-  color: #007db2;
   text-decoration: underline;
 }
 
@@ -102,11 +57,6 @@
   margin: 0;
   max-width: 1200px;
   margin: 0 auto;
-}
-
-/* Dark theme specific styles */
-:root.dark-mode .section-title {
-  color: #fff;
 }
 
 :root.dark-mode .latest-chapters {
