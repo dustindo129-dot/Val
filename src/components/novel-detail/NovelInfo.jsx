@@ -14,6 +14,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   const { updateBookmarkStatus } = useBookmarks();
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isNoteExpanded, setIsNoteExpanded] = useState(false);
   
   // Create a safe local copy of userInteraction with defaults
   const safeUserInteraction = {
@@ -524,7 +525,18 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
             {novelData.note && (
               <div className="note-section">
                 <h2 className="mt-4">Announcement</h2>
-                <div className="novel-note">{processDescription(novelData.note)}</div>
+                <div className="novel-note">
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: isNoteExpanded 
+                      ? novelData.note 
+                      : truncateHTML(novelData.note, 300)
+                  }} />
+                  {novelData.note && novelData.note.length > 300 && (
+                    <button className="read-more-btn" onClick={() => setIsNoteExpanded(!isNoteExpanded)}>
+                      {isNoteExpanded ? 'Show Less' : 'Read More'}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
