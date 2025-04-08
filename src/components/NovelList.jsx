@@ -492,8 +492,12 @@ const NovelList = () => {
         div.innerHTML = html;
         const text = div.textContent || div.innerText || '';
 
+        // If text is shorter than maxLength, return original HTML
         if (text.length <= maxLength) {
-            return html;
+            return {
+                html: html,
+                isTruncated: false
+            };
         }
 
         let truncated = '';
@@ -514,7 +518,10 @@ const NovelList = () => {
             }
         }
 
-        return truncated + '...';
+        return {
+            html: truncated + '...',
+            isTruncated: true
+        };
     };
 
     if (isLoading) return <div className="loading">Loading novels...</div>;
@@ -603,24 +610,34 @@ const NovelList = () => {
                                                     className={`description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
                                                     ref={el => descriptionRefs.current[novel._id] = el}
                                                 >
-                                                    <div dangerouslySetInnerHTML={{ __html:truncateHTML(novel.description, 1000)}} />
+                                                    {(() => {
+                                                        const truncatedResult = truncateHTML(novel.description, 1000);
+                                                        return (
+                                                            <div dangerouslySetInnerHTML={{ 
+                                                                __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html 
+                                                            }} />
+                                                        );
+                                                    })()}
                                                 </div>
 
-                                                {/* Read more button - only show when description overflow */}
-                                                {descriptionNeedsReadMore[novel._id] && (
-                                                    <div className="read-more-container">
-                                                        <a
-                                                            href="#"
-                                                            className="read-more"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                toggleDescription(novel._id);
-                                                            }}
-                                                        >
-                                                            {expandedDescriptions[novel._id] ? 'Collapse' : 'Read more'}
-                                                        </a>
-                                                    </div>
-                                                )}
+                                                {/* Read more button - only show when description is actually truncated */}
+                                                {(() => {
+                                                    const truncatedResult = truncateHTML(novel.description, 1000);
+                                                    return truncatedResult.isTruncated && descriptionNeedsReadMore[novel._id] && (
+                                                        <div className="read-more-container">
+                                                            <a
+                                                                href="#"
+                                                                className="read-more"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    toggleDescription(novel._id);
+                                                                }}
+                                                            >
+                                                                {expandedDescriptions[novel._id] ? 'Collapse' : 'Read more'}
+                                                            </a>
+                                                        </div>
+                                                    );
+                                                })()}
 
                                                 {/* Latest chapters list */}
                                                 <div className="chapter-list">
