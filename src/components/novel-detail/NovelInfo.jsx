@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isNoteExpanded, setIsNoteExpanded] = useState(false);
+  const [lastLikeTime, setLastLikeTime] = useState(0);
+  const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
   
   // Create a safe local copy of userInteraction with defaults
   const safeUserInteraction = {
@@ -104,64 +106,67 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   });
   
   const likeMutation = useMutation({
-    mutationFn: () => {
-      if (!novelId) {
-        throw new Error("Cannot like: Novel ID is missing");
+    mutationFn: () => api.toggleLike(novelId),
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(['novel-stats', novelId]);
+      await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
+
+      // Snapshot the previous values
+      const previousStats = queryClient.getQueryData(['novel-stats', novelId]);
+      const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
+
+      // Optimistically update the like status and count
+      const willBeLiked = !(previousInteraction?.liked);
+      
+      queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+        ...old,
+        liked: willBeLiked
+      }));
+
+      queryClient.setQueryData(['novel-stats', novelId], old => ({
+        ...old,
+        totalLikes: willBeLiked ? (old.totalLikes + 1) : (old.totalLikes - 1)
+      }));
+
+      // Return a context object with the snapshotted values
+      return { previousStats, previousInteraction };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context we saved to roll back
+      if (context?.previousStats) {
+        queryClient.setQueryData(['novel-stats', novelId], context.previousStats);
       }
-      return api.toggleLike(novelId);
+      if (context?.previousInteraction) {
+        queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
+      }
     },
     onSuccess: (response) => {
-      // Immediately update the like count in the cache
-      queryClient.setQueryData(['novel', novelId], (oldData) => {
-        if (!oldData) return oldData;
-        
-        // Create a deep copy to avoid mutating the cache directly
-        const newData = JSON.parse(JSON.stringify(oldData));
-        
-        // Update the like count based on the response
-        if (newData.novel) {
-          newData.novel.likes = response.likes;
-        } else if (newData._id) {
-          // Direct novel structure (not nested)
-          newData.likes = response.likes;
-        }
-        
-        return newData;
-      });
+      // Update both caches with the actual response data
+      queryClient.setQueryData(['novel-stats', novelId], old => ({
+        ...old,
+        totalLikes: response.totalLikes
+      }));
       
-      // Also directly update the user interaction data in the cache
-      queryClient.setQueryData(['userInteraction', user?.username, novelId], 
-        (oldData) => {
-          // If we don't have old data, create a new object
-          const baseData = oldData || { liked: false, rating: null };
-          
-          // Create a new object with the updated liked status from the response
-          return {
-            ...baseData,
-            liked: response.liked // The API returns the new liked status
-          };
-        }
-      );
-      
-      // Don't refetch immediately - this prevents overriding our cache updates
-      // Just invalidate to ensure fresh data on next fetch
+      queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+        ...old,
+        liked: response.liked
+      }));
+
+      // Invalidate related queries to ensure consistency
       queryClient.invalidateQueries({
         queryKey: ['novel', novelId],
         refetchType: 'none'
       });
       
       queryClient.invalidateQueries({
-        queryKey: ['userInteraction', user?.username, novelId],
+        queryKey: ['novel-stats', novelId],
         refetchType: 'none'
       });
-    },
-    onError: (error) => {
-      console.error("Like error:", error);
-      alert("Failed to toggle like. Please try again.");
     }
   });
   
-  // Handle like toggling
+  // Handle like toggling with debounce
   const toggleLike = () => {
     // Use username presence instead of isAuthenticated flag
     if (!user?.username) {
@@ -183,6 +188,13 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
       alert("Error: Cannot identify the novel. Please try refreshing the page.");
       return;
     }
+
+    // Add debouncing
+    const now = Date.now();
+    if (now - lastLikeTime < LIKE_COOLDOWN) {
+      return; // Ignore click if too soon after last click
+    }
+    setLastLikeTime(now);
 
     likeMutation.mutate();
   };

@@ -70,7 +70,6 @@ const AdminDashboard = () => {
   };
 
   // State management for novels
-  const [selectedNovel, setSelectedNovel] = useState(null);
   const [newNovel, setNewNovel] = useState({ 
     title: '', 
     alternativeTitles: '',
@@ -95,13 +94,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // State management for chapters
-  const [chapters, setChapters] = useState([]);
-  const [selectedChapter, setSelectedChapter] = useState(null);
-  const [chapterContent, setChapterContent] = useState('');
-  const [chapterTitle, setChapterTitle] = useState('');
-  const [isEditingChapter, setIsEditingChapter] = useState(false);
-
   const [description, setDescription] = useState('');
   const editorRef = useRef(null);
   const noteEditorRef = useRef(null);
@@ -142,149 +134,6 @@ const AdminDashboard = () => {
       return timestampB - timestampA;
     });
   }, [novels]);
-
-  /**
-   * Fetches chapters for a specific novel
-   * @param {string} novelId - ID of the novel to fetch chapters for
-   */
-  const fetchChapters = async (novelId) => {
-    try {
-      // Fetch chapters
-      const chaptersResponse = await fetch(`${config.backendUrl}/api/chapters/novel/${novelId}`);
-      const chaptersData = await chaptersResponse.json();
-      setChapters(chaptersData || []);
-
-      // Fetch novel details separately
-      const novelResponse = await fetch(`${config.backendUrl}/api/novels/${novelId}`);
-      const novelData = await novelResponse.json();
-      setSelectedNovel(novelData);
-    } catch (err) {
-      setError('Failed to fetch chapters');
-      console.error('Error fetching chapters:', err);
-    }
-  };
-
-  /**
-   * Handles novel selection and fetches its chapters
-   * @param {Object} novel - Selected novel object
-   */
-  const handleNovelSelect = async (novel) => {
-    setSelectedNovel(novel);
-    await fetchChapters(novel._id);
-    setSelectedChapter(null);
-    setChapterContent('');
-    setChapterTitle('');
-    setIsEditingChapter(false);
-  };
-
-  /**
-   * Handles chapter selection for editing
-   * @param {Object} chapter - Selected chapter object
-   */
-  const handleChapterSelect = (chapter) => {
-    setSelectedChapter(chapter);
-    setChapterContent(chapter.content);
-    setChapterTitle(chapter.title);
-    setIsEditingChapter(true);
-  };
-
-  /**
-   * Updates an existing chapter
-   */
-  const handleChapterUpdate = async () => {
-    if (!selectedNovel || !selectedChapter) return;
-
-    try {
-      const response = await fetch(
-        `${config.backendUrl}/api/chapters/${selectedChapter._id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            title: chapterTitle,
-            content: chapterContent
-          })
-        }
-      );
-
-      if (!response.ok) throw new Error('Failed to update chapter');
-
-      await fetchChapters(selectedNovel._id);
-      setIsEditingChapter(false);
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  /**
-   * Creates a new chapter for the selected novel
-   */
-  const handleNewChapter = async () => {
-    if (!selectedNovel) return;
-
-    try {
-      const response = await fetch(
-        `${config.backendUrl}/api/chapters`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            novelId: selectedNovel._id,
-            moduleId: selectedNovel._id, // Using novel ID as module ID for now
-            title: 'New Chapter',
-            content: 'Enter chapter content here...'
-          })
-        }
-      );
-
-      if (!response.ok) throw new Error('Failed to create chapter');
-
-      await fetchChapters(selectedNovel._id);
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  /**
-   * Deletes a chapter from the selected novel
-   * @param {Object} chapter - Chapter to delete
-   */
-  const handleDeleteChapter = async (chapter) => {
-    if (!selectedNovel || !window.confirm('Are you sure you want to delete this chapter?')) return;
-
-    try {
-      const response = await fetch(
-        `${config.backendUrl}/api/chapters/${chapter._id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
-
-      if (!response.ok) throw new Error('Failed to delete chapter');
-
-      await fetchChapters(selectedNovel._id);
-      if (selectedChapter?._id === chapter._id) {
-        setSelectedChapter(null);
-        setChapterContent('');
-        setChapterTitle('');
-        setIsEditingChapter(false);
-      }
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
   /**
    * Handles input changes in the novel form
@@ -562,12 +411,6 @@ const AdminDashboard = () => {
         throw new Error('Failed to delete novel');
       }
 
-      // If the deleted novel was selected, clear the selection
-      if (selectedNovel?._id === id) {
-        setSelectedNovel(null);
-        setChapters([]);
-      }
-
       // Remove all cached data related to this novel
       queryClient.removeQueries(['novel', id]);
       
@@ -635,10 +478,6 @@ const AdminDashboard = () => {
           : []
       );
 
-      if (selectedNovel?._id === id) {
-        setSelectedNovel(prev => ({ ...prev, status, updatedAt }));
-      }
-
       // Update the status in the context
       updateNovelStatus(id, status);
 
@@ -677,9 +516,6 @@ const AdminDashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['novels'] });
       queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
 
-      if (selectedNovel?._id === id) {
-        setSelectedNovel(prev => ({ ...prev, ...updatedNovel }));
-      }
     } catch (err) {
       // Revert cache on error
       queryClient.setQueryData(['novels'], previousData);
@@ -1035,14 +871,10 @@ const AdminDashboard = () => {
           <h3 className="section-title">Novel List</h3>
           <ul>
             {sortedNovels.map(novel => (
-              <li 
-                key={novel._id} 
-                className={selectedNovel?._id === novel._id ? 'selected' : ''}
-              >
-                <div className="novel-title-section" onClick={() => handleNovelSelect(novel)}>
+              <li key={novel._id}>
+                <div className="novel-title-section">
                   <Link 
                     to={`/novel/${novel._id}`}
-                    onClick={(e) => e.stopPropagation()}
                     className="novel-title-link"
                   >
                     {novel.title}
@@ -1052,55 +884,22 @@ const AdminDashboard = () => {
                   <select
                     className="status-dropdown"
                     value={novel.status || 'Ongoing'}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleStatusChange(novel._id, e.target.value);
-                    }}
+                    onChange={(e) => handleStatusChange(novel._id, e.target.value)}
                   >
                     <option value="Ongoing">Ongoing</option>
                     <option value="Completed">Completed</option>
                     <option value="Hiatus">Hiatus</option>
                   </select>
-                  <button onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(novel);
-                  }}>Edit</button>
+                  <button onClick={() => handleEdit(novel)}>Edit</button>
                   <button 
                     className="delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(novel._id);
-                    }}
+                    onClick={() => handleDelete(novel._id)}
                   >Delete</button>
                 </div>
               </li>
             ))}
           </ul>
         </div>
-
-        {/* Chapter Management Section */}
-        {selectedNovel && (
-          <div className="chapter-management">
-            <h3 className="section-title">Chapters for {selectedNovel.title}</h3>
-            
-            <div className="chapter-list">
-              <ul>
-                {chapters.map(chapter => (
-                  <li key={chapter._id}>
-                    <span>{chapter.title}</span>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => handleDeleteChapter(chapter)}
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

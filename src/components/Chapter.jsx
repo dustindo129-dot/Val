@@ -5,7 +5,7 @@ import axios from 'axios';
 import '../styles/components/Chapter.css';
 import CommentSection from './CommentSection';
 import config from '../config/config';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowUp, faEllipsisV, faTimes, faList, faSpinner,
@@ -81,6 +81,10 @@ const Chapter = () => {
 
   // Use the reading progress hook
   const readingProgress = useReadingProgress(contentRef);
+
+  // Add debouncing
+  const [lastLikeTime, setLastLikeTime] = useState(0);
+  const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
 
   // Reset navigation state when chapter changes
   useEffect(() => {
@@ -461,6 +465,13 @@ const Chapter = () => {
       return;
     }
 
+    // Add debouncing
+    const now = Date.now();
+    if (now - lastLikeTime < LIKE_COOLDOWN) {
+      return; // Ignore click if too soon after last click
+    }
+    setLastLikeTime(now);
+
     // Optimistic update
     const previousLiked = isLiked;
     const newLikeCount = isLiked ? likeCount - 1 : likeCount + 1;
@@ -535,6 +546,97 @@ const Chapter = () => {
     }
   };
 
+  // Add rating mutation
+  const rateMutation = useMutation({
+    mutationFn: async (rating) => {
+      const response = await axios.post(
+        `${config.backendUrl}/api/userchapterinteractions/rate`,
+        { 
+          chapterId,
+          rating 
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    },
+    onMutate: async (newRating) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(['chapter-interactions', chapterId]);
+      await queryClient.cancelQueries(['user-interactions', chapterId, user?.id]);
+
+      // Snapshot the previous values
+      const previousStats = queryClient.getQueryData(['chapter-interactions', chapterId]);
+      const previousInteraction = queryClient.getQueryData(['user-interactions', chapterId, user?.id]);
+
+      // Calculate new average rating
+      const oldRating = previousInteraction?.rating || 0;
+      const totalRatings = previousStats?.totalRatings || 0;
+      const currentAvgRating = parseFloat(previousStats?.averageRating || '0');
+
+      let newTotalRatings = totalRatings;
+      let newAvgRating = currentAvgRating;
+
+      if (oldRating === 0) {
+        // Adding new rating
+        newTotalRatings++;
+        newAvgRating = ((currentAvgRating * totalRatings) + newRating) / newTotalRatings;
+      } else {
+        // Updating existing rating
+        newAvgRating = ((currentAvgRating * totalRatings) - oldRating + newRating) / totalRatings;
+      }
+
+      // Optimistically update stats
+      queryClient.setQueryData(['chapter-interactions', chapterId], old => ({
+        ...old,
+        totalRatings: newTotalRatings,
+        averageRating: newAvgRating.toFixed(1)
+      }));
+
+      // Optimistically update user interaction
+      queryClient.setQueryData(['user-interactions', chapterId, user?.id], old => ({
+        ...old,
+        rating: newRating
+      }));
+
+      return { previousStats, previousInteraction };
+    },
+    onError: (err, variables, context) => {
+      // Reset to previous values on error
+      if (context?.previousStats) {
+        queryClient.setQueryData(['chapter-interactions', chapterId], context.previousStats);
+      }
+      if (context?.previousInteraction) {
+        queryClient.setQueryData(['user-interactions', chapterId, user?.id], context.previousInteraction);
+      }
+      console.error('Failed to update rating:', err);
+    },
+    onSuccess: (response) => {
+      // Update with actual server data
+      queryClient.setQueryData(['chapter-interactions', chapterId], old => ({
+        ...old,
+        totalRatings: response.ratingsCount || old?.totalRatings || 0,
+        averageRating: response.averageRating
+      }));
+
+      queryClient.setQueryData(['user-interactions', chapterId, user?.id], old => ({
+        ...old,
+        rating: response.rating
+      }));
+
+      // Invalidate queries to ensure consistency
+      queryClient.invalidateQueries({
+        queryKey: ['chapter-interactions', chapterId],
+        exact: true
+      });
+
+      setShowRatingModal(false);
+    }
+  });
+
   /**
    * Handles submitting a rating for the chapter
    */
@@ -551,31 +653,9 @@ const Chapter = () => {
     }
 
     try {
-      await axios.post(
-        `${config.backendUrl}/api/userchapterinteractions/rate`,
-        { 
-          chapterId,
-          rating: currentRating 
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
-
-      // Close modal
-      setShowRatingModal(false);
-
-      // Invalidate related queries
-      queryClient.invalidateQueries({
-        queryKey: ['chapter-interactions', chapterId]
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['user-interactions', chapterId, user?.id]
-      });
-    } catch (err) {
-      console.error('Failed to rate chapter:', err);
+      await rateMutation.mutateAsync(currentRating);
+    } catch (error) {
+      console.error('Failed to rate chapter:', error);
       alert('Failed to submit rating. Please try again.');
     }
   };
@@ -1062,11 +1142,11 @@ const Chapter = () => {
         id="chapterDropdown"
       >
         <div className="chapter-dropdown-title">Chapters</div>
-        <ul className="chapter-list">
+        <ul className="chapter-dropdown-list">
           {chapterList.map((item) => (
             <li
               key={item._id}
-              className={`chapter-item ${item._id === chapterId ? 'current' : ''}`}
+              className={`chapter-dropdown-item ${item._id === chapterId ? 'current' : ''}`}
             >
               <Link to={`/novel/${novelId}/chapter/${item._id}`}>
                 {item.title}
@@ -1077,13 +1157,13 @@ const Chapter = () => {
           {/* If chapterList is empty, show some dummy chapters for the UI */}
           {chapterList.length === 0 && (
             <>
-              <li className="chapter-item">
+              <li className="chapter-dropdown-item">
                 <Link to={`/novel/${novelId}/chapter/1`}>Chapter 1</Link>
               </li>
-              <li className="chapter-item">
+              <li className="chapter-dropdown-item">
                 <Link to={`/novel/${novelId}/chapter/2`}>Chapter 2</Link>
               </li>
-              <li className="chapter-item current">
+              <li className="chapter-dropdown-item current">
                 <Link
                   to={`/novel/${novelId}/chapter/${chapterId}`}>Chapter {chapter.chapterNumber || 3}</Link>
               </li>

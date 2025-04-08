@@ -642,7 +642,7 @@ const NovelList = () => {
                                                 {/* Latest chapters list */}
                                                 <div className="chapter-list">
                                                     {sortedChapters.map(chapter => (
-                                                        <div key={chapter._id} className="chapter-item">
+                                                        <div key={chapter._id} className="novel-list-chapter-item">
                                                             <Link
                                                                 to={`/novel/${novel._id}/chapter/${chapter._id}`}
                                                                 className="novel-list-chapter-title"

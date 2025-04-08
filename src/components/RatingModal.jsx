@@ -1,86 +1,119 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import config from '../config/config';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+import { StarIcon, StarFilledIcon } from './novel-detail/NovelIcons';
 
 const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSuccess }) => {
   const [selectedRating, setSelectedRating] = useState(currentRating);
+  const [error, setError] = useState(null);
   const queryClient = useQueryClient();
-  const { user } = useAuth();  // Get the current user
+  const { user } = useAuth();
+
+  // Update selected rating when currentRating changes
+  useEffect(() => {
+    setSelectedRating(currentRating);
+  }, [currentRating]);
   
-  // API calls for rating
-  const rateNovel = async (rating) => {
-    try {
-      const response = await fetch(`${config.backendUrl}/api/novels/${novelId}/rate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ rating })
-      });
-      
-      if (!response.ok) throw new Error('Failed to rate novel');
-      return await response.json();
-    } catch (error) {
-      console.error('Error rating novel:', error);
-      throw error;
-    }
-  };
-  
-  const removeRating = async () => {
-    try {
-      const response = await fetch(`${config.backendUrl}/api/novels/${novelId}/rate`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to remove rating');
-      return await response.json();
-    } catch (error) {
-      console.error('Error removing rating:', error);
-      throw error;
-    }
-  };
-  
-  // Mutations
   const rateMutation = useMutation({
-    mutationFn: (rating) => rateNovel(rating),
-    onSuccess: (response) => {
-      if (onRatingSuccess) {
-        onRatingSuccess(response);
-      }
-    }
-  });
-  
-  const removeRatingMutation = useMutation({
-    mutationFn: () => removeRating(),
-    onSuccess: (response) => {
-      if (onRatingSuccess) {
-        onRatingSuccess(response);
-      }
-    }
-  });
-  
-  // Submit handler
-  const handleSubmit = async () => {
-    try {
-      if (selectedRating === 0) {
-        await removeRatingMutation.mutateAsync();
+    mutationFn: (rating) => api.rateNovel(novelId, rating),
+    onMutate: async (newRating) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(['novel-stats', novelId]);
+      await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
+
+      // Snapshot the previous values
+      const previousStats = queryClient.getQueryData(['novel-stats', novelId]);
+      const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
+
+      // Calculate new average rating
+      const oldRating = previousInteraction?.rating || 0;
+      const totalRatings = previousStats?.totalRatings || 0;
+      const currentAvgRating = parseFloat(previousStats?.averageRating || '0');
+
+      let newTotalRatings = totalRatings;
+      let newAvgRating = currentAvgRating;
+
+      if (oldRating === 0) {
+        // Adding new rating
+        newTotalRatings++;
+        newAvgRating = ((currentAvgRating * totalRatings) + newRating) / newTotalRatings;
       } else {
-        await rateMutation.mutateAsync(selectedRating);
+        // Updating existing rating
+        newAvgRating = ((currentAvgRating * totalRatings) - oldRating + newRating) / totalRatings;
       }
+
+      // Optimistically update stats
+      queryClient.setQueryData(['novel-stats', novelId], old => ({
+        ...old,
+        totalRatings: newTotalRatings,
+        averageRating: newAvgRating.toFixed(1)
+      }));
+
+      // Optimistically update user interaction
+      queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+        ...old,
+        rating: newRating
+      }));
+
+      return { previousStats, previousInteraction };
+    },
+    onError: (err, variables, context) => {
+      // Reset to previous values on error
+      if (context?.previousStats) {
+        queryClient.setQueryData(['novel-stats', novelId], context.previousStats);
+      }
+      if (context?.previousInteraction) {
+        queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
+      }
+      setError('Failed to update rating. Please try again.');
+    },
+    onSuccess: (response) => {
+      // Update with actual server data
+      queryClient.setQueryData(['novel-stats', novelId], old => ({
+        ...old,
+        totalRatings: response.ratingsCount || old?.totalRatings || 0,
+        averageRating: response.averageRating
+      }));
+
+      queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+        ...old,
+        rating: response.rating
+      }));
+
+      // Invalidate queries to ensure consistency
+      queryClient.invalidateQueries({
+        queryKey: ['novel-stats', novelId],
+        exact: true
+      });
+
+      if (onRatingSuccess) {
+        onRatingSuccess(response);
+      }
+
+      setError(null);
+      onClose();
+    }
+  });
+  
+  const handleSubmit = async () => {
+    if (selectedRating === 0) {
+      setError('Please select a rating before submitting.');
+      return;
+    }
+
+    try {
+      await rateMutation.mutateAsync(selectedRating);
     } catch (error) {
       console.error('Error submitting rating:', error);
-      // You might want to show an error message to the user here
+      setError('Failed to update rating. Please try again.');
     }
   };
   
-  // Cancel handler
   const handleCancel = () => {
     setSelectedRating(currentRating);
+    setError(null);
     onClose();
   };
   
@@ -99,33 +132,32 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
             <button
               key={star}
               className={`star-button ${star <= selectedRating ? 'active' : ''}`}
-              onClick={() => setSelectedRating(star === selectedRating ? 0 : star)}
+              onClick={() => setSelectedRating(star === selectedRating ? selectedRating : star)}
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="32" 
-                height="32" 
-                viewBox="0 0 24 24" 
-                fill={star <= selectedRating ? "currentColor" : "none"} 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
+              {star <= selectedRating ? (
+                <StarFilledIcon size={32} />
+              ) : (
+                <StarIcon size={32} />
+              )}
             </button>
           ))}
         </div>
         
         <div className="rating-value-display">
-          {selectedRating > 0 ? `${selectedRating} / 5` : 'No Rating'}
+          {selectedRating > 0 ? `${selectedRating} / 5` : 'Select Rating'}
         </div>
+
+        {error && (
+          <div className="error-message" style={{ color: 'red', marginTop: '10px', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
         
         <div className="rating-modal-footer">
           <button 
             className="cancel-button" 
             onClick={handleCancel}
+            disabled={rateMutation.isLoading}
           >
             Cancel
           </button>
@@ -133,12 +165,12 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
           <button 
             className="submit-button" 
             onClick={handleSubmit}
-            disabled={rateMutation.isLoading || removeRatingMutation.isLoading}
+            disabled={rateMutation.isLoading || selectedRating === 0}
           >
-            {rateMutation.isLoading || removeRatingMutation.isLoading 
+            {rateMutation.isLoading 
               ? 'Submitting...' 
-              : selectedRating === 0 
-                ? 'Remove Rating' 
+              : currentRating > 0 
+                ? 'Update Rating' 
                 : 'Submit Rating'
             }
           </button>

@@ -6,7 +6,6 @@
  * 
  * Features:
  * - Novel management interface
- * - Chapter management interface
  * - Form controls
  * - List views
  * - Grid layout
@@ -117,11 +116,6 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.novel-list li.selected {
-  border-color: var(--primary-color, #3498db);
-  background: var(--selected-bg, #f0f7ff);
-}
-
 /* Novel actions styles */
 .novel-actions {
   display: flex;
@@ -173,119 +167,12 @@
   background: var(--danger-color, #e74c3c);
 }
 
-/* Chapter management styles */
-.chapter-management {
-  background: var(--card-bg, #fff);
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-top: 2rem;
-}
-
-.chapter-list {
-  margin-top: 1rem;
-}
-
-.chapter-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.chapter-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: var(--item-bg, #f8f9fa);
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #dee2e6);
-}
-
-.chapter-list li span {
-  font-size: 1rem;
-  color: var(--text-color, #2c3e50);
-}
-
-.chapter-list .delete-btn {
-  padding: 0.5rem 1rem;
-  background: var(--danger-color, #e74c3c);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
-}
-
-.chapter-list .delete-btn:hover {
-  background: #c0392b;
-}
-
-/* Dark mode support */
-:root.dark-mode .chapter-management {
-  background: var(--card-bg, #2d2d2d);
-}
-
-:root.dark-mode .chapter-list li {
-  background: var(--item-bg, #333);
-  border-color: var(--border-color, #404040);
-}
-
-:root.dark-mode .chapter-list li span {
-  color: var(--text-color, #e0e0e0);
-}
-
-/* Form actions styles */
-.form-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.submit-btn,
-.cancel-btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.submit-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-}
-
-.cancel-btn {
-  background: none;
-  border: 1px solid #ddd;
-  color: #666;
-  text-decoration: none;
-}
-
-/* Error message styles */
-.error {
-  color: var(--danger-color, #e74c3c);
-  background: var(--danger-bg, #fee);
-  border: 1px solid var(--danger-border, #fcc);
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-
 /* Responsive styles */
 @media (max-width: 768px) {
   .admin-dashboard {
     padding: 1rem;
   }
   
-  .chapter-grid {
-    grid-template-columns: 1fr;
-  }
-
   .novel-list li {
     flex-direction: column;
     gap: 10px;

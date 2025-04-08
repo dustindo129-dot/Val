@@ -354,12 +354,13 @@
 
 /* Chapter list */
 .chapter-list {
+    margin-top: 1rem;
     font-size: 16px;
     margin: auto 0 0 0;  /* Push to bottom */
     padding-top: 15px;
 }
 
-.chapter-item {
+.novel-list-chapter-item {
     display: flex;
     align-items: center;
     border-top: 1px solid #eee;
@@ -367,7 +368,7 @@
     padding: 12px 0;
 }
 
-.chapter-item:last-child {
+.novel-list-chapter-item:last-child {
     padding-bottom: 0;  /* Remove padding from last item */
 }
 
@@ -672,7 +673,7 @@
         overflow-x: hidden; /* Hide horizontal scroll */
     }
 
-    .chapter-list .chapter-item:nth-child(n+2) {
+    .chapter-list .novel-list-chapter-item:nth-child(n+2) {
         display: none;
     }
 

@@ -86,7 +86,7 @@ const ModuleChapters = memo(({
   return (
     <div className="module-chapters">
       {chapters && chapters.length > 0 ? (
-        <div className="chapters-list">
+        <div className="module-chapters-list">
           {chapters.map((chapter, index) => {
             const chapterId = chapter._id || `index-${index}`;
             
@@ -101,7 +101,7 @@ const ModuleChapters = memo(({
             return (
               <div 
                 key={`chapter-item-${chapterId}`}
-                className={`chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''}`}
+                className={`module-chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''}`}
                 style={{ transition: 'all 0.3s ease' }}
               >
                 <div className="chapter-list-content" key={`chapter-content-${chapterId}`}>
