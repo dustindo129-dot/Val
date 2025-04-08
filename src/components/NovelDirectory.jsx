@@ -1,15 +1,54 @@
-import { useState, useEffect, memo, useMemo } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+/**
+ * NovelDirectory Component
+ *
+ * Displays a paginated grid of novels sorted alphabetically with:
+ * - Filter sidebar with genre categories and checkboxes
+ * - Novel cards arranged in a 2-column grid
+ * - Client-side filtering and pagination
+ */
+
+import { useState, useEffect, memo, useMemo, useRef, useCallback } from 'react';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import '../styles/NovelList.css';
+import '../styles/NovelDirectory.css';
 import config from '../config/config';
+
+// Genre categories for filtering
+const genreCategories = {
+  'Format & Origin': [
+    'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
+    'Web Novel', 'One shot'
+  ],
+  'Target Audience': [
+    'Seinen', 'Shounen', 'Josei', 'Shoujo'
+  ],
+  'Main Genres': [
+    'Action', 'Adventure', 'Comedy', 'Drama', 'Ecchi', 'Fantasy',
+    'Historical', 'Horror', 'Mystery', 'Romance', 'Science Fiction',
+    'Slice of Life', 'Supernatural', 'Suspense', 'Tragedy',
+    'Magic', 'Psychological'
+  ],
+  'Character & Relationship Features': [
+    'Age Gap', 'Boys Love', 'Character Growth', 'Different Social Status',
+    'Female Protagonist', 'Gender Bender', 'Harem', 'Incest',
+    'Mature', 'Netorare', 'Reverse Harem', 'Yuri'
+  ],
+  'Settings & Worlds': [
+    'Cooking', 'Game', 'Isekai', 'Martial Arts', 'Mecha', 'Military',
+    'Otome Game', 'Parody', 'School Life', 'Slow Life', 'Sports',
+    'Super Power', 'Wars', 'Workplace'
+  ],
+};
 
 // Function to truncate HTML content safely
 const truncateHTML = (html, maxLength) => {
+  if (!html) return '';
+
   const div = document.createElement('div');
   div.innerHTML = html;
   const text = div.textContent || div.innerText || '';
-  
+
   if (text.length <= maxLength) {
     return html;
   }
@@ -37,13 +76,13 @@ const truncateHTML = (html, maxLength) => {
 
 /**
  * NovelImage Component
- * 
+ *
  * Memoized component for displaying novel cover images with:
  * - Fallback image handling
  * - Status indicator overlay
  * - Lazy loading
  */
-const NovelImage = memo(({ src, alt, status, novelId }) => {
+const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
   const [imgSrc, setImgSrc] = useState(src);
   const defaultImage = 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png';
 
@@ -55,252 +94,523 @@ const NovelImage = memo(({ src, alt, status, novelId }) => {
     setImgSrc(defaultImage);
   };
 
-  return (
-    <div className="novel-image-container">
-      <Link to={`/novel/${novelId}`} className="novel-image-link">
-        <div className="novel-image">
-          <img 
-            src={imgSrc} 
-            alt={alt}
-            onError={handleError}
-            loading="lazy"
-          />
-        </div>
-      </Link>
-    </div>
-  );
-});
-
-/**
- * NovelDirectory Component
- * 
- * Displays a paginated grid of novels sorted alphabetically
- */
-const NovelDirectory = () => {
-  const navigate = useNavigate();
-  const { page } = useParams(); // Get page from URL params
-  const [novels, setNovels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState({});
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0
-  });
-
-  const currentPage = parseInt(page) || 1;
-  // Remove frontend sorting since it should be handled by the database
-  const cachedNovels = useMemo(() => novels, [novels]);
-
-  useEffect(() => {
-    const fetchNovels = async () => {
-      try {
-        // Add collation for case-insensitive sorting and proper handling of special characters
-        const response = await axios.get(
-          `${config.backendUrl}/api/novels?page=${currentPage}&limit=20&sortBy=title&order=asc&collation=true`
-        );
-        
-        // Sort novels client-side as a backup if server sorting isn't perfect
-        const sortedNovels = (response.data.novels || []).sort((a, b) => {
-          return a.title.toLowerCase().localeCompare(b.title.toLowerCase(), undefined, {
-            numeric: true,
-            sensitivity: 'base'
-          });
-        });
-        
-        setNovels(sortedNovels);
-        setPagination(response.data.pagination);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch novels');
-        setLoading(false);
-        console.error('Error fetching novels:', err);
-      }
-    };
-
-    fetchNovels();
-  }, [currentPage]);
-
-  // Add scroll to top effect when page changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentPage]);
-
-  const handlePageChange = (page) => {
-    navigate(`/novel-directory/page/${page}`);
-  };
-
-  const renderPagination = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    if (startPage > 1) {
-      pages.push(
-        <Link
-          key="1"
-          to="/novel-directory/page/1"
-          className={`pagination-button ${1 === currentPage ? 'active' : ''}`}
-          onClick={() => window.scrollTo(0, 0)}
-        >
-          1
-        </Link>
-      );
-      if (startPage > 2) {
-        pages.push(<span key="ellipsis1" className="pagination-ellipsis">...</span>);
-      }
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <Link
-          key={i}
-          to={`/novel-directory/page/${i}`}
-          className={`pagination-button ${i === currentPage ? 'active' : ''}`}
-          onClick={() => window.scrollTo(0, 0)}
-        >
-          {i}
-        </Link>
-      );
-    }
-
-    if (endPage < pagination.totalPages) {
-      if (endPage < pagination.totalPages - 1) {
-        pages.push(<span key="ellipsis2" className="pagination-ellipsis">...</span>);
-      }
-      pages.push(
-        <Link
-          key={pagination.totalPages}
-          to={`/novel-directory/page/${pagination.totalPages}`}
-          className={`pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
-          onClick={() => window.scrollTo(0, 0)}
-        >
-          {pagination.totalPages}
-        </Link>
-      );
-    }
-
-    return (
-      <div className="pagination">
-        <Link
-          to={currentPage > 1 ? `/novel-directory/page/${currentPage - 1}` : '#'}
-          onClick={(e) => {
-            if (currentPage === 1) e.preventDefault();
-            else window.scrollTo(0, 0);
-          }}
-          className={`pagination-button nav ${currentPage === 1 ? 'disabled' : ''}`}
-        >
-          ‹
-        </Link>
-        {pages}
-        <Link
-          to={currentPage < pagination.totalPages ? `/novel-directory/page/${currentPage + 1}` : '#'}
-          onClick={(e) => {
-            if (currentPage === pagination.totalPages) e.preventDefault();
-            else window.scrollTo(0, 0);
-          }}
-          className={`pagination-button nav ${currentPage === pagination.totalPages ? 'disabled' : ''}`}
-        >
-          ›
-        </Link>
-      </div>
-    );
-  };
-
-  const toggleDescription = (novelId) => {
-    setExpandedDescriptions(prev => ({
-      ...prev,
-      [novelId]: !prev[novelId]
-    }));
-  };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
 
-  if (loading) return <div className="loading">Loading novels...</div>;
-  if (error) return <div className="error">{error}</div>;
-  if (!cachedNovels || cachedNovels.length === 0) return <div className="loading">No novels available.</div>;
-
   return (
-    <div className="novel-list-container">
-      <div className="content-layout">
-        <div className="main-content">
-          <div className="section-headers">
-            <h2>NOVEL DIRECTORY</h2>
+      <div className="novel-image-container">
+        <Link to={`/novel/${novelId}`} className="novel-image-link">
+          <div className="novel-image">
+            {updatedAt && (
+                <span className="dir-update-time">
+                {formatDate(updatedAt)}
+              </span>
+            )}
+            <img
+                src={imgSrc}
+                alt={alt}
+                onError={handleError}
+                loading="lazy"
+            />
           </div>
-          <div className="novel-grid">
-            {cachedNovels.map(novel => (
-              <div key={novel._id} className="novel-card">
-                <NovelImage
-                  src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'}
-                  alt={novel.title}
-                  status={novel.status}
-                  novelId={novel._id}
-                />
-                <div className="novel-content">
-                  <div className="novel-header">
-                    <Link to={`/novel/${novel._id}`} className="novel-title-link">
-                      <h3 className="novel-title">{novel.title}</h3>
-                    </Link>
-                    <Link to={`/novel/${novel._id}/chapter/1`} className="first-chapter">
-                      First Chapter
-                    </Link>
-                  </div>
-                  <span className="update-time">
-                    Updated {formatDate(novel.updatedAt || new Date())}
-                  </span>
-                  <div className="novel-description">
-                    <div dangerouslySetInnerHTML={{ 
-                      __html: expandedDescriptions[novel._id]
-                        ? novel.description
-                        : truncateHTML(novel.description || '', 150)
-                    }} />
-                    {novel.description?.length > 150 && (
-                      <button 
-                        className="read-more"
-                        onClick={() => toggleDescription(novel._id)}
-                      >
-                        {expandedDescriptions[novel._id] ? 'Read less ↑' : 'Read more ↓'}
-                      </button>
-                    )}
-                  </div>
-                  <div className="chapter-list">
-                    {(novel.chapters || []).map(chapter => (
-                      <Link 
-                        key={chapter._id} 
-                        to={`/novel/${novel._id}/chapter/${chapter._id}`}
-                        className="chapter-item"
-                      >
-                        <span className="chapter-title">
-                          Chapter {chapter.chapterNumber}: {chapter.title}
-                        </span>
-                        <span className="chapter-date">
-                          {formatDate(chapter.createdAt)}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
+        </Link>
+        {/* Status nằm dưới hình ảnh */}
+        <span className="dir-novel-status" data-status={status || 'ONGOING'}>
+          {status || 'ONGOING'}
+        </span>
+      </div>
+  );
+});
+
+/**
+ * NovelDirectory Component
+ *
+ * Displays all novels with client-side filtering and pagination
+ */
+const NovelDirectory = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { page } = useParams();
+  const currentPage = parseInt(page) || 1;
+  const ITEMS_PER_PAGE = 20;
+
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [expandedTags, setExpandedTags] = useState({});
+  const [selectedGenres, setSelectedGenres] = useState({});
+  const [appliedGenres, setAppliedGenres] = useState({});
+  const [needsTagToggle, setNeedsTagToggle] = useState({});
+  const sidebarRef = useRef(null);
+  const tagListRefs = useRef({});
+  const descriptionRefs = useRef({});
+
+  // Parse URL search params for filters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const genres = searchParams.get('genres');
+
+    if (genres) {
+      const genreArray = genres.split(',');
+      const genreObject = {};
+
+      genreArray.forEach(genre => {
+        genreObject[genre] = true;
+      });
+
+      setSelectedGenres(genreObject);
+      setAppliedGenres(genreObject);
+    }
+  }, [location.search]);
+
+  // Query to fetch novels with a larger limit
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['novels-directory', 'large-list'],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/novels?page=1&limit=100`);
+
+      // Sort novels by title (case-insensitive)
+      const sortedNovels = (response.data.novels || []).sort((a, b) => {
+        return a.title.toLowerCase().localeCompare(b.title.toLowerCase(), undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      });
+
+      return {
+        novels: sortedNovels,
+        totalCount: sortedNovels.length
+      };
+    },
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
+  });
+
+  // Check if tag lists need a toggle button
+  useEffect(() => {
+    if (data?.novels) {
+      const timer = setTimeout(() => {
+        const updatedNeedsToggle = {};
+
+        // Check each tag list element
+        Object.keys(tagListRefs.current).forEach(novelId => {
+          const tagListRef = tagListRefs.current[novelId];
+          if (tagListRef) {
+            const { scrollHeight, clientHeight } = tagListRef;
+            // If scrollHeight significantly greater than clientHeight, we need a toggle
+            updatedNeedsToggle[novelId] = scrollHeight > clientHeight + 5;
+          }
+        });
+
+        setNeedsTagToggle(updatedNeedsToggle);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [data]);
+
+  // Filter and paginate novels client-side
+  const filteredAndPaginatedNovels = useMemo(() => {
+    if (!data?.novels) return { novels: [], totalPages: 1 };
+
+    // Get selected genre filters
+    const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
+
+    // Filter novels based on selected genres
+    const filtered = activeGenres.length > 0
+        ? data.novels.filter(novel => {
+          // Check if novel has at least one of the selected genres
+          return novel.genres && novel.genres.some(genre =>
+              activeGenres.includes(genre)
+          );
+        })
+        : data.novels;
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedNovels = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    return {
+      novels: paginatedNovels,
+      totalPages,
+      totalItems: filtered.length
+    };
+  }, [data, currentPage, appliedGenres]);
+
+  // Add scroll to top effect when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
+  // Handle genre checkbox changes
+  const handleGenreChange = useCallback((genre) => {
+    setSelectedGenres(prev => ({
+      ...prev,
+      [genre]: !prev[genre]
+    }));
+  }, []);
+
+  // Apply filters
+  const applyFilters = useCallback(() => {
+    setAppliedGenres(selectedGenres);
+
+    const genreFilters = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
+
+    if (genreFilters.length > 0) {
+      navigate(`/novel-directory/page/1?genres=${genreFilters.join(',')}`);
+    } else {
+      navigate('/novel-directory/page/1');
+    }
+  }, [selectedGenres, navigate]);
+
+  // Reset filters
+  const resetFilters = useCallback(() => {
+    setSelectedGenres({});
+    setAppliedGenres({});
+    navigate('/novel-directory/page/1');
+  }, [navigate]);
+
+  // Toggle description expansion
+  const toggleDescription = useCallback((novelId) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [novelId]: !prev[novelId]
+    }));
+  }, []);
+
+  // Toggle tags expansion
+  const toggleTags = useCallback((novelId) => {
+    setExpandedTags(prev => ({
+      ...prev,
+      [novelId]: !prev[novelId]
+    }));
+  }, []);
+
+  // Function to get genre tags with proper styling
+  const getGenreTags = (novel) => {
+    if (!novel.genres || novel.genres.length === 0) {
+      return [];
+    }
+
+    return novel.genres.map(genre => {
+      if (genre.includes('Novel')) {
+        let className = '';
+        if (genre.includes('Japanese')) className = 'japanese-novel';
+        else if (genre.includes('Chinese')) className = 'chinese-novel';
+        else if (genre.includes('Korean')) className = 'korean-novel';
+        else if (genre.includes('English')) className = 'english-novel';
+        else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
+
+        return {
+          name: genre,
+          type: 'format-origin',
+          class: className
+        };
+      } else if (genre === 'Mature') {
+        return {
+          name: genre,
+          type: 'mature',
+          class: 'mature'
+        };
+      } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
+        return {
+          name: genre,
+          type: 'target-audience',
+          class: ''
+        };
+      } else {
+        return {
+          name: genre,
+          type: 'other',
+          class: ''
+        };
+      }
+    }).sort((a, b) => {
+      const typeOrder = {
+        'format-origin': 1,
+        'mature': 2,
+        'target-audience': 3,
+        'other': 4
+      };
+
+      return typeOrder[a.type] - typeOrder[b.type];
+    });
+  };
+
+  // Render pagination controls
+  const renderPagination = () => {
+    const pages = [];
+    const totalPages = filteredAndPaginatedNovels.totalPages;
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Prepare query params for pagination links
+    const genreFilters = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
+    const queryParams = genreFilters.length > 0 ? `?genres=${genreFilters.join(',')}` : '';
+
+    if (startPage > 1) {
+      pages.push(
+          <Link
+              key="1"
+              to={`/novel-directory/page/1${queryParams}`}
+              className="pagination-button directory"
+          >
+            1
+          </Link>
+      );
+      if (startPage > 2) {
+        pages.push(<span key="ellipsis1" className="pagination-ellipsis directory">...</span>);
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+          <Link
+              key={i}
+              to={`/novel-directory/page/${i}${queryParams}`}
+              className={`pagination-button directory ${i === currentPage ? 'active' : ''}`}
+          >
+            {i}
+          </Link>
+      );
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pages.push(<span key="ellipsis2" className="pagination-ellipsis directory">...</span>);
+      }
+      pages.push(
+          <Link
+              key={totalPages}
+              to={`/novel-directory/page/${totalPages}${queryParams}`}
+              className="pagination-button directory"
+          >
+            {totalPages}
+          </Link>
+      );
+    }
+
+    return (
+        <div className="pagination directory">
+          <Link
+              to={currentPage > 1 ? `/novel-directory/page/${currentPage - 1}${queryParams}` : '#'}
+              className={`pagination-button directory nav ${currentPage === 1 ? 'disabled' : ''}`}
+          >
+            ‹
+          </Link>
+          {pages}
+          <Link
+              to={currentPage < totalPages ? `/novel-directory/page/${currentPage + 1}${queryParams}` : '#'}
+              className={`pagination-button directory nav ${currentPage === totalPages ? 'disabled' : ''}`}
+          >
+            ›
+          </Link>
+        </div>
+    );
+  };
+
+  if (isLoading) return <div className="directory-loading">Loading novels...</div>;
+  if (error) return <div className="directory-error">{error.message}</div>;
+
+  const { novels, totalItems } = filteredAndPaginatedNovels;
+
+  if (!novels || novels.length === 0) {
+    return (
+        <div className="novel-list-container directory">
+          <div className="content-layout directory">
+            <div className="main-content directory">
+              <div className="section-headers directory">
+                <h2>NOVEL DIRECTORY</h2>
+              </div>
+              <div className="no-results directory">No novels match your selected filters.</div>
+              <button className="reset-all-filters directory" onClick={resetFilters}>Clear all filters</button>
+            </div>
+
+            {/* Sidebar with genre filters */}
+            <div className="sidebar" ref={sidebarRef}>
+              <div className="filter-panel">
+                <h3>Filter by Genres</h3>
+
+                {Object.entries(genreCategories).map(([category, genres]) => (
+                    <div key={category} className="genre-category">
+                      <h4 className="genre-category-title">{category}</h4>
+                      <div className="genre-checkboxes">
+                        {genres.map(genre => (
+                            <div key={genre} className="genre-checkbox">
+                              <input
+                                  type="checkbox"
+                                  id={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}
+                                  checked={!!selectedGenres[genre]}
+                                  onChange={() => handleGenreChange(genre)}
+                              />
+                              <label htmlFor={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}>
+                                {genre}
+                              </label>
+                            </div>
+                        ))}
+                      </div>
+                    </div>
+                ))}
+
+                <div className="filter-actions">
+                  <button className="filter-button apply-filters" onClick={applyFilters}>
+                    Apply Filters
+                  </button>
+                  <button className="filter-button reset-filters" onClick={resetFilters}>
+                    Reset Filters
+                  </button>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-          {renderPagination()}
+        </div>
+    );
+  }
+
+  return (
+      <div className="novel-list-container directory">
+        <div className="content-layout directory">
+          {/* Main content area */}
+          <div className="main-content directory">
+            <div className="section-headers directory">
+              <h2>NOVEL DIRECTORY</h2>
+              <div className="results-count directory">
+                Showing {novels.length} of {totalItems} novels
+              </div>
+            </div>
+            <div className="novel-grid directory">
+              {novels.map(novel => {
+                // Get formatted genre tags for this novel
+                const genreTags = getGenreTags(novel);
+
+                return (
+                    <div key={novel._id} className="novel-card">
+                      {/* Novel cover image with status and update time */}
+                      <NovelImage
+                          src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'}
+                          alt={novel.title}
+                          status={novel.status}
+                          novelId={novel._id}
+                          updatedAt={novel.updatedAt}
+                      />
+
+                      {/* Novel content section */}
+                      <div className="novel-content">
+                        {/* Novel title */}
+                        <Link to={`/novel/${novel._id}`} className="dir-novel-title-link">
+                          <h3 className="dir-novel-title">{novel.title}</h3>
+                        </Link>
+
+                        {/* Genre tags - limited to 2 rows with toggle option */}
+                        {genreTags.length > 0 && (
+                            <div
+                                ref={el => tagListRefs.current[novel._id] = el}
+                                className={`dir-tag-list ${expandedTags[novel._id] ? 'expanded' : ''}`}
+                            >
+                              {genreTags.map((genre, index) => (
+                                  <span key={index} className={`dir-tag ${genre.class}`}>
+                                    {genre.name}
+                                  </span>
+                              ))}
+
+                              {needsTagToggle[novel._id] && (
+                                  <span
+                                      className="dir-toggle-tags"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        toggleTags(novel._id);
+                                      }}
+                                  >
+                                    {expandedTags[novel._id] ? 'Show less' : '...'}
+                                  </span>
+                              )}
+                            </div>
+                        )}
+
+                        <div className="dir-novel-description-container" style={{position: 'relative'}}>
+                          <div
+                              className={`dir-novel-description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                              ref={el => descriptionRefs.current[novel._id] = el}
+                          >
+                            <div dangerouslySetInnerHTML={{
+                              __html: novel.description || ''
+                            }} />
+                          </div>
+
+                          {novel.description && (
+                              <button
+                                  className="dir-read-more"
+                                  onClick={() => toggleDescription(novel._id)}
+                              >
+                                {expandedDescriptions[novel._id] ? 'Show less' : 'Read more'}
+                              </button>
+                          )}
+                        </div>
+
+                      </div>
+                    </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination controls */}
+            {renderPagination()}
+          </div>
+
+          {/* Sidebar with genre filters */}
+          <div className="sidebar" ref={sidebarRef}>
+            <div className="filter-panel">
+              <h3>Filter by Genres</h3>
+
+              {/* Genre category sections */}
+              {Object.entries(genreCategories).map(([category, genres]) => (
+                  <div key={category} className="genre-category">
+                    <h4 className="genre-category-title">{category}</h4>
+                    <div className="genre-checkboxes">
+                      {genres.map(genre => (
+                          <div key={genre} className="genre-checkbox">
+                            <input
+                                type="checkbox"
+                                id={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}
+                                checked={!!selectedGenres[genre]}
+                                onChange={() => handleGenreChange(genre)}
+                            />
+                            <label htmlFor={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}>
+                              {genre}
+                            </label>
+                          </div>
+                      ))}
+                    </div>
+                  </div>
+              ))}
+
+              {/* Filter actions */}
+              <div className="filter-actions">
+                <button className="filter-button apply-filters" onClick={applyFilters}>
+                  Apply Filters
+                </button>
+                <button className="filter-button reset-filters" onClick={resetFilters}>
+                  Reset Filters
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
   );
 };
 
-export default NovelDirectory; 
+export default NovelDirectory;
