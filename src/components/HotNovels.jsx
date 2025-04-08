@@ -72,10 +72,10 @@ const HotNovels = () => {
       const response = await axios.get(`${config.backendUrl}/api/novels/hot?_cb=${cacheBuster}`);
       return response.data.novels || [];
     },
-    staleTime: 0, // Data is immediately stale
+    staleTime: 15000, // Data remains fresh for 15 seconds
     cacheTime: 0, // Don't cache at all
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
     refetchInterval: 30000 // Refresh every 30 seconds
   });
 
