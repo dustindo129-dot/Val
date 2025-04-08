@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/components/CommentSection.css';
+import axios from 'axios';
+import config from '../config/config';
 
 /**
  * Comment section component for novels
@@ -65,7 +67,30 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
   const [deleting, setDeleting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [userToBlock, setUserToBlock] = useState(null);
+  const [message, setMessage] = useState(null);
+  const [isBanned, setIsBanned] = useState(false);
   
+  // Check if user is banned
+  useEffect(() => {
+    const checkBanStatus = async () => {
+      if (!isAuthenticated || !user) return;
+      
+      try {
+        const response = await axios.get(
+          `${config.backendUrl}/api/users/${user.username}/ban-status`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setIsBanned(response.data.isBanned);
+      } catch (error) {
+        console.error('Failed to check ban status:', error);
+      }
+    };
+
+    checkBanStatus();
+  }, [user, isAuthenticated]);
+
   // Fetch comments on component mount
   useEffect(() => {
     if (!novelId) return;
@@ -73,10 +98,17 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     const fetchComments = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/comments?contentType=novels&contentId=${novelId}`);
+        const response = await fetch(`${config.backendUrl}/api/comments?contentType=novels&contentId=${novelId}`);
         
+        // Check if response is ok before trying to parse JSON
         if (!response.ok) {
-          throw new Error('Failed to fetch comments');
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch comments');
+          } else {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          }
         }
         
         const data = await response.json();
@@ -98,6 +130,11 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     
     if (!isAuthenticated) {
       alert('Please log in to leave a comment');
+      return;
+    }
+
+    if (isBanned) {
+      alert('You cannot comment because you have been banned');
       return;
     }
     
@@ -202,6 +239,11 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       alert('Please log in to reply to comments');
       return;
     }
+
+    if (isBanned) {
+      alert('You cannot reply because you have been banned');
+      return;
+    }
     
     if (!replyText.trim()) {
       return;
@@ -302,6 +344,43 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     }
   };
   
+  const handleBlock = async () => {
+    if (!userToBlock || !isAuthenticated) return;
+
+    try {
+      const endpoint = user.role === 'admin' ? 'ban' : 'block';
+      await axios.post(
+        `${config.backendUrl}/api/users/${endpoint}/${userToBlock.username}`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      setMessage({ 
+        type: 'success', 
+        text: `User ${user.role === 'admin' ? 'banned' : 'blocked'} successfully` 
+      });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || `Failed to ${user.role === 'admin' ? 'ban' : 'block'} user` 
+      });
+    } finally {
+      setShowBlockModal(false);
+      setUserToBlock(null);
+    }
+  };
+
+  const openBlockModal = (commentUser) => {
+    // Prevent blocking self or admin blocking admin
+    if (!isAuthenticated || 
+        commentUser.username === user.username || 
+        (user.role === 'admin' && commentUser.role === 'admin')) {
+      return;
+    }
+    setUserToBlock(commentUser);
+    setShowBlockModal(true);
+  };
+
   // Create a recursive component for rendering comments and their replies
   const RenderComment = ({ comment, level = 0 }) => (
     <div className="comment-item">
@@ -316,9 +395,20 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       </div>
       <div className="comment-content">
         <div className="comment-header">
-          <span className="comment-username">
-            {comment.isDeleted && !comment.adminDeleted ? '[deleted]' : comment.user.username}
-          </span>
+          <div className="comment-user-info">
+            <span className="comment-username">
+              {comment.isDeleted && !comment.adminDeleted ? '[deleted]' : comment.user.username}
+            </span>
+            {isAuthenticated && !comment.isDeleted && comment.user.username !== user.username && (
+              <button
+                className="block-btn"
+                onClick={() => openBlockModal(comment.user)}
+                title={user.role === 'admin' ? 'Ban user' : 'Block user'}
+              >
+                🚫
+              </button>
+            )}
+          </div>
           <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
         </div>
         <div className="comment-text">
@@ -410,23 +500,29 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       <h3 className="comments-title">Comments ({comments.length})</h3>
       
       {isAuthenticated ? (
-        <form className="comment-form" onSubmit={handleSubmit}>
-          <textarea
-            className="comment-input"
-            placeholder="Add a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            disabled={submitting}
-            required
-          />
-          <button 
-            type="submit" 
-            className="comment-submit-btn"
-            disabled={submitting || !newComment.trim()}
-          >
-            {submitting ? 'Posting...' : 'Post Comment'}
-          </button>
-        </form>
+        isBanned ? (
+          <div className="banned-message">
+            You are currently banned and cannot post comments or replies.
+          </div>
+        ) : (
+          <form className="comment-form" onSubmit={handleSubmit}>
+            <textarea
+              className="comment-input"
+              placeholder="Add a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              disabled={submitting}
+              required
+            />
+            <button 
+              type="submit" 
+              className="comment-submit-btn"
+              disabled={submitting || !newComment.trim()}
+            >
+              {submitting ? 'Posting...' : 'Post Comment'}
+            </button>
+          </form>
+        )
       ) : (
         <div className="login-to-comment">
           Please <a href="/login">log in</a> to leave a comment.
@@ -442,6 +538,26 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       ) : (
         <div className="no-comments">
           <p>No comments yet. Be the first to comment!</p>
+        </div>
+      )}
+
+      {/* Block confirmation modal */}
+      {showBlockModal && (
+        <div className="block-confirm-modal">
+          <div className="block-confirm-content">
+            <p>Are you sure you want to {user.role === 'admin' ? 'ban' : 'block'} {userToBlock.username}?</p>
+            <div className="block-confirm-actions">
+              <button onClick={handleBlock}>
+                {user.role === 'admin' ? 'Ban User' : 'Block User'}
+              </button>
+              <button onClick={() => {
+                setShowBlockModal(false);
+                setUserToBlock(null);
+              }}>
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -97,7 +97,7 @@ const NovelDetail = () => {
 
   // Handler for deleting modules
   const handleDeleteModule = useCallback(async (moduleId) => {
-    if (!user || user.role !== 'admin') return;
+    if (!user || (user.role !== 'admin')) return;
     
     if (window.confirm('Are you sure you want to delete this module?')) {
       try {
@@ -113,7 +113,7 @@ const NovelDetail = () => {
 
   // Handler for module reordering
   const handleModuleReorder = useCallback(async (moduleId, direction) => {
-    if (!user || user.role !== 'admin') return;
+    if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return;
     
     try {
       // Get current data for optimistic update
@@ -629,7 +629,7 @@ const NovelDetail = () => {
           <div className="chapter-list-container">
             <div className="chapters-header">
               <h2>Chapters</h2>
-              {user?.role === 'admin' && (
+              {(user?.role === 'admin' || user?.role === 'moderator') && (
                 <button 
                   className="add-module-btn"
                   onClick={handleModuleFormToggle}

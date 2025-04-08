@@ -43,6 +43,7 @@ const UserProfile = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
+  const [bannedUsers, setBannedUsers] = useState([]);
 
   /**
    * Initialize form data with user information
@@ -51,7 +52,11 @@ const UserProfile = () => {
     if (user) {
       setEmail(user.email || '');
       setAvatar(user.avatar || '');
-      fetchBlockedUsers();
+      if (user.role === 'admin') {
+        fetchBannedUsers();
+      } else {
+        fetchBlockedUsers();
+      }
     }
   }, [user]);
 
@@ -67,17 +72,41 @@ const UserProfile = () => {
     }
   };
 
+  const fetchBannedUsers = async () => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/users/banned`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setBannedUsers(response.data);
+    } catch (error) {
+      console.error('Failed to fetch banned users:', error);
+    }
+  };
+
   const handleUnblock = async (blockedUsername) => {
     try {
       await axios.delete(
         `${config.backendUrl}/api/users/${username}/block/${blockedUsername}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      // Update the blocked users list
       setBlockedUsers(prev => prev.filter(user => user.username !== blockedUsername));
       setMessage({ type: 'success', text: 'User unblocked successfully' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to unblock user' });
+    }
+  };
+
+  const handleUnban = async (bannedUsername) => {
+    try {
+      await axios.delete(
+        `${config.backendUrl}/api/users/ban/${bannedUsername}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setBannedUsers(prev => prev.filter(user => user.username !== bannedUsername));
+      setMessage({ type: 'success', text: 'User unbanned successfully' });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to unban user' });
     }
   };
 
@@ -376,31 +405,56 @@ const UserProfile = () => {
           </form>
         </div>
 
-        {/* Blocked Users Section */}
+        {/* Blocked/Banned Users Section */}
         <div className="blocked-users-section">
-          <h2>Blocked Users ({blockedUsers.length}/50)</h2>
+          <h2>{user?.role === 'admin' ? `Banned Users (${bannedUsers.length}/50)` : `Blocked Users (${blockedUsers.length}/50)`}</h2>
           <div className="blocked-users-list">
-            {blockedUsers.map(blockedUser => (
-              <div key={blockedUser._id} className="blocked-user-item">
-                <div className="blocked-user-info">
-                  <img 
-                    src={blockedUser.avatar || '/default-avatar.png'} 
-                    alt={`${blockedUser.username}'s avatar`} 
-                    className="blocked-user-avatar"
-                  />
-                  <span className="blocked-username">{blockedUser.username}</span>
+            {user?.role === 'admin' ? (
+              bannedUsers.map(bannedUser => (
+                <div key={bannedUser._id} className="blocked-user-item">
+                  <div className="blocked-user-info">
+                    <img 
+                      src={bannedUser.avatar || '/default-avatar.png'} 
+                      alt={`${bannedUser.username}'s avatar`} 
+                      className="blocked-user-avatar"
+                    />
+                    <span className="blocked-username">{bannedUser.username}</span>
+                  </div>
+                  <button
+                    className="unblock-btn"
+                    onClick={() => handleUnban(bannedUser.username)}
+                    title="Unban user"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  className="unblock-btn"
-                  onClick={() => handleUnblock(blockedUser.username)}
-                  title="Unblock user"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            {blockedUsers.length === 0 && (
-              <p className="no-blocked-users">No blocked users</p>
+              ))
+            ) : (
+              blockedUsers.map(blockedUser => (
+                <div key={blockedUser._id} className="blocked-user-item">
+                  <div className="blocked-user-info">
+                    <img 
+                      src={blockedUser.avatar || '/default-avatar.png'} 
+                      alt={`${blockedUser.username}'s avatar`} 
+                      className="blocked-user-avatar"
+                    />
+                    <span className="blocked-username">{blockedUser.username}</span>
+                  </div>
+                  <button
+                    className="unblock-btn"
+                    onClick={() => handleUnblock(blockedUser.username)}
+                    title="Unblock user"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            )}
+            {((user?.role === 'admin' && bannedUsers.length === 0) || 
+              (!user?.role === 'admin' && blockedUsers.length === 0)) && (
+              <p className="no-blocked-users">
+                No {user?.role === 'admin' ? 'banned' : 'blocked'} users
+              </p>
             )}
           </div>
         </div>

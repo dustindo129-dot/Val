@@ -14,6 +14,11 @@ const ModuleList = memo(({
 }) => {
   const [isReordering, setIsReordering] = useState(false);
 
+  // Check if user can edit
+  const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
+  // Check if user can delete
+  const canDelete = user && user.role === 'admin';
+
   const handleReorderClick = useCallback(async (moduleId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
     
@@ -42,7 +47,7 @@ const ModuleList = memo(({
                 alt={`${module.title} cover`}
                 className="module-cover-image"
               />
-              {user?.role === 'admin' && (
+              {canEdit && (
                 <div className="module-reorder-buttons">
                   <button
                     className={`reorder-btn ${moduleIndex === 0 ? 'disabled' : ''}`}
@@ -80,10 +85,10 @@ const ModuleList = memo(({
             <div className="module-details">
               <div className="module-header">
                 <div className="module-title-area">
-                  <h3 className="module-title">{module.title}</h3>
+                  <h3 className="module-title">{module.title || 'Untitled Module'}</h3>
                 </div>
                 
-                {user?.role === 'admin' && (
+                {canEdit && (
                   <div className="module-actions">
                     <button
                       className="edit-module-btn"
@@ -92,13 +97,15 @@ const ModuleList = memo(({
                     >
                       Edit
                     </button>
-                    <button
-                      className="delete-module-btn"
-                      onClick={() => handleModuleDelete(module._id)}
-                      title="Delete module"
-                    >
-                      Delete
-                    </button>
+                    {canDelete && (
+                      <button
+                        className="delete-module-btn"
+                        onClick={() => handleModuleDelete(module._id)}
+                        title="Delete module"
+                      >
+                        Delete
+                      </button>
+                    )}
                     <Link
                       to={`/novel/${novelId}/module/${module._id}/add-chapter`}
                       className="add-chapter-btn"
@@ -115,6 +122,8 @@ const ModuleList = memo(({
                 novelId={novelId}
                 moduleId={module._id}
                 user={user}
+                canEdit={canEdit}
+                canDelete={canDelete}
                 handleChapterReorder={handleChapterReorder}
                 handleChapterDelete={handleChapterDelete}
               />

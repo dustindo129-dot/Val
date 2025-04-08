@@ -358,27 +358,35 @@
 
 .chapter-item {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     border-top: 1px solid #eee;
     margin: -5px 0 -5px 0;
+    padding: 8px 0;
 }
 
 /* Set chapter font-size to 14px with blue color */
-.chapter-title {
-    color: #2573ce !important; /* Blue color */
+.novel-list-chapter-title {
+    color: #2573ce; /* Blue color */
     text-decoration: none;
     font-weight: 500;
-    font-size: 14px !important; /* Setting font-size to 14px */
+    font-size: 14px; /* Setting font-size to 14px */
+    flex: 1; /* Take up remaining space */
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Show ellipsis for overflow */
 }
 
-.chapter-title:hover {
-    text-decoration: none !important;
+.novel-list-chapter-title:hover {
+    text-decoration: none;
     color: #009fdf;
 }
 
-.chapter-date {
+.novel-list-chapter-date {
     color: #666;
     font-size: 14px;
+    margin-left: auto; /* Push to the right */
+    white-space: nowrap; /* Prevent date from wrapping */
+    padding-left: 16px; /* Add some space between title and date */
 }
 
 /* Pagination container */
@@ -579,8 +587,8 @@
     color: #ccc;
 }
 
-:root.dark-mode .chapter-title {
-    color: white!important;
+:root.dark-mode .novel-list-chapter-title {
+    color: white;
 }
 
 :root.dark-mode .toggle-tags {
@@ -605,6 +613,10 @@
 
 :root.dark-mode .pagination-ellipsis {
     color: #999;
+}
+
+:root.dark-mode .novel-list-chapter-date {
+    color: #9ca3af;
 }
 
 /* Responsive layout adjustments */

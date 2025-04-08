@@ -665,10 +665,10 @@ const Chapter = () => {
       case 'protected':
         return !!user; // Protected requires user to be logged in
       case 'draft':
-        return user?.role === 'admin'; // Draft is admin only
+        return user?.role === 'admin' || user?.role === 'moderator'; // Draft accessible to admin and moderator
       case 'paid':
         // TODO: Implement paid content check
-        return user?.role === 'admin'; // For now, only admin access
+        return user?.role === 'admin' || user?.role === 'moderator'; // For now, admin and moderator access
       default:
         return true;
     }
@@ -710,6 +710,11 @@ const Chapter = () => {
       setError('Failed to update chapter mode. Please try again.');
     }
   };
+
+  // Check if user can edit
+  const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
+  // Check if user can delete
+  const canDelete = user && user.role === 'admin';
 
   // Show loading state with animation
   if (isLoading) {
@@ -753,7 +758,21 @@ const Chapter = () => {
         increaseFontSize={increaseFontSize}
         setShowSettingsModal={setShowSettingsModal}
         user={user}
-      />
+      >
+        {canEdit && (
+          <div className="admin-controls">
+            <button className="edit-chapter-btn" onClick={() => setIsEditing(!isEditing)}>
+              {isEditing ? 'Cancel Edit' : 'Edit Chapter'}
+            </button>
+            
+            {canDelete && (
+              <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
+                Delete Chapter
+              </button>
+            )}
+          </div>
+        )}
+      </ChapterHeader>
 
       {/* Navigation */}
       <ChapterNavigation
@@ -779,14 +798,19 @@ const Chapter = () => {
           </span>
         </div>
 
-        {/* Stats */}
-        <div className="chapter-stats">
-          <span className="stat-item">
-            <FontAwesomeIcon icon={faEye}/> {viewCount} views
+        <div className="action-toolbar-right">
+          <span className="chapter-view-date">
+            {chapter?.updatedAt ? formatDate(chapter.updatedAt) : 'Unknown date'}
           </span>
-          <span className="stat-item">
-            <FontAwesomeIcon icon={faFont}/> {wordCount} words
-          </span>
+          {/* Stats */}
+          <div className="chapter-stats">
+            <span className="chapter-stat-item">
+              <FontAwesomeIcon icon={faEye}/> {viewCount} views
+            </span>
+            <span className="chapter-stat-item">
+              <FontAwesomeIcon icon={faFont}/> {wordCount} words
+            </span>
+          </div>
         </div>
       </div>
 
@@ -828,7 +852,7 @@ const Chapter = () => {
           editorRef={editorRef}
           getSafeHtml={getSafeHtml}
           onModeChange={handleModeChange}
-          isAdmin={user?.role === 'admin'}
+          canEdit={canEdit}
         />
       )}
 

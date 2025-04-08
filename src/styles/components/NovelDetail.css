@@ -147,7 +147,7 @@
   margin-bottom: 20px;
 }
 
-.stat-item {
+.novel-detail-stat-item {
   display: flex;
   align-items: center;
   gap: 15px;
@@ -679,7 +679,7 @@
   animation: pulse 2s infinite;
 }
 
-.chapter-date {
+.novel-detail-chapter-date {
   color: #6b7280;
   font-size: 0.875rem;
   white-space: nowrap;
@@ -754,10 +754,6 @@
   color: #f9fafb;
 }
 
-.dark-mode .chapter-date {
-  color: #9ca3af;
-}
-
 /* Responsive styles */
 /* Removing max-width media queries */
 
@@ -783,10 +779,6 @@
 
 :root.dark-mode .chapter-item a {
   color: #f9fafb;
-}
-
-:root.dark-mode .chapter-date {
-  color: #d1d5db;
 }
 
 /* Responsive styles */
@@ -1111,15 +1103,6 @@
 
 .delete-chapter-btn:hover {
   background-color: #c53030;
-}
-
-.chapter-date {
-  color: #718096;
-  font-size: 0.875rem;
-}
-
-.dark-mode .chapter-date {
-  color: #a0aec0;
 }
 
 /* Pulse animation for NEW tag */

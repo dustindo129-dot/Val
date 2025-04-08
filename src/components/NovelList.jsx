@@ -628,11 +628,11 @@ const NovelList = () => {
                                                         <div key={chapter._id} className="chapter-item">
                                                             <Link
                                                                 to={`/novel/${novel._id}/chapter/${chapter._id}`}
-                                                                className="chapter-title"
+                                                                className="novel-list-chapter-title"
                                                             >
                                                                 {chapter.title}
                                                             </Link>
-                                                            <span className="chapter-date">
+                                                            <span className="novel-list-chapter-date">
                                 {formatDate(chapter.createdAt)}
                               </span>
                                                         </div>

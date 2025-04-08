@@ -49,6 +49,8 @@ const ModuleChapters = memo(({
   novelId, 
   moduleId, 
   user, 
+  canEdit,
+  canDelete,
   handleChapterReorder, 
   handleChapterDelete 
 }) => {
@@ -121,7 +123,7 @@ const ModuleChapters = memo(({
                   </Link>
                 </div>
                 
-                {user?.role === 'admin' && (
+                {canEdit && (
                   <div className="chapter-actions" key={`chapter-actions-${chapterId}`}>
                     <button
                       className={`reorder-btn ${index === 0 ? 'disabled' : ''}`}
@@ -165,13 +167,15 @@ const ModuleChapters = memo(({
                         <path key={`path-down-${chapterId}`} d="M6 9l6 6 6-6"/>
                       </svg>
                     </button>
-                    <button
-                      className="delete-chapter-btn"
-                      onClick={() => handleChapterDelete(moduleId, chapterId)}
-                      title="Delete chapter"
-                    >
-                      Delete
-                    </button>
+                    {canDelete && (
+                      <button
+                        className="delete-chapter-btn"
+                        onClick={() => handleChapterDelete(moduleId, chapterId)}
+                        title="Delete chapter"
+                      >
+                        Delete
+                      </button>
+                    )}
                     <span className="chapter-mode-indicator">
                       {chapter.mode && chapter.mode !== 'published' && (
                         <span className={`mode-tag mode-${chapter.mode}`}>
@@ -181,7 +185,7 @@ const ModuleChapters = memo(({
                     </span>
                   </div>
                 )}
-                <span className="chapter-date">
+                <span className="novel-detail-chapter-date">
                   {formatDateUtil(chapter.createdAt)}
                 </span>
               </div>

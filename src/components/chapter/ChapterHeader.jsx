@@ -3,97 +3,67 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faCog } from '@fortawesome/free-solid-svg-icons';
 
-const ChapterHeader = ({ 
+const ChapterHeader = ({
   novel,
-  novelId, 
-  chapter, 
-  isEditing, 
-  editedTitle, 
-  setEditedTitle, 
-  handleEditChapter, 
+  novelId,
+  chapter,
+  isEditing,
+  editedTitle,
+  setEditedTitle,
+  handleEditChapter,
   handleDeleteChapter,
-  isSaving, 
-  setIsEditing, 
-  formatDate, 
-  decreaseFontSize, 
-  increaseFontSize, 
+  isSaving,
+  setIsEditing,
+  formatDate,
+  decreaseFontSize,
+  increaseFontSize,
   setShowSettingsModal,
-  user
+  user,
+  children
 }) => {
   return (
-    <div className="chapter-header">
-      <div className="chapter-navigation-header">
-        <div className="title-section">
-          {/* Admin actions */}
-          {user?.role === 'admin' && (
-            <div className="admin-actions">
-              {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} className="edit-chapter-btn">
-                  <FontAwesomeIcon icon={faEdit}/> Edit Chapter
-                </button>
-              ) : (
-                <div className="edit-actions">
-                  <button
-                    onClick={handleEditChapter}
-                    className="save-btn"
-                    disabled={isSaving}
-                  >
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="cancel-btn"
-                    disabled={isSaving}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={handleDeleteChapter}
-                className="delete-chapter-btn"
-                disabled={isSaving}
-              >
-                Delete Chapter
-              </button>
-            </div>
-          )}
+    <header className="chapter-header">
+      <div className="chapter-breadcrumb">
+        <a href="/" className="breadcrumb-item">Home</a>
+        <span className="breadcrumb-separator">&gt;</span>
+        <a href={`/novel/${novelId}`} className="breadcrumb-item">{novel?.title}</a>
+        <span className="breadcrumb-separator">&gt;</span>
+        <span className="breadcrumb-current">{chapter?.title}</span>
+      </div>
+      
+      <div className="header-meta">
+        <div className="chapter-meta">
+          {/* Removing chapter view date from here */}
         </div>
-
-        <div className="chapter-info">
-          <div className="chapter-header-novel-title">
-            <Link to={`/novel/${novelId}`}>{novel.title}</Link>
+        
+        <div>
+          <div className="reader-controls">
+            <button
+              className="font-size-btn decrease"
+              onClick={decreaseFontSize}
+              title="Decrease font size"
+            >
+              A-
+            </button>
+            <button
+              className="font-size-btn increase"
+              onClick={increaseFontSize}
+              title="Increase font size"
+            >
+              A+
+            </button>
+            <button
+              className="settings-btn"
+              onClick={() => setShowSettingsModal(true)}
+              title="Reading settings"
+            >
+              ⚙️
+            </button>
           </div>
-
-          {isEditing ? (
-            <input
-              type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              className="chapter-title-input"
-              placeholder="Chapter Title"
-            />
-          ) : (
-            <span className="chapter-title">
-              {chapter.title}
-            </span>
-          )}
-        </div>
-
-        <div className="chapter-date-section">
-          {formatDate(chapter.createdAt)}
+          {children}
         </div>
       </div>
-
-      {/* Reading options */}
-      <div className="reading-options">
-        <button onClick={decreaseFontSize} className="font-button">A-</button>
-        <button onClick={increaseFontSize} className="font-button">A+</button>
-        <button onClick={() => setShowSettingsModal(true)} className="font-button">
-          <FontAwesomeIcon icon={faCog}/>
-        </button>
-      </div>
-    </div>
+    </header>
   );
 };
 

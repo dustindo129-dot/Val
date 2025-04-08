@@ -388,7 +388,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
           {/* Stats Row */}
           <div className="novel-stats-row">
             {/* Views */}
-            <div className="stat-item views-stat">
+            <div className="novel-detail-stat-item views-stat">
               <div className="stat-icon">
                 <ViewsIcon />
               </div>
@@ -399,7 +399,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
             </div>
             
             {/* Likes */}
-            <div className="stat-item likes-stat" onClick={toggleLike}>
+            <div className="novel-detail-stat-item likes-stat" onClick={toggleLike}>
               <div className="stat-icon">
                 {(safeUserInteraction.liked === true) ? (
                   <HeartFilledIcon />
@@ -419,7 +419,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
             </div>
             
             {/* Ratings */}
-            <div className="stat-item ratings-stat" onClick={handleRatingClick}>
+            <div className="novel-detail-stat-item ratings-stat" onClick={handleRatingClick}>
               <div className="stat-icon">
                 <StarIcon />
               </div>
