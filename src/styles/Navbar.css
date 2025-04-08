@@ -412,68 +412,112 @@ body {
 
 /* Mobile responsive styles */
 @media (max-width: 768px) {
-  /* Adjust navbar layout for mobile */
   .navbar {
     padding: 0.75rem 1rem;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
 
-  /* Adjust navbar left section */
   .navbar-left {
-    flex: 1;
-    min-width: auto;
+    flex: 0 0 auto;
   }
 
-  /* Move search bar below logo and buttons */
+  .navbar-right {
+    margin-left: auto;
+  }
+
   .search-container {
-    order: 2;
+    order: 3;
     width: 100%;
     margin: 0.5rem 0 0 0;
+    max-width: none;
   }
 
-  /* Keep navbar-right next to logo */
-  .navbar-right {
-    flex: 0 0 auto;
-    gap: 0.5rem;
-  }
-
-  /* Adjust logo size for mobile */
   .navbar-logo {
     height: 32px;
   }
 
-  /* Adjust title size for mobile */
   .navbar-title {
     font-size: 1.2rem;
   }
 
-  /* Adjust auth buttons for mobile */
   .auth-button {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
   }
 
-  /* Adjust auth buttons container spacing */
   .auth-buttons {
     gap: 0.5rem;
   }
 
-  /* Adjust modal content for mobile */
   .modal-content {
     width: 90%;
     max-width: none;
   }
 
-  /* Ensure proper spacing between elements */
   .title-container {
     gap: 4px;
   }
 
-  /* Adjust beta tag for mobile */
   .beta-tag {
     font-size: 10px;
     padding: 1px 4px;
+  }
+
+  body {
+    padding-top: 110px;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar {
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .navbar-left {
+    flex: 0 0 auto;
+  }
+
+  .navbar-right {
+    margin-left: auto;
+  }
+
+  .search-container {
+    order: 3;
+    width: 100%;
+    margin: 0.5rem 0 0 0;
+    max-width: none;
+  }
+
+  .search-input {
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .search-button {
+    right: 4px;
+  }
+
+  .clear-search {
+    right: 32px;
+  }
+
+  .navbar-title {
+    font-size: 1rem;
+  }
+
+  .navbar-logo {
+    height: 28px;
+  }
+
+  .auth-button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  body {
+    padding-top: 110px;
   }
 }
 
