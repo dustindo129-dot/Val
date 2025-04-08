@@ -498,16 +498,8 @@ const Chapter = () => {
    * Handles bookmarking/unbookmarking a chapter
    */
   const handleBookmark = async () => {
-    // For non-logged in users, use localStorage
     if (!user) {
-      const newBookmarkState = !isBookmarked;
-      setIsBookmarked(newBookmarkState);
-
-      if (newBookmarkState) {
-        localStorage.setItem(`bookmark_${novelId}_${chapterId}`, 'true');
-      } else {
-        localStorage.removeItem(`bookmark_${novelId}_${chapterId}`);
-      }
+      alert('Please log in to bookmark this chapter');
       return;
     }
 
@@ -592,6 +584,12 @@ const Chapter = () => {
    * Handles submitting a report for the chapter
    */
   const handleSubmitReport = async () => {
+    if (!user) {
+      alert('Please log in to report this chapter');
+      setShowReportModal(false);
+      return;
+    }
+
     if (!reportReason) {
       alert('Please select a reason for your report');
       return;
@@ -606,9 +604,9 @@ const Chapter = () => {
           details: reportDetails
         },
         {
-          headers: user ? {
+          headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
-          } : {}
+          }
         }
       );
 
