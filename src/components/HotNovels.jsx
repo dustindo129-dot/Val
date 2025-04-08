@@ -76,7 +76,7 @@ const HotNovels = () => {
     cacheTime: 0, // Don't cache at all
     refetchOnMount: true, // Always refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchInterval: 10000 // Refresh every 10 seconds
+    refetchInterval: 30000 // Refresh every 30 seconds
   });
 
     if (isLoading) {
