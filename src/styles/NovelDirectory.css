@@ -504,6 +504,11 @@
   .directory .genre-checkboxes {
     grid-template-columns: 1fr;
   }
+
+  .content-layout {
+    padding: 0 0.25rem; /* Giảm khoảng cách lề trong mobile xuống 0.25rem */
+  }
+
 }
   /* Mobile-specific optimizations */
   @media (max-width: 576px) {
@@ -544,7 +549,4 @@
       margin-bottom: 1rem;
     }
 
-    .directory .novel-grid {
-      gap: 0.1rem; /* Reduced gap for mobile */
-    }
 }

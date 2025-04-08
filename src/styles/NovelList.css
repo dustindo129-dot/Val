@@ -14,7 +14,7 @@
     gap: 2rem;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 0.5rem; /* Giảm khoảng cách lề sang 0.5rem */
+    padding: 0 0.5rem;
 }
 
 .main-content {
@@ -126,7 +126,7 @@
 .novel-main {
     display: flex;
     width: 100%;
-    margin-top: -15px; /* Thay đổi từ -15px về 0 */
+    margin-top: -15px;
     position: relative;
 }
 
@@ -194,7 +194,6 @@
     transition: all 0.2s ease;
 }
 
-/* First chapter button ngay dưới status */
 .first-chapter {
     display: block;
     width: 100%;
@@ -235,7 +234,6 @@
     transition: max-height 0.3s ease;
 }
 
-/* Thêm một lớp để chỉ hiển thị toggle khi cần thiết */
 .tag-list.needs-toggle .toggle-tags {
     display: block;
 }
@@ -526,7 +524,7 @@
 @media (max-width: 1200px) {
     .content-layout {
         grid-template-columns: 1fr 400px;
-        gap: 1.5rem;
+        gap: 1rem;
     }
 }
 
@@ -572,10 +570,6 @@
         display: none;
     }
 
-    .content-layout {
-        gap: 1rem;
-        padding: 0 0.25rem; /* Giảm khoảng cách lề trong mobile xuống 0.25rem */
-    }
 
     .sidebar {
         margin-top: 1.5rem;
