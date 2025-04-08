@@ -11,7 +11,7 @@ import {
   faArrowUp, faEllipsisV, faTimes, faList, faSpinner,
   faChevronLeft, faChevronRight, faEye, faFont,
   faLanguage, faEdit, faCheckDouble, faHeart, faStar,
-  faComment, faLock, faCog
+  faComment, faLock, faCog, faSave
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faHeart as farHeart,
@@ -759,9 +759,39 @@ const Chapter = () => {
       >
         {canEdit && (
           <div className="admin-controls">
-            <button className="edit-chapter-btn" onClick={() => setIsEditing(!isEditing)}>
-              {isEditing ? 'Cancel Edit' : 'Edit Chapter'}
-            </button>
+            {isEditing ? (
+              <>
+                <button 
+                  className="save-changes-btn" 
+                  onClick={handleEditChapter}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} spin /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faSave} /> Save Changes
+                    </>
+                  )}
+                </button>
+                <button 
+                  className="cancel-edit-btn" 
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                >
+                  Cancel Edit
+                </button>
+              </>
+            ) : (
+              <button 
+                className="edit-chapter-btn" 
+                onClick={() => setIsEditing(true)}
+              >
+                Edit Chapter
+              </button>
+            )}
             
             {canDelete && (
               <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
