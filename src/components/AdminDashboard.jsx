@@ -94,6 +94,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
+  // Staff management state
+  const [activeStaffItems, setActiveStaffItems] = useState([]);
+  const [inactiveStaffItems, setInactiveStaffItems] = useState([]);
+  
   const [description, setDescription] = useState('');
   const editorRef = useRef(null);
   const noteEditorRef = useRef(null);
@@ -178,30 +182,113 @@ const AdminDashboard = () => {
   };
 
   /**
-   * Handles staff input change for translator, editor, proofreader arrays
+   * Adds a new staff item to either active or inactive staff
    * @param {string} status - 'active' or 'inactive'
-   * @param {string} role - 'translator', 'editor', or 'proofreader'
-   * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event
    */
-  const handleStaffInputChange = (status, role, e) => {
-    const target = editingNovel ? editingNovel : newNovel;
-    // Convert comma-separated names into an array
-    const names = e.target.value.split(',').map(name => name.trim()).filter(name => name);
+  const addStaffItem = (status) => {
+    const newItem = { id: Date.now(), name: '', role: 'translator' };
     
-    const updatedNovel = {
-      ...target,
-      [status]: {
-        ...target[status],
-        [role]: names
-      }
-    };
-    
-    if (editingNovel) {
-      setEditingNovel(updatedNovel);
+    if (status === 'active') {
+      setActiveStaffItems([...activeStaffItems, newItem]);
     } else {
-      setNewNovel(updatedNovel);
+      setInactiveStaffItems([...inactiveStaffItems, newItem]);
     }
   };
+
+  /**
+   * Removes a staff item by id
+   * @param {string} status - 'active' or 'inactive'
+   * @param {number} id - id of the staff item to remove
+   */
+  const removeStaffItem = (status, id) => {
+    if (status === 'active') {
+      setActiveStaffItems(activeStaffItems.filter(item => item.id !== id));
+    } else {
+      setInactiveStaffItems(inactiveStaffItems.filter(item => item.id !== id));
+    }
+  };
+
+  /**
+   * Handles changes to a staff item
+   * @param {string} status - 'active' or 'inactive'
+   * @param {number} id - id of the staff item
+   * @param {string} field - 'name' or 'role'
+   * @param {string} value - new value
+   */
+  const handleStaffItemChange = (status, id, field, value) => {
+    if (status === 'active') {
+      setActiveStaffItems(activeStaffItems.map(item => 
+        item.id === id ? { ...item, [field]: value } : item
+      ));
+    } else {
+      setInactiveStaffItems(inactiveStaffItems.map(item => 
+        item.id === id ? { ...item, [field]: value } : item
+      ));
+    }
+  };
+
+  // Convert staff items arrays to the novel staff structure
+  const compileStaffToNovel = () => {
+    const active = {
+      translator: activeStaffItems
+        .filter(item => item.role === 'translator' && item.name.trim())
+        .map(item => item.name.trim()),
+      editor: activeStaffItems
+        .filter(item => item.role === 'editor' && item.name.trim())
+        .map(item => item.name.trim()),
+      proofreader: activeStaffItems
+        .filter(item => item.role === 'proofreader' && item.name.trim())
+        .map(item => item.name.trim())
+    };
+    
+    const inactive = {
+      translator: inactiveStaffItems
+        .filter(item => item.role === 'translator' && item.name.trim())
+        .map(item => item.name.trim()),
+      editor: inactiveStaffItems
+        .filter(item => item.role === 'editor' && item.name.trim())
+        .map(item => item.name.trim()),
+      proofreader: inactiveStaffItems
+        .filter(item => item.role === 'proofreader' && item.name.trim())
+        .map(item => item.name.trim())
+    };
+    
+    return { active, inactive };
+  };
+
+  // Initialize staff items from novel data when editing
+  useEffect(() => {
+    if (editingNovel) {
+      // Reset current staff items
+      const activeItems = [];
+      const inactiveItems = [];
+      
+      // Process active staff
+      ['translator', 'editor', 'proofreader'].forEach(role => {
+        if (editingNovel.active && Array.isArray(editingNovel.active[role])) {
+          editingNovel.active[role].forEach(name => {
+            activeItems.push({ id: Date.now() + Math.random(), name, role });
+          });
+        }
+      });
+      
+      // Process inactive staff
+      ['translator', 'editor', 'proofreader'].forEach(role => {
+        if (editingNovel.inactive && Array.isArray(editingNovel.inactive[role])) {
+          editingNovel.inactive[role].forEach(name => {
+            inactiveItems.push({ id: Date.now() + Math.random(), name, role });
+          });
+        }
+      });
+      
+      setActiveStaffItems(activeItems);
+      setInactiveStaffItems(inactiveItems);
+    } else {
+      // Clear staff items when not editing
+      setActiveStaffItems([]);
+      setInactiveStaffItems([]);
+    }
+  }, [editingNovel?._id]);
 
   /**
    * Handles illustration file upload
@@ -275,13 +362,17 @@ const AdminDashboard = () => {
         : `${config.backendUrl}/api/novels`;
       
       const method = editingNovel ? 'PUT' : 'POST';
+      
+      // Compile staff data from staff items
+      const staffData = compileStaffToNovel();
+      
       const novelData = {
         title: editingNovel ? editingNovel.title : newNovel.title,
         alternativeTitles: editingNovel ? editingNovel.alternativeTitles : newNovel.alternativeTitles,
         author: editingNovel ? editingNovel.author : newNovel.author,
         illustrator: editingNovel ? editingNovel.illustrator : newNovel.illustrator,
-        active: editingNovel ? editingNovel.active : newNovel.active,
-        inactive: editingNovel ? editingNovel.inactive : newNovel.inactive,
+        active: staffData.active,
+        inactive: staffData.inactive,
         genres: editingNovel ? editingNovel.genres : newNovel.genres,
         description: editorRef.current.getContent(),
         note: noteEditorRef.current.getContent(),
@@ -566,47 +657,88 @@ const AdminDashboard = () => {
               onChange={handleInputChange}
             />
             
-            {/* Staff Section */}
+            {/* Staff Section - Active */}
             <div className="staff-section">
-              <h4>Active Staff</h4>
-              <input
-                type="text"
-                placeholder="Translators (comma-separated)"
-                value={editingNovel ? editingNovel.active?.translator?.join(', ') || '' : newNovel.active?.translator?.join(', ') || ''}
-                onChange={(e) => handleStaffInputChange('active', 'translator', e)}
-              />
-              <input
-                type="text"
-                placeholder="Editors (comma-separated)"
-                value={editingNovel ? editingNovel.active?.editor?.join(', ') || '' : newNovel.active?.editor?.join(', ') || ''}
-                onChange={(e) => handleStaffInputChange('active', 'editor', e)}
-              />
-              <input
-                type="text"
-                placeholder="Proofreaders (comma-separated)"
-                value={editingNovel ? editingNovel.active?.proofreader?.join(', ') || '' : newNovel.active?.proofreader?.join(', ') || ''}
-                onChange={(e) => handleStaffInputChange('active', 'proofreader', e)}
-              />
+              <div className="staff-header">
+                <h4>Active Staff</h4>
+                <button 
+                  type="button" 
+                  className="add-staff-btn" 
+                  onClick={() => addStaffItem('active')}
+                >
+                  +
+                </button>
+              </div>
               
-              <h4>Inactive Staff</h4>
-              <input
-                type="text"
-                placeholder="Translators (comma-separated)"
-                value={editingNovel ? editingNovel.inactive?.translator?.join(', ') || '' : newNovel.inactive?.translator?.join(', ') || ''}
-                onChange={(e) => handleStaffInputChange('inactive', 'translator', e)}
-              />
-              <input
-                type="text"
-                placeholder="Editors (comma-separated)"
-                value={editingNovel ? editingNovel.inactive?.editor?.join(', ') || '' : newNovel.inactive?.editor?.join(', ') || ''}
-                onChange={(e) => handleStaffInputChange('inactive', 'editor', e)}
-              />
-              <input
-                type="text"
-                placeholder="Proofreaders (comma-separated)"
-                value={editingNovel ? editingNovel.inactive?.proofreader?.join(', ') || '' : newNovel.inactive?.proofreader?.join(', ') || ''}
-                onChange={(e) => handleStaffInputChange('inactive', 'proofreader', e)}
-              />
+              <div className="staff-items-grid">
+                {activeStaffItems.map((item, index) => (
+                  <div key={item.id} className="staff-item">
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={item.name}
+                      onChange={(e) => handleStaffItemChange('active', item.id, 'name', e.target.value)}
+                    />
+                    <select
+                      value={item.role}
+                      onChange={(e) => handleStaffItemChange('active', item.id, 'role', e.target.value)}
+                    >
+                      <option value="translator">Translator</option>
+                      <option value="editor">Editor</option>
+                      <option value="proofreader">Proofreader</option>
+                    </select>
+                    <button 
+                      type="button" 
+                      className="remove-staff-btn" 
+                      onClick={() => removeStaffItem('active', item.id)}
+                      aria-label="Remove staff member"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Staff Section - Inactive */}
+              <div className="staff-header">
+                <h4>Inactive Staff</h4>
+                <button 
+                  type="button" 
+                  className="add-staff-btn" 
+                  onClick={() => addStaffItem('inactive')}
+                >
+                  +
+                </button>
+              </div>
+              
+              <div className="staff-items-grid">
+                {inactiveStaffItems.map((item, index) => (
+                  <div key={item.id} className="staff-item">
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={item.name}
+                      onChange={(e) => handleStaffItemChange('inactive', item.id, 'name', e.target.value)}
+                    />
+                    <select
+                      value={item.role}
+                      onChange={(e) => handleStaffItemChange('inactive', item.id, 'role', e.target.value)}
+                    >
+                      <option value="translator">Translator</option>
+                      <option value="editor">Editor</option>
+                      <option value="proofreader">Proofreader</option>
+                    </select>
+                    <button 
+                      type="button" 
+                      className="remove-staff-btn" 
+                      onClick={() => removeStaffItem('inactive', item.id)}
+                      aria-label="Remove staff member"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             
             {/* Genres Section */}

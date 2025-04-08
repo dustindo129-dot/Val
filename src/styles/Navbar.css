@@ -416,13 +416,26 @@ body {
   .navbar {
     padding: 0.75rem 1rem;
     flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Adjust navbar left section */
+  .navbar-left {
+    flex: 1;
+    min-width: auto;
   }
 
   /* Move search bar below logo and buttons */
   .search-container {
-    order: 3;
+    order: 2;
     width: 100%;
-    margin: 1rem 0;
+    margin: 0.5rem 0 0 0;
+  }
+
+  /* Keep navbar-right next to logo */
+  .navbar-right {
+    flex: 0 0 auto;
+    gap: 0.5rem;
   }
 
   /* Adjust logo size for mobile */
@@ -432,19 +445,35 @@ body {
 
   /* Adjust title size for mobile */
   .navbar-title {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   /* Adjust auth buttons for mobile */
   .auth-button {
-    padding: 0.4rem 1rem;
+    padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
+  }
+
+  /* Adjust auth buttons container spacing */
+  .auth-buttons {
+    gap: 0.5rem;
   }
 
   /* Adjust modal content for mobile */
   .modal-content {
     width: 90%;
     max-width: none;
+  }
+
+  /* Ensure proper spacing between elements */
+  .title-container {
+    gap: 4px;
+  }
+
+  /* Adjust beta tag for mobile */
+  .beta-tag {
+    font-size: 10px;
+    padding: 1px 4px;
   }
 }
 
