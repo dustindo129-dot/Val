@@ -810,7 +810,7 @@ const AdminDashboard = () => {
                   height: 300,
                   menubar: false,
                   plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+                    'advlist', 'autolink', 'lists', 'link', 'charmap',
                     'searchreplace', 'visualblocks', 'code', 'fullscreen',
                     'insertdatetime', 'media', 'table', 'help', 'wordcount',
                     'preview'
@@ -819,11 +819,11 @@ const AdminDashboard = () => {
                     'bold italic underline strikethrough | ' +
                     'alignleft aligncenter alignright alignjustify | ' +
                     'bullist numlist outdent indent | ' +
-                    'link image | code preview | removeformat | help',
+                    'link | code preview | removeformat | help',
                   content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                   skin: 'oxide',
                   content_css: 'default',
-                  placeholder: 'Write novel description...',
+                  placeholder: 'Write novel description... (max 1000 words)',
                   statusbar: false,
                   resize: false,
                   branding: false,
@@ -832,9 +832,17 @@ const AdminDashboard = () => {
                   wordcount_countwords: true,
                   wordcount_countspaces: false,
                   wordcount_alwaysshown: true,
-                  paste_data_images: true,
-                  paste_as_text: false,
-                  smart_paste: true,
+                  max_words: 1000,
+                  setup: function(editor) {
+                    editor.on('KeyUp', function(e) {
+                      const wordCount = editor.plugins.wordcount.getCount();
+                      if (wordCount > 1000) {
+                        const content = editor.getContent();
+                        const words = content.split(/\s+/);
+                        editor.setContent(words.slice(0, 1000).join(' '));
+                      }
+                    });
+                  },
                   paste_preprocess: function(plugin, args) {
                     const wrapper = document.createElement('div');
                     wrapper.innerHTML = args.content;
