@@ -38,6 +38,7 @@
     "axios": "^1.8.4",
     "compression": "^1.8.0",
     "dompurify": "^3.2.4",
+    "express-validator": "^7.2.1",
     "html-react-parser": "^5.2.3",
     "mongoose": "^8.13.1",
     "node-cache": "^5.1.2",

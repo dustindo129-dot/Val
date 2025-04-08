@@ -93,6 +93,17 @@ const Chapter = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chapterId]);
 
+  // Query for novel data
+  const { data: novelData } = useQuery({
+    queryKey: ['novel', novelId],
+    queryFn: async () => {
+      const novelRes = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
+      return novelRes.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!novelId
+  });
+
   // Query for chapter data
   const { data: chapterData, error: chapterError, isLoading } = useQuery({
     queryKey: ['chapter', chapterId],
@@ -128,16 +139,65 @@ const Chapter = () => {
     enabled: !!chapterId
   });
 
-  // Query for novel data to get chapters list
-  const { data: novelData } = useQuery({
-    queryKey: ['novel', novelId],
+  // Extract chapter and novel data
+  const chapter = chapterData?.chapter;
+  const novel = chapter?.novel || novelData?.novel || {title: "Novel"};
+
+  // Query for all chapters in the current module
+  const { data: moduleChaptersData, isLoading: isModuleChaptersLoading } = useQuery({
+    queryKey: ['module-chapters', chapter?.moduleId],
     queryFn: async () => {
-      const novelRes = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
-      return novelRes.data;
+      if (!chapter?.moduleId) return { chapters: [] };
+      const res = await axios.get(`${config.backendUrl}/api/chapters/module/${chapter.moduleId}`);
+      return { chapters: res.data }; // Wrap the response data in a chapters property to match our expected format
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!novelId
+    enabled: !!chapter?.moduleId && showChapterList, // Only fetch when dropdown is open
   });
+
+  // Create a sorted chapter list from the module chapters or fallback to prev/next
+  const getModuleChapterList = () => {
+    // If we have module chapters data, use it
+    if (moduleChaptersData?.chapters && moduleChaptersData.chapters.length > 0) {
+      return moduleChaptersData.chapters.sort((a, b) => (a.order || 0) - (b.order || 0));
+    }
+    
+    // Fallback to using current, prev, and next chapters
+    if (!chapter) return [];
+    
+    const list = [];
+    
+    // Add current chapter
+    list.push({
+      _id: chapterId,
+      title: chapter.title,
+      order: chapter.order || 0
+    });
+    
+    // Add previous chapter if available
+    if (chapter.prevChapter && chapter.prevChapter._id) {
+      list.push({
+        _id: chapter.prevChapter._id,
+        title: chapter.prevChapter.title,
+        order: chapter.prevChapter.order || 0
+      });
+    }
+    
+    // Add next chapter if available
+    if (chapter.nextChapter && chapter.nextChapter._id) {
+      list.push({
+        _id: chapter.nextChapter._id,
+        title: chapter.nextChapter.title,
+        order: chapter.nextChapter.order || 0
+      });
+    }
+    
+    // Sort by order
+    return list.sort((a, b) => a.order - b.order);
+  };
+  
+  // Use the module chapter list for the dropdown
+  const moduleChapters = getModuleChapterList();
 
   // Query for likes, bookmarks and ratings
   const { data: interactionData } = useQuery({
@@ -186,11 +246,6 @@ const Chapter = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!chapterId && !!user
   });
-
-  // Extract chapter and novel data
-  const chapter = chapterData?.chapter;
-  const novel = chapter?.novel || novelData?.novel || {title: "Novel"};
-  const chapterList = novelData?.chapters || [];
 
   // Effect to update interaction stats
   useEffect(() => {
@@ -1142,34 +1197,28 @@ const Chapter = () => {
         id="chapterDropdown"
       >
         <div className="chapter-dropdown-title">Chapters</div>
-        <ul className="chapter-dropdown-list">
-          {chapterList.map((item) => (
-            <li
-              key={item._id}
-              className={`chapter-dropdown-item ${item._id === chapterId ? 'current' : ''}`}
-            >
-              <Link to={`/novel/${novelId}/chapter/${item._id}`}>
-                {item.title}
-              </Link>
-            </li>
-          ))}
-
-          {/* If chapterList is empty, show some dummy chapters for the UI */}
-          {chapterList.length === 0 && (
-            <>
-              <li className="chapter-dropdown-item">
-                <Link to={`/novel/${novelId}/chapter/1`}>Chapter 1</Link>
-              </li>
-              <li className="chapter-dropdown-item">
-                <Link to={`/novel/${novelId}/chapter/2`}>Chapter 2</Link>
-              </li>
-              <li className="chapter-dropdown-item current">
-                <Link
-                  to={`/novel/${novelId}/chapter/${chapterId}`}>Chapter {chapter.chapterNumber || 3}</Link>
-              </li>
-            </>
-          )}
-        </ul>
+        {isModuleChaptersLoading ? (
+          <div className="loading-chapters">
+            <FontAwesomeIcon icon={faSpinner} spin /> Loading chapters...
+          </div>
+        ) : (
+          <ul className="chapter-dropdown-list">
+            {moduleChapters && moduleChapters.length > 0 ? (
+              moduleChapters.map((item) => (
+                <li
+                  key={item._id}
+                  className={`chapter-dropdown-item ${item._id === chapterId ? 'current' : ''}`}
+                >
+                  <Link to={`/novel/${novelId}/chapter/${item._id}`}>
+                    {item.order ? `${item.order}. ` : ''}{item.title}
+                  </Link>
+                </li>
+              ))
+            ) : (
+              <li className="chapter-dropdown-item empty">No chapters available</li>
+            )}
+          </ul>
+        )}
       </div>
 
       {/* Modals */}
