@@ -85,6 +85,8 @@ const Chapter = () => {
   // Reset navigation state when chapter changes
   useEffect(() => {
     setIsNavigating(false);
+    // Scroll to top when chapter changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chapterId]);
 
   // Query for chapter data
@@ -286,7 +288,6 @@ const Chapter = () => {
   const handlePrevChapter = async () => {
     if (chapter?.prevChapter && chapter.prevChapter._id) {
       setIsNavigating(true);
-      await scrollToTop();
       try {
         // Prefetch next chapter data if query client available
         await queryClient.prefetchQuery({
@@ -297,6 +298,8 @@ const Chapter = () => {
           }
         });
         navigate(`/novel/${novelId}/chapter/${chapter.prevChapter._id}`);
+        // Scroll after navigation
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
         console.error('Error navigating to previous chapter:', error);
         setError('Failed to navigate to previous chapter.');
@@ -311,7 +314,6 @@ const Chapter = () => {
   const handleNextChapter = async () => {
     if (chapter?.nextChapter && chapter.nextChapter._id) {
       setIsNavigating(true);
-      await scrollToTop();
       try {
         // Prefetch next chapter data if query client available
         await queryClient.prefetchQuery({
@@ -322,6 +324,8 @@ const Chapter = () => {
           }
         });
         navigate(`/novel/${novelId}/chapter/${chapter.nextChapter._id}`);
+        // Scroll after navigation
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
         console.error('Error navigating to next chapter:', error);
         setError('Failed to navigate to next chapter.');

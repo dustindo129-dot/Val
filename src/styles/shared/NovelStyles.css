@@ -16,7 +16,6 @@
 .content-layout,
 .novels-container {
   display: grid;
-  grid-template-columns: 1fr 300px;
   gap: 1.5rem;
   align-items: flex-start;
 }
@@ -214,21 +213,32 @@
   }
 }
 
-@media (max-width: 768px) {
+/* Added breakpoints for smaller screens moving upward */
+@media (min-width: 550px) {
   .content-layout,
   .novels-container {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0.75rem;
   }
-
-  .novel-update-card,
-  .novel-card {
-    flex-direction: column;
+  
+  .main-content {
+    width: 100%;
   }
-
-  .novel-cover-section,
-  .novel-image-container {
-    flex: none;
-    max-width: 180px;
-    margin: 0 auto;
+  
+  .sidebar {
+    margin-top: 1.5rem;
+    width: 100%;
   }
 }
+
+@media (min-width: 850px) {
+  .content-layout,
+  .novels-container {
+    grid-template-columns: 1fr 400px;
+    gap: 1.25rem;
+    padding: 1rem;
+  }
+}
+
+

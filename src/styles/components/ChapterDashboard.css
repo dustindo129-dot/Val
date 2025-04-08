@@ -67,13 +67,6 @@
   opacity: 0.8;
 }
 
-.module-title {
-  margin-top: 8px;
-  font-size: 1.1rem;
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
 .back-to-novel {
   padding: 10px 20px;
   background-color: var(--secondary-color);

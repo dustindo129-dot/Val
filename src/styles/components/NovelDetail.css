@@ -106,6 +106,15 @@
 .novel-cover-section {
   position: relative;
   width: 300px;
+  height: 450px;
+  flex-shrink: 0;
+}
+
+.novel-cover-section img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .novel-update-timestamp {
@@ -379,32 +388,10 @@
 }
 
 /* Responsive layouts */
-@media (max-width: 1024px) {
-  .novel-main-panel {
-    grid-template-columns: 200px 1fr;
-  }
-  
-  .novel-cover-section {
-    width: 200px;
-  }
-  
-  .novel-chapter-count {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-  }
-  
-  .novel-layout-container {
-    flex-direction: column;
-  }
-  
-  .novel-staff-column {
-    width: 100%;
-    position: static;
-  }
-}
+/* Removing max-width media queries */
 
-@media (max-width: 768px) {
+/* Added min-width breakpoints for responsive design */
+@media (min-width: 550px) {
   .novel-main-panel {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -412,15 +399,60 @@
   
   .novel-cover-section {
     width: 100%;
-    max-width: 300px;
+    max-width: 250px;
     margin: 0 auto;
+  }
+  
+  .novel-content-area {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .novel-content-row {
+    flex-direction: column;
+    gap: 20px;
   }
   
   .novel-stats-row,
   .novel-action-row {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 }
+
+@media (min-width: 850px) {
+  .novel-main-panel {
+    grid-template-columns: 250px 1fr auto;
+    gap: 25px;
+  }
+  
+  .novel-cover-section {
+    width: 250px;
+    margin: 0;
+  }
+  
+  .novel-content-area {
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+  }
+  
+  .novel-content-row {
+    flex-direction: row;
+    gap: 25px;
+  }
+  
+  .novel-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
+  .novel-action-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+/* Removing max-width media queries */
 
 /* Novel details styles */
 .detail-page-novel-details {
@@ -727,28 +759,7 @@
 }
 
 /* Responsive styles */
-@media (max-width: 768px) {
-  .chapter-item {
-    flex-wrap: wrap;
-  }
-  
-  .chapter-list-content {
-    width: 100%;
-    order: 1;
-  }
-  
-  .chapter-actions {
-    order: 2;
-    margin-left: auto;
-  }
-  
-  .chapter-date {
-    order: 3;
-    margin-left: 0;
-    width: 100%;
-    text-align: right;
-  }
-}
+/* Removing max-width media queries */
 
 /* Modules list */
 .modules-list {
@@ -779,29 +790,7 @@
 }
 
 /* Responsive styles */
-@media (max-width: 768px) {
-  .chapters-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .add-module-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .module-controls {
-    flex-wrap: wrap;
-    margin-top: 10px;
-  }
-  
-  .edit-module-btn,
-  .delete-module-btn,
-  .add-chapter-btn {
-    flex: 1;
-  }
-}
+/* Removing max-width media queries */
 
 /* Add module button */
 .add-module-btn {
@@ -959,29 +948,7 @@
 }
 
 /* Responsive styles */
-@media (max-width: 768px) {
-  .chapters-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .add-module-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .module-controls {
-    flex-wrap: wrap;
-    margin-top: 10px;
-  }
-  
-  .edit-module-btn,
-  .delete-module-btn,
-  .add-chapter-btn {
-    flex: 1;
-  }
-}
+/* Removing max-width media queries */
 
 /* Module container and content */
 .module-container {
@@ -1000,7 +967,7 @@
 
 .module-content {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
   padding: 1rem;
 }
 
@@ -1019,7 +986,7 @@
 
 .module-cover {
   flex-shrink: 0;
-  width: 120px;
+  width: 200px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -1028,7 +995,7 @@
 
 .module-cover-image {
   width: 100%;
-  height: 170px;
+  height: 300px;
   object-fit: cover;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -1055,28 +1022,13 @@
 
 .module-title {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
+  margin-top: 8px;
 }
 
 /* Responsive adjustment for mobile */
-@media (max-width: 640px) {
-  .module-content {
-    flex-direction: column;
-  }
-  
-  .module-cover {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-  
-  .module-cover-image {
-    height: auto;
-    max-height: 200px;
-    width: 100%;
-    object-fit: contain;
-  }
-}
+/* Removing max-width media queries */
 
 /* Chapter list styles */
 .chapter-list {
@@ -1239,13 +1191,7 @@
 }
 
 /* Responsive styles for comments button */
-@media (max-width: 768px) {
-  .comments-toggle-btn {
-    width: 100%;
-    max-width: 300px;
-    font-size: 0.9rem;
-  }
-}
+/* Removing max-width media queries */
 
 /* Dark mode support */
 :root.dark-mode .novel-comments-section {
@@ -1258,17 +1204,7 @@
 }
 
 /* Responsive styles */
-@media (max-width: 768px) {
-  .novel-comments-section {
-    padding: 15px;
-    margin-top: 30px;
-  }
-  
-  .novel-comments-section h2 {
-    font-size: 1.3rem;
-    margin-bottom: 15px;
-  }
-}
+/* Removing max-width media queries */
 
 /* Like and Rating Styles */
 .novel-ratings-info {
@@ -1598,13 +1534,6 @@
   height: 20px;
 }
 
-/* Responsive adjustment for novel-content-row */
-@media (max-width: 768px) {
-  .novel-content-row {
-    flex-direction: column;
-  }
-}
-
 /* Update reorder button styles for vertical layout */
 .reorder-btn {
   padding: 4px;
@@ -1639,14 +1568,6 @@
   background: rgba(74, 85, 104, 0.7);
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .module-reorder-buttons {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
 /* Note section styles */
 .note-section {
   margin-top: 2.5rem;
@@ -1655,7 +1576,3 @@
 .note-section h2 {
   margin-bottom: 1rem;
 }
-
-
-
-

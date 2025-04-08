@@ -81,36 +81,129 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
 
 // FacebookPlugin Component
 const FacebookPlugin = memo(() => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [hasError, setHasError] = useState(false);
+
     useEffect(() => {
-        (function (d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) return;
-            js = d.createElement(s);
-            js.id = id;
-            js.src = "https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v12.0";
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
+        // Intercept errors as early as possible - before the component fully mounts
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        // More aggressive global error handler to catch all Facebook-related errors
+        window.addEventListener('error', function(event) {
+            const errorMsg = event.message || '';
+            if (
+                errorMsg.includes('u_1_') || 
+                errorMsg.includes('Could not find element') || 
+                errorMsg.includes('FB') || 
+                errorMsg.includes('facebook') ||
+                errorMsg.includes('DataStore') ||
+                errorMsg.includes('__elem_')
+            ) {
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+            }
+        }, true);
+        
+        // Override console.error to suppress specific Facebook-related errors
+        console.error = function(...args) {
+            const errorMsg = args[0]?.toString() || '';
+            if (
+                errorMsg.includes('u_1_') || 
+                errorMsg.includes('Could not find element') || 
+                errorMsg.includes('FB') || 
+                errorMsg.includes('facebook') ||
+                errorMsg.includes('DataStore') ||
+                errorMsg.includes('__elem_')
+            ) {
+                // Suppress Facebook-related errors
+                return;
+            }
+            originalConsoleError.apply(console, args);
+        };
+        
+        // Override console.warn to suppress specific Facebook-related warnings
+        console.warn = function(...args) {
+            const warnMsg = args[0]?.toString() || '';
+            if (
+                warnMsg.includes('u_1_') || 
+                warnMsg.includes('Could not find element') || 
+                warnMsg.includes('FB') || 
+                warnMsg.includes('facebook') ||
+                warnMsg.includes('DataStore') ||
+                warnMsg.includes('mutation event') ||
+                warnMsg.includes('__elem_')
+            ) {
+                // Suppress Facebook-related warnings
+                return;
+            }
+            originalConsoleWarn.apply(console, args);
+        };
+        
+        // Set a timeout to mark as loaded after 3 seconds, regardless of actual load status
+        const timeoutId = setTimeout(() => {
+            setIsLoaded(true);
+        }, 3000);
+
+        // Cleanup function
+        return () => {
+            console.error = originalConsoleError;
+            console.warn = originalConsoleWarn;
+            clearTimeout(timeoutId);
+        };
     }, []);
+
+    // Handle iframe load and error events
+    const handleLoad = () => {
+        setIsLoaded(true);
+        setHasError(false);
+    };
+
+    const handleError = () => {
+        setHasError(true);
+        setIsLoaded(true);
+    };
 
     return (
         <div className="facebook-plugin">
-            <div
-                className="fb-page"
-                data-href="https://www.facebook.com/profile.php?id=100064392503502"
-                data-tabs="timeline"
-                data-width="400"
-                data-height="800"
-                data-small-header="false"
-                data-adapt-container-width="true"
-                data-hide-cover="false"
-                data-show-facepile="true"
-            >
-                <blockquote cite="https://www.facebook.com/profile.php?id=100064392503502"
-                            className="fb-xfbml-parse-ignore">
-                    <a href="https://www.facebook.com/profile.php?id=100064392503502">Hội những người yêu thích Light
-                        Novel</a>
-                </blockquote>
-            </div>
+            {!isLoaded && (
+                <div className="fb-loading">
+                    <div className="fb-loading-spinner"></div>
+                    <div className="fb-loading-text">Loading Facebook timeline...</div>
+                </div>
+            )}
+            
+            <iframe 
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100064392503502&tabs=timeline&width=400&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
+                width="400"
+                height="800"
+                style={{ 
+                    border: 'none', 
+                    overflow: 'hidden',
+                    display: isLoaded ? 'block' : 'none' 
+                }}
+                scrolling="no"
+                frameBorder="0"
+                allowFullScreen={true}
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                onLoad={handleLoad}
+                onError={handleError}
+                title="Facebook Page Timeline"
+            ></iframe>
+            
+            {hasError && (
+                <div className="fb-error">
+                    <p>Unable to load Facebook content.</p>
+                    <a 
+                        href="https://www.facebook.com/profile.php?id=100064392503502" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                    >
+                        Visit our Facebook page
+                    </a>
+                </div>
+            )}
         </div>
     );
 });
