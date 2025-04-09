@@ -136,6 +136,18 @@ const Chapter = () => {
   const chapter = chapterData?.chapter;
   const novel = chapter?.novel || novelData?.novel || {title: "Novel"};
 
+  // Query for module data when we have a moduleId
+  const { data: moduleData } = useQuery({
+    queryKey: ['module', chapter?.moduleId],
+    queryFn: async () => {
+      if (!chapter?.moduleId) return null;
+      const res = await axios.get(`${config.backendUrl}/api/modules/${novelId}/modules/${chapter.moduleId}`);
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!chapter?.moduleId
+  });
+
   // Query for all chapters in the current module
   const { data: moduleChaptersData, isLoading: isModuleChaptersLoading } = useQuery({
     queryKey: ['module-chapters', chapter?.moduleId],
@@ -822,6 +834,7 @@ const Chapter = () => {
         novel={novel}
         novelId={novelId}
         chapter={chapter}
+        moduleData={moduleData}
         isEditing={isEditing}
         editedTitle={editedTitle}
         setEditedTitle={setEditedTitle}

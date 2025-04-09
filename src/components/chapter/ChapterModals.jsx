@@ -23,8 +23,8 @@ export const SettingsModal = ({
   if (!showSettingsModal) return null;
 
   return (
-    <div className="settings-modal-container">
-      <div className="settings-modal">
+    <div className={`settings-modal ${showSettingsModal ? 'active' : ''}`}>
+      <div className="settings-container">
         <div className="settings-modal-header">
           <h3>Reading Settings</h3>
           <button 

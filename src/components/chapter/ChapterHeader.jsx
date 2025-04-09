@@ -7,6 +7,7 @@ const ChapterHeader = ({
   novel,
   novelId,
   chapter,
+  moduleData,
   isEditing,
   editedTitle,
   setEditedTitle,
@@ -29,6 +30,12 @@ const ChapterHeader = ({
         <span className="breadcrumb-separator">&gt;</span>
         <a href={`/novel/${novelId}`} className="breadcrumb-item">{novel?.title}</a>
         <span className="breadcrumb-separator">&gt;</span>
+        {moduleData && (
+          <>
+            <span className="breadcrumb-current">{moduleData.title}</span>
+            <span className="breadcrumb-separator">&gt;</span>
+          </>
+        )}
         <span className="breadcrumb-current">{chapter?.title}</span>
       </div>
       

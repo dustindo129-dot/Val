@@ -562,6 +562,12 @@ const AdminDashboard = () => {
       // Create a timestamp for consistent optimistic updates
       const updatedAt = new Date().toISOString();
       
+      // Find the novel in the current data
+      const currentNovel = previousData.find(novel => novel._id === id);
+      if (!currentNovel) {
+        throw new Error('Novel not found');
+      }
+      
       // Optimistically update the cache
       queryClient.setQueryData(['novels'], old => 
         Array.isArray(old) 
@@ -572,7 +578,7 @@ const AdminDashboard = () => {
       // Update the status in the context
       updateNovelStatus(id, status);
 
-      // Send request to server
+      // Send request to server with all required fields
       const response = await fetch(`${config.backendUrl}/api/novels/${id}`, {
         method: 'PUT',
         headers: {
@@ -580,8 +586,8 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ 
+          ...currentNovel, // Include all existing novel data
           status,
-          // Explicitly request to update the timestamp
           updatedAt 
         })
       });

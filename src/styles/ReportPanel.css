@@ -135,7 +135,6 @@
 }
 
 /* Modal styling */
-.settings-modal-container,
 .rating-modal-container,
 .report-modal-container {
   position: fixed;
@@ -151,7 +150,6 @@
   padding: 20px;
 }
 
-.settings-modal,
 .rating-modal,
 .report-modal {
   background-color: white;
@@ -165,7 +163,6 @@
   flex-direction: column;
 }
 
-.settings-modal-header,
 .rating-modal-header,
 .report-modal-header {
   display: flex;
@@ -175,7 +172,6 @@
   border-bottom: 1px solid #e9ecef;
 }
 
-.settings-modal-header h3,
 .rating-modal-header h3,
 .report-modal-header h3 {
   margin: 0;
@@ -184,27 +180,6 @@
   color: #212529;
 }
 
-.close-modal-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #6c757d;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.close-modal-btn:hover {
-  background-color: #f8f9fa;
-  color: #343a40;
-}
-
-.settings-modal-body,
 .rating-modal-body,
 .report-modal-body {
   padding: 20px;
@@ -323,7 +298,6 @@
     max-height: 300px;
   }
   
-  .settings-modal,
   .rating-modal,
   .report-modal {
     max-width: 100%;
