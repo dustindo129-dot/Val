@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../styles/UserProfile.css';
 import config from '../config/config';
+import ReportPanel from '../components/ReportPanel';
 
 /**
  * UserProfile Component
@@ -458,6 +459,13 @@ const UserProfile = () => {
             )}
           </div>
         </div>
+
+        {/* Reports Section - Only visible for admins and moderators */}
+        {(user?.role === 'admin' || user?.role === 'moderator') && (
+          <div className="reports-section">
+            <ReportPanel user={user} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -717,45 +717,12 @@ const Chapter = () => {
 
   /**
    * Handles submitting a report for the chapter
+   * This function acts as a bridge to the submitReport function in ReportModal
+   * The actual submission logic is now in the ReportModal component
    */
-  const handleSubmitReport = async () => {
-    if (!user) {
-      alert('Please log in to report this chapter');
-      setShowReportModal(false);
-      return;
-    }
-
-    if (!reportReason) {
-      alert('Please select a reason for your report');
-      return;
-    }
-
-    try {
-      // Make API call to report
-      await axios.post(
-        `${config.backendUrl}/api/chapters/${chapterId}/report`,
-        {
-          reason: reportReason,
-          details: reportDetails
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
-
-      // Close modal and reset form
-      setShowReportModal(false);
-      setReportReason('');
-      setReportDetails('');
-
-      // Show success message
-      alert('Thank you for your report. We will review it soon.');
-    } catch (err) {
-      console.error('Failed to submit report:', err);
-      alert('Failed to submit report. Please try again.');
-    }
+  const handleSubmitReport = () => {
+    // This is now a stub function - the report submission is handled within the ReportModal component
+    // We keep this to maintain compatibility with the existing component
   };
 
   /**
@@ -1251,6 +1218,9 @@ const Chapter = () => {
         setReportReason={setReportReason}
         reportDetails={reportDetails}
         setReportDetails={setReportDetails}
+        chapterId={chapterId}
+        chapterTitle={chapter?.title}
+        novelId={novelId}
         handleSubmitReport={handleSubmitReport}
       />
     </div>

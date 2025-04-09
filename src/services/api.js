@@ -433,6 +433,79 @@ const api = {
       throw error;
     }
   },
+
+  // Report related API calls
+  submitReport: async (contentType, contentId, reportType, details, contentTitle, novelId) => {
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/reports`,
+        { contentType, contentId, reportType, details, contentTitle, novelId },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      throw error;
+    }
+  },
+
+  getReports: async (status = 'pending') => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/reports?status=${status}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
+      throw error;
+    }
+  },
+
+  resolveReport: async (reportId) => {
+    try {
+      const response = await axios.put(
+        `${config.backendUrl}/api/reports/${reportId}/resolve`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to resolve report:', error);
+      throw error;
+    }
+  },
+
+  deleteReport: async (reportId) => {
+    try {
+      const response = await axios.delete(
+        `${config.backendUrl}/api/reports/${reportId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete report:', error);
+      throw error;
+    }
+  }
 };
 
 export default api;
