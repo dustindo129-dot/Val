@@ -94,7 +94,7 @@ const ChapterHeader = ({
                   className="edit-chapter-btn" 
                   onClick={() => setIsEditing(true)}
                 >
-                  Edit Chapter
+                  <FontAwesomeIcon icon={faEdit} /> Edit Chapter
                 </button>
               )}
               

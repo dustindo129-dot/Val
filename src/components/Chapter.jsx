@@ -287,8 +287,7 @@ const Chapter = () => {
   // Effect to handle edit mode initialization
   useEffect(() => {
     if (isEditing && chapter) {
-      setEditedTitle(chapter.title);
-      // Unescape HTML before setting editor content
+      setEditedTitle(chapter.title || '');
       setEditedContent({
         content: unescapeHtml(chapter.content || ''),
         footnotes: chapter.footnotes || []
@@ -863,6 +862,8 @@ const Chapter = () => {
           isEditing={isEditing}
           editedContent={editedContent}
           setEditedContent={setEditedContent}
+          editedTitle={editedTitle}
+          setEditedTitle={setEditedTitle}
           fontSize={fontSize}
           fontFamily={fontFamily}
           lineHeight={lineHeight}

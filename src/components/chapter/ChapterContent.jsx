@@ -14,6 +14,8 @@ const ChapterContent = ({
   isEditing = false,
   editedContent,
   setEditedContent,
+  editedTitle,
+  setEditedTitle,
   fontSize = 16,
   fontFamily = 'Arial, sans-serif',
   lineHeight = '1.6',
@@ -80,6 +82,13 @@ const ChapterContent = ({
       }
     }
   }, [localFootnotes, isEditing, setEditedContent, editedContent?.footnotes]);
+
+  // Initialize editedTitle from parent component when entering edit mode
+  useEffect(() => {
+    if (isEditing && chapter && editedTitle === '') {
+      setEditedTitle(chapter.title || '');
+    }
+  }, [isEditing, chapter, editedTitle, setEditedTitle]);
 
   const handleFootnoteClick = (targetId) => {
     const element = document.getElementById(targetId);
@@ -230,9 +239,10 @@ const ChapterContent = ({
           {isEditing ? (
             <input
               type="text"
-              value={editedContent.title || chapter.title}
-              onChange={(e) => setEditedContent({ ...editedContent, title: e.target.value })}
-              placeholder="Chapter title"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              placeholder="Chapter Title"
+              className="chapter-title-banner-input"
             />
           ) : (
             chapter.title
@@ -463,6 +473,8 @@ ChapterContent.propTypes = {
     )
   }),
   setEditedContent: PropTypes.func,
+  editedTitle: PropTypes.string,
+  setEditedTitle: PropTypes.func,
   fontSize: PropTypes.number,
   fontFamily: PropTypes.string,
   lineHeight: PropTypes.string,
