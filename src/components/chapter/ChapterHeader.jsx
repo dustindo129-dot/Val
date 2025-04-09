@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faCog, faSave, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 const ChapterHeader = ({
   novel,
@@ -19,7 +19,8 @@ const ChapterHeader = ({
   increaseFontSize,
   setShowSettingsModal,
   user,
-  children
+  canEdit,
+  canDelete
 }) => {
   return (
     <header className="chapter-header">
@@ -60,7 +61,50 @@ const ChapterHeader = ({
               ⚙️
             </button>
           </div>
-          {children}
+          
+          {canEdit && (
+            <div className="admin-controls">
+              {isEditing ? (
+                <>
+                  <button 
+                    className="save-changes-btn" 
+                    onClick={handleEditChapter}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin /> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faSave} /> Save Changes
+                      </>
+                    )}
+                  </button>
+                  <button 
+                    className="cancel-edit-btn" 
+                    onClick={() => setIsEditing(false)}
+                    disabled={isSaving}
+                  >
+                    Cancel Edit
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className="edit-chapter-btn" 
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit Chapter
+                </button>
+              )}
+              
+              {canDelete && (
+                <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
+                  Delete Chapter
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>

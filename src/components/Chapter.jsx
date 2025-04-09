@@ -1,31 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import '../styles/components/Chapter.css';
-import CommentSection from './CommentSection';
 import config from '../config/config';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faArrowUp, faEllipsisV, faTimes, faList, faSpinner,
-  faChevronLeft, faChevronRight, faEye, faFont,
-  faLanguage, faEdit, faCheckDouble, faHeart, faStar,
-  faComment, faLock, faCog, faSave
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  faHeart as farHeart,
-  faStar as farStar
-} from '@fortawesome/free-regular-svg-icons';
-import {
-  faFacebookF, faTwitter, faPinterestP, faTelegram
-} from '@fortawesome/free-brands-svg-icons';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 // Import components
 import ChapterHeader from './chapter/ChapterHeader';
 import ChapterNavigation from './chapter/ChapterNavigation';
 import ChapterContent from './chapter/ChapterContent';
 import ChapterFooter from './chapter/ChapterFooter';
+import ChapterToolbar from './chapter/ChapterToolbar';
+import ChapterActions from './chapter/ChapterActions';
+import ChapterSocialShare from './chapter/ChapterSocialShare';
+import ChapterNavigationControls from './chapter/ChapterNavigationControls';
+import ChapterCommentsSection from './chapter/ChapterCommentsSection';
+import ChapterAccessGuard from './chapter/ChapterAccessGuard';
 import { SettingsModal, RatingModal, ReportModal } from './chapter/ChapterModals';
 
 // Import utilities 
@@ -51,7 +44,7 @@ const Chapter = () => {
 
   // UI state
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState('');
+  const [editedContent, setEditedContent] = useState({ content: '', footnotes: [] });
   const [editedTitle, setEditedTitle] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -296,7 +289,10 @@ const Chapter = () => {
     if (isEditing && chapter) {
       setEditedTitle(chapter.title);
       // Unescape HTML before setting editor content
-      setEditedContent(unescapeHtml(chapter.content || ''));
+      setEditedContent({
+        content: unescapeHtml(chapter.content || ''),
+        footnotes: chapter.footnotes || []
+      });
     }
   }, [isEditing, chapter]);
 
@@ -454,10 +450,19 @@ const Chapter = () => {
         }
       }
       
+      // Extract footnotes from editedContent
+      let footnotes = [];
+      if (editedContent && editedContent.footnotes) {
+        footnotes = editedContent.footnotes;
+      } else if (chapter.footnotes) {
+        footnotes = chapter.footnotes;
+      }
+      
       const updateData = {
         title: updatedTitle,
         content: updatedContent,
-        mode: updatedMode
+        mode: updatedMode,
+        footnotes: footnotes
       };
 
       // Optimistic UI update
@@ -472,6 +477,7 @@ const Chapter = () => {
           title: updatedTitle,
           content: updatedContent, // Raw HTML preserved in cache
           mode: updatedMode,
+          footnotes: footnotes,
           updatedAt: new Date().toISOString()
         }
       });
@@ -716,16 +722,6 @@ const Chapter = () => {
   };
 
   /**
-   * Handles submitting a report for the chapter
-   * This function acts as a bridge to the submitReport function in ReportModal
-   * The actual submission logic is now in the ReportModal component
-   */
-  const handleSubmitReport = () => {
-    // This is now a stub function - the report submission is handled within the ReportModal component
-    // We keep this to maintain compatibility with the existing component
-  };
-
-  /**
    * Handles sharing the chapter on social media
    * @param {string} platform - Social media platform to share on
    */
@@ -753,25 +749,6 @@ const Chapter = () => {
     }
 
     window.open(shareUrl, 'ShareWindow', 'height=450, width=550, toolbar=0, menubar=0');
-  };
-
-  // Check if user has access to chapter content based on mode
-  const canAccessChapterContent = (chapter, user) => {
-    if (!chapter || !chapter.mode) return true; // Default to accessible if no mode specified
-    
-    switch (chapter.mode) {
-      case 'published':
-        return true; // Published is accessible to everyone
-      case 'protected':
-        return !!user; // Protected requires user to be logged in
-      case 'draft':
-        return user?.role === 'admin' || user?.role === 'moderator'; // Draft accessible to admin and moderator
-      case 'paid':
-        // TODO: Implement paid content check
-        return user?.role === 'admin' || user?.role === 'moderator'; // For now, admin and moderator access
-      default:
-        return true;
-    }
   };
 
   // Handle mode change
@@ -858,51 +835,9 @@ const Chapter = () => {
         increaseFontSize={increaseFontSize}
         setShowSettingsModal={setShowSettingsModal}
         user={user}
-      >
-        {canEdit && (
-          <div className="admin-controls">
-            {isEditing ? (
-              <>
-                <button 
-                  className="save-changes-btn" 
-                  onClick={handleEditChapter}
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <>
-                      <FontAwesomeIcon icon={faSpinner} spin /> Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FontAwesomeIcon icon={faSave} /> Save Changes
-                    </>
-                  )}
-                </button>
-                <button 
-                  className="cancel-edit-btn" 
-                  onClick={() => setIsEditing(false)}
-                  disabled={isSaving}
-                >
-                  Cancel Edit
-                </button>
-              </>
-            ) : (
-              <button 
-                className="edit-chapter-btn" 
-                onClick={() => setIsEditing(true)}
-              >
-                Edit Chapter
-              </button>
-            )}
-            
-            {canDelete && (
-              <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
-                Delete Chapter
-              </button>
-            )}
-          </div>
-        )}
-      </ChapterHeader>
+        canEdit={canEdit}
+        canDelete={canDelete}
+      />
 
       {/* Navigation */}
       <ChapterNavigation
@@ -913,64 +848,16 @@ const Chapter = () => {
         handleNextChapter={handleNextChapter}
       />
 
-      {/* Action Toolbar */}
-      <div className="action-toolbar">
-        {/* Staff Info */}
-        <div className="staff-info">
-          <span className="staff-member translator">
-            <FontAwesomeIcon icon={faLanguage}/> {chapter.translator || 'No Translator'}
-          </span>
-          <span className="staff-member editor">
-            <FontAwesomeIcon icon={faEdit}/> {chapter.editor || 'No Editor'}
-          </span>
-          <span className="staff-member proofreader">
-            <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader || 'No Proofreader'}
-          </span>
-        </div>
+      {/* Toolbar with staff info and chapter stats */}
+      <ChapterToolbar
+        chapter={chapter}
+        viewCount={viewCount}
+        wordCount={wordCount}
+        formatDate={formatDate}
+      />
 
-        <div className="action-toolbar-right">
-          <span className="chapter-view-date">
-            {chapter?.updatedAt ? formatDate(chapter.updatedAt) : 'Unknown date'}
-          </span>
-          {/* Stats */}
-          <div className="chapter-stats">
-            <span className="chapter-stat-item">
-              <FontAwesomeIcon icon={faEye}/> {viewCount} views
-            </span>
-            <span className="chapter-stat-item">
-              <FontAwesomeIcon icon={faFont}/> {wordCount} words
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Chapter Content */}
-      {!canAccessChapterContent(chapter, user) ? (
-        <div className="restricted-content-message">
-          {chapter?.mode === 'protected' && (
-            <div className="protected-content">
-              <FontAwesomeIcon icon={faLock} size="3x" />
-              <h3>Protected Content</h3>
-              <p>Please log in to read this chapter.</p>
-              <Link to="/login" className="login-button">Log In</Link>
-            </div>
-          )}
-          {chapter?.mode === 'draft' && (
-            <div className="draft-content">
-              <FontAwesomeIcon icon={faCog} size="3x" />
-              <h3>Draft Content</h3>
-              <p>This chapter is still in draft mode and not available for public viewing.</p>
-            </div>
-          )}
-          {chapter?.mode === 'paid' && (
-            <div className="paid-content">
-              <FontAwesomeIcon icon={faLock} size="3x" />
-              <h3>Premium Content</h3>
-              <p>This chapter is premium content. Feature coming soon.</p>
-            </div>
-          )}
-        </div>
-      ) : (
+      {/* Chapter Content with Access Guard */}
+      <ChapterAccessGuard chapter={chapter} user={user}>
         <ChapterContent
           chapter={chapter}
           isEditing={isEditing}
@@ -984,58 +871,23 @@ const Chapter = () => {
           onModeChange={handleModeChange}
           canEdit={canEdit}
         />
-      )}
+      </ChapterAccessGuard>
 
       {/* Chapter Bottom Actions */}
       <div className="chapter-bottom-actions">
         {/* Social Share */}
-        <div className="share-buttons">
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            handleShare('facebook');
-          }} className="share-btn facebook" title="Share on Facebook">
-            <FontAwesomeIcon icon={faFacebookF}/>
-          </a>
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            handleShare('twitter');
-          }} className="share-btn twitter" title="Share on Twitter">
-            <FontAwesomeIcon icon={faTwitter}/>
-          </a>
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            handleShare('pinterest');
-          }} className="share-btn pinterest" title="Share on Pinterest">
-            <FontAwesomeIcon icon={faPinterestP}/>
-          </a>
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            handleShare('telegram');
-          }} className="share-btn telegram" title="Share on Telegram">
-            <FontAwesomeIcon icon={faTelegram}/>
-          </a>
-        </div>
+        <ChapterSocialShare handleShare={handleShare} />
 
         {/* User Actions */}
-        <div className="user-actions">
-          <button
-            onClick={handleLike}
-            className={`action-btn like ${isLiked ? 'active' : ''}`}
-          >
-            <FontAwesomeIcon icon={isLiked ? faHeart : farHeart}/>
-            {isLiked ? 'Liked' : 'Like'}
-            <span className="like-count">{likeCount}</span>
-          </button>
-
-          <button
-            onClick={() => setShowRatingModal(true)}
-            className={`action-btn rate ${currentRating > 0 ? 'active' : ''}`}
-          >
-            <FontAwesomeIcon icon={currentRating > 0 ? faStar : farStar}/>
-            Rate
-            <span className="rate-count">{averageRating}/5 • {ratingCount}</span>
-          </button>
-        </div>
+        <ChapterActions
+          isLiked={isLiked}
+          likeCount={likeCount}
+          currentRating={currentRating}
+          averageRating={averageRating}
+          ratingCount={ratingCount}
+          handleLike={handleLike}
+          setShowRatingModal={setShowRatingModal}
+        />
       </div>
 
       {/* Bottom Navigation */}
@@ -1064,129 +916,34 @@ const Chapter = () => {
       </div>
 
       {/* Comments section */}
-      <div className="novel-comments-section">
-        <button
-          className="comments-toggle-btn"
-          onClick={() => setIsCommentsOpen(!isCommentsOpen)}
-        >
-          {isCommentsOpen ? (
-            <>
-              <FontAwesomeIcon icon={faLock} style={{marginRight: '8px'}}/>
-              Hide Comments
-            </>
-          ) : (
-            <>
-              <FontAwesomeIcon icon={faComment} style={{marginRight: '8px'}}/>
-              Show Comments
-            </>
-          )}
-        </button>
+      <ChapterCommentsSection
+        isCommentsOpen={isCommentsOpen}
+        setIsCommentsOpen={setIsCommentsOpen}
+        novelId={novelId}
+        chapterId={chapterId}
+        user={user}
+        comments={comments}
+        isCommentsLoading={isCommentsLoading}
+      />
 
-        {isCommentsOpen && (
-          <CommentSection
-            novelId={`${novelId}-${chapterId}`}
-            user={user}
-            isAuthenticated={!!user}
-            comments={comments}
-            isLoading={isCommentsLoading}
-          />
-        )}
-      </div>
-
-      {/* Fixed Controls */}
-      <div className="fixed-controls">
-        <button
-          className="control-btn"
-          id="scrollTopBtn"
-          title="Scroll to Top"
-          onClick={scrollToTop}
-          style={{display: 'none'}}
-        >
-          <FontAwesomeIcon icon={faArrowUp}/>
-        </button>
-      </div>
-
-      {/* Toggle Button */}
-      <button
-        className="toggle-btn"
-        onClick={() => setShowNavControls(!showNavControls)}
-        title="Toggle Navigation Controls"
-      >
-        <FontAwesomeIcon icon={showNavControls ? faTimes : faEllipsisV}/>
-      </button>
-
-      {/* Fixed Navigation Controls */}
-      <div className={`nav-controls-container ${showNavControls ? 'visible' : ''}`}>
-        <button
-          className="control-btn"
-          onClick={() => setShowChapterList(!showChapterList)}
-          title="Chapter List"
-          id="chapterListBtn"
-        >
-          <FontAwesomeIcon icon={faList}/>
-        </button>
-
-        <button
-          className="control-btn"
-          onClick={() => setShowSettingsModal(true)}
-          title="Reading Settings"
-        >
-          <FontAwesomeIcon icon={faCog}/>
-        </button>
-      </div>
-
-      {/* Fixed Navigation Buttons */}
-      <div className={`nav-control-prev ${showNavControls ? 'visible' : ''}`}>
-        <button
-          className={`nav-control-btn ${!chapter?.prevChapter ? 'disabled' : ''}`}
-          onClick={handlePrevChapter}
-          disabled={!chapter?.prevChapter || isNavigating || isEditing}
-          title={chapter?.prevChapter ? `Previous: ${chapter.prevChapter.title}` : 'No previous chapter available'}
-        >
-          <FontAwesomeIcon icon={faChevronLeft}/>
-        </button>
-      </div>
-
-      <div className={`nav-control-next ${showNavControls ? 'visible' : ''}`}>
-        <button
-          className={`nav-control-btn ${!chapter?.nextChapter ? 'disabled' : ''}`}
-          onClick={handleNextChapter}
-          disabled={!chapter?.nextChapter || isNavigating || isEditing}
-          title={chapter?.nextChapter ? `Next: ${chapter.nextChapter.title}` : 'No next chapter available'}
-        >
-          <FontAwesomeIcon icon={faChevronRight}/>
-        </button>
-      </div>
-
-      {/* Chapter Dropdown */}
-      <div
-        className={`chapter-dropdown ${showChapterList ? 'active' : ''}`}
-        id="chapterDropdown"
-      >
-        <div className="chapter-dropdown-title">Chapters</div>
-        {isModuleChaptersLoading ? (
-          <div className="loading-chapters">
-            <FontAwesomeIcon icon={faSpinner} spin /> Loading chapters...
-          </div>
-        ) : (
-          <ul className="chapter-dropdown-list">
-            {moduleChapters && moduleChapters.length > 0 ? (
-              moduleChapters.map((item) => (
-                <li
-                  key={item._id}
-                  className={`chapter-dropdown-item ${item._id === chapterId ? 'current' : ''}`}
-                >
-                  <Link to={`/novel/${novelId}/chapter/${item._id}`}>
-                    {item.order ? `${item.order}. ` : ''}{item.title}
-                  </Link>
-                </li>
-              ))
-            ) : (
-              <li className="chapter-dropdown-item empty">No chapters available</li>
-            )}
-          </ul>
-        )}
-      </div>
+      {/* Navigation Controls */}
+      <ChapterNavigationControls
+        novelId={novelId}
+        chapter={chapter}
+        chapterId={chapterId}
+        showNavControls={showNavControls}
+        setShowNavControls={setShowNavControls}
+        showChapterList={showChapterList}
+        setShowChapterList={setShowChapterList}
+        setShowSettingsModal={setShowSettingsModal}
+        scrollToTop={scrollToTop}
+        handlePrevChapter={handlePrevChapter}
+        handleNextChapter={handleNextChapter}
+        isNavigating={isNavigating}
+        isEditing={isEditing}
+        moduleChapters={moduleChapters}
+        isModuleChaptersLoading={isModuleChaptersLoading}
+      />
 
       {/* Modals */}
       <SettingsModal
@@ -1221,7 +978,6 @@ const Chapter = () => {
         chapterId={chapterId}
         chapterTitle={chapter?.title}
         novelId={novelId}
-        handleSubmitReport={handleSubmitReport}
       />
     </div>
   );

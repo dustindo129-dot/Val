@@ -68,12 +68,19 @@ const api = {
 
   toggleBookmark: async (novelId) => {
     try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user')); // Get user from localStorage
+      
+      if (!token || !user) {
+        throw new Error('Authentication required');
+      }
+
       const response = await axios.post(
-        `${config.backendUrl}/api/usernovelinteractions/bookmark`,
+        `${config.backendUrl}/api/users/${user.username}/bookmarks`,
         { novelId },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -369,11 +376,23 @@ const api = {
   getUserInteraction: async (novelId) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!token || !user) {
         return { liked: false, rating: null, bookmarked: false };
       }
       
-      const response = await axios.get(
+      // Get bookmark status from users endpoint
+      const bookmarkResponse = await axios.get(
+        `${config.backendUrl}/api/users/${user.username}/bookmarks/${novelId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      // Get other interactions from usernovelinteractions
+      const interactionResponse = await axios.get(
         `${config.backendUrl}/api/usernovelinteractions/user/${novelId}`,
         {
           headers: {
@@ -381,7 +400,11 @@ const api = {
           }
         }
       );
-      return response.data;
+      
+      return {
+        ...interactionResponse.data,
+        bookmarked: bookmarkResponse.data.isBookmarked
+      };
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');

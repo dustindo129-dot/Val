@@ -810,7 +810,12 @@ const ChapterDashboard = () => {
                   ))}
                 </div>
             ) : (
-                <p>No footnotes added yet. Click the button below to add a footnote.</p>
+              <p>Hướng dẫn sử dụng footnote:
+                 <br />1. Add to&agrave;n bộ content v&agrave;o trước.
+                 <br />2. Bấm v&agrave;o chỗ muốn th&ecirc;m footnote trong nội dung.
+                 <br />3. + Add footnote
+                 <br />4. Lặp lại bước 2 v&agrave; 3 đến khi đầy đủ footnote.
+                 <br />5. Nếu th&ecirc;m nhầm c&oacute; thể bấm x&oacute;a, tất cả nội dung v&agrave; footnote chỉ ấn định sau khi bấm Save Chapter.</p>
             )}
 
             <button
