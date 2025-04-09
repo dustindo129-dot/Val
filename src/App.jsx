@@ -1,10 +1,11 @@
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 import { NovelStatusProvider } from './context/NovelStatusContext';
 import { NovelProvider } from './context/NovelContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { initGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
 import Footer from './components/Footer';
@@ -23,7 +24,23 @@ const queryClient = new QueryClient({
   },
 });
 
+// Route tracking component
+const RouteTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location]);
+
+  return null;
+};
+
 const App = () => {
+  useEffect(() => {
+    // Replace 'G-XXXXXXXXXX' with your actual GA4 measurement ID
+    initGA('G-4L5EBS6ZQT');
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
@@ -41,6 +58,7 @@ const App = () => {
                   <Navbar />
                   <SecondaryNavbar />
                   <main className="main-content">
+                    <RouteTracker />
                     <AppRoutes />
                   </main>
                   <Footer />
