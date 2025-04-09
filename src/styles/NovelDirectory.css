@@ -30,13 +30,16 @@
   font-weight: bold;
   margin-bottom: 1.5rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #009fdf;
+  background: linear-gradient(to right, #FF6B6B, #FFA69E);
+  background-size: 100% 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
   color: #333;
 }
 
 .directory .section-headers h2::after {
-  content: " ★";
-  color: #009fdf;
+  content: " ᐁ";
+  color: #FF6B6B;
 }
 
 /* Novel grid - 2 cards per row */
@@ -118,7 +121,7 @@
 
 .directory .dir-novel-status[data-status="COMPLETED"],
 .directory .dir-novel-status[data-status="Completed"] {
-  background: #009fdf;
+  background: #FF6B6B;
   border-color: #0277BD;
   border-width: 2px;
   transition: all 0.2s ease;
@@ -302,7 +305,10 @@
   margin-top: 0;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #009fdf;
+  background: linear-gradient(to right, #FF6B6B, #FFA69E);
+  background-size: 100% 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
 }
 
 .directory .genre-category {
@@ -312,7 +318,7 @@
 .directory .genre-category-title {
   font-size: 16px;
   font-weight: 600;
-  color: #009fdf;
+  color: #FF6B6B;
   margin-bottom: 10px;
 }
 
@@ -352,13 +358,13 @@
 }
 
 .directory .apply-filters {
-  background-color: #009fdf;
+  background-color: #FF6B6B;
   color: white;
   border: none;
 }
 
 .directory .apply-filters:hover {
-  background-color: #0080b3;
+  background-color: #ff5252;
 }
 
 .directory .reset-filters {
@@ -394,12 +400,12 @@
 }
 
 .directory .pagination-button:hover:not(.disabled) {
-  background: #009fdf;
+  background: #FF6B6B;
   color: white;
 }
 
 .directory .pagination-button.active {
-  background: #009fdf;
+  background: #FF6B6B;
   color: white;
 }
 
@@ -422,7 +428,10 @@
 
 :root.dark-mode .directory .section-headers h2 {
   color: #fff;
-  border-bottom-color: #009fdf;
+  background: linear-gradient(to right, #FF6B6B, #FFA69E);
+  background-size: 100% 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
 }
 
 :root.dark-mode .directory .novel-card {
@@ -456,7 +465,10 @@
 :root.dark-mode .directory .filter-panel h3,
 :root.dark-mode .directory .genre-category-title {
   color: #e0e0e0;
-  border-bottom-color: #009fdf;
+  background: linear-gradient(to right, #FF6B6B, #FFA69E);
+  background-size: 100% 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
 }
 
 :root.dark-mode .directory .genre-checkbox label {

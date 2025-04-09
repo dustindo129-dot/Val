@@ -31,13 +31,16 @@
     font-weight: bold;
     margin-bottom: 1.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid #ff0000;
+    background: linear-gradient(to right, #FF6B6B, #FFA69E);
+    background-size: 100% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
     color: #333;
 }
 
 .section-headers h2::after {
-    content: " ★";
-    color: #ff0000;
+    content: " ᐁ";
+    color: #FF6B6B;
 }
 
 /* Novel list container */
@@ -387,7 +390,7 @@
 
 .novel-list-chapter-title:hover {
     text-decoration: none;
-    color: #009fdf;
+    color: #FF6B6B;
 }
 
 .novel-list-chapter-date {
@@ -428,12 +431,12 @@
 }
 
 .pagination-button:hover:not(.disabled) {
-    background: #009fdf;
+    background: #FF6B6B;
     color: #fff;
 }
 
 .pagination-button.active {
-    background: #009fdf;
+    background: #FF6B6B;
     color: #fff;
 }
 

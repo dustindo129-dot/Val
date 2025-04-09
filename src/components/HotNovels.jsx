@@ -84,7 +84,7 @@ const HotNovels = () => {
             <div className="hot-novels">
                 <h2 className="hot-novels-title">
                     HOT NOVEL
-                    <span className="hot-icon">★</span>
+                    <span className="hot-icon">ᐁ</span>
                 </h2>
                 <div className="hot-novels-loading">
                     <div className="loading-spinner"></div>
@@ -99,7 +99,7 @@ const HotNovels = () => {
             <div className="hot-novels">
                 <h2 className="hot-novels-title">
                     HOT NOVEL
-                    <span className="hot-icon">★</span>
+                    <span className="hot-icon">ᐁ</span>
                 </h2>
                 <div className="hot-novels-error">Failed to load hot novels</div>
             </div>
@@ -110,7 +110,7 @@ const HotNovels = () => {
         <div className="hot-novels">
             <h2 className="hot-novels-title">
                 HOT NOVEL
-                <span className="hot-icon">★</span>
+                <span className="hot-icon">ᐁ</span>
             </h2>
             <div className="hot-novels-list">
                 {data?.map((novel) => (

@@ -17,6 +17,7 @@ import NovelList from './components/NovelList';
 import './Novel.css';
 import config from '../config/config';
 import sseService from './services/sseService';
+import { StarIcon } from "./components/Icons";
 
 // Novel component with optional search query prop
 const Novel = ({ searchQuery = "" }) => {
@@ -116,7 +117,7 @@ const Novel = ({ searchQuery = "" }) => {
         <div className="section-header">
           <h2 className="section-title">
             LATEST UPDATES
-            <span className="title-icon">★</span>
+            <StarIcon className="title-icon" />
           </h2>
         </div>
 
