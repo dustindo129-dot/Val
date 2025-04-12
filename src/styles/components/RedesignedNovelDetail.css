@@ -326,6 +326,21 @@
   margin-bottom: 5px;
 }
 
+/* Add specific colors for each stat icon */
+.rd-stat-icon .fa-eye {
+  color: #3498db;  /* Blue */
+}
+
+.rd-stat-icon .fa-heart,
+.rd-stat-icon .fa-heart-regular {
+  color: #e74c3c;  /* Red */
+}
+
+.rd-stat-icon .fa-star,
+.rd-stat-icon .fa-star-regular {
+  color: #f1c40f;  /* Yellow */
+}
+
 .rd-stat-value {
   font-weight: 600;
   font-size: 0.9rem;
