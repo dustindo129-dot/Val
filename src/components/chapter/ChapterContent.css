@@ -147,4 +147,9 @@
 .add-footnote-btn:hover {
   background-color: white;
   border-color: #3498db;
+}
+
+/* Dark mode support */
+.dark-mode .footnote-section p {
+  color: #2c3e50;
 } 

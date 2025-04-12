@@ -1,0 +1,603 @@
+/**
+ * RedesignedNovelDetail.css
+ * 
+ * Redesigned styles for the NovelDetail component.
+ * All classes are prefixed with 'rd-' to avoid conflicts with existing styles.
+ */
+
+/* Container styles */
+.rd-novel-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header styles */
+.rd-novel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.rd-novel-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.rd-novel-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.rd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.rd-status-ongoing {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+
+.rd-status-completed {
+  background-color: rgba(52, 152, 219, 0.2);
+  color: #3498db;
+}
+
+.rd-status-hiatus {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+}
+
+/* Social share buttons */
+.rd-social-share {
+  display: flex;
+  gap: 8px;
+}
+
+.rd-share-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.rd-share-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.rd-facebook {
+  background-color: #3b5998;
+}
+
+.rd-twitter {
+  background-color: #1da1f2;
+}
+
+.rd-pinterest {
+  background-color: #bd081c;
+}
+
+.rd-telegram {
+  background-color: #0088cc;
+}
+
+/* Main content layout */
+.rd-novel-content {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.rd-novel-main, .rd-novel-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Novel card styles */
+.rd-novel-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.rd-novel-header-content {
+  display: flex;
+  background-color: #2c3e50;
+  padding: 15px;
+  position: relative;
+}
+
+.rd-novel-cover {
+  flex: 0 0 180px;
+  margin-right: 15px;
+  position: relative;
+  width: 300px;
+  height: 450px;
+  flex-shrink: 0;
+}
+
+.rd-cover-image {
+  height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  aspect-ratio: 2/3;
+  object-fit: cover;
+}
+
+.rd-update-time {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 12px;
+  padding: 5px;
+  text-align: center;
+  border-radius: 0 0 4px 4px;
+}
+
+.rd-novel-info {
+  flex: 1;
+  color: white;
+  position: relative;
+}
+
+.rd-alt-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rd-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rd-info-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.rd-info-label {
+  flex: 0 0 90px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rd-info-value {
+  flex: 1;
+  color: white;
+}
+
+.rd-author-name {
+  color: #ff9800;
+  font-weight: 600;
+}
+
+.rd-genres-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.rd-genres-label {
+  flex: 0 0 90px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rd-genres-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.rd-genre-tag {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.rd-genre-tag:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Stats and action footer */
+.rd-card-footer {
+  background-color: #f5f5f5;
+}
+
+.rd-stats-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+}
+
+.rd-stat-item {
+  flex: 1;
+  padding: 10px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.rd-stat-item:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.rd-stat-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.rd-stat-icon {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.rd-stat-value {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.rd-actions-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  gap: 10px;
+}
+
+.rd-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.rd-btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.rd-btn-primary:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rd-btn-bookmark {
+  background-color: transparent;
+  color: #ff9800;
+  border: 1px solid #ff9800;
+}
+
+.rd-btn-bookmark:hover, .rd-btn-bookmark.active {
+  background-color: #ff9800;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.rd-btn-bookmark.active {
+  background-color: #ff9800;
+  color: white;
+}
+
+/* Description section */
+.rd-description-section {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.rd-description-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 15px;
+  background-color: #2c3e50;
+  color: white;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rd-description-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  background-color: #f39c12;
+  margin-right: 8px;
+}
+
+.rd-description-content {
+  padding: 15px;
+  font-size: 15px;
+  line-height: 1.8;
+  text-align: justify;
+  max-height: 150px;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+}
+
+.rd-description-content.expanded {
+  max-height: 3000px;
+}
+
+.rd-show-toggle {
+  color: #3498db;
+  text-decoration: none;
+  display: inline-block;
+  margin: 0 15px 15px;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: rgba(52, 152, 219, 0.1);
+  padding: 5px 15px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.rd-show-toggle:hover {
+  background-color: rgba(52, 152, 219, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Staff and announcement sections */
+.rd-section {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.rd-section-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 15px;
+  background-color: #2c3e50;
+  color: white;
+  position: relative;
+}
+
+.rd-section-content {
+  padding: 15px;
+}
+
+/* Staff section */
+.rd-staff-category {
+  margin: 0 0 15px;
+  text-align: center;
+}
+
+.rd-active-category {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2ecc71;
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 5px rgba(46, 204, 113, 0.3);
+}
+
+.rd-active-category::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(to right, rgba(46, 204, 113, 0), rgba(46, 204, 113, 1), rgba(46, 204, 113, 0));
+}
+
+.rd-inactive-category {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e74c3c;
+  position: relative;
+  padding-bottom: 5px;
+  margin: 20px 0 15px;
+  opacity: 0.85;
+}
+
+.rd-inactive-category::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 0;
+  height: 1px;
+  background-color: rgba(231, 76, 60, 0.5);
+}
+
+.rd-staff-role {
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.rd-role-translator {
+  color: #9b59b6;
+}
+
+.rd-role-editor {
+  color: #3498db;
+}
+
+.rd-role-qc {
+  color: #f39c12;
+}
+
+.rd-role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin-right: 6px;
+  color: white;
+}
+
+.rd-translator-badge {
+  background-color: #9b59b6;
+}
+
+.rd-editor-badge {
+  background-color: #3498db;
+}
+
+.rd-qc-badge {
+  background-color: #f39c12;
+}
+
+.rd-staff-members {
+  padding-left: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  font-size: 13px;
+}
+
+.rd-staff-name {
+  color: #16a085;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background-color: rgba(22, 160, 133, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.rd-staff-name:hover {
+  background-color: #16a085;
+  color: white;
+}
+
+.rd-staff-empty {
+  font-style: italic;
+  color: #7f8c8d;
+}
+
+/* Announcement section */
+.rd-announcement {
+  background-color: #fff8e1;
+  border-left: 4px solid #ff9800;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+  .rd-novel-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .rd-novel-header-content {
+    flex-direction: column;
+  }
+
+  .rd-novel-cover {
+    margin: 0 auto 20px;
+    max-width: 180px;
+  }
+
+  .rd-novel-info {
+    padding: 0 10px;
+  }
+
+  .rd-actions-row {
+    flex-direction: column;
+  }
+
+  .rd-staff-members {
+    flex-direction: column;
+  }
+
+  .rd-novel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rd-social-share {
+    margin-top: 15px;
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .rd-novel-title {
+    font-size: 1.8rem;
+  }
+  
+  .rd-stats-row {
+    flex-direction: column;
+  }
+  
+  .rd-stat-item:not(:last-child)::after {
+    width: 0;
+    height: 1px;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+  }
+} 

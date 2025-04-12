@@ -38,7 +38,8 @@ const ChapterCommentsSection = ({
 
       {isCommentsOpen && (
         <CommentSection
-          novelId={`${novelId}-${chapterId}`}
+          contentId={`${novelId}-${chapterId}`}
+          contentType="chapters"
           user={user}
           isAuthenticated={!!user}
           comments={comments}

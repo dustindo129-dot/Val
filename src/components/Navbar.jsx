@@ -74,6 +74,20 @@ const Navbar = () => {
     };
   }, [lastScrollY]);
 
+  // Add event listener for openLoginModal event
+  useEffect(() => {
+    const handleOpenLoginModal = () => {
+      setShowLogin(true);
+      setShowSignUp(false);
+    };
+
+    window.addEventListener('openLoginModal', handleOpenLoginModal);
+
+    return () => {
+      window.removeEventListener('openLoginModal', handleOpenLoginModal);
+    };
+  }, []);
+
   /**
    * Handles the search input changes and fetches results
    * @param {Event} e - The input change event

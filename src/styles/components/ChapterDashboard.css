@@ -468,6 +468,10 @@
   border-color: #555;
 }
 
+:root.dark-mode .footnote-section p {
+  color: #2c3e50;
+}
+
 /* Responsive styles */
 @media (max-width: 991px) {
   .form-row {

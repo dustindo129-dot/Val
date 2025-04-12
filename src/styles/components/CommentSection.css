@@ -83,6 +83,20 @@
   text-align: center;
 }
 
+.login-link {
+  background: none;
+  border: none;
+  color: #0d6efd;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.login-link:hover {
+  color: #0a58ca;
+}
+
 /* Comments list styles */
 .comments-list {
   display: flex;
@@ -567,5 +581,61 @@
     background-color: rgba(198, 40, 40, 0.1);
     border-color: #c62828;
     color: #ff8a80;
+  }
+}
+
+/* Sort controls */
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sort-controls span {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.sort-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #495057;
+}
+
+.sort-btn.active {
+  background-color: #e9ecef;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Dark mode styles for sort controls */
+@media (prefers-color-scheme: dark) {
+  .sort-controls span {
+    color: #adb5bd;
+  }
+  
+  .sort-btn {
+    color: #adb5bd;
+  }
+  
+  .sort-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #e9ecef;
+  }
+  
+  .sort-btn.active {
+    background-color: #343a40;
+    color: #f8f9fa;
   }
 }

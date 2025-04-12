@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components/CommentSection.css';
 import axios from 'axios';
 import config from '../config/config';
+import { Link } from 'react-router-dom';
 
 /**
  * Comment section component for novels
@@ -10,6 +11,7 @@ import config from '../config/config';
  * @param {string} props.novelId - ID of the novel
  * @param {Object} props.user - Current user object
  * @param {boolean} props.isAuthenticated - Whether user is authenticated
+ * @param {string} props.defaultSort - Default sort order for comments
  * @returns {JSX.Element} CommentSection component
  */
 
@@ -58,7 +60,7 @@ const organizeComments = (flatComments) => {
   return rootComments;
 };
 
-const CommentSection = ({ novelId, user, isAuthenticated }) => {
+const CommentSection = ({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest' }) => {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,7 +73,20 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
   const [userToBlock, setUserToBlock] = useState(null);
   const [message, setMessage] = useState(null);
   const [isBanned, setIsBanned] = useState(false);
+  const [likingComments, setLikingComments] = useState(new Set());
+  const [sortOrder, setSortOrder] = useState(defaultSort);
+  const [submittingReply, setSubmittingReply] = useState(false);
   
+  // Add ref for reply textarea
+  const replyTextareaRef = useRef(null);
+  
+  // Keep focus on reply textarea when typing
+  useEffect(() => {
+    if (replyingTo && replyTextareaRef.current) {
+      replyTextareaRef.current.focus();
+    }
+  }, [replyingTo]);
+
   // Check if user is banned
   useEffect(() => {
     const checkBanStatus = async () => {
@@ -93,12 +108,12 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
 
   // Fetch comments on component mount
   useEffect(() => {
-    if (!novelId) return;
+    if (!contentId) return;
     
     const fetchComments = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${config.backendUrl}/api/comments?contentType=novels&contentId=${novelId}`);
+        const response = await fetch(`${config.backendUrl}/api/comments?contentType=${contentType}&contentId=${contentId}&sort=${sortOrder}`);
         
         // Check if response is ok before trying to parse JSON
         if (!response.ok) {
@@ -123,7 +138,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     };
     
     fetchComments();
-  }, [novelId]);
+  }, [contentId, contentType, sortOrder]);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -145,7 +160,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     setSubmitting(true);
     
     try {
-      const response = await fetch(`${config.backendUrl}/api/comments/novels/${novelId}`, {
+      const response = await fetch(`${config.backendUrl}/api/comments/${contentType}/${contentId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +183,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
           text: newComment,
           createdAt: new Date().toISOString(),
           likes: [],
-          dislikes: [],
+          replies: [],
           isDeleted: false,
           adminDeleted: false
         },
@@ -258,6 +273,14 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     if (!replyText.trim()) {
       return;
     }
+
+    // Prevent multiple submissions
+    if (submittingReply) {
+      return;
+    }
+    
+    // Set submitting state to true at the beginning
+    setSubmittingReply(true);
     
     try {
       const response = await fetch(`${config.backendUrl}/api/comments/${parentId}/replies`, {
@@ -276,59 +299,68 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       
       const data = await response.json();
       
-      // Update the comments list with the new reply
-      setComments(prevComments => 
-        prevComments.map(comment => {
-          // If replying to the main comment
-          if (comment._id === parentId) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), {
-                _id: data._id,
-                text: replyText,
-                user: {
-                  username: user.username,
-                  avatar: user.avatar || ''
-                },
-                createdAt: new Date().toISOString(),
-                likes: [],
-                dislikes: [],
-                replies: [],
-                isDeleted: false,
-                adminDeleted: false
-              }]
-            };
-          }
-          // If replying to a reply, find the parent comment and add to its replies
-          if (comment.replies?.some(reply => reply._id === parentId)) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), {
-                _id: data._id,
-                text: replyText,
-                user: {
-                  username: user.username,
-                  avatar: user.avatar || ''
-                },
-                createdAt: new Date().toISOString(),
-                likes: [],
-                dislikes: [],
-                parentId: parentId, // Store the direct parent ID
-                isDeleted: false,
-                adminDeleted: false
-              }]
-            };
-          }
-          return comment;
-        })
-      );
-      
-      // Clear the reply form
+      // Clear the reply form immediately
       setReplyText('');
       setReplyingTo(null);
+
+      // Refetch all comments to ensure correct structure
+      const commentsResponse = await fetch(`${config.backendUrl}/api/comments?contentType=${contentType}&contentId=${contentId}&sort=${sortOrder}`);
+      
+      if (commentsResponse.ok) {
+        const commentsData = await commentsResponse.json();
+        // Organize comments before setting state
+        setComments(organizeComments(commentsData));
+      } else {
+        // If refetch fails, apply optimistic update
+        const newReply = {
+          _id: data._id,
+          text: data.text,
+          user: {
+            username: user.username,
+            avatar: user.avatar || ''
+          },
+          createdAt: new Date().toISOString(),
+          likes: [],
+          replies: [],
+          parentId: parentId,
+          isDeleted: false,
+          adminDeleted: false
+        };
+        
+        // Helper function to update comments recursively
+        const updateCommentWithReply = (comments, parentId, newReply) => {
+          return comments.map(comment => {
+            // If this is the parent comment, add the reply to it directly
+            if (comment._id === parentId) {
+              return {
+                ...comment,
+                replies: [...(comment.replies || []), newReply]
+              };
+            }
+            
+            // If this comment has replies, check them recursively
+            if (comment.replies && comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateCommentWithReply(comment.replies, parentId, newReply)
+              };
+            }
+            
+            // Otherwise, return the comment unchanged
+            return comment;
+          });
+        };
+        
+        // Update comments state using our helper function
+        setComments(prevComments => updateCommentWithReply(prevComments, parentId, newReply));
+      }
+      
     } catch (err) {
       console.error('Error posting reply:', err);
       alert(err.message || 'Failed to post reply. Please try again.');
+    } finally {
+      // Reset submitting state to false at the end
+      setSubmittingReply(false);
     }
   };
   
@@ -404,6 +436,11 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       return;
     }
 
+    // Prevent multiple simultaneous likes on the same comment
+    if (likingComments.has(commentId)) {
+      return;
+    }
+
     // Use user.id since that's the property in the user object
     const userId = user.id || user._id;
 
@@ -413,10 +450,9 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     }
 
     try {
-      console.log(`Attempting to like comment with ID: ${commentId}`);
-      console.log(`User ID: ${userId}`);
-      console.log('Token:', localStorage.getItem('token'));
-      
+      // Add comment to loading state
+      setLikingComments(prev => new Set([...prev, commentId]));
+
       // Send the user ID in the request body to ensure it's available
       const response = await fetch(`${config.backendUrl}/api/comments/${commentId}/like`, {
         method: 'POST',
@@ -441,7 +477,6 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       }
 
       const data = await response.json();
-      console.log('Like response:', data);
 
       // Update comments state to reflect the new like status
       setComments(prevComments => 
@@ -451,10 +486,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
               ...comment,
               likes: data.liked 
                 ? [...(comment.likes || []), userId]
-                : (comment.likes || []).filter(id => id !== userId),
-              dislikes: data.disliked 
-                ? [...(comment.dislikes || []), userId]
-                : (comment.dislikes || []).filter(id => id !== userId)
+                : (comment.likes || []).filter(id => id !== userId)
             };
           }
           // Also check replies
@@ -467,10 +499,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
                       ...reply,
                       likes: data.liked 
                         ? [...(reply.likes || []), userId]
-                        : (reply.likes || []).filter(id => id !== userId),
-                      dislikes: data.disliked 
-                        ? [...(reply.dislikes || []), userId]
-                        : (reply.dislikes || []).filter(id => id !== userId)
+                        : (reply.likes || []).filter(id => id !== userId)
                     }
                   : reply
               )
@@ -482,6 +511,13 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     } catch (err) {
       console.error('Error liking comment:', err);
       alert(`Failed to like comment: ${err.message}`);
+    } finally {
+      // Remove comment from loading state
+      setLikingComments(prev => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
     }
   };
 
@@ -533,16 +569,22 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
                 <button 
                   className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
                   onClick={() => handleLike(comment._id)}
-                  disabled={!isAuthenticated}
+                  disabled={!isAuthenticated || likingComments.has(comment._id)}
                 >
                   <span className="like-icon">
-                    {isLikedByCurrentUser ? '❤️' : '🤍'}
+                    {likingComments.has(comment._id) ? '⏳' : isLikedByCurrentUser ? '❤️' : '🤍'}
                   </span>
                   <span className="like-count">{comment.likes ? comment.likes.length : 0}</span>
                 </button>
                 <button 
                   className="reply-button"
-                  onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
+                  onClick={() => {
+                    // If clicking reply on a different comment, clear the reply text
+                    if (replyingTo !== null && replyingTo !== comment._id) {
+                      setReplyText('');
+                    }
+                    setReplyingTo(replyingTo === comment._id ? null : comment._id);
+                  }}
                 >
                   Reply
                 </button>
@@ -566,16 +608,27 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
                 className="reply-input"
                 placeholder="Write a reply..."
                 value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
+                onChange={(e) => {
+                  setReplyText(e.target.value);
+                  // Keep cursor position by refocusing after state update
+                  if (replyTextareaRef.current) {
+                    const length = e.target.value.length;
+                    setTimeout(() => {
+                      replyTextareaRef.current.focus();
+                      replyTextareaRef.current.setSelectionRange(length, length);
+                    }, 0);
+                  }
+                }}
                 required
+                ref={replyTextareaRef}
               />
               <div className="reply-actions">
                 <button 
                   className="reply-submit-btn"
                   onClick={() => handleReplySubmit(comment._id)}
-                  disabled={!replyText.trim()}
+                  disabled={!replyText.trim() || submittingReply}
                 >
-                  Post Reply
+                  {submittingReply ? 'Posting...' : 'Post Reply'}
                 </button>
                 <button 
                   className="reply-cancel-btn"
@@ -607,6 +660,11 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     );
   };
 
+  // Add a function to handle sorting
+  const handleSortChange = (newSortOrder) => {
+    setSortOrder(newSortOrder);
+  };
+
   if (isLoading) {
     return <div className="comments-loading">Loading comments...</div>;
   }
@@ -618,6 +676,29 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
   return (
     <div className="comments-section">
       <h3 className="comments-title">Comments ({comments.length})</h3>
+      
+      {/* Sort controls */}
+      <div className="sort-controls">
+        <span>Sort by: </span>
+        <button 
+          className={`sort-btn ${sortOrder === 'newest' ? 'active' : ''}`}
+          onClick={() => handleSortChange('newest')}
+        >
+          Newest
+        </button>
+        <button 
+          className={`sort-btn ${sortOrder === 'oldest' ? 'active' : ''}`}
+          onClick={() => handleSortChange('oldest')}
+        >
+          Oldest
+        </button>
+        <button 
+          className={`sort-btn ${sortOrder === 'likes' ? 'active' : ''}`}
+          onClick={() => handleSortChange('likes')}
+        >
+          Most Liked
+        </button>
+      </div>
       
       {isAuthenticated ? (
         isBanned ? (
@@ -645,7 +726,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
         )
       ) : (
         <div className="login-to-comment">
-          Please <a href="/login">log in</a> to leave a comment.
+          Please <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">log in</button> to leave a comment.
         </div>
       )}
       

@@ -24,6 +24,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import '../styles/components/NovelDetail.css';
+import '../styles/components/RedesignedNovelDetail.css';
 import { CommentIcon, LockIcon } from './novel-detail/NovelIcons';
 import LoadingSpinner from './LoadingSpinner';
 import CommentSection from './CommentSection';
@@ -716,7 +717,8 @@ const NovelDetail = () => {
             
             {isCommentsOpen && (
               <CommentSection 
-                novelId={novelId}
+                contentId={novelId}
+                contentType="novels"
                 user={user}
                 isAuthenticated={!!user}
               />
