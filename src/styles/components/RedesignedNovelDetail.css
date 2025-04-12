@@ -162,6 +162,7 @@
   flex: 1;
   color: white;
   position: relative;
+  padding-right: 100px;
 }
 
 .rd-alt-title {
@@ -170,6 +171,36 @@
   font-weight: 500;
   margin-bottom: 12px;
   color: rgba(255, 255, 255, 0.85);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  padding-right: 10px;
+}
+
+.rd-chapter-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 0 0 0 5px;
+  padding: 4px 8px;
+  font-weight: bold;
+  font-size: 14px;
+  z-index: 5;
+  width: 90px;
+}
+
+.rd-chapter-count-label {
+  text-align: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #ffd700;
+}
+
+.rd-chapter-count-value {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .rd-info-rows {
@@ -238,6 +269,24 @@
 /* Stats and action footer */
 .rd-card-footer {
   background-color: #f5f5f5;
+}
+
+/* Dark mode support for card footer and section content */
+:root.dark-mode .rd-card-footer {
+  background-color: #2a2a2a;
+}
+
+:root.dark-mode .rd-section-content {
+  background-color: #2a2a2a;
+}
+
+:root.dark-mode .rd-stats-row {
+  background-color: #2a2a2a;
+  border-color: #404040;
+}
+
+:root.dark-mode .rd-stat-value {
+  color: #e0e0e0;
 }
 
 .rd-stats-row {
@@ -337,7 +386,7 @@
 
 /* Description section */
 .rd-description-section {
-  background-color: white;
+  background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -394,6 +443,30 @@
 .rd-show-toggle:hover {
   background-color: rgba(52, 152, 219, 0.2);
   transform: translateY(-2px);
+}
+
+/* Dark mode support for description section */
+:root.dark-mode .rd-description-section {
+  background-color: #2a2a2a;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+:root.dark-mode .rd-description-title {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+}
+
+:root.dark-mode .rd-description-content {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .rd-show-toggle {
+  color: #66b0ff;
+  background-color: rgba(102, 176, 255, 0.1);
+}
+
+:root.dark-mode .rd-show-toggle:hover {
+  background-color: rgba(102, 176, 255, 0.2);
 }
 
 /* Staff and announcement sections */

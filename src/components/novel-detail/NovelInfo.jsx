@@ -434,30 +434,11 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               </div>
 
               <div className="rd-novel-info">
-                <div style={{
-                  position: "absolute", 
-                  top: 0, 
-                  right: 0, 
-                  backgroundColor: "rgba(0,0,0,0.5)", 
-                  color: "white", 
-                  borderRadius: "0 0 0 5px", 
-                  padding: "4px 8px", 
-                  fontWeight: "bold", 
-                  fontSize: "14px"
-                }}>
-                  <div style={{
-                    textAlign: "center", 
-                    fontSize: "10px", 
-                    textTransform: "uppercase", 
-                    color: "#ffd700"
-                  }}>
+                <div className="rd-chapter-count">
+                  <div className="rd-chapter-count-label">
                     CHAPTERS
                   </div>
-                  <div style={{
-                    textAlign: "center", 
-                    fontSize: "18px", 
-                    fontWeight: "700"
-                  }}>
+                  <div className="rd-chapter-count-value">
                     {totalChapters}
                   </div>
                 </div>
