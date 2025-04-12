@@ -145,7 +145,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     setSubmitting(true);
     
     try {
-      const response = await fetch(`/api/comments/novels/${novelId}`, {
+      const response = await fetch(`${config.backendUrl}/api/comments/novels/${novelId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -189,6 +189,11 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
   const handleDelete = async (commentId, isReply = false, parentCommentId = null) => {
     if (!isAuthenticated || deleting) return;
     
+    if (!user || (!user._id && !user.id)) {
+      alert('User information is missing. Please try logging in again.');
+      return;
+    }
+    
     if (!window.confirm('Are you sure you want to delete this comment?')) {
       return;
     }
@@ -196,7 +201,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     setDeleting(true);
     
     try {
-      const response = await fetch(`/api/comments/${commentId}`, {
+      const response = await fetch(`${config.backendUrl}/api/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -240,6 +245,11 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
       return;
     }
 
+    if (!user || (!user._id && !user.id)) {
+      alert('User information is missing. Please try logging in again.');
+      return;
+    }
+
     if (isBanned) {
       alert('You cannot reply because you have been banned');
       return;
@@ -250,7 +260,7 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     }
     
     try {
-      const response = await fetch(`/api/comments/${parentId}/replies`, {
+      const response = await fetch(`${config.backendUrl}/api/comments/${parentId}/replies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -381,111 +391,221 @@ const CommentSection = ({ novelId, user, isAuthenticated }) => {
     setShowBlockModal(true);
   };
 
+  // Add this function before the RenderComment component
+  const handleLike = async (commentId) => {
+    if (!isAuthenticated) {
+      alert('Please log in to like comments');
+      return;
+    }
+
+    if (!user || (!user._id && !user.id)) {
+      alert('User information is missing. Please try logging in again.');
+      console.error('Missing user information:', user);
+      return;
+    }
+
+    // Use user.id since that's the property in the user object
+    const userId = user.id || user._id;
+
+    if (isBanned) {
+      alert('You cannot like comments because you have been banned');
+      return;
+    }
+
+    try {
+      console.log(`Attempting to like comment with ID: ${commentId}`);
+      console.log(`User ID: ${userId}`);
+      console.log('Token:', localStorage.getItem('token'));
+      
+      // Send the user ID in the request body to ensure it's available
+      const response = await fetch(`${config.backendUrl}/api/comments/${commentId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ userId })
+      });
+
+      if (!response.ok) {
+        // Try to get more detailed error information
+        let errorMessage = 'Failed to like comment';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error('Error details:', errorData);
+        } catch (parseError) {
+          console.error('Could not parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log('Like response:', data);
+
+      // Update comments state to reflect the new like status
+      setComments(prevComments => 
+        prevComments.map(comment => {
+          if (comment._id === commentId) {
+            return {
+              ...comment,
+              likes: data.liked 
+                ? [...(comment.likes || []), userId]
+                : (comment.likes || []).filter(id => id !== userId),
+              dislikes: data.disliked 
+                ? [...(comment.dislikes || []), userId]
+                : (comment.dislikes || []).filter(id => id !== userId)
+            };
+          }
+          // Also check replies
+          if (comment.replies) {
+            return {
+              ...comment,
+              replies: comment.replies.map(reply => 
+                reply._id === commentId
+                  ? {
+                      ...reply,
+                      likes: data.liked 
+                        ? [...(reply.likes || []), userId]
+                        : (reply.likes || []).filter(id => id !== userId),
+                      dislikes: data.disliked 
+                        ? [...(reply.dislikes || []), userId]
+                        : (reply.dislikes || []).filter(id => id !== userId)
+                    }
+                  : reply
+              )
+            };
+          }
+          return comment;
+        })
+      );
+    } catch (err) {
+      console.error('Error liking comment:', err);
+      alert(`Failed to like comment: ${err.message}`);
+    }
+  };
+
   // Create a recursive component for rendering comments and their replies
-  const RenderComment = ({ comment, level = 0 }) => (
-    <div className="comment-item">
-      <div className="comment-avatar">
-        {comment.user.avatar ? (
-          <img src={comment.user.avatar} alt={comment.user.username} />
-        ) : (
-          <div className="default-avatar">
-            {comment.user.username.charAt(0).toUpperCase()}
-          </div>
-        )}
-      </div>
-      <div className="comment-content">
-        <div className="comment-header">
-          <div className="comment-user-info">
-            <span className="comment-username">
-              {comment.isDeleted && !comment.adminDeleted ? '[deleted]' : comment.user.username}
-            </span>
-            {isAuthenticated && !comment.isDeleted && comment.user.username !== user.username && (
-              <button
-                className="block-btn"
-                onClick={() => openBlockModal(comment.user)}
-                title={user.role === 'admin' ? 'Ban user' : 'Block user'}
-              >
-                🚫
-              </button>
-            )}
-          </div>
-          <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
-        </div>
-        <div className="comment-text">
-          {comment.isDeleted && !comment.adminDeleted ? 'Comment deleted by user' : comment.text}
-        </div>
-        <div className="comment-actions">
-          {!comment.isDeleted && (
-            <>
-              <button className="like-button">
-                <span className="like-icon">❤️</span>
-                <span className="like-count">{comment.likes.length}</span>
-              </button>
-              <button 
-                className="reply-button"
-                onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
-              >
-                Reply
-              </button>
-              {user && (user.username === comment.user.username || user.role === 'admin') && (
-                <button 
-                  className="delete-button"
-                  onClick={() => handleDelete(comment._id, level > 0, comment.parentId)}
-                  disabled={deleting}
-                >
-                  {deleting ? 'Deleting...' : 'Delete'}
-                </button>
-              )}
-            </>
+  const RenderComment = ({ comment, level = 0 }) => {
+    // Use user.id since that's the property in the user object
+    const userId = user?.id || user?._id;
+    
+    // Check if the current user has liked this comment
+    const isLikedByCurrentUser = isAuthenticated && user && userId && 
+      comment.likes && Array.isArray(comment.likes) && 
+      comment.likes.some(likeId => likeId === userId);
+    
+    return (
+      <div className="comment-item">
+        <div className="comment-avatar">
+          {comment.user.avatar ? (
+            <img src={comment.user.avatar} alt={comment.user.username} />
+          ) : (
+            <div className="default-avatar">
+              {comment.user.username.charAt(0).toUpperCase()}
+            </div>
           )}
         </div>
-
-        {/* Reply form */}
-        {replyingTo === comment._id && (
-          <div className="reply-form">
-            <textarea
-              className="reply-input"
-              placeholder="Write a reply..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              required
-            />
-            <div className="reply-actions">
-              <button 
-                className="reply-submit-btn"
-                onClick={() => handleReplySubmit(comment._id)}
-                disabled={!replyText.trim()}
-              >
-                Post Reply
-              </button>
-              <button 
-                className="reply-cancel-btn"
-                onClick={() => {
-                  setReplyingTo(null);
-                  setReplyText('');
-                }}
-              >
-                Cancel
-              </button>
+        <div className="comment-content">
+          <div className="comment-header">
+            <div className="comment-user-info">
+              <span className="comment-username">
+                {comment.isDeleted && !comment.adminDeleted ? '[deleted]' : comment.user.username}
+              </span>
+              {isAuthenticated && user && !comment.isDeleted && comment.user.username !== user.username && (
+                <button
+                  className="block-btn"
+                  onClick={() => openBlockModal(comment.user)}
+                  title={user.role === 'admin' ? 'Ban user' : 'Block user'}
+                >
+                  🚫
+                </button>
+              )}
             </div>
+            <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
           </div>
-        )}
+          <div className="comment-text">
+            {comment.isDeleted && !comment.adminDeleted ? 'Comment deleted by user' : comment.text}
+          </div>
+          <div className="comment-actions">
+            {!comment.isDeleted && (
+              <>
+                <button 
+                  className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
+                  onClick={() => handleLike(comment._id)}
+                  disabled={!isAuthenticated}
+                >
+                  <span className="like-icon">
+                    {isLikedByCurrentUser ? '❤️' : '🤍'}
+                  </span>
+                  <span className="like-count">{comment.likes ? comment.likes.length : 0}</span>
+                </button>
+                <button 
+                  className="reply-button"
+                  onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
+                >
+                  Reply
+                </button>
+                {isAuthenticated && user && (user.username === comment.user.username || user.role === 'admin') && (
+                  <button 
+                    className="delete-button"
+                    onClick={() => handleDelete(comment._id, level > 0, comment.parentId)}
+                    disabled={deleting}
+                  >
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
 
-        {/* Nested replies */}
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="replies-list">
-            {comment.replies.map((reply) => (
-              <RenderComment 
-                key={reply._id} 
-                comment={reply} 
-                level={level + 1}
+          {/* Reply form */}
+          {replyingTo === comment._id && (
+            <div className="reply-form">
+              <textarea
+                className="reply-input"
+                placeholder="Write a reply..."
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                required
               />
-            ))}
-          </div>
-        )}
+              <div className="reply-actions">
+                <button 
+                  className="reply-submit-btn"
+                  onClick={() => handleReplySubmit(comment._id)}
+                  disabled={!replyText.trim()}
+                >
+                  Post Reply
+                </button>
+                <button 
+                  className="reply-cancel-btn"
+                  onClick={() => {
+                    setReplyingTo(null);
+                    setReplyText('');
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Nested replies */}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="replies-list">
+              {comment.replies.map((reply) => (
+                <RenderComment 
+                  key={reply._id} 
+                  comment={reply} 
+                  level={level + 1}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (isLoading) {
     return <div className="comments-loading">Loading comments...</div>;

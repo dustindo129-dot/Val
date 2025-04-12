@@ -366,13 +366,22 @@ const AdminDashboard = () => {
       // Compile staff data from staff items
       const staffData = compileStaffToNovel();
       
+      // Create novel data with all required fields
       const novelData = {
         title: editingNovel ? editingNovel.title : newNovel.title,
         alternativeTitles: editingNovel ? editingNovel.alternativeTitles : newNovel.alternativeTitles,
         author: editingNovel ? editingNovel.author : newNovel.author,
         illustrator: editingNovel ? editingNovel.illustrator : newNovel.illustrator,
-        active: staffData.active,
-        inactive: staffData.inactive,
+        active: {
+          translator: staffData.active.translator || [],
+          editor: staffData.active.editor || [],
+          proofreader: staffData.active.proofreader || []
+        },
+        inactive: {
+          translator: staffData.inactive.translator || [],
+          editor: staffData.inactive.editor || [],
+          proofreader: staffData.inactive.proofreader || []
+        },
         genres: editingNovel ? editingNovel.genres : newNovel.genres,
         description: editorRef.current.getContent(),
         note: noteEditorRef.current.getContent(),

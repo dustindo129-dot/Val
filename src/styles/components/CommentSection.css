@@ -160,7 +160,41 @@
   gap: 1rem;
 }
 
-.like-button, .delete-button {
+.like-button {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.like-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.like-button:not(:disabled):hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.like-button.liked {
+  color: #e74c3c;
+}
+
+.like-button.liked .like-icon {
+  transform: scale(1.1);
+}
+
+.like-count {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.delete-button {
   background: none;
   border: none;
   display: flex;
@@ -174,8 +208,9 @@
   transition: background-color 0.2s;
 }
 
-.like-button:hover {
-  background-color: rgba(0, 123, 255, 0.1);
+.delete-button:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
 }
 
 .reply-button {
@@ -194,15 +229,6 @@
 
 .reply-button:hover {
   background-color: rgba(108, 117, 125, 0.1);
-}
-
-.delete-button:hover {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-}
-
-.like-count {
-  font-size: 0.9rem;
 }
 
 .no-comments {
@@ -512,6 +538,14 @@
     background-color: #212529;
     border-color: #495057;
     color: #f8f9fa;
+  }
+
+  .like-button:not(:disabled):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .like-count {
+    color: #999;
   }
 }
 
