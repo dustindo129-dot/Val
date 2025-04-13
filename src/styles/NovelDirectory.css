@@ -121,7 +121,7 @@
 
 .directory .dir-novel-status[data-status="COMPLETED"],
 .directory .dir-novel-status[data-status="Completed"] {
-  background: #FF6B6B;
+  background: #009fdf;
   border-color: #0277BD;
   border-width: 2px;
   transition: all 0.2s ease;

@@ -35,9 +35,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Get current location for redirect
   const location = useLocation();
   
-  // Check if user is authenticated and has admin role
-  if (!user || user.role !== 'admin') {
-    // Redirect to home page if not admin, preserving attempted location
+  // Check if user is authenticated and has admin or moderator role
+  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+    // Redirect to home page if not admin or moderator, preserving attempted location
     return <Navigate to="/" replace state={{ from: location }} />;
   }
 

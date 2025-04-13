@@ -90,8 +90,8 @@ const SecondaryNavbar = () => {
           <Link to="/donation" className={`nav-link ${isActive('/donation')}`}>
             Donation
           </Link>
-          {/* Admin-only dashboard link */}
-          {user?.role === 'admin' && (
+          {/* Admin and Moderator dashboard link */}
+          {(user?.role === 'admin' || user?.role === 'moderator') && (
             <Link to="/admin-dashboard" className={`nav-link ${isActive('/admin-dashboard')}`}>
               Admin Dashboard
             </Link>

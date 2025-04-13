@@ -41,6 +41,7 @@ const AdminDashboard = () => {
   const { updateNovelStatus } = useNovelStatus();
   const { updateNovel } = useNovel();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Genre categories and options
   const genreCategories = {
@@ -1038,10 +1039,12 @@ const AdminDashboard = () => {
                     <option value="Hiatus">Hiatus</option>
                   </select>
                   <button onClick={() => handleEdit(novel)}>Edit</button>
-                  <button 
-                    className="delete"
-                    onClick={() => handleDelete(novel._id)}
-                  >Delete</button>
+                  {user?.role === 'admin' && (
+                    <button 
+                      className="delete"
+                      onClick={() => handleDelete(novel._id)}
+                    >Delete</button>
+                  )}
                 </div>
               </li>
             ))}

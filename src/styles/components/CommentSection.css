@@ -470,118 +470,103 @@
 }
 
 /* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .comments-section {
-    background-color: #343a40;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .comments-title {
-    color: #f8f9fa;
-  }
-
-  .comment-input {
-    background-color: #212529;
-    border-color: #495057;
-    color: #f8f9fa;
-  }
-
-  .comment-input:focus {
-    border-color: #6c757d;
-    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
-  }
-
-  .login-to-comment {
-    background-color: #212529;
-    color: #f8f9fa;
-  }
-
-  .comment-item {
-    border-bottom-color: #495057;
-  }
-
-  .comment-username {
-    color: #f8f9fa;
-  }
-
-  .comment-text {
-    color: #e9ecef;
-  }
-
-  .no-comments, .comments-loading {
-    color: #adb5bd;
-  }
-
-  .reply-form {
-    background-color: #212529;
-  }
-
-  .reply-input {
-    background-color: #343a40;
-    border-color: #495057;
-    color: #f8f9fa;
-  }
-
-  .reply-input:focus {
-    border-color: #6c757d;
-    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
-  }
-
-  .reply-item {
-    background-color: #212529;
-    border-left-color: #495057;
-  }
-
-  .reply-username {
-    color: #f8f9fa;
-  }
-
-  .reply-text {
-    color: #e9ecef;
-  }
-
-  .block-confirm-content {
-    background-color: #343a40;
-  }
-
-  .block-confirm-content p {
-    color: #f8f9fa;
-  }
-
-  .block-confirm-actions button:last-child {
-    background-color: #212529;
-    border-color: #495057;
-    color: #f8f9fa;
-  }
-
-  .like-button:not(:disabled):hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  .like-count {
-    color: #999;
-  }
+:root.dark-mode .comments-section {
+  background-color: #343a40;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Banned message styles */
-.banned-message {
-  padding: 1rem;
-  margin-bottom: 2rem;
-  background-color: #ffebee;
-  border: 1px solid #ffcdd2;
-  border-radius: 4px;
-  color: #c62828;
-  text-align: center;
-  font-weight: 500;
+:root.dark-mode .comments-title {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .comment-input {
+  background-color: #212529;
+  border-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .comment-input:focus {
+  border-color: #6c757d;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+:root.dark-mode .login-to-comment {
+  background-color: #212529;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .comment-item {
+  border-bottom-color: #495057;
+}
+
+:root.dark-mode .comment-username {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .comment-text {
+  color: #e9ecef;
+}
+
+:root.dark-mode .no-comments, 
+:root.dark-mode .comments-loading {
+  color: #adb5bd;
+}
+
+:root.dark-mode .reply-form {
+  background-color: #212529;
+}
+
+:root.dark-mode .reply-input {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .reply-input:focus {
+  border-color: #6c757d;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+:root.dark-mode .reply-item {
+  background-color: #212529;
+  border-left-color: #495057;
+}
+
+:root.dark-mode .reply-username {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .reply-text {
+  color: #e9ecef;
+}
+
+:root.dark-mode .block-confirm-content {
+  background-color: #343a40;
+}
+
+:root.dark-mode .block-confirm-content p {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .block-confirm-actions button:last-child {
+  background-color: #212529;
+  border-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .like-button:not(:disabled):hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark-mode .like-count {
+  color: #999;
 }
 
 /* Dark mode support for banned message */
-@media (prefers-color-scheme: dark) {
-  .banned-message {
-    background-color: rgba(198, 40, 40, 0.1);
-    border-color: #c62828;
-    color: #ff8a80;
-  }
+:root.dark-mode .banned-message {
+  background-color: rgba(198, 40, 40, 0.1);
+  border-color: #c62828;
+  color: #ff8a80;
 }
 
 /* Sort controls */
@@ -620,22 +605,20 @@
 }
 
 /* Dark mode styles for sort controls */
-@media (prefers-color-scheme: dark) {
-  .sort-controls span {
-    color: #adb5bd;
-  }
-  
-  .sort-btn {
-    color: #adb5bd;
-  }
-  
-  .sort-btn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #e9ecef;
-  }
-  
-  .sort-btn.active {
-    background-color: #343a40;
-    color: #f8f9fa;
-  }
+:root.dark-mode .sort-controls span {
+  color: #adb5bd;
+}
+
+:root.dark-mode .sort-btn {
+  color: #adb5bd;
+}
+
+:root.dark-mode .sort-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e9ecef;
+}
+
+:root.dark-mode .sort-btn.active {
+  background-color: #343a40;
+  color: #f8f9fa;
 }
