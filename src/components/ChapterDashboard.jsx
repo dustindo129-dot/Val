@@ -494,8 +494,8 @@ const ChapterDashboard = () => {
   };
 
   // Check if user has admin privileges
-  if (user?.role !== 'admin') {
-    return <div className="error">Access denied. Admin only.</div>;
+  if (user?.role !== 'admin' && user?.role !== 'moderator') {
+    return <div className="error">Access denied. Admin and moderator only.</div>;
   }
 
   // Show loading state

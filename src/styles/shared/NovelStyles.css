@@ -92,18 +92,6 @@
   gap: 1rem;
 }
 
-/* Title styles */
-.novel-title {
-  font-size: 2.5rem;
-  color: #333;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.novel-title-link:hover {
-  text-decoration: none;
-}
-
 /* Description styles */
 .novel-description {
   color: #666;
@@ -148,10 +136,6 @@
 :root.dark-mode .novel-card {
   background: #1a1a1a;
   border-color: #333;
-}
-
-:root.dark-mode .novel-title {
-  color: #fff;
 }
 
 :root.dark-mode .novel-description {

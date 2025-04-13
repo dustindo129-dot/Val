@@ -76,15 +76,15 @@
 
 .novel-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 18px !important;
+    font-size: 18px;
     font-weight: 600;
-    padding: 10px 15px;
+    padding: 10px 150px 10px 15px;
     background-color: #2c3e50;
-    color: white!important;
+    color: white;
     position: relative;
     display: flex;
     align-items: center;
-    margin: -20px -20px 0 -20px!important;
+    margin: -20px -20px 0 -20px;
     width: calc(100% + 40px);
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
@@ -382,7 +382,6 @@
     font-weight: 500;
     font-size: 16px;  /* Increased from 14px */
     flex: 1;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     padding-right: 15px;  /* Add some space before the date */
