@@ -76,7 +76,7 @@ const api = {
       }
 
       const response = await axios.post(
-        `${config.backendUrl}/api/users/${user.username}/bookmarks`,
+        `${config.backendUrl}/api/usernovelinteractions/bookmark`,
         { novelId },
         {
           headers: {
@@ -381,17 +381,7 @@ const api = {
         return { liked: false, rating: null, bookmarked: false };
       }
       
-      // Get bookmark status from users endpoint
-      const bookmarkResponse = await axios.get(
-        `${config.backendUrl}/api/users/${user.username}/bookmarks/${novelId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      // Get other interactions from usernovelinteractions
+      // Get all interactions from usernovelinteractions endpoint
       const interactionResponse = await axios.get(
         `${config.backendUrl}/api/usernovelinteractions/user/${novelId}`,
         {
@@ -401,10 +391,7 @@ const api = {
         }
       );
       
-      return {
-        ...interactionResponse.data,
-        bookmarked: bookmarkResponse.data.isBookmarked
-      };
+      return interactionResponse.data;
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
@@ -527,6 +514,28 @@ const api = {
     } catch (error) {
       console.error('Failed to delete report:', error);
       throw error;
+    }
+  },
+
+  getBookmarks: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error("Authentication token missing");
+      }
+
+      const response = await axios.get(
+        `${config.backendUrl}/api/usernovelinteractions/bookmarks`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch bookmarks:', error);
+      return [];
     }
   }
 };

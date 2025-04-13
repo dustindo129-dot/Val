@@ -22,6 +22,7 @@ import axios from 'axios';
 import '../styles/UserBookmarks.css';
 import config from '../config/config';
 import { useBookmarks } from '../context/BookmarkContext';
+import api from '../services/api';
 
 /**
  * UserBookmarks Component
@@ -54,16 +55,7 @@ const UserBookmarks = () => {
     if (!user || user.username !== username) return;
     
     try {
-      const response = await axios.get(
-        `${config.backendUrl}/api/users/${username}/bookmarks`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
-      
-      const bookmarksData = response.data;
+      const bookmarksData = await api.getBookmarks();
       setBookmarks(bookmarksData);
       setTotalBookmarks(bookmarksData.length);
       setBookmarkedNovels(bookmarksData.map(bookmark => bookmark._id));
@@ -97,14 +89,7 @@ const UserBookmarks = () => {
     event.stopPropagation();
     
     try {
-      await axios.delete(
-        `${config.backendUrl}/api/users/${username}/bookmarks/${novelId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      await api.toggleBookmark(novelId);
       
       // Update local state immediately for better UX
       setBookmarks(prev => prev.filter(bookmark => bookmark._id !== novelId));
@@ -181,6 +166,12 @@ const UserBookmarks = () => {
               />
               <div className="bookmark-info">
                 <span className="bookmark-title">{novel.title}</span>
+                <span className="bookmark-status" data-status={novel.status || 'Ongoing'}>
+                  {novel.status || 'Ongoing'}
+                </span>
+                <span className="bookmark-chapters">
+                  {novel.totalChapters > 0 ? `${novel.totalChapters} Chapters` : 'No chapters yet'}
+                </span>
                 <span className="bookmark-latest-chapter">
                   {novel.latestChapter ? `Latest: Chapter ${novel.latestChapter.number} - ${novel.latestChapter.title}` : 'No chapters yet'}
                 </span>

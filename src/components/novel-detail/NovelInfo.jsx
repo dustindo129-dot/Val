@@ -97,16 +97,22 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
         
         // Update the isBookmarked status based on the response
         if (newData.novel) {
-          newData.novel.isBookmarked = response.isBookmarked;
+          newData.novel.isBookmarked = response.bookmarked;
         } else if (newData._id) {
-          newData.isBookmarked = response.isBookmarked;
+          newData.isBookmarked = response.bookmarked;
         }
         
         return newData;
       });
 
+      // Update the userInteraction data in the cache
+      queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+        ...old,
+        bookmarked: response.bookmarked
+      }));
+
       // Update the bookmark context
-      updateBookmarkStatus(novelId, response.isBookmarked);
+      updateBookmarkStatus(novelId, response.bookmarked);
       
       // Invalidate queries to ensure fresh data on next fetch
       queryClient.invalidateQueries({
@@ -380,7 +386,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   }
 
   // Determine if the novel is bookmarked
-  const isBookmarked = novelData.isBookmarked || false;
+  const isBookmarked = safeUserInteraction.bookmarked || false;
   // Determine if the novel is liked
   const isLiked = safeUserInteraction.liked || false;
   // Current user rating
