@@ -75,6 +75,6 @@ html {
 @media (max-width: 768px) {
   /* Adjust main content padding for mobile */
   .main-content {
-    padding: 1rem;
+    padding: 2rem 0;
   }
 } 

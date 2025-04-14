@@ -27,13 +27,6 @@ const ChapterNavigationControls = ({
   moduleChapters,
   isModuleChaptersLoading
 }) => {
-  // Debug logging
-  useEffect(() => {
-    console.log('Chapter list visibility:', showChapterList);
-    console.log('Module chapters:', moduleChapters);
-    console.log('Loading state:', isModuleChaptersLoading);
-  }, [showChapterList, moduleChapters, isModuleChaptersLoading]);
-
   return (
     <>
       {/* Toggle Button */}
