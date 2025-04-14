@@ -269,12 +269,14 @@ const Navbar = () => {
                   className="avatar-image"
                 />
               </div>
-              <Link to={`/user/${user.username}/profile`} className="auth-button profile-btn">
-                Profile
-              </Link>
-              <button onClick={handleLogout} className="auth-button logout-btn">
-                Logout
-              </button>
+              <div className="profile-logout-container">
+                <Link to={`/user/${user.username}/profile`} className="auth-button profile-btn">
+                  Profile
+                </Link>
+                <button onClick={handleLogout} className="auth-button logout-btn">
+                  Logout
+                </button>
+              </div>
             </div>
           ) : (
             // Guest user menu

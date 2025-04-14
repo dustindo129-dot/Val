@@ -251,6 +251,22 @@ body {
   border: 2px solid #4a90e2;
 }
 
+/* Profile and logout container */
+.profile-logout-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-logout-container .auth-button {
+  min-width: 80px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+}
+
 /* Search results dropdown */
 .search-results {
   position: absolute;
