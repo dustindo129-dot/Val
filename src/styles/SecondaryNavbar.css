@@ -58,6 +58,7 @@
   font-weight: 400;
   padding: 0.5rem 0;
   transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
 /* Navigation link hover state */
@@ -251,7 +252,7 @@
   .nav-links.show {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(10px);
   }
 
   .nav-link {
