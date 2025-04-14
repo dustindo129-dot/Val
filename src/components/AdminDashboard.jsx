@@ -444,6 +444,9 @@ const AdminDashboard = () => {
    * @param {Object} novel - Novel to edit
    */
   const handleEdit = (novel) => {
+    // Reset form first to discard any unsaved work
+    resetForm();
+    
     // Ensure staff arrays are properly initialized with empty arrays if undefined
     const novelWithDefaults = {
       ...novel,
@@ -485,6 +488,9 @@ const AdminDashboard = () => {
    */
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this novel?')) return;
+
+    // Reset form first to discard any unsaved work
+    resetForm();
 
     try {
       // Get current cache data
@@ -565,6 +571,9 @@ const AdminDashboard = () => {
    * @param {string} status - New status value
    */
   const handleStatusChange = async (id, status) => {
+    // Reset form first to discard any unsaved work
+    resetForm();
+    
     try {
       // Get current cache data
       const previousData = queryClient.getQueryData(['novels']);

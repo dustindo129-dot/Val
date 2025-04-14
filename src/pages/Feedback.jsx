@@ -27,7 +27,7 @@ const Feedback = () => {
             <p>Vậy th&ocirc;i, have fun!</p>
             <p>&nbsp;</p>
             <p><em>Nekko</em></p>
-            <p><em>05/12/2025&nbsp;&nbsp;</em></p>
+            <p><em>04/13/2025&nbsp;&nbsp;</em></p>
           </div>
         </div>
       </div>
