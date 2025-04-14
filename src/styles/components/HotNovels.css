@@ -214,6 +214,6 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .hot-novels {
-    margin-top: 1.5rem;
+    display: none;
   }
 }

@@ -89,7 +89,7 @@
 .module-chapters-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
 }
 
 /* Chapters header */

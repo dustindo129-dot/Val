@@ -661,6 +661,10 @@
     .sidebar {
         margin-top: 1.5rem;
     }
+    
+    .facebook-plugin {
+        display: none;
+    }
 }
 
 @media (max-width: 576px) {

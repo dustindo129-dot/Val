@@ -769,8 +769,8 @@
 
 .toggle-btn {
   position: fixed;
-  bottom: 75px;
-  right: 20px;
+  bottom: 20px;
+  right: 80px;
   width: 45px;
   height: 45px;
   border-radius: 50%;
@@ -790,36 +790,12 @@
   transform: scale(1.1);
 }
 
-/* Scroll to Top Button */
-.scroll-top-btn {
-  position: fixed;
-  bottom: 130px;
-  right: 20px;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: var(--primary-color);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  z-index: 100;
-}
-
-.scroll-top-btn:hover {
-  transform: scale(1.1);
-}
-
 .nav-controls-container {
   position: fixed;
-  bottom: 130px;
-  right: 20px;
+  bottom: 20px;
+  right: 140px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 10px;
   z-index: 100;
   transition: opacity 0.3s ease, visibility 0.3s ease;

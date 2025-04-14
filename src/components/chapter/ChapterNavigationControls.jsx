@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faArrowUp, faTimes, faEllipsisV, faList, faCog,
+  faTimes, faEllipsisV, faList, faCog,
   faChevronLeft, faChevronRight, faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -20,7 +20,6 @@ const ChapterNavigationControls = ({
   showChapterList,
   setShowChapterList,
   setShowSettingsModal,
-  scrollToTop,
   handlePrevChapter,
   handleNextChapter,
   isNavigating,
@@ -30,15 +29,6 @@ const ChapterNavigationControls = ({
 }) => {
   return (
     <>
-      {/* Scroll to Top Button */}
-      <button
-        className="scroll-top-btn"
-        title="Scroll to Top"
-        onClick={scrollToTop}
-      >
-        <FontAwesomeIcon icon={faArrowUp}/>
-      </button>
-
       {/* Toggle Button */}
       <button
         className="toggle-btn"
@@ -68,58 +58,42 @@ const ChapterNavigationControls = ({
         </button>
       </div>
 
-      {/* Fixed Navigation Buttons */}
-      <div className={`nav-control-prev ${showNavControls ? 'visible' : ''}`}>
-        <button
-          className={`nav-control-btn ${!chapter?.prevChapter ? 'disabled' : ''}`}
-          onClick={handlePrevChapter}
-          disabled={!chapter?.prevChapter || isNavigating || isEditing}
-          title={chapter?.prevChapter ? `Previous: ${chapter.prevChapter.title}` : 'No previous chapter available'}
-        >
-          <FontAwesomeIcon icon={faChevronLeft}/>
-        </button>
-      </div>
-
-      <div className={`nav-control-next ${showNavControls ? 'visible' : ''}`}>
-        <button
-          className={`nav-control-btn ${!chapter?.nextChapter ? 'disabled' : ''}`}
-          onClick={handleNextChapter}
-          disabled={!chapter?.nextChapter || isNavigating || isEditing}
-          title={chapter?.nextChapter ? `Next: ${chapter.nextChapter.title}` : 'No next chapter available'}
-        >
-          <FontAwesomeIcon icon={faChevronRight}/>
-        </button>
-      </div>
-
-      {/* Chapter Dropdown */}
-      <div
-        className={`chapter-dropdown ${showChapterList ? 'active' : ''}`}
-        id="chapterDropdown"
-      >
-        <div className="chapter-dropdown-title">Chapters</div>
-        {isModuleChaptersLoading ? (
-          <div className="loading-chapters">
-            <FontAwesomeIcon icon={faSpinner} spin /> Loading chapters...
+      {/* Chapter List Dropdown */}
+      {showChapterList && (
+        <div className="chapter-dropdown" id="chapterDropdown">
+          <div className="chapter-dropdown-header">
+            <h3>Chapters</h3>
+            <button 
+              onClick={() => setShowChapterList(false)}
+              className="close-dropdown"
+            >
+              <FontAwesomeIcon icon={faTimes}/>
+            </button>
           </div>
-        ) : (
-          <ul className="chapter-dropdown-list">
-            {moduleChapters && moduleChapters.length > 0 ? (
-              moduleChapters.map((item) => (
-                <li
-                  key={item._id}
-                  className={`chapter-dropdown-item ${item._id === chapterId ? 'current' : ''}`}
+
+          {isModuleChaptersLoading ? (
+            <div className="dropdown-loading">
+              <FontAwesomeIcon icon={faSpinner} spin/>
+              <span>Loading chapters...</span>
+            </div>
+          ) : moduleChapters && moduleChapters.length > 0 ? (
+            <ul className="chapter-dropdown-list">
+              {moduleChapters.map((chapterItem) => (
+                <li 
+                  key={chapterItem._id}
+                  className={chapterItem._id === chapterId ? 'active' : ''}
                 >
-                  <Link to={`/novel/${novelId}/chapter/${item._id}`}>
-                    {item.order ? `${item.order}. ` : ''}{item.title}
+                  <Link to={`/novel/${novelId}/chapter/${chapterItem._id}`}>
+                    {chapterItem.title}
                   </Link>
                 </li>
-              ))
-            ) : (
-              <li className="chapter-dropdown-item empty">No chapters available</li>
-            )}
-          </ul>
-        )}
-      </div>
+              ))}
+            </ul>
+          ) : (
+            <div className="no-chapters">No chapters available</div>
+          )}
+        </div>
+      )}
     </>
   );
 };

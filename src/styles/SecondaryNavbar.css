@@ -15,11 +15,11 @@
   background-color: #fff;
   border-bottom: 1px solid #e5e7eb;
   padding: 1rem 0;
-  top: 72px;
+  position: static;
   z-index: 999;
   width: 100%;
-  left: 0;
-  right: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* Navigation container for flex layout */
@@ -28,6 +28,9 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  box-sizing: border-box;
+  padding: 0 2rem;
+  margin: 0;
 }
 
 /* Container for navigation links */
@@ -111,10 +114,10 @@
   .secondary-navbar {
     padding: 0.75rem 0;
     width: 100%;
-    top: 110px;
     background-color: #fff;
     display: flex;
     justify-content: center;
+    box-sizing: border-box;
   }
 
   .nav-container {
@@ -123,12 +126,14 @@
     align-items: center;
     width: 100%;
     max-width: none;
+    padding: 0 1rem;
   }
 
   .nav-links {
     display: flex;
     justify-content: flex-start;
     padding: 0;
+    padding-left: 0;
     gap: 1rem;
   }
 
@@ -148,15 +153,17 @@
   .secondary-navbar {
     padding: 0.5rem 0;
     width: 100%;
-    top: 110px;
+    box-sizing: border-box;
   }
 
   .nav-container {
     width: 100%;
+    padding: 0 0.5rem;
   }
 
   .nav-links {
     gap: 0.75rem;
+    padding-left: 0;
   }
 
   .nav-link {

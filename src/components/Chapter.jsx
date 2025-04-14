@@ -20,11 +20,12 @@ import ChapterNavigationControls from './chapter/ChapterNavigationControls';
 import ChapterCommentsSection from './chapter/ChapterCommentsSection';
 import ChapterAccessGuard from './chapter/ChapterAccessGuard';
 import { SettingsModal, RatingModal, ReportModal } from './chapter/ChapterModals';
+import ScrollToTop from './ScrollToTop';
 
 // Import utilities 
 import {
   useReadingSettings, useReadingProgress, getSafeHtml,
-  unescapeHtml, countWords, formatDate, scrollToTop
+  unescapeHtml, countWords, formatDate
 } from './chapter/ChapterUtils';
 
 const Chapter = () => {
@@ -940,6 +941,9 @@ const Chapter = () => {
         isCommentsLoading={isCommentsLoading}
       />
 
+      {/* Add the ScrollToTop component */}
+      <ScrollToTop threshold={300} />
+
       {/* Navigation Controls */}
       <ChapterNavigationControls
         novelId={novelId}
@@ -950,7 +954,6 @@ const Chapter = () => {
         showChapterList={showChapterList}
         setShowChapterList={setShowChapterList}
         setShowSettingsModal={setShowSettingsModal}
-        scrollToTop={scrollToTop}
         handlePrevChapter={handlePrevChapter}
         handleNextChapter={handleNextChapter}
         isNavigating={isNavigating}

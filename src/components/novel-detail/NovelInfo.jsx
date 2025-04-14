@@ -773,13 +773,20 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                     ? novelData.note 
                     : truncateHTML(novelData.note, 300) 
                 }} />
-                {novelData.note && novelData.note.length > 300 && (
-                  <a href="#" className="rd-show-toggle" onClick={(e) => {
-                    e.preventDefault();
-                    setIsNoteExpanded(!isNoteExpanded);
-                  }}>
-                    {isNoteExpanded ? 'Show less' : 'Read more'}
-                  </a>
+                {novelData.note && (
+                  (() => {
+                    const div = document.createElement('div');
+                    div.innerHTML = novelData.note;
+                    const fullText = div.textContent || div.innerText || '';
+                    return fullText.length > 300 ? (
+                      <a href="#" className="rd-show-toggle" onClick={(e) => {
+                        e.preventDefault();
+                        setIsNoteExpanded(!isNoteExpanded);
+                      }}>
+                        {isNoteExpanded ? 'Show less' : 'Read more'}
+                      </a>
+                    ) : null;
+                  })()
                 )}
               </div>
             </div>

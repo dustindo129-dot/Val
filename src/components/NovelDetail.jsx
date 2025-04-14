@@ -32,6 +32,7 @@ import RatingModal from './RatingModal';
 import ModuleChapters from './novel-detail/ModuleChapters';
 import ModuleForm from './novel-detail/ModuleForm';
 import NovelInfo from './novel-detail/NovelInfo';
+import ScrollToTop from './ScrollToTop';
 import api from '../services/api';
 import sseService from '../services/sseService';
 import ModuleList from './novel-detail/ModuleList';
@@ -734,6 +735,9 @@ const NovelDetail = () => {
               currentRating={userInteraction?.rating || 0}
             />
           )}
+          
+          {/* Add ScrollToTop component */}
+          <ScrollToTop threshold={400} />
         </>
       ) : (
         <div className="error-message">Novel not found</div>

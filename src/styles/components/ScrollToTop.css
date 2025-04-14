@@ -1,0 +1,52 @@
+/* ScrollToTop Component Styles */
+
+.scroll-top-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #3498db);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  z-index: 1000;
+  opacity: 0.8;
+}
+
+.scroll-top-btn:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Animation for button appearance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+}
+
+.scroll-top-btn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Media queries for responsive design */
+@media screen and (max-width: 768px) {
+  .scroll-top-btn {
+    bottom: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+  }
+} 

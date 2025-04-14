@@ -9,6 +9,7 @@ import { initGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import AppRoutes from './routes/AppRoutes';
 import './styles/shared/App.css';
 
@@ -62,6 +63,8 @@ const App = () => {
                     <AppRoutes />
                   </main>
                   <Footer />
+                  {/* Global ScrollToTop button that appears on all pages */}
+                  <ScrollToTop threshold={300} />
                 </div>
               </BookmarkProvider>
             </NovelStatusProvider>
