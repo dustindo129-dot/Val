@@ -272,7 +272,6 @@ const ChapterContent = ({
         <>
           <div className="chapter-content editor-container">
             <Editor
-              apiKey={config.tinymceApiKey}
               onInit={(evt, editor) => {
                 editorRef.current = editor;
                 if (editedContent?.content || chapter?.content) {
@@ -288,7 +287,10 @@ const ChapterContent = ({
                   }));
                 }
               }}
+              scriptLoading={{ async: true, load: "domainBased" }}
               init={{
+                script_src: config.tinymce.scriptPath,
+                license_key: 'gpl',
                 height: 500,
                 menubar: false,
                 entity_encoding: 'raw',

@@ -150,10 +150,12 @@ const Donation = () => {
         <div className="donation-content">
           {isAdmin && isEditing ? (
             <Editor
-              apiKey={config.tinymceApiKey}
               onInit={(evt, editor) => editorRef.current = editor}
               initialValue={content}
+              scriptLoading={{ async: true, load: "domainBased" }}
               init={{
+                script_src: config.tinymce.scriptPath,
+                license_key: 'gpl',
                 height: 500,
                 menubar: true,
                 plugins: [

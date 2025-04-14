@@ -788,16 +788,18 @@ const AdminDashboard = () => {
             {/* Description Editor */}
             <div className="description-editor">
               <Editor
-                apiKey={config.tinymceApiKey}
                 onInit={(evt, editor) => editorRef.current = editor}
+                initialValue={editingNovel ? editingNovel.description : newNovel.description}
+                scriptLoading={{ async: true, load: "domainBased" }}
                 init={{
+                  script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
+                  license_key: 'gpl',
                   height: 300,
                   menubar: false,
                   plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'charmap',
+                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                     'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'help', 'wordcount',
-                    'preview'
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
                   ],
                   toolbar: 'undo redo | formatselect | ' +
                     'bold italic underline strikethrough | ' +
@@ -906,17 +908,18 @@ const AdminDashboard = () => {
             {/* Note Editor */}
             <div className="note-editor">
               <Editor
-                apiKey={config.tinymceApiKey}
                 onInit={(evt, editor) => noteEditorRef.current = editor}
                 initialValue={editingNovel ? editingNovel.note : newNovel.note}
+                scriptLoading={{ async: true, load: "domainBased" }}
                 init={{
+                  script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
+                  license_key: 'gpl',
                   height: 200,
                   menubar: false,
                   plugins: [
                     'advlist', 'autolink', 'lists', 'link', 'charmap',
                     'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'table', 'help', 'wordcount',
-                    'preview'
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
                   ],
                   toolbar: 'undo redo | formatselect | ' +
                     'bold italic underline | ' +

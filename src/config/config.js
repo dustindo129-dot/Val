@@ -8,7 +8,9 @@ const config = {
       comment: import.meta.env.VITE_CLOUDINARY_COMMENT_UPLOAD_PRESET
     }
   },
-  tinymceApiKey: '2xls70o8iwqefp6s06bpnm5efessylgsoqj93g48lwvyy6pj'
+  tinymce: {
+    scriptPath: '/tinymce/js/tinymce/tinymce.min.js' // Path to self-hosted TinyMCE script in public folder
+  }
 };
 
 export default config; 

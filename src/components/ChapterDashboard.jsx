@@ -638,7 +638,6 @@ const ChapterDashboard = () => {
             <div className="chapter-content-group">
               <div className="chapter-content-editor">
                 <Editor
-                    apiKey={config.tinymceApiKey}
                     onInit={(evt, editor) => {
                       editorRef.current = editor;
                       // Set content if in edit mode
@@ -646,7 +645,10 @@ const ChapterDashboard = () => {
                         editor.setContent(chapterContent);
                       }
                     }}
+                    scriptLoading={{ async: true, load: "domainBased" }}
                     init={{
+                      script_src: config.tinymce.scriptPath,
+                      license_key: 'gpl',
                       height: 600,
                       menubar: false,
                       plugins: [
