@@ -770,7 +770,7 @@
 .toggle-btn {
   position: fixed;
   bottom: 20px;
-  right: 80px;
+  right: 20px;
   width: 45px;
   height: 45px;
   border-radius: 50%;
@@ -784,16 +784,18 @@
   transition: all 0.3s ease;
   border: none;
   z-index: 100;
+  opacity: 0.8;
 }
 
 .toggle-btn:hover {
   transform: scale(1.1);
+  opacity: 1;
 }
 
 .nav-controls-container {
   position: fixed;
   bottom: 20px;
-  right: 140px;
+  right: 80px;
   display: flex;
   flex-direction: row;
   gap: 10px;
@@ -827,60 +829,6 @@
   transform: scale(1.1);
 }
 
-.nav-control-prev {
-  position: fixed;
-  bottom: 75px;
-  left: 20px;
-  z-index: 100;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-  opacity: 0;
-  visibility: hidden;
-}
-
-.nav-control-next {
-  position: fixed;
-  bottom: 75px;
-  right: 75px;
-  z-index: 100;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-  opacity: 0;
-  visibility: hidden;
-}
-
-.nav-control-prev.visible,
-.nav-control-next.visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-.nav-control-btn {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: var(--primary-color);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.nav-control-btn:hover {
-  transform: scale(1.1);
-}
-
-.nav-control-btn.disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.nav-control-btn.disabled:hover {
-  transform: none;
-}
-
 /* Chapter dropdown */
 .chapter-dropdown {
   position: fixed;
@@ -888,12 +836,13 @@
   right: 20px;
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  width: 250px;
-  max-height: 300px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  max-height: 400px;
   overflow-y: auto;
   z-index: 101;
   display: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .chapter-dropdown.active {
@@ -901,13 +850,43 @@
   animation: fadeIn 0.3s ease;
 }
 
-.chapter-dropdown-title {
-  padding: 10px 15px;
+.chapter-dropdown-header {
+  padding: 15px;
   font-weight: 600;
   border-bottom: 1px solid #e0e0e0;
   position: sticky;
   top: 0;
   background-color: var(--card-bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+}
+
+.chapter-dropdown-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--primary-color);
+}
+
+.close-dropdown {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+}
+
+.close-dropdown:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--accent-color);
 }
 
 .chapter-dropdown-list {
@@ -916,21 +895,103 @@
   margin: 0;
 }
 
-.chapter-dropdown-item:hover {
-  background-color: #f5f5f5;
+.chapter-dropdown-list li {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.chapter-dropdown-item a {
+.chapter-dropdown-list li:last-child {
+  border-bottom: none;
+}
+
+.chapter-dropdown-list li a {
   text-decoration: none;
   color: var(--text-color);
   display: block;
+  padding: 12px 15px;
+  transition: all 0.2s ease;
+  font-size: 14px;
 }
 
-.chapter-dropdown-item.current {
+.chapter-dropdown-list li a:hover {
   background-color: rgba(52, 152, 219, 0.1);
-  font-weight: 500;
 }
 
+.chapter-dropdown-list li.active {
+  background-color: rgba(52, 152, 219, 0.15);
+}
+
+.chapter-dropdown-list li.active a {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.dropdown-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  color: #666;
+}
+
+.no-chapters {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+/* Dark mode styles */
+:root.dark-mode .chapter-dropdown {
+  background-color: #2c2c2c;
+  border-color: #444;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .chapter-dropdown-header {
+  border-bottom-color: #444;
+  background-color: #2c2c2c;
+}
+
+:root.dark-mode .chapter-dropdown-header h3 {
+  color: #66b0ff;
+}
+
+:root.dark-mode .close-dropdown {
+  color: #aaa;
+}
+
+:root.dark-mode .close-dropdown:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ff6b6b;
+}
+
+:root.dark-mode .chapter-dropdown-list li {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+:root.dark-mode .chapter-dropdown-list li a {
+  color: #ddd;
+}
+
+:root.dark-mode .chapter-dropdown-list li a:hover {
+  background-color: rgba(102, 176, 255, 0.1);
+}
+
+:root.dark-mode .chapter-dropdown-list li.active {
+  background-color: rgba(102, 176, 255, 0.15);
+}
+
+:root.dark-mode .chapter-dropdown-list li.active a {
+  color: #66b0ff;
+}
+
+:root.dark-mode .dropdown-loading,
+:root.dark-mode .no-chapters {
+  color: #aaa;
+}
+
+/* Animation for dropdown */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1193,6 +1254,18 @@
   .chapter-title-banner {
     width: 100%;
   }
+
+  .toggle-btn {
+    bottom: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .nav-controls-container {
+    bottom: 15px;
+    right: 65px;
+  }
 }
 
 /* Dark mode support */
@@ -1245,23 +1318,6 @@
   background-color: #3a2c2c;
   border-color: #4a3535;
   color: #ff8a80;
-}
-
-:root.dark-mode .chapter-dropdown-title {
-  border-bottom-color: #333;
-  background-color: #1a1a1a;
-}
-
-:root.dark-mode .chapter-dropdown-item {
-  background-color: #1a1a1a;
-}
-
-:root.dark-mode .chapter-dropdown-item:hover {
-  background-color: #2c2c2c;
-}
-
-:root.dark-mode .chapter-dropdown-item a {
-  color: #e9ecef;
 }
 
 :root.dark-mode .settings-title {
@@ -1477,11 +1533,6 @@
 /* Paid content specific styles */
 .paid-content svg {
   color: #3498db;
-}
-
-.reader-controls {
-  display: flex;
-  gap: 8px;
 }
 
 .font-size-btn {

@@ -2,7 +2,7 @@
 
 .scroll-top-btn {
   position: fixed;
-  bottom: 20px;
+  bottom: 75px;
   right: 20px;
   width: 45px;
   height: 45px;
@@ -16,7 +16,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
-  z-index: 1000;
+  z-index: 100;
   opacity: 0.8;
 }
 
@@ -44,7 +44,7 @@
 /* Media queries for responsive design */
 @media screen and (max-width: 768px) {
   .scroll-top-btn {
-    bottom: 15px;
+    bottom: 65px;
     right: 15px;
     width: 40px;
     height: 40px;

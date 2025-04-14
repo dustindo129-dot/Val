@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -27,6 +27,13 @@ const ChapterNavigationControls = ({
   moduleChapters,
   isModuleChaptersLoading
 }) => {
+  // Debug logging
+  useEffect(() => {
+    console.log('Chapter list visibility:', showChapterList);
+    console.log('Module chapters:', moduleChapters);
+    console.log('Loading state:', isModuleChaptersLoading);
+  }, [showChapterList, moduleChapters, isModuleChaptersLoading]);
+
   return (
     <>
       {/* Toggle Button */}
@@ -59,41 +66,39 @@ const ChapterNavigationControls = ({
       </div>
 
       {/* Chapter List Dropdown */}
-      {showChapterList && (
-        <div className="chapter-dropdown" id="chapterDropdown">
-          <div className="chapter-dropdown-header">
-            <h3>Chapters</h3>
-            <button 
-              onClick={() => setShowChapterList(false)}
-              className="close-dropdown"
-            >
-              <FontAwesomeIcon icon={faTimes}/>
-            </button>
-          </div>
-
-          {isModuleChaptersLoading ? (
-            <div className="dropdown-loading">
-              <FontAwesomeIcon icon={faSpinner} spin/>
-              <span>Loading chapters...</span>
-            </div>
-          ) : moduleChapters && moduleChapters.length > 0 ? (
-            <ul className="chapter-dropdown-list">
-              {moduleChapters.map((chapterItem) => (
-                <li 
-                  key={chapterItem._id}
-                  className={chapterItem._id === chapterId ? 'active' : ''}
-                >
-                  <Link to={`/novel/${novelId}/chapter/${chapterItem._id}`}>
-                    {chapterItem.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="no-chapters">No chapters available</div>
-          )}
+      <div className={`chapter-dropdown ${showChapterList ? 'active' : ''}`} id="chapterDropdown">
+        <div className="chapter-dropdown-header">
+          <h3>Chapters</h3>
+          <button 
+            onClick={() => setShowChapterList(false)}
+            className="close-dropdown"
+          >
+            <FontAwesomeIcon icon={faTimes}/>
+          </button>
         </div>
-      )}
+
+        {isModuleChaptersLoading ? (
+          <div className="dropdown-loading">
+            <FontAwesomeIcon icon={faSpinner} spin/>
+            <span>Loading chapters...</span>
+          </div>
+        ) : moduleChapters && moduleChapters.length > 0 ? (
+          <ul className="chapter-dropdown-list">
+            {moduleChapters.map((chapterItem) => (
+              <li 
+                key={chapterItem._id}
+                className={chapterItem._id === chapterId ? 'active' : ''}
+              >
+                <Link to={`/novel/${novelId}/chapter/${chapterItem._id}`}>
+                  {chapterItem.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="no-chapters">No chapters available</div>
+        )}
+      </div>
     </>
   );
 };

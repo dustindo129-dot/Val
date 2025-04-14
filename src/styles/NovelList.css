@@ -631,7 +631,7 @@
 
 @media (max-width: 768px) {
     .novel-list-container {
-        padding: 0.5rem;
+        padding: 0;
     }
 
     .novel-grid {
