@@ -80,12 +80,6 @@ export const useReadingProgress = (contentRef) => {
 
       const progress = (scrolled / (fullHeight - windowHeight)) * 100;
       setReadingProgress(Math.min(100, Math.max(0, progress)));
-
-      // Show/hide scroll to top button
-      const scrollTopBtn = document.getElementById('scrollTopBtn');
-      if (scrollTopBtn) {
-        scrollTopBtn.style.display = scrolled > 300 ? 'flex' : 'none';
-      }
     };
 
     window.addEventListener('scroll', handleScroll);

@@ -30,18 +30,14 @@ const ChapterNavigationControls = ({
 }) => {
   return (
     <>
-      {/* Fixed Controls */}
-      <div className="fixed-controls">
-        <button
-          className="control-btn"
-          id="scrollTopBtn"
-          title="Scroll to Top"
-          onClick={scrollToTop}
-          style={{display: 'none'}}
-        >
-          <FontAwesomeIcon icon={faArrowUp}/>
-        </button>
-      </div>
+      {/* Scroll to Top Button */}
+      <button
+        className="scroll-top-btn"
+        title="Scroll to Top"
+        onClick={scrollToTop}
+      >
+        <FontAwesomeIcon icon={faArrowUp}/>
+      </button>
 
       {/* Toggle Button */}
       <button

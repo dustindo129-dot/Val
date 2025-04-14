@@ -1,6 +1,6 @@
 .chapter-content-container {
   position: relative;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 1rem;
 }
@@ -9,6 +9,14 @@
   font-size: var(--content-font-size, 1rem);
   line-height: var(--content-line-height, 1.6);
   font-family: var(--content-font-family, 'Arial', sans-serif);
+}
+
+.chapter-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem auto;
+  border-radius: 4px;
 }
 
 /* Footnote reference styling */

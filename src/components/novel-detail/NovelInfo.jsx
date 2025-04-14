@@ -477,15 +477,60 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       <div className="rd-genres-label">Genres:</div>
                       <div className="rd-info-value">
                         <div className="rd-genres-list">
-                          {novelData.genres.map((genre, index) => (
-                            <Link 
-                              to={`/novels?genre=${encodeURIComponent(genre)}`} 
-                              className="rd-genre-tag"
-                              key={index}
-                            >
-                              {genre}
-                            </Link>
-                          ))}
+                          {(() => {
+                            // Sort genres using the same logic as NovelList
+                            const sortedGenres = (novelData.genres || []).map(genre => {
+                              if (genre.includes('Novel')) {
+                                let className = '';
+                                if (genre.includes('Japanese')) className = 'japanese-novel';
+                                else if (genre.includes('Chinese')) className = 'chinese-novel';
+                                else if (genre.includes('Korean')) className = 'korean-novel';
+                                else if (genre.includes('English')) className = 'english-novel';
+                                else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
+
+                                return {
+                                  name: genre,
+                                  type: 'format-origin',
+                                  class: className
+                                };
+                              } else if (genre === 'Mature') {
+                                return {
+                                  name: genre,
+                                  type: 'mature',
+                                  class: 'mature'
+                                };
+                              } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
+                                return {
+                                  name: genre,
+                                  type: 'target-audience',
+                                  class: ''
+                                };
+                              } else {
+                                return {
+                                  name: genre,
+                                  type: 'other',
+                                  class: ''
+                                };
+                              }
+                            }).sort((a, b) => {
+                              const typeOrder = {
+                                'format-origin': 1,
+                                'mature': 2,
+                                'target-audience': 3,
+                                'other': 4
+                              };
+                              return typeOrder[a.type] - typeOrder[b.type];
+                            });
+
+                            return sortedGenres.map((genre, index) => (
+                              <span 
+                                className={`rd-genre-tag ${genre.class}`}
+                                key={index}
+                              >
+                                {genre.name}
+                              </span>
+                            ));
+                          })()}
                         </div>
                       </div>
                     </div>

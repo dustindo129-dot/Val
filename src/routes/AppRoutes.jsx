@@ -10,7 +10,6 @@ import ChangePassword from '../pages/ChangePassword';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Chapter from '../components/Chapter';
 import ResetPassword from '../components/auth/ResetPassword';
-import GenrePage from '../pages/GenrePage';
 import Donation from '../pages/Donation';
 import Feedback from '../pages/Feedback';
 
@@ -26,7 +25,6 @@ function AppRoutes() {
       <Route path="/novel/:novelId" element={<NovelDetail />} />
       <Route path="/novel/:novelId/chapter/:chapterId" element={<Chapter />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
-      <Route path="/genres/:genre" element={<GenrePage />} />
       <Route path="/feedback" element={<Feedback />} />
       <Route path="/donation" element={<Donation />} />
       
