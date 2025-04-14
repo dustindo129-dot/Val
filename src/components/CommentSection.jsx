@@ -3,6 +3,7 @@ import '../styles/components/CommentSection.css';
 import axios from 'axios';
 import config from '../config/config';
 import { Link } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 
 /**
  * Comment section component for novels
@@ -58,6 +59,15 @@ const organizeComments = (flatComments) => {
   rootComments.forEach(comment => sortReplies(comment));
 
   return rootComments;
+};
+
+// Create a safe sanitize function
+const sanitizeHTML = (content) => {
+  if (!content) return '';
+  return DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  });
 };
 
 const CommentSection = ({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest' }) => {
@@ -166,7 +176,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ text: newComment })
+        body: JSON.stringify({ text: sanitizeHTML(newComment) })
       });
       
       if (!response.ok) {
@@ -289,7 +299,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ text: replyText })
+        body: JSON.stringify({ text: sanitizeHTML(replyText) })
       });
       
       if (!response.ok) {
@@ -561,7 +571,9 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
           </div>
           <div className="comment-text">
-            {comment.isDeleted && !comment.adminDeleted ? 'Comment deleted by user' : comment.text}
+            {comment.isDeleted && !comment.adminDeleted ? 'Comment deleted by user' : (
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(comment.text) }} />
+            )}
           </div>
           <div className="comment-actions">
             {!comment.isDeleted && (

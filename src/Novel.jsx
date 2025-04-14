@@ -72,6 +72,12 @@ const Novel = ({ searchQuery = "" }) => {
       queryClient.refetchQueries({ queryKey: ['novels', currentPage] });
     };
 
+    const handleNewComment = () => {
+      console.log('New comment added');
+      queryClient.invalidateQueries({ queryKey: ['recentComments'] });
+      queryClient.refetchQueries({ queryKey: ['recentComments'] });
+    };
+
     // Add event listeners
     sseService.addEventListener('update', handleUpdate);
     sseService.addEventListener('novel_status_changed', handleStatusChange);
@@ -79,6 +85,7 @@ const Novel = ({ searchQuery = "" }) => {
     sseService.addEventListener('refresh', handleRefresh);
     sseService.addEventListener('new_novel', handleNewNovel);
     sseService.addEventListener('new_chapter', handleNewChapter);
+    sseService.addEventListener('new_comment', handleNewComment);
 
     // Clean up on unmount
     return () => {
@@ -88,6 +95,7 @@ const Novel = ({ searchQuery = "" }) => {
       sseService.removeEventListener('refresh', handleRefresh);
       sseService.removeEventListener('new_novel', handleNewNovel);
       sseService.removeEventListener('new_chapter', handleNewChapter);
+      sseService.removeEventListener('new_comment', handleNewComment);
     };
   }, [currentPage, queryClient]);
 

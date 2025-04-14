@@ -22,6 +22,7 @@ import {Link, useNavigate, useParams} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
 import axios from 'axios';
 import HotNovels from './HotNovels';
+import RecentComments from './RecentComments';
 import '../styles/NovelList.css';
 import config from '../config/config';
 
@@ -669,6 +670,7 @@ const NovelList = () => {
                     <aside className="sidebar">
                         <HotNovels/>
                         <FacebookPlugin/>
+                        <RecentComments/>
                     </aside>
                 </div>
             </div>
