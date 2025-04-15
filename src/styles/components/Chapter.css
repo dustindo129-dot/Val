@@ -210,13 +210,6 @@
   color: #66b0ff;
 }
 
-.chapter-navigation-header {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  flex: 1;
-}
-
 .title-section {
   display: flex;
   flex-direction: column;
@@ -1208,7 +1201,6 @@
   }
 
   .chapter-navigation {
-    flex-direction: column;
     gap: 10px;
   }
 
