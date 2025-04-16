@@ -38,7 +38,6 @@ const ChapterAccessGuard = ({ chapter, user, children }) => {
             <FontAwesomeIcon icon={faLock} size="3x" />
             <h3>Protected Content</h3>
             <p>Please log in to read this chapter.</p>
-            <Link to="/login" className="login-button">Log In</Link>
           </div>
         )}
         {chapter?.mode === 'draft' && (

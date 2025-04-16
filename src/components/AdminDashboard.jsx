@@ -557,6 +557,9 @@ const AdminDashboard = () => {
     });
     setEditingNovel(null);
     setLoading(false);
+    // Reset staff items
+    setActiveStaffItems([]);
+    setInactiveStaffItems([]);
     if (editorRef.current) {
       editorRef.current.setContent('');
     }

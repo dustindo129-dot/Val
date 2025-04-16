@@ -1414,7 +1414,7 @@
 .chapter-content .WordSection5 {
   margin: 0 auto;
   max-width: 100%;
-  width: 100% !important;
+  width: 100%;
 }
 
 .chapter-content br[clear="all"] {
@@ -1431,23 +1431,23 @@
   max-width: 100%;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  width: 100% !important;
+  width: 100%;
 }
 
 .chapter-content .MsoNormal,
 .chapter-content .MsoBodyText {
   margin: 1em 0;
   line-height: 1.6;
-  width: 100% !important;
+  width: 100% ;
 }
 
 /* Override any problematic Word styles */
 .chapter-content [style*="text-indent"],
 .chapter-content [style*="margin-left"],
 .chapter-content [style*="margin-right"] {
-  max-width: 100% !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Add these styles for the restricted content message */
@@ -1498,22 +1498,6 @@
   font-size: 16px;
   color: #666;
   margin-bottom: 20px;
-}
-
-.login-button {
-  padding: 10px 20px;
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.2s ease;
-}
-
-.login-button:hover {
-  background-color: #c0392b;
 }
 
 /* Draft content specific styles */
