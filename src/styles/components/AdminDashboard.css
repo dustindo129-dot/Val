@@ -83,6 +83,28 @@
   transform: translateY(-1px);
 }
 
+.form-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.novel-form .discard-button {
+  background: var(--secondary-color, #95a5a6);
+}
+
+.novel-form .discard-button:hover {
+  background: var(--secondary-dark, #7f8c8d);
+}
+
+.novel-form .cancel-button {
+  background: var(--secondary-color, #95a5a6);
+}
+
+.novel-form .cancel-button:hover {
+  background: var(--secondary-dark, #7f8c8d);
+}
+
 /* Novel list styles */
 .novel-list {
   background: var(--card-bg, #fff);

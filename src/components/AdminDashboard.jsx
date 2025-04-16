@@ -669,7 +669,7 @@ const AdminDashboard = () => {
             <input
               type="text"
               name="author"
-              placeholder="Author(s) / Artist(s)"
+              placeholder="Author(s)"
               value={editingNovel ? editingNovel.author : newNovel.author}
               onChange={handleInputChange}
               required
@@ -1015,14 +1015,20 @@ const AdminDashboard = () => {
                 {loading ? 'Uploading...' : 'Upload Cover Image'}
               </label>
             </div>
-            <button type="submit" disabled={loading}>
-              {loading ? 'Processing...' : (editingNovel ? 'Update Novel' : 'Add Novel')}
-            </button>
-            {editingNovel && (
-              <button type="button" onClick={resetForm} className="cancel-button">
-                Cancel Edit
+            <div className="form-buttons">
+              <button type="submit" disabled={loading}>
+                {loading ? 'Processing...' : (editingNovel ? 'Update Novel' : 'Add Novel')}
               </button>
-            )}
+              {editingNovel ? (
+                <button type="button" onClick={resetForm} className="cancel-button">
+                  Cancel Edit
+                </button>
+              ) : (
+                <button type="button" onClick={resetForm} className="discard-button">
+                  Discard
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
