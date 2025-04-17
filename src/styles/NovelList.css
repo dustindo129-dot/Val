@@ -592,6 +592,10 @@
 }
 
 /* Dark mode styles */
+:root.dark-mode .section-headers h2 {
+    color: #fff;
+}
+
 :root.dark-mode .novel-card {
     background: #1a1a1a;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
