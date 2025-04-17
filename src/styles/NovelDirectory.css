@@ -377,6 +377,24 @@
   background-color: #f5f5f5;
 }
 
+/* Style for the "Clear all filters" button on the no results page */
+.directory .reset-all-filters {
+  background-color: #FF6B6B;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.directory .reset-all-filters:hover {
+  background-color: #ff5252;
+}
+
 /* Pagination */
 .directory .pagination {
   display: flex;

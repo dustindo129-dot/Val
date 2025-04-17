@@ -80,12 +80,23 @@ const Chapter = () => {
   const [lastLikeTime, setLastLikeTime] = useState(0);
   const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
 
-  // Reset navigation state when chapter changes
+  // Reset navigation state and edited content when chapter changes
   useEffect(() => {
     setIsNavigating(false);
+    // Reset edited content when chapter changes
+    setEditedContent({ content: '', footnotes: [] });
+    setEditedTitle('');
     // Scroll to top when chapter changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chapterId]);
+
+  // Reset edited content when exiting edit mode
+  useEffect(() => {
+    if (!isEditing) {
+      setEditedContent({ content: '', footnotes: [] });
+      setEditedTitle('');
+    }
+  }, [isEditing]);
 
   // Query for novel data
   const { data: novelData } = useQuery({
@@ -305,8 +316,32 @@ const Chapter = () => {
         content: unescapeHtml(chapter.content || ''),
         footnotes: chapter.footnotes || []
       });
+      
+      // Add a slight delay to ensure the editor is mounted before attempting to set content
+      const timer = setTimeout(() => {
+        if (editorRef.current && editorRef.current.setContent) {
+          // Force reset any editor content
+          editorRef.current.setContent(unescapeHtml(chapter.content || ''));
+        }
+      }, 50);
+      
+      return () => clearTimeout(timer);
     }
   }, [isEditing, chapter]);
+
+  // Reset edited content when exiting edit mode
+  useEffect(() => {
+    if (!isEditing && editorRef.current) {
+      // Clear editor content when exiting edit mode
+      setEditedContent({ content: '', footnotes: [] });
+      setEditedTitle('');
+      
+      // Attempt to reset the editor directly when available
+      if (editorRef.current.setContent) {
+        editorRef.current.setContent('');
+      }
+    }
+  }, [isEditing]);
 
   // Effect for keyboard navigation
   useEffect(() => {
@@ -872,6 +907,7 @@ const Chapter = () => {
       {/* Chapter Content with Access Guard */}
       <ChapterAccessGuard chapter={chapter} user={user}>
         <ChapterContent
+          key={`chapter-content-${chapterId}`}
           chapter={chapter}
           isEditing={isEditing}
           editedContent={editedContent}

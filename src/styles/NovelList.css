@@ -7,6 +7,15 @@
 
 @import './shared/NovelStyles.css';
 
+/* Add CSS variables for light/dark mode backgrounds at the top of the file */
+:root {
+  --novel-card-bg: url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1744867207/Untitled_design_9_khl2ei.png');
+}
+
+.dark-mode {
+  --novel-card-bg: url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1744867539/Untitled_design_10_rjthsb.png');
+}
+
 /* Layout styles */
 .content-layout {
     display: grid;

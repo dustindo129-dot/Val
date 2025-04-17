@@ -558,7 +558,11 @@ const NovelList = () => {
                                         : null);
 
                                 return (
-                                    <div key={novel._id} className="novel-card">
+                                    <div key={novel._id} className="novel-card" style={{
+                                        backgroundImage: "var(--novel-card-bg)",
+                                        backgroundSize: "cover",
+                                        backgroundPosition: "center"
+                                    }}>
                                         {/* Novel header with title and update time */}
                                         <div className="novel-header">
                                             <Link to={`/novel/${novel._id}`} className="novel-list-title-link">

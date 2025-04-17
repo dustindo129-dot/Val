@@ -225,9 +225,9 @@ const NovelDirectory = () => {
     // Filter novels based on selected genres
     const filtered = activeGenres.length > 0
         ? data.novels.filter(novel => {
-          // Check if novel has at least one of the selected genres
-          return novel.genres && novel.genres.some(genre =>
-              activeGenres.includes(genre)
+          // Check if novel has ALL of the selected genres
+          return novel.genres && activeGenres.every(genre => 
+              novel.genres.includes(genre)
           );
         })
         : data.novels;
