@@ -1391,6 +1391,11 @@
   background-color: #ede3d0;
 }
 
+/* Specific text color for chapter content in sepia mode */
+:root.sepia-mode .chapter-content {
+  color: #4B2E2E;
+}
+
 /* Loading and error states */
 .loading {
   text-align: center;
