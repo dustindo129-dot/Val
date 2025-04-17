@@ -15,6 +15,12 @@
   --font-size: 1.3rem;
   --mono: "Oxygen mono", monospace;
   --sans: Oxygen, sans-serif;
+  --app-background: url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1743985759/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif');
+}
+
+/* Dark mode variables */
+.dark-mode {
+  --app-background: url('https://res.cloudinary.com/dvoytcc6b/image/upload/v1744909152/1a1fc623-cdd0-4ab2-b949-c13e29a53449.png');
 }
 
 /* Box model reset for consistent sizing */
