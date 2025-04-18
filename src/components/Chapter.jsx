@@ -799,19 +799,28 @@ const Chapter = () => {
   };
 
   // Handle mode change
-  const handleModeChange = async (newMode) => {
-    console.log(`Changing chapter mode to: ${newMode}`);
+  const handleModeChange = async (newMode, currentContent) => {
     try {
+      // Get current content if not provided
+      const content = currentContent || (editorRef.current ? editorRef.current.getContent() : chapter.content);
+      
       // Update UI immediately for better perceived performance
       queryClient.setQueryData(['chapter', chapterId], old => ({
         ...old,
-        chapter: { ...old.chapter, mode: newMode }
+        chapter: { 
+          ...old.chapter, 
+          mode: newMode,
+          content: content // Preserve current content
+        }
       }));
 
-      // Make API call
-      const response = await axios.put(
+      // Make API call with both mode and content
+      await axios.put(
         `${config.backendUrl}/api/chapters/${chapterId}`,
-        { mode: newMode },
+        { 
+          mode: newMode,
+          content: content
+        },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -819,8 +828,6 @@ const Chapter = () => {
           }
         }
       );
-      
-      console.log('Chapter mode updated successfully:', response.data);
       
       // Invalidate queries to ensure fresh data
       queryClient.invalidateQueries(['chapter', chapterId]);
