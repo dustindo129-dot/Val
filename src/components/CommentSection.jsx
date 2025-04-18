@@ -77,25 +77,12 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [replyingTo, setReplyingTo] = useState(null);
-  const [replyText, setReplyText] = useState('');
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [userToBlock, setUserToBlock] = useState(null);
   const [message, setMessage] = useState(null);
   const [isBanned, setIsBanned] = useState(false);
   const [likingComments, setLikingComments] = useState(new Set());
   const [sortOrder, setSortOrder] = useState(defaultSort);
-  const [submittingReply, setSubmittingReply] = useState(false);
-  
-  // Add ref for reply textarea
-  const replyTextareaRef = useRef(null);
-  
-  // Keep focus on reply textarea when typing
-  useEffect(() => {
-    if (replyingTo && replyTextareaRef.current) {
-      replyTextareaRef.current.focus();
-    }
-  }, [replyingTo]);
 
   // Check if user is banned
   useEffect(() => {
@@ -263,117 +250,6 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     }
   };
   
-  // Handle reply submission
-  const handleReplySubmit = async (parentId) => {
-    if (!isAuthenticated) {
-      alert('Please log in to reply to comments');
-      return;
-    }
-
-    if (!user || (!user._id && !user.id)) {
-      alert('User information is missing. Please try logging in again.');
-      return;
-    }
-
-    if (isBanned) {
-      alert('You cannot reply because you have been banned');
-      return;
-    }
-    
-    if (!replyText.trim()) {
-      return;
-    }
-
-    // Prevent multiple submissions
-    if (submittingReply) {
-      return;
-    }
-    
-    // Set submitting state to true at the beginning
-    setSubmittingReply(true);
-    
-    try {
-      const response = await fetch(`${config.backendUrl}/api/comments/${parentId}/replies`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ text: sanitizeHTML(replyText) })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to post reply');
-      }
-      
-      const data = await response.json();
-      
-      // Clear the reply form immediately
-      setReplyText('');
-      setReplyingTo(null);
-
-      // Refetch all comments to ensure correct structure
-      const commentsResponse = await fetch(`${config.backendUrl}/api/comments?contentType=${contentType}&contentId=${contentId}&sort=${sortOrder}`);
-      
-      if (commentsResponse.ok) {
-        const commentsData = await commentsResponse.json();
-        // Organize comments before setting state
-        setComments(organizeComments(commentsData));
-      } else {
-        // If refetch fails, apply optimistic update
-        const newReply = {
-          _id: data._id,
-          text: data.text,
-          user: {
-            username: user.username,
-            avatar: user.avatar || ''
-          },
-          createdAt: new Date().toISOString(),
-          likes: [],
-          replies: [],
-          parentId: parentId,
-          isDeleted: false,
-          adminDeleted: false
-        };
-        
-        // Helper function to update comments recursively
-        const updateCommentWithReply = (comments, parentId, newReply) => {
-          return comments.map(comment => {
-            // If this is the parent comment, add the reply to it directly
-            if (comment._id === parentId) {
-              return {
-                ...comment,
-                replies: [...(comment.replies || []), newReply]
-              };
-            }
-            
-            // If this comment has replies, check them recursively
-            if (comment.replies && comment.replies.length > 0) {
-              return {
-                ...comment,
-                replies: updateCommentWithReply(comment.replies, parentId, newReply)
-              };
-            }
-            
-            // Otherwise, return the comment unchanged
-            return comment;
-          });
-        };
-        
-        // Update comments state using our helper function
-        setComments(prevComments => updateCommentWithReply(prevComments, parentId, newReply));
-      }
-      
-    } catch (err) {
-      console.error('Error posting reply:', err);
-      alert(err.message || 'Failed to post reply. Please try again.');
-    } finally {
-      // Reset submitting state to false at the end
-      setSubmittingReply(false);
-    }
-  };
-  
   // Format date to relative time
   const formatRelativeTime = (dateString) => {
     const date = new Date(dateString);
@@ -533,6 +409,129 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
 
   // Create a recursive component for rendering comments and their replies
   const RenderComment = ({ comment, level = 0 }) => {
+    // Move reply state inside this component
+    const [isReplying, setIsReplying] = useState(false);
+    const [replyText, setReplyText] = useState('');
+    const [submittingReply, setSubmittingReply] = useState(false);
+    const replyTextareaRef = useRef(null);
+
+    // Focus the reply textarea when the reply form is shown
+    useEffect(() => {
+      if (isReplying && replyTextareaRef.current) {
+        replyTextareaRef.current.focus();
+      }
+    }, [isReplying]);
+
+    // Local handleReplySubmit function
+    const handleReplySubmit = async () => {
+      if (!isAuthenticated) {
+        alert('Please log in to reply to comments');
+        return;
+      }
+  
+      if (!user || (!user._id && !user.id)) {
+        alert('User information is missing. Please try logging in again.');
+        return;
+      }
+  
+      if (isBanned) {
+        alert('You cannot reply because you have been banned');
+        return;
+      }
+      
+      if (!replyText.trim()) {
+        return;
+      }
+  
+      // Prevent multiple submissions
+      if (submittingReply) {
+        return;
+      }
+      
+      setSubmittingReply(true);
+      
+      try {
+        const response = await fetch(`${config.backendUrl}/api/comments/${comment._id}/replies`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ text: sanitizeHTML(replyText) })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to post reply');
+        }
+        
+        const data = await response.json();
+        
+        // Clear the reply form immediately
+        setReplyText('');
+        setIsReplying(false);
+  
+        // Refetch all comments to ensure correct structure
+        const commentsResponse = await fetch(`${config.backendUrl}/api/comments?contentType=${contentType}&contentId=${contentId}&sort=${sortOrder}`);
+        
+        if (commentsResponse.ok) {
+          const commentsData = await commentsResponse.json();
+          // Organize comments before setting state
+          setComments(organizeComments(commentsData));
+        } else {
+          // If refetch fails, apply optimistic update
+          const newReply = {
+            _id: data._id,
+            text: data.text,
+            user: {
+              username: user.username,
+              avatar: user.avatar || ''
+            },
+            createdAt: new Date().toISOString(),
+            likes: [],
+            replies: [],
+            parentId: comment._id,
+            isDeleted: false,
+            adminDeleted: false
+          };
+          
+          // Helper function to update comments recursively
+          const updateCommentWithReply = (comments, parentId, newReply) => {
+            return comments.map(commentItem => {
+              // If this is the parent comment, add the reply to it directly
+              if (commentItem._id === parentId) {
+                return {
+                  ...commentItem,
+                  replies: [...(commentItem.replies || []), newReply]
+                };
+              }
+              
+              // If this comment has replies, check them recursively
+              if (commentItem.replies && commentItem.replies.length > 0) {
+                return {
+                  ...commentItem,
+                  replies: updateCommentWithReply(commentItem.replies, parentId, newReply)
+                };
+              }
+              
+              // Otherwise, return the comment unchanged
+              return commentItem;
+            });
+          };
+          
+          // Update comments state using our helper function
+          setComments(prevComments => updateCommentWithReply(prevComments, comment._id, newReply));
+        }
+        
+      } catch (err) {
+        console.error('Error posting reply:', err);
+        alert(err.message || 'Failed to post reply. Please try again.');
+      } finally {
+        // Reset submitting state to false at the end
+        setSubmittingReply(false);
+      }
+    };
+
     // Use user.id since that's the property in the user object
     const userId = user?.id || user?._id;
     
@@ -590,13 +589,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                 </button>
                 <button 
                   className="reply-button"
-                  onClick={() => {
-                    // If clicking reply on a different comment, clear the reply text
-                    if (replyingTo !== null && replyingTo !== comment._id) {
-                      setReplyText('');
-                    }
-                    setReplyingTo(replyingTo === comment._id ? null : comment._id);
-                  }}
+                  onClick={() => setIsReplying(!isReplying)}
                 >
                   Reply
                 </button>
@@ -614,30 +607,20 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           </div>
 
           {/* Reply form */}
-          {replyingTo === comment._id && (
+          {isReplying && (
             <div className="reply-form">
               <textarea
                 className="reply-input"
                 placeholder="Write a reply..."
                 value={replyText}
-                onChange={(e) => {
-                  setReplyText(e.target.value);
-                  // Keep cursor position by refocusing after state update
-                  if (replyTextareaRef.current) {
-                    const length = e.target.value.length;
-                    setTimeout(() => {
-                      replyTextareaRef.current.focus();
-                      replyTextareaRef.current.setSelectionRange(length, length);
-                    }, 0);
-                  }
-                }}
+                onChange={(e) => setReplyText(e.target.value)}
                 required
                 ref={replyTextareaRef}
               />
               <div className="reply-actions">
                 <button 
                   className="reply-submit-btn"
-                  onClick={() => handleReplySubmit(comment._id)}
+                  onClick={handleReplySubmit}
                   disabled={!replyText.trim() || submittingReply}
                 >
                   {submittingReply ? 'Posting...' : 'Post Reply'}
@@ -645,7 +628,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                 <button 
                   className="reply-cancel-btn"
                   onClick={() => {
-                    setReplyingTo(null);
+                    setIsReplying(false);
                     setReplyText('');
                   }}
                 >
