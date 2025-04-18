@@ -370,18 +370,18 @@ const NovelDetail = () => {
       // Check if we need to force a fresh fetch from the server
       const needsFreshData = location.state?.from === 'addChapter' && location.state?.shouldRefetch;
       
-      // Check if novel was viewed in the last 8 hours
+      // Check if novel was viewed in the last 4 hours
       const viewKey = `novel_${novelId}_last_viewed`;
       const lastViewed = localStorage.getItem(viewKey);
       const now = Date.now();
-      const eightHours = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+      const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
       
       // Only count view if:
       // 1. Never viewed before, or
-      // 2. Last viewed more than 8 hours ago
+      // 2. Last viewed more than 4 hours ago
       const shouldCountView = !needsFreshData && 
         !queryClient.getQueryData(['novel', novelId]) && 
-        (!lastViewed || (now - parseInt(lastViewed, 10)) > eightHours);
+        (!lastViewed || (now - parseInt(lastViewed, 10)) > fourHours);
       
       // Use forceRefresh when coming from chapter creation
       const response = await api.fetchNovelWithModules(novelId, needsFreshData, shouldCountView);

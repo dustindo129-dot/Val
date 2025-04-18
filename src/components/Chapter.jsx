@@ -119,8 +119,8 @@ const Chapter = () => {
       const viewKeyLocal = `chapter_${chapterId}_last_viewed`;
       const lastViewed = localStorage.getItem(viewKeyLocal);
       const now = Date.now();
-      const eightHours = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
-      const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > eightHours;
+      const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+      const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > fourHours;
 
       // Only call the view endpoint if we haven't viewed this chapter recently
       if (shouldCountView) {
