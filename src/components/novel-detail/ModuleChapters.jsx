@@ -117,9 +117,6 @@ const ModuleChapters = memo(({
                     {isChapterNew(chapter.createdAt) && (
                       <span className="new-tag" key={`new-tag-${chapterId}`}>NEW</span>
                     )}
-                    {chapter.mode === 'protected' && (
-                      <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
-                    )}
                   </Link>
                 </div>
                 
@@ -177,11 +174,9 @@ const ModuleChapters = memo(({
                       </button>
                     )}
                     <span className="chapter-mode-indicator">
-                      {chapter.mode && chapter.mode !== 'published' && (
-                        <span className={`mode-tag mode-${chapter.mode}`}>
-                          {chapter.mode.toUpperCase()}
-                        </span>
-                      )}
+                      <span className={`mode-tag mode-${chapter.mode || 'published'}`}>
+                        {(chapter.mode || 'published').toUpperCase()}
+                      </span>
                     </span>
                   </div>
                 )}
@@ -200,5 +195,45 @@ const ModuleChapters = memo(({
 });
 
 ModuleChapters.displayName = 'ModuleChapters';
+
+// Add inline styles for the mode tags
+const styles = `
+  .chapter-mode-indicator {
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .mode-tag {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-weight: bold;
+    color: white;
+  }
+  
+  .mode-published {
+    background-color: #2ecc71;
+  }
+  
+  .mode-draft {
+    background-color: #f39c12;
+  }
+  
+  .mode-protected {
+    background-color: #e74c3c;
+  }
+  
+  .mode-paid {
+    background-color: #3498db;
+  }
+`;
+
+// Add the styles to the document
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = styles;
+  document.head.appendChild(styleElement);
+}
 
 export default ModuleChapters; 
