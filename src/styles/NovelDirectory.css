@@ -232,6 +232,12 @@
   color: #8e44ad;
 }
 
+.directory .dir-tag.vietnamese-novel {
+  border: 1px dashed #f3bec7;
+  background-color: #fde8ed;
+  color: #c0392b;
+}
+
 .directory .dir-toggle-tags {
   position: absolute;
   right: 0;
