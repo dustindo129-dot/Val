@@ -125,16 +125,40 @@ const Chapter = () => {
       // Only call the view endpoint if we haven't viewed this chapter recently
       if (shouldCountView) {
         try {
-          const viewResponse = await axios.post(`${config.backendUrl}/api/userchapterinteractions/view/${chapterId}`, {}, {
-            headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
-          });
-          
-          // If the view was counted by the server, update our localStorage timestamp
-          if (viewResponse.data.counted) {
-            localStorage.setItem(viewKeyLocal, now.toString());
-          }
+          // Use a timeout to ensure the view request doesn't block chapter loading
+          setTimeout(async () => {
+            try {
+              const viewResponse = await axios.post(`${config.backendUrl}/api/userchapterinteractions/view/${chapterId}`, {}, {
+                headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {},
+                timeout: 5000 // 5 second timeout for view recording
+              });
+              
+              // If the view was counted by the server, update our localStorage timestamp
+              if (viewResponse.data.counted) {
+                localStorage.setItem(viewKeyLocal, now.toString());
+                
+                // Update the view count in the UI if it was a successful count
+                if (viewResponse.data.views) {
+                  queryClient.setQueryData(['chapter', chapterId], oldData => {
+                    if (!oldData) return oldData;
+                    return {
+                      ...oldData,
+                      chapter: {
+                        ...oldData.chapter,
+                        views: viewResponse.data.views
+                      }
+                    };
+                  });
+                }
+              }
+            } catch (viewErr) {
+              // Log but don't disrupt user experience for view count errors
+              console.error('Error recording view:', viewErr);
+            }
+          }, 500); // Small delay to prioritize chapter content loading
         } catch (err) {
-          console.error('Error recording view:', err);
+          // Silent catch - view count errors shouldn't disrupt reading
+          console.error('Error setting up view recording:', err);
         }
       }
 

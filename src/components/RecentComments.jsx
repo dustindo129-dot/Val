@@ -42,6 +42,13 @@ const formatRelativeTime = (dateString) => {
   }
 };
 
+// Function to decode HTML entities
+const decodeHtmlEntities = (text) => {
+  const textArea = document.createElement('textarea');
+  textArea.innerHTML = text;
+  return textArea.value;
+};
+
 // Memoized comment card component for better performance
 const CommentCard = memo(({ comment }) => {
   // Determine link and title based on content type
@@ -71,11 +78,14 @@ const CommentCard = memo(({ comment }) => {
     linkTitle = 'Feedback';
   }
 
+  // Decode HTML entities in the comment text
+  const decodedText = decodeHtmlEntities(comment.text || '');
+
   // Truncate comment text if it's too long
   const MAX_COMMENT_LENGTH = 100;
-  const truncatedText = comment.text.length > MAX_COMMENT_LENGTH
-    ? `${comment.text.substring(0, MAX_COMMENT_LENGTH)}...`
-    : comment.text;
+  const truncatedText = decodedText.length > MAX_COMMENT_LENGTH
+    ? `${decodedText.substring(0, MAX_COMMENT_LENGTH)}...`
+    : decodedText;
 
   return (
     <div className="recent-comment-card">

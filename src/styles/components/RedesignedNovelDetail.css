@@ -491,6 +491,10 @@
 }
 
 /* Dark mode support for description section */
+:root.dark-mode .rd-novel-title {
+  color: #fff;
+}
+
 :root.dark-mode .rd-description-section {
   background-color: #2a2a2a;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);

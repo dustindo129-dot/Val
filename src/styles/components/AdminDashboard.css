@@ -388,10 +388,18 @@
     width: 100%;
     justify-content: flex-end;
     margin-top: 0.5rem;
+    flex-wrap: wrap; /* Allow buttons to wrap to next line */
+    gap: 6px; /* Reduce gap size on mobile */
   }
   
   .novel-title-section {
     width: 100%;
+  }
+
+  /* Make action buttons more compact on mobile */
+  .novel-actions button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
   }
 }
 

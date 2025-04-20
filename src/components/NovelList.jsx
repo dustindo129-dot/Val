@@ -84,6 +84,7 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
 const FacebookPlugin = memo(() => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const iframeRef = useRef(null);
 
     useEffect(() => {
         // Intercept errors as early as possible - before the component fully mounts
@@ -176,7 +177,8 @@ const FacebookPlugin = memo(() => {
             )}
             
             <iframe 
-                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100064392503502&tabs=timeline&width=400&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
+                ref={iframeRef}
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100064392503502&tabs=timeline&width=400&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&lazy=true"
                 width="400"
                 height="800"
                 style={{ 

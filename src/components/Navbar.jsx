@@ -150,145 +150,148 @@ const Navbar = () => {
     <>
       {/* Main navigation bar */}
       <nav className="navbar">
-        {/* Left section with logo and site title */}
-        <Link to="/" className="navbar-left">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" stroke="black" className="navbar-logo">
-            {/* Main V letter */}
-            <path d="M75 20 L50 90 L25 20" fill="none" strokeWidth="8" strokeLinecap="round"/>
-            
-            {/* Decorative floral element */}
-            <path d="M25 20 C25 20, 35 15, 40 25 S50 15, 55 25 S65 15, 75 20" 
-                  fill="none" strokeWidth="3"/>
-            <path d="M40 22 C40 22, 45 18, 50 28" 
-                  fill="none" strokeWidth="2"/>
-            <path d="M60 22 C60 22, 65 18, 70 28" 
-                  fill="none" strokeWidth="2"/>
-          </svg>
-          <div className="title-container">
-            <h1 className="navbar-title">Valvrareteam</h1>
-            <span className="beta-tag">BETA</span>
-          </div>
-        </Link>
-        
-        {/* Search section */}
-        <div className="search-container">
-          <form onSubmit={handleSubmit} className="search-form">
-            <div className="search-input-container">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearch}
-                placeholder="Search novels..."
-                className="search-input"
-              />
-              {/* Clear search button */}
-              <button 
-                type="button" 
-                className="clear-search" 
-                onClick={() => {
-                  setSearchQuery("");
-                  setSearchResults([]);
-                }}
-              >
-                ×
-              </button>
-              {/* Search button with icon */}
-              <button type="submit" className="search-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-              </button>
+        {/* Navbar content container */}
+        <div className="navbar-content">
+          {/* Left section with logo and site title */}
+          <Link to="/" className="navbar-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" stroke="black" className="navbar-logo">
+              {/* Main V letter */}
+              <path d="M75 20 L50 90 L25 20" fill="none" strokeWidth="8" strokeLinecap="round"/>
+              
+              {/* Decorative floral element */}
+              <path d="M25 20 C25 20, 35 15, 40 25 S50 15, 55 25 S65 15, 75 20" 
+                    fill="none" strokeWidth="3"/>
+              <path d="M40 22 C40 22, 45 18, 50 28" 
+                    fill="none" strokeWidth="2"/>
+              <path d="M60 22 C60 22, 65 18, 70 28" 
+                    fill="none" strokeWidth="2"/>
+            </svg>
+            <div className="title-container">
+              <h1 className="navbar-title">Valvrareteam</h1>
+              <span className="beta-tag">BETA</span>
             </div>
-            {/* Error message display */}
-            {error && <div className="search-error">{error}</div>}
-            {/* Search results dropdown */}
-            {searchResults.length > 0 && (
-              <div className="search-results">
-                {searchResults.map(novel => (
-                  <div 
-                    key={novel._id} 
-                    className="search-result-item"
-                    onClick={() => handleNovelClick(novel._id)}
-                  >
-                    <img 
-                      src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
-                      alt={novel.title} 
-                      className="search-result-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png';
-                      }}
-                    />
-                    <div className="search-result-info">
-                      <div className="search-result-title">{novel.title}</div>
-                      <div className="search-result-details">
-                        <span>Total chapters: {novel.totalChapters || 0}</span>{' '}
-                        <span>{novel.status}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </form>
-        </div>
-
-        {/* Right section with navigation and auth buttons */}
-        <div className="navbar-right">
-          {/* Navigation links */}
-          <div className="nav-links">
-            {/* Admin link will be added here if needed */}
-          </div>
-
-          {/* Auth buttons */}
-          {user ? (
-            // Logged in user menu
-            <div className="auth-buttons">
-              <Link to={`/user/${user.username}/bookmarks`} className="auth-button bookmark-btn">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  className="bookmark-icon"
-                >
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                </svg>
-                Bookmarks
-              </Link>
-              <div className="user-avatar">
-                <img 
-                  src={user.avatar || '/default-avatar.png'} 
-                  alt={`${user.username}'s avatar`} 
-                  className="avatar-image"
+          </Link>
+          
+          {/* Search section */}
+          <div className="search-container">
+            <form onSubmit={handleSubmit} className="search-form">
+              <div className="search-input-container">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  placeholder="Search novels..."
+                  className="search-input"
                 />
-              </div>
-              <div className="profile-logout-container">
-                <Link to={`/user/${user.username}/profile`} className="auth-button profile-btn">
-                  Profile
-                </Link>
-                <button onClick={handleLogout} className="auth-button logout-btn">
-                  Logout
+                {/* Clear search button */}
+                <button 
+                  type="button" 
+                  className="clear-search" 
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                >
+                  ×
+                </button>
+                {/* Search button with icon */}
+                <button type="submit" className="search-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
                 </button>
               </div>
+              {/* Error message display */}
+              {error && <div className="search-error">{error}</div>}
+              {/* Search results dropdown */}
+              {searchResults.length > 0 && (
+                <div className="search-results">
+                  {searchResults.map(novel => (
+                    <div 
+                      key={novel._id} 
+                      className="search-result-item"
+                      onClick={() => handleNovelClick(novel._id)}
+                    >
+                      <img 
+                        src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
+                        alt={novel.title} 
+                        className="search-result-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png';
+                        }}
+                      />
+                      <div className="search-result-info">
+                        <div className="search-result-title">{novel.title}</div>
+                        <div className="search-result-details">
+                          <span>Total chapters: {novel.totalChapters || 0}</span>{' '}
+                          <span>{novel.status}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </form>
+          </div>
+
+          {/* Right section with navigation and auth buttons */}
+          <div className="navbar-right">
+            {/* Navigation links */}
+            <div className="nav-links">
+              {/* Admin link will be added here if needed */}
             </div>
-          ) : (
-            // Guest user menu
-            <div className="auth-buttons">
-              <button onClick={handleLoginClick} className="auth-button login">
-                Log In
-              </button>
-              <button onClick={handleSignUpClick} className="auth-button sign-up">
-                Sign Up
-              </button>
-            </div>
-          )}
+
+            {/* Auth buttons */}
+            {user ? (
+              // Logged in user menu
+              <div className="auth-buttons">
+                <Link to={`/user/${user.username}/bookmarks`} className="auth-button bookmark-btn">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="bookmark-icon"
+                  >
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  Bookmarks
+                </Link>
+                <div className="user-avatar">
+                  <img 
+                    src={user.avatar || '/default-avatar.png'} 
+                    alt={`${user.username}'s avatar`} 
+                    className="avatar-image"
+                  />
+                </div>
+                <div className="profile-logout-container">
+                  <Link to={`/user/${user.username}/profile`} className="auth-button profile-btn">
+                    Profile
+                  </Link>
+                  <button onClick={handleLogout} className="auth-button logout-btn">
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Guest user menu
+              <div className="auth-buttons">
+                <button onClick={handleLoginClick} className="auth-button login">
+                  Log In
+                </button>
+                <button onClick={handleSignUpClick} className="auth-button sign-up">
+                  Sign Up
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 

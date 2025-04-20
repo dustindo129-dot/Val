@@ -243,6 +243,69 @@
   .bookmark-title {
     font-size: 0.9rem;
   }
+  
+  .bookmark-info {
+    padding: 0.25rem;
+  }
+  
+  .bookmark-latest-chapter {
+    max-width: 100%;
+    font-size: 0.7rem;
+  }
+  
+  .bookmark-status {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+  }
+  
+  .bookmark-chapters {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .bookmarks-container {
+    margin: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .bookmark-item {
+    padding: 0.4rem;
+    flex-wrap: wrap;
+  }
+  
+  .novel-link {
+    width: calc(100% - 40px);
+  }
+  
+  .bookmark-cover {
+    width: 35px;
+    height: 49px;
+  }
+  
+  .bookmark-title {
+    font-size: 0.8rem;
+    max-width: 100%;
+  }
+  
+  .bookmark-info {
+    padding: 0.15rem;
+  }
+  
+  .bookmark-status,
+  .bookmark-chapters,
+  .bookmark-latest-chapter {
+    font-size: 0.65rem;
+  }
+  
+  .remove-bookmark {
+    padding: 0.3rem;
+  }
+  
+  .remove-bookmark svg {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 .bookmark-status {
