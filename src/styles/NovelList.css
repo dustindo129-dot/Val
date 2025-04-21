@@ -772,6 +772,11 @@
         width: 100%;
     }
 
+    .novel-grid {
+        gap: 0.75rem;
+        padding: 0 0.5rem;
+    }
+
     .novel-title {
         margin: -10px -10px 0 -10px;
         width: calc(100% + 20px);
