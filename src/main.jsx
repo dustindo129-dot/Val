@@ -11,19 +11,33 @@
 // Import required dependencies
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles/shared/index.css';
 
-// Get the root DOM element where the app will be mounted
-const container = document.getElementById('root');
+// Create React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-// Create a root using React 18's createRoot API
-const root = createRoot(container);
+// Get the root element
+const root = document.getElementById('root');
 
-// Render the application inside React.StrictMode
-// StrictMode helps identify potential problems in the app during development
-root.render(
+// Render the app
+createRoot(root).render(
   <React.StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
   </React.StrictMode>
 ); 
