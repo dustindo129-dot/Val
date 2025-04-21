@@ -12,23 +12,18 @@
  * - Responsive design
  */
 
-/* Grid layout */
-.content-layout,
-.novels-container {
-  display: grid;
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
 /* Common novel card styles */
-.novel-update-card,
 .novel-card {
   display: flex;
   gap: 1.25rem;
   background: #fafafa;
   border: 1px solid #e0e0e0;
-  padding: 1.25rem;
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 1.25rem;  
+  flex-direction: column;
+  width: 100%;
 }
 
 /* Cover image styles */
@@ -146,49 +141,6 @@
 :root.dark-mode .pagination-button {
   background: #333;
   color: #fff;
-}
-
-/* Responsive design */
-@media (max-width: 1024px) {
-  .content-layout,
-  .novels-container {
-    grid-template-columns: 1fr 250px;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
-  .novel-cover-section,
-  .novel-image-container {
-    flex: 0 0 150px;
-  }
-}
-
-/* Added breakpoints for smaller screens moving upward */
-@media (min-width: 550px) {
-  .content-layout,
-  .novels-container {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 0.75rem;
-  }
-  
-  .main-content {
-    width: 100%;
-  }
-  
-  .sidebar {
-    margin-top: 1.5rem;
-    width: 100%;
-  }
-}
-
-@media (min-width: 850px) {
-  .content-layout,
-  .novels-container {
-    grid-template-columns: 1fr 400px;
-    gap: 1.25rem;
-    padding: 1rem;
-  }
 }
 
 

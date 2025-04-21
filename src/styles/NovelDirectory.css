@@ -156,7 +156,6 @@
   margin: -10px -10px 0 -10px;
   width: calc(100% + 20px);
   border-top-right-radius: 12px;
-  box-sizing: border-box;
   line-height: 1.3;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -533,7 +532,7 @@
 @media (max-width: 768px) {
   .directory .novel-grid {
     grid-template-columns: 1fr;
-    gap: 0.1rem; /* Reduced gap for mobile */
+    gap: 0.1rem; 
 
   }
 
@@ -541,8 +540,8 @@
     grid-template-columns: 1fr;
   }
 
-  .content-layout {
-    padding: 0 0.25rem; /* Giảm khoảng cách lề trong mobile xuống 0.25rem */
+  .content-layout.directory {
+    padding: 0 0.25rem; 
   }
 
 }

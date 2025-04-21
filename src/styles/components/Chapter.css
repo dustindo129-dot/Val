@@ -40,7 +40,6 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  background-color: var(--light-bg);
   color: var(--text-color);
   position: relative;
 }
@@ -61,7 +60,7 @@
 .chapter-header {
   margin-bottom: 20px;
   background: white;
-  padding: 15px 20px;
+  padding: 15px 10px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -1178,7 +1177,7 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .chapter-container {
-    padding: 15px;
+    padding: 0rem;
   }
 
   .chapter-header {
@@ -1428,6 +1427,13 @@
   content: "";
   clear: both;
 }
+
+.chapter-content br {
+  content: "";
+  display: block;
+  margin: 1em 0;
+}
+
 
 /* Force consistent text alignment and prevent side scrolling */
 .chapter-content p {
