@@ -4,8 +4,6 @@
  * Styles specific to the novel directory page component.
  */
 
-@import './shared/NovelStyles.css';
-
 /* Layout styles */
 .content-layout.directory {
   display: grid;

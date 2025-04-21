@@ -5,8 +5,6 @@
  * Imports shared styles from NovelStyles.css
  */
 
-@import './shared/NovelStyles.css';
-
 /* Section header with title */
 .section-header {
   margin-bottom: 1.25rem;
