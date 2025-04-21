@@ -23,7 +23,7 @@
     gap: 2rem;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 0.5rem;
+    padding: 0;
 }
 
 /* Section headers with decorative elements */
@@ -41,6 +41,7 @@
     background-position: 0 100%;
     background-repeat: no-repeat;
     color: #333;
+    padding: 0 0.5rem;
 }
 
 .section-headers h2::after {
@@ -633,6 +634,7 @@
 
     .novel-grid {
         gap: 0.75rem;
+        padding: 0;
     }
 
     .novel-header {
