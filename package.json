@@ -1,25 +1,28 @@
 {
-  "name": "val-server",
+  "name": "val-frontend",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.js",
   "engines": {
     "node": "18.x || 20.x",
     "npm": "9.x || 10.x"
   },
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "build": "npm install --production"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "Dustin Do",
   "license": "Apache-2.0",
   "description": "Web đọc light novel số 1 Việt Nam thực hiện bởi Valvrareteam",
   "devDependencies": {
-    "nodemon": "3.1.0"
+    "nodemon": "3.1.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.2.1"
   },
   "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "@aws-sdk/client-ses": "3.777.0",
     "axios": "1.8.4",
     "bcryptjs": "3.0.2",
