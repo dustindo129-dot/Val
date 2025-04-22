@@ -8,6 +8,7 @@ import ChapterFootnotes from './ChapterFootnotes';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import './ChapterContent.css';
+import hybridCdnService from '../../services/bunnyUploadService';
 
 const ChapterContent = ({
   chapter,
@@ -338,29 +339,16 @@ const ChapterContent = ({
                 paste_as_text: false,
                 images_upload_handler: (blobInfo) => {
                   return new Promise((resolve, reject) => {
-                    const formData = new FormData();
-                    formData.append('file', blobInfo.blob(), blobInfo.filename());
-                    formData.append('upload_preset', config.cloudinary.uploadPresets.illustration);
-                    formData.append('folder', 'novel-illustrations');
-
-                    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`;
-
-                    fetch(cloudinaryUrl, {
-                      method: 'POST',
-                      body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                      if (result.secure_url) {
-                        resolve(result.secure_url);
-                      } else {
+                    const file = blobInfo.blob();
+                    
+                    hybridCdnService.uploadFile(file, 'illustrations', config.cloudinary.uploadPresets.illustration)
+                      .then(url => {
+                        resolve(url);
+                      })
+                      .catch(error => {
+                        console.error('Image upload error:', error);
                         reject('Image upload failed');
-                      }
-                    })
-                    .catch(error => {
-                      console.error('Cloudinary upload error:', error);
-                      reject('Image upload failed');
-                    });
+                      });
                   });
                 },
                 images_upload_base_path: '/',

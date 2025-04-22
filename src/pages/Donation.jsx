@@ -6,6 +6,7 @@ import '../styles/Donation.css';
 import config from '../config/config';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import bunnyUploadService from '../services/bunnyUploadService';
 
 const Donation = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -42,24 +43,12 @@ const Donation = () => {
 
   const handleImageUpload = async (blobInfo) => {
     try {
-      const formData = new FormData();
-      formData.append('file', blobInfo.blob(), blobInfo.filename());
-      formData.append('upload_preset', config.cloudinary.uploadPresets.illustration);
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
+      const url = await bunnyUploadService.uploadFile(
+        blobInfo.blob(), 
+        'illustrations', 
+        config.cloudinary.uploadPresets.illustration
       );
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const data = await response.json();
-      return data.secure_url;
+      return url;
     } catch (error) {
       console.error('Image upload failed:', error);
       throw error;

@@ -28,6 +28,7 @@ import { Link } from 'react-router-dom';
 import { useNovelStatus } from '../context/NovelStatusContext';
 import { useNovel } from '../context/NovelContext';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import hybridCdnService from '../services/bunnyUploadService';
 
 /**
  * AdminDashboard Component
@@ -314,28 +315,23 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
-      // Create form data for Cloudinary
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', config.cloudinary.uploadPresets.illustration);
-      formData.append('folder', 'novel-illustrations');
-
-      // Upload to Cloudinary
-      const cloudinaryResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`,
-        formData
+      // Upload using hybrid CDN service
+      const imageUrl = await hybridCdnService.uploadFile(
+        file, 
+        'illustrations', 
+        config.cloudinary.uploadPresets.illustration
       );
 
       // Update the novel state with the new illustration URL
       if (editingNovel) {
         setEditingNovel({
           ...editingNovel,
-          illustration: cloudinaryResponse.data.secure_url
+          illustration: imageUrl
         });
       } else {
         setNewNovel({
           ...newNovel,
-          illustration: cloudinaryResponse.data.secure_url
+          illustration: imageUrl
         });
       }
 
@@ -886,29 +882,17 @@ const AdminDashboard = () => {
                   },
                   images_upload_handler: (blobInfo) => {
                     return new Promise((resolve, reject) => {
-                      const formData = new FormData();
-                      formData.append('file', blobInfo.blob(), blobInfo.filename());
-                      formData.append('upload_preset', config.cloudinary.uploadPresets.illustration);
-                      formData.append('folder', 'novel-illustrations');
-
-                      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`;
-
-                      fetch(cloudinaryUrl, {
-                        method: 'POST',
-                        body: formData
-                      })
-                      .then(response => response.json())
-                      .then(result => {
-                        if (result.secure_url) {
-                          resolve(result.secure_url);
-                        } else {
+                      const file = blobInfo.blob();
+                      
+                      // Use hybrid CDN service
+                      hybridCdnService.uploadFile(file, 'illustrations', config.cloudinary.uploadPresets.illustration)
+                        .then(url => {
+                          resolve(url);
+                        })
+                        .catch(error => {
+                          console.error('Image upload error:', error);
                           reject('Image upload failed');
-                        }
-                      })
-                      .catch(error => {
-                        console.error('Cloudinary upload error:', error);
-                        reject('Image upload failed');
-                      });
+                        });
                     });
                   },
                   images_upload_base_path: '/',

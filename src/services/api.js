@@ -1,6 +1,7 @@
 import axios from 'axios';
 import config from '../config/config';
 import { queryClient } from '../lib/react-query';
+import hybridCdnService from './bunnyUploadService';
 
 const api = {
   fetchNovelWithModules: async (novelId, forceRefresh = false, countView = false) => {
@@ -212,16 +213,12 @@ const api = {
   },
 
   uploadModuleCover: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', config.cloudinary.uploadPresets.illustration);
-    formData.append('folder', 'novel-illustrations');
-
-    const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`,
-      formData
-    );
-    return response.data.secure_url;
+    try {
+      return await hybridCdnService.uploadFile(file, 'illustrations', config.cloudinary.uploadPresets.illustration);
+    } catch (error) {
+      console.error('Error uploading cover image:', error);
+      throw new Error('Failed to upload cover image');
+    }
   },
 
   updateChapterOrder: async ({ novelId, moduleId, chapterId, newOrder }) => {

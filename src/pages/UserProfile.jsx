@@ -22,6 +22,7 @@ import axios from 'axios';
 import '../styles/UserProfile.css';
 import config from '../config/config';
 import ReportPanel from '../components/ReportPanel';
+import bunnyUploadService from '../services/bunnyUploadService';
 
 /**
  * UserProfile Component
@@ -112,39 +113,33 @@ const UserProfile = () => {
   };
 
   /**
-   * Handles avatar image upload using Cloudinary
+   * Handles avatar file change and upload
    * @param {Event} e - File input change event
    */
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setMessage({ type: 'error', text: 'Please upload an image file' });
+    // Validate file type and size
+    if (!file.type.match('image.*')) {
+      setMessage({ type: 'error', text: 'Please select an image file' });
       return;
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
       setMessage({ type: 'error', text: 'Image size should be less than 5MB' });
       return;
     }
 
     try {
       setIsLoading(true);
-      setMessage({ type: 'info', text: 'Uploading image...' });
-      
-      // Create form data for Cloudinary
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', config.cloudinary.uploadPresets.avatar);
-      formData.append('folder', 'avatars'); // Add folder specification
+      setMessage({ type: 'info', text: 'Uploading avatar...' });
 
-      // Upload to Cloudinary
-      const cloudinaryResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`,
-        formData
+      // Upload to Bunny.net instead of Cloudinary
+      const newAvatarUrl = await bunnyUploadService.uploadFile(
+        file,
+        'avatars',
+        config.cloudinary.uploadPresets.avatar
       );
 
       // Create axios instance with proper config
@@ -157,16 +152,15 @@ const UserProfile = () => {
         }
       });
 
-      // Send Cloudinary URL to backend
+      // Send avatar URL to backend
       await api.post(
         `/api/users/${username}/avatar`,
         {
-          avatar: cloudinaryResponse.data.secure_url
+          avatar: newAvatarUrl
         }
       );
       
       // Update both local state and localStorage
-      const newAvatarUrl = cloudinaryResponse.data.secure_url;
       setAvatar(newAvatarUrl);
       
       // Update user data in localStorage and AuthContext

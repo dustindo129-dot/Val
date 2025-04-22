@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import '../styles/NovelDirectory.css';
 import config from '../config/config';
+import cdnConfig from '../config/bunny';
 
 // Genre categories for filtering
 const genreCategories = {
@@ -84,7 +85,7 @@ const truncateHTML = (html, maxLength) => {
  */
 const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
   const [imgSrc, setImgSrc] = useState(src);
-  const defaultImage = 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png';
+  const defaultImage = cdnConfig.defaultImageUrl;
 
   useEffect(() => {
     setImgSrc(src || defaultImage);
@@ -500,7 +501,7 @@ const NovelDirectory = () => {
                     <div key={novel._id} className="novel-card">
                       {/* Novel cover image with status and update time */}
                       <NovelImage
-                          src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'}
+                          src={novel.illustration || cdnConfig.defaultImageUrl}
                           alt={novel.title}
                           status={novel.status}
                           novelId={novel._id}
