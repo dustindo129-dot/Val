@@ -6,6 +6,24 @@ class SSEService {
     this.listeners = new Map();
     this.isConnected = false;
     this.reconnectTimeout = null;
+    this.clientId = null;
+    
+    // Use localStorage to persist tab ID across refreshes
+    this.tabId = this.getOrCreateTabId();
+  }
+
+  // Get existing tab ID from localStorage or create a new one
+  getOrCreateTabId() {
+    const storageKey = 'sse_tab_id';
+    let tabId = localStorage.getItem(storageKey);
+    
+    // If no existing tab ID, create and store a new one
+    if (!tabId) {
+      tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      localStorage.setItem(storageKey, tabId);
+    }
+    
+    return tabId;
   }
 
   connect() {
@@ -14,10 +32,11 @@ class SSEService {
     }
 
     try {
-      this.eventSource = new EventSource(`${config.backendUrl}/api/novels/sse`);
+      // Add a unique query parameter to force a new connection for each tab
+      this.eventSource = new EventSource(`${config.backendUrl}/api/novels/sse?tabId=${this.tabId}`);
       
       this.eventSource.onopen = () => {
-        console.log('SSE connection established');
+        console.log(`SSE connection established for tab ${this.tabId}`);
         this.isConnected = true;
         if (this.reconnectTimeout) {
           clearTimeout(this.reconnectTimeout);
@@ -26,18 +45,31 @@ class SSEService {
       };
 
       this.eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
+        console.error(`SSE connection error for tab ${this.tabId}:`, error);
         this.isConnected = false;
         
         // Try to reconnect after a delay
         if (!this.reconnectTimeout) {
           this.reconnectTimeout = setTimeout(() => {
-            console.log('Attempting to reconnect SSE...');
+            console.log(`Attempting to reconnect SSE for tab ${this.tabId}...`);
             this.disconnect();
             this.connect();
           }, 5000);
         }
       };
+
+      // Listen for the initial connection message to get client ID
+      this.eventSource.addEventListener('message', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.clientId) {
+            this.clientId = data.clientId;
+            console.log(`Connected with client ID: ${this.clientId} for tab ${this.tabId}`);
+          }
+        } catch (error) {
+          console.error('Error processing initial message:', error);
+        }
+      });
 
       // Set up default event listeners
       const events = ['update', 'novel_status_changed', 'novel_deleted', 'refresh', 'new_novel', 'new_chapter'];
@@ -55,7 +87,7 @@ class SSEService {
         });
       });
     } catch (error) {
-      console.error('Error setting up SSE connection:', error);
+      console.error(`Error setting up SSE connection for tab ${this.tabId}:`, error);
       this.isConnected = false;
     }
   }
@@ -70,6 +102,7 @@ class SSEService {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
+    console.log(`Disconnected client ID: ${this.clientId} for tab ${this.tabId}`);
   }
 
   addEventListener(eventName, callback) {

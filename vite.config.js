@@ -59,7 +59,7 @@ export default defineConfig(({ command, mode }) => {
   } : {};
 
   return {
-    base: isProduction ? './' : '/',
+    base: '/',  // Always use root as base
     server: {
       port: 5173,
       host: 'localhost',
@@ -75,11 +75,15 @@ export default defineConfig(({ command, mode }) => {
         port: 5173,
         overlay: true,
       } : false,
+      // Add history API fallback for client-side routing
+      historyApiFallback: true
     },
     preview: {
       port: 4173,
       host: 'localhost',
       hmr: false,
+      // Add history API fallback for client-side routing in preview mode
+      historyApiFallback: true
     },
     resolve: {
       alias: {
@@ -94,6 +98,21 @@ export default defineConfig(({ command, mode }) => {
     build: {
       minify: isProduction,
       sourcemap: !isProduction,
+      // Don't empty outDir to preserve the .gitkeep file
+      emptyOutDir: false,
+      // Ensure proper chunking
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: [
+              'react', 
+              'react-dom', 
+              'react-router-dom',
+              '@tanstack/react-query'
+            ],
+          }
+        }
+      },
     }
   };
 });
