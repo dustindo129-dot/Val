@@ -214,6 +214,23 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .hot-novels {
-    display: none;
+    padding: 1rem;
+  }
+  
+  .hot-novel-cover {
+    width: 60px;
+    height: 90px;
+  }
+  
+  .hot-novel-title {
+    font-size: 0.875rem;
+  }
+  
+  .hot-novel-status {
+    font-size: 0.75rem;
+  }
+  
+  .hot-novel-chapter {
+    font-size: 0.75rem;
   }
 }

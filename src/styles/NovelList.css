@@ -563,7 +563,6 @@
 
 /* Facebook plugin container */
 .facebook-plugin {
-    background: #fff;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -576,11 +575,11 @@
 
 .facebook-plugin .fb-page,
 .facebook-plugin iframe {
-    width: 100% !important;
-    max-width: 100% !important;
-    border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    margin: 0;
+    padding: 0;
 }
 
 /* Facebook loading spinner and text */
@@ -724,7 +723,18 @@
 }
 
 @media (max-width: 768px) {
+    .content-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .sidebar {
+        order: 2;
+        max-width: 100%;
+    }
+    
     .novel-list-container {
+        order: 1;
         padding: 0;
     }
 
@@ -758,7 +768,13 @@
     }
     
     .facebook-plugin {
-        display: none;
+        display: block;
+        min-height: 300px;
+    }
+
+    .fb-loading,
+    .fb-error {
+        height: 300px;
     }
 }
 
@@ -860,4 +876,94 @@
         margin-top: 2px;
         padding: 2px 0;
     }
+}
+
+/* Sort controls styling */
+.sort-controls-container {
+  display: flex;
+  align-items: center;
+  background: #fafafa;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.sort-label {
+  font-weight: 600;
+  margin-right: 10px;
+  color: var(--text-color, #333);
+}
+
+.sort-select {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 28px 6px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-select:hover {
+  border-color: #009fdf;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #009fdf;
+  box-shadow: 0 0 0 2px rgba(0, 159, 223, 0.25);
+}
+
+/* Dark mode support for sort controls */
+:root.dark-mode .sort-controls-container {
+  background: var(--bg-color-secondary, #2a2a2a);
+  border-color: var(--border-color, #444);
+}
+
+:root.dark-mode .sort-label {
+  color: var(--text-color, #e0e0e0);
+}
+
+:root.dark-mode .sort-select {
+  background-color: #333;
+  color: #e0e0e0;
+  border-color: #555;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+:root.dark-mode .sort-select:hover {
+  border-color: #009fdf;
+}
+
+/* Adjust section headers to support the new sort control */
+.section-headers {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .section-headers {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .section-headers h2 {
+    margin-bottom: 12px;
+  }
+  
+  .sort-controls-container {
+    width: 100%;
+    margin-bottom: 20px;
+  }
 }

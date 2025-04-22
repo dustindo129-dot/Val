@@ -12,6 +12,7 @@ import Chapter from '../components/Chapter';
 import ResetPassword from '../components/auth/ResetPassword';
 import Donation from '../pages/Donation';
 import Feedback from '../pages/Feedback';
+import OLN from '../pages/OLN';
 
 function AppRoutes() {
   return (
@@ -22,6 +23,8 @@ function AppRoutes() {
       <Route path="/latest-update" element={<NovelList filter="latest" />} />
       <Route path="/novel-directory" element={<NovelDirectory />} />
       <Route path="/novel-directory/page/:page" element={<NovelDirectory />} />
+      <Route path="/oln" element={<OLN />} />
+      <Route path="/oln/page/:page" element={<OLN />} />
       <Route path="/novel/:novelId" element={<NovelDetail />} />
       <Route path="/novel/:novelId/chapter/:chapterId" element={<Chapter />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />

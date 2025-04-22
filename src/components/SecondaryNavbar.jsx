@@ -122,8 +122,11 @@ const SecondaryNavbar = () => {
             <Link to="/novel-directory" className={`nav-link ${isActive('/novel-directory')}`} onClick={() => setIsMenuOpen(false)}>
               Novel Directory
             </Link>
+            <Link to="/oln" className={`nav-link ${isActive('/oln')}`} onClick={() => setIsMenuOpen(false)}>
+              OLN
+            </Link>
             <Link to="/feedback" className={`nav-link ${isActive('/feedback')}`} onClick={() => setIsMenuOpen(false)}>
-              Feedback ( README )
+              Feedback
             </Link>
             <Link to="/donation" className={`nav-link ${isActive('/donation')}`} onClick={() => setIsMenuOpen(false)}>
               Donation
