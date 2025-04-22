@@ -18,6 +18,6 @@ export async function onBeforeRender(pageContext) {
 
 // Metadata for SEO
 export const documentProps = {
-  title: 'Val-JS - Light Novels',
+  title: 'Valvrareteam',
   description: 'Valvrare Team tạo ra nhằm mục đích mang đến cho độc giả những bản dịch tiếng việt chất lượng. Rất mong được các bạn độc giả ủng hộ.'
 }; 
