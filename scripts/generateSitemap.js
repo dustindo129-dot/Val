@@ -1,7 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const config = require('../src/config/config');
+import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
+import config from '../src/config/config.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function generateSitemap() {
   const baseUrl = process.env.FRONTEND_URL || 'https://valvrareteam.net';
