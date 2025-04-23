@@ -66,7 +66,7 @@ const Login = ({ onClose, onSignUp }) => {
       const response = await login(formData.username, formData.password);
       onClose(); // Close modal on successful login
     } catch (err) {
-      setError('Invalid email or password');
+      setError('Invalid username or password');
       console.error('Login error:', err);
     } finally {
       setLoading(false);

@@ -65,6 +65,7 @@ const ChapterDashboard = () => {
 
   // State for mode selection
   const [mode, setMode] = useState('published'); // Default to published
+  const [chapterBalance, setChapterBalance] = useState(0);
 
   // State for staff selection
   const [translator, setTranslator] = useState('');
@@ -220,6 +221,7 @@ const ChapterDashboard = () => {
       setTranslator(chapterData.translator || '');
       setEditor(chapterData.editor || '');
       setProofreader(chapterData.proofreader || '');
+      setChapterBalance(chapterData.chapterBalance || 0);
 
       // Extract footnotes from content
       if (chapterData.content) {
@@ -376,7 +378,8 @@ const ChapterDashboard = () => {
         translator: translator,
         editor: editor,
         proofreader: proofreader,
-        footnotes: footnotes
+        footnotes: footnotes,
+        chapterBalance: mode === 'paid' ? parseInt(chapterBalance) || 0 : 0
       };
 
       // Cancel any outgoing refetches for the novel
@@ -422,6 +425,7 @@ const ChapterDashboard = () => {
                 editor,
                 proofreader,
                 footnotes,
+                chapterBalance: mode === 'paid' ? parseInt(chapterBalance) || 0 : 0,
                 createdAt: timestamp,
                 updatedAt: timestamp
               };
@@ -569,11 +573,25 @@ const ChapterDashboard = () => {
                     className="mode-dropdown"
                 >
                   <option value="published">Published (Visible to everyone)</option>
-                  <option value="draft">Draft (Admin only)</option>
+                  <option value="draft">Draft (Admin/Mod only)</option>
                   <option value="protected">Protected (Login required)</option>
-                  <option value="paid">Paid Content</option>
+                  {user?.role === 'admin' && (
+                    <option value="paid">Paid Content</option>
+                  )}
                 </select>
               </div>
+              {mode === 'paid' && user?.role === 'admin' && (
+                <div className="chapter-balance-input">
+                  <label>Chapter Balance:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={chapterBalance}
+                    onChange={(e) => setChapterBalance(e.target.value)}
+                    placeholder="Enter chapter balance"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

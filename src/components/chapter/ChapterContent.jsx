@@ -23,11 +23,15 @@ const ChapterContent = ({
   editorRef,
   onModeChange,
   canEdit = false,
+  userRole = 'user'
 }) => {
   const contentRef = useRef(null);
   const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
   const [localFootnotes, setLocalFootnotes] = useState([]);
   const [nextFootnoteId, setNextFootnoteId] = useState(1);
+  const [editedChapterBalance, setEditedChapterBalance] = useState(chapter.chapterBalance || 0);
+  const [originalMode] = useState(chapter.mode || 'published');
+  const [originalChapterBalance] = useState(chapter.chapterBalance || 0);
   
   // Initialize localFootnotes and nextFootnoteId when entering edit mode
   useEffect(() => {
@@ -89,7 +93,24 @@ const ChapterContent = ({
     if (isEditing && chapter && editedTitle === '') {
       setEditedTitle(chapter.title || '');
     }
+    
+    if (isEditing && chapter) {
+      setEditedChapterBalance(chapter.chapterBalance || 0);
+    }
   }, [isEditing, chapter, editedTitle, setEditedTitle]);
+
+  // Only prepare edited content when saving instead of on every change
+  useEffect(() => {
+    if (isEditing && setEditedContent) {
+      // Store mode and balance info in the editedContent object 
+      // but don't trigger immediate API calls
+      setEditedContent(prev => ({
+        ...prev,
+        mode: editedMode,
+        chapterBalance: editedMode === 'paid' ? (parseInt(editedChapterBalance) || 0) : 0
+      }));
+    }
+  }, [isEditing, setEditedContent]);
 
   const handleFootnoteClick = (targetId) => {
     const element = document.getElementById(targetId);
@@ -205,6 +226,18 @@ const ChapterContent = ({
     };
   }, []);
 
+  const handleModeChange = (value) => {
+    setEditedMode(value);
+    
+    // If mode changes from paid to something else, reset chapter balance locally
+    if (value !== 'paid') {
+      setEditedChapterBalance(0);
+    }
+    
+    // We don't call onModeChange or setEditedContent here anymore
+    // Changes will be saved when the user clicks the Save Changes button
+  };
+
   // Process content to wrap footnote references and sanitize HTML
   const processContent = (content) => {
     if (!content) return '';
@@ -254,17 +287,29 @@ const ChapterContent = ({
             <label>Chapter Mode:</label>
             <select
               value={editedMode}
-              onChange={(e) => {
-                setEditedMode(e.target.value);
-                if (onModeChange) onModeChange(e.target.value);
-              }}
+              onChange={(e) => handleModeChange(e.target.value)}
               className="mode-dropdown"
             >
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-              <option value="protected">Protected</option>
-              <option value="paid">Paid</option>
+              <option value="published">Published (Visible to everyone)</option>
+              <option value="draft">Draft (Admin/Mod only)</option>
+              <option value="protected">Protected (Login required)</option>
+              {userRole === 'admin' && (
+                <option value="paid">Paid Content</option>
+              )}
             </select>
+            
+            {editedMode === 'paid' && userRole === 'admin' && (
+              <div className="chapter-balance-input">
+                <label>Chapter Balance:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editedChapterBalance}
+                  onChange={(e) => setEditedChapterBalance(e.target.value)}
+                  placeholder="Enter chapter balance"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -362,6 +407,7 @@ const ChapterContent = ({
               ref={(input) => {
                 if (input) {
                   input.getMode = () => editedMode;
+                  input.getChapterBalance = () => editedMode === 'paid' ? (parseInt(editedChapterBalance) || 0) : 0;
                 }
               }} 
             />}
@@ -444,6 +490,7 @@ ChapterContent.propTypes = {
     title: PropTypes.string.isRequired,
     content: PropTypes.string.isRequired,
     mode: PropTypes.string,
+    chapterBalance: PropTypes.number,
     footnotes: PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,
@@ -455,6 +502,7 @@ ChapterContent.propTypes = {
   editedContent: PropTypes.shape({
     title: PropTypes.string,
     content: PropTypes.string,
+    chapterBalance: PropTypes.number,
     footnotes: PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,
@@ -470,7 +518,8 @@ ChapterContent.propTypes = {
   lineHeight: PropTypes.string,
   editorRef: PropTypes.object,
   onModeChange: PropTypes.func,
-  canEdit: PropTypes.bool
+  canEdit: PropTypes.bool,
+  userRole: PropTypes.string
 };
 
 export default ChapterContent; 

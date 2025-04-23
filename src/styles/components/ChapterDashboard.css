@@ -579,3 +579,23 @@
     flex: 1;
   }
 }
+
+.chapter-balance-input {
+  flex: 1;
+  min-width: 200px;
+  margin-top: 10px;
+}
+
+.chapter-balance-input label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.chapter-balance-input input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}

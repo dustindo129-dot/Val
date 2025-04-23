@@ -165,7 +165,9 @@ const api = {
         `${config.backendUrl}/api/modules/${novelId}/modules`,
         {
           title: moduleData.title,
-          illustration: moduleData.illustration
+          illustration: moduleData.illustration,
+          mode: moduleData.mode || 'published',
+          moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0
         },
         {
           headers: {
@@ -196,7 +198,9 @@ const api = {
         `${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}`,
         {
           title: moduleData.title,
-          illustration: moduleData.illustration
+          illustration: moduleData.illustration,
+          mode: moduleData.mode || 'published',
+          moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0
         },
         {
           headers: {

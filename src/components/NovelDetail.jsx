@@ -92,7 +92,9 @@ const NovelDetail = () => {
     title: '', 
     illustration: '', 
     loading: false, 
-    error: '' 
+    error: '',
+    mode: 'published',
+    moduleBalance: 0
   });
   const [editingModule, setEditingModule] = useState(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
@@ -254,7 +256,9 @@ const NovelDetail = () => {
           title: '',
           illustration: '',
           loading: false,
-          error: ''
+          error: '',
+          mode: 'published',
+          moduleBalance: 0
         });
         setEditingModule(null);
       }
@@ -263,10 +267,13 @@ const NovelDetail = () => {
   }, []);
 
   // Handler for module submission (create/update)
-  const handleModuleSubmit = useCallback(async (e) => {
+  const handleModuleSubmit = useCallback(async (e, formData) => {
     e.preventDefault();
     
-    if (!moduleForm.title.trim()) {
+    // Use the formData passed from ModuleForm if available, otherwise use moduleForm state
+    const dataToSubmit = formData || moduleForm;
+    
+    if (!dataToSubmit.title.trim()) {
       setModuleForm(prev => ({ ...prev, error: 'Module title is required' }));
       return;
     }
@@ -291,8 +298,10 @@ const NovelDetail = () => {
             module._id === editingModule 
               ? { 
                   ...module, 
-                  title: moduleForm.title,
-                  illustration: moduleForm.illustration,
+                  title: dataToSubmit.title,
+                  illustration: dataToSubmit.illustration,
+                  mode: dataToSubmit.mode,
+                  moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0,
                   updatedAt: new Date().toISOString()
                 }
               : module
@@ -307,13 +316,18 @@ const NovelDetail = () => {
         
         // Make the API call
         response = await api.updateModule(novelId, editingModule, {
-          title: moduleForm.title,
-          illustration: moduleForm.illustration
+          title: dataToSubmit.title,
+          illustration: dataToSubmit.illustration,
+          mode: dataToSubmit.mode,
+          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0
         });
       } else {
+        // Create new module
         response = await api.createModule(novelId, {
-          title: moduleForm.title,
-          illustration: moduleForm.illustration
+          title: dataToSubmit.title,
+          illustration: dataToSubmit.illustration,
+          mode: dataToSubmit.mode,
+          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0
         });
         
         // If we have current data and a successful response, optimistically add the new module
@@ -338,7 +352,9 @@ const NovelDetail = () => {
         title: '',
         illustration: '',
         loading: false,
-        error: ''
+        error: '',
+        mode: 'published',
+        moduleBalance: 0
       });
       setEditingModule(null);
     } catch (error) {
@@ -353,7 +369,7 @@ const NovelDetail = () => {
       // On error, force refetch to make sure we have correct data
       queryClient.refetchQueries(['novel', novelId]);
     }
-  }, [moduleForm.title, moduleForm.illustration, editingModule, novelId, queryClient]);
+  }, [moduleForm, editingModule, novelId, queryClient]);
   
   // Check if token exists
   useEffect(() => {
@@ -530,25 +546,21 @@ const NovelDetail = () => {
   }, [user, novelId, queryClient]);
   
   const handleEditModule = useCallback((module) => {
-    // First make sure to show the form before setting other data
-    setShowModuleForm(true);
-    // Then set the editing module data
-    setEditingModule(module._id);
+    // Set form data from the existing module
     setModuleForm({
       title: module.title || '',
       illustration: module.illustration || '',
       loading: false,
-      error: ''
+      error: '',
+      mode: module.mode || 'published',
+      moduleBalance: module.moduleBalance || 0
     });
     
-    // Scroll to where the form should be to ensure visibility
-    setTimeout(() => {
-      // Attempt to find and scroll to the chapter list container
-      const container = document.querySelector('.chapter-list-container');
-      if (container) {
-        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
+    // Set the editing ID
+    setEditingModule(module._id);
+    
+    // Show the form
+    setShowModuleForm(true);
   }, []);
 
   const handleModuleCoverUpload = useCallback(async (e) => {

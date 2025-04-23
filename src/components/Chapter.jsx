@@ -512,11 +512,17 @@ const Chapter = () => {
       // Find the hidden input that contains the editedMode value
       const modeInputs = document.querySelectorAll('input[type="hidden"]');
       let updatedMode = chapter.mode;
+      let updatedChapterBalance = 0;
       
       // Look through any hidden inputs for one with a getMode function
       for (const input of modeInputs) {
         if (typeof input.getMode === 'function') {
           updatedMode = input.getMode();
+          
+          // Also get chapterBalance if available
+          if (typeof input.getChapterBalance === 'function') {
+            updatedChapterBalance = input.getChapterBalance();
+          }
           break;
         }
       }
@@ -533,7 +539,8 @@ const Chapter = () => {
         title: updatedTitle,
         content: updatedContent,
         mode: updatedMode,
-        footnotes: footnotes
+        footnotes: footnotes,
+        chapterBalance: updatedMode === 'paid' ? updatedChapterBalance : 0
       };
 
       // Optimistic UI update
@@ -549,6 +556,7 @@ const Chapter = () => {
           content: updatedContent, // Raw HTML preserved in cache
           mode: updatedMode,
           footnotes: footnotes,
+          chapterBalance: updatedMode === 'paid' ? updatedChapterBalance : 0,
           updatedAt: new Date().toISOString()
         }
       });
@@ -952,6 +960,7 @@ const Chapter = () => {
           getSafeHtml={getSafeHtml}
           onModeChange={handleModeChange}
           canEdit={canEdit}
+          userRole={user?.role || 'user'}
         />
       </ChapterAccessGuard>
 

@@ -72,7 +72,7 @@ const ModuleChapters = memo(({
 
   // Function to determine if a chapter should be visible based on its mode
   const isChapterVisible = (chapter) => {
-    if (!chapter.mode || chapter.mode === 'published' || chapter.mode === 'protected') {
+    if (!chapter.mode || chapter.mode === 'published' || chapter.mode === 'protected' || chapter.mode === 'paid') {
       return true; // These modes are visible to everyone
     }
     

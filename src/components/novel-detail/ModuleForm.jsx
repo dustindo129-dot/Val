@@ -1,4 +1,5 @@
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const ModuleForm = memo(({ 
   moduleForm, 
@@ -8,10 +9,49 @@ const ModuleForm = memo(({
   handleModuleFormToggle, 
   editingModule 
 }) => {
-  // Log when component mounts or editingModule changes
+  const { user } = useAuth();
+  const isAdmin = user && user.role === 'admin';
+  const [mode, setMode] = useState(moduleForm.mode || 'published');
+  const [moduleBalance, setModuleBalance] = useState(moduleForm.moduleBalance || 0);
+
+  // Update form values when editingModule changes
   useEffect(() => {
-    // Removed console.log statements
-  }, [editingModule, moduleForm]);
+    setMode(moduleForm.mode || 'published');
+    setModuleBalance(moduleForm.moduleBalance || 0);
+  }, [moduleForm.mode, moduleForm.moduleBalance]);
+
+  // Handler for mode change
+  const handleModeChange = (e) => {
+    const newMode = e.target.value;
+    setMode(newMode);
+    // If changing from paid to published, reset moduleBalance
+    if (newMode !== 'paid') {
+      setModuleBalance(0);
+    }
+  };
+
+  // Handler for moduleBalance change
+  const handleModuleBalanceChange = (e) => {
+    setModuleBalance(e.target.value);
+  };
+
+  // Handle form submission with updated values
+  const handleSubmit = (e) => {
+    e.preventDefault(); // Prevent default form submission
+    
+    // Create updated form data with current mode and moduleBalance
+    const updatedForm = {
+      ...moduleForm,
+      mode: mode,
+      moduleBalance: mode === 'paid' ? parseInt(moduleBalance) || 0 : 0
+    };
+    
+    // Update the form state
+    setModuleForm(updatedForm);
+    
+    // Call the parent's submit handler with the updated form data
+    handleModuleSubmit(e, updatedForm);
+  };
 
   return (
     <div className="module-form" style={{ 
@@ -28,7 +68,7 @@ const ModuleForm = memo(({
         {editingModule ? '✏️ EDIT MODULE' : 'ADD NEW MODULE'}
       </h4>
       {moduleForm.error && <div className="form-error" style={{color: 'red'}}>{moduleForm.error}</div>}
-      <form onSubmit={handleModuleSubmit}>
+      <form onSubmit={handleSubmit}>
         <div className="form-group" style={{margin: '10px 0'}}>
           <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Title:</label>
           <input
@@ -45,6 +85,47 @@ const ModuleForm = memo(({
             }}
           />
         </div>
+        
+        {/* Module Mode Selection */}
+        {isAdmin && (
+          <div className="form-group" style={{margin: '10px 0'}}>
+            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Module Mode:</label>
+            <select
+              value={mode}
+              onChange={handleModeChange}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
+            >
+              <option value="published">PUBLISHED (Visible to everyone)</option>
+              <option value="paid">PAID</option>
+            </select>
+          </div>
+        )}
+        
+        {/* Module Balance Input - Only shows when mode is paid */}
+        {isAdmin && mode === 'paid' && (
+          <div className="form-group" style={{margin: '10px 0'}}>
+            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Module Balance:</label>
+            <input
+              type="number"
+              min="0"
+              value={moduleBalance}
+              onChange={handleModuleBalanceChange}
+              placeholder="Enter module balance"
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ccc',
+                borderRadius: '4px'
+              }}
+            />
+          </div>
+        )}
+        
         <div className="form-group" style={{margin: '10px 0'}}>
           <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Cover Image:</label>
           <div className="cover-upload">

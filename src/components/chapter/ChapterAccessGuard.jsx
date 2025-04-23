@@ -21,8 +21,7 @@ const ChapterAccessGuard = ({ chapter, user, children }) => {
       case 'draft':
         return user?.role === 'admin' || user?.role === 'moderator'; // Draft accessible to admin and moderator
       case 'paid':
-        // TODO: Implement paid content check
-        return user?.role === 'admin' || user?.role === 'moderator'; // For now, admin and moderator access
+        return true; // Paid content is now accessible to everyone
       default:
         return true;
     }
