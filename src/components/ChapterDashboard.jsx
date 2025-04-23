@@ -683,7 +683,7 @@ const ChapterDashboard = () => {
                           'bullist numlist outdent indent | ' +
                           'link image | code preview | removeformat | help',
                       content_style: `
-                    body { font-family:Helvetica,Arial,sans-serif; font-size:16px; line-height:1.6; }
+                    body { font-family:Helvetica,Arial,Georgia,sans-serif; font-size:16px; line-height:1.6; }
                     sup.footnote-marker { color: #e74c3c; font-weight: bold; cursor: pointer; }
                   `,
                       skin: 'oxide',

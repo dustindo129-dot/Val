@@ -8,7 +8,7 @@
 .chapter-content {
   font-size: var(--content-font-size, 1rem);
   line-height: var(--content-line-height, 1.6);
-  font-family: var(--content-font-family, 'Arial', sans-serif);
+  font-family: var(--content-font-family, 'Arial', 'Georgia', sans-serif);
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
