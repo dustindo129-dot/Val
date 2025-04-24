@@ -933,6 +933,7 @@ const Chapter = () => {
         isEditing={isEditing}
         handlePrevChapter={handlePrevChapter}
         handleNextChapter={handleNextChapter}
+        user={user}
       />
 
       {/* Toolbar with staff info and chapter stats */}
@@ -989,6 +990,7 @@ const Chapter = () => {
         handlePrevChapter={handlePrevChapter}
         handleNextChapter={handleNextChapter}
         position="bottom"
+        user={user}
       />
 
       {/* Footer Navigation */}

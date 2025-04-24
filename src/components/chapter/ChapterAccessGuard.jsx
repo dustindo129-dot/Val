@@ -24,7 +24,7 @@ const ChapterAccessGuard = ({ chapter, user, children }) => {
       case 'draft':
         return user?.role === 'admin' || user?.role === 'moderator'; // Draft accessible to admin and moderator
       case 'paid':
-        return true; // Paid content is now accessible to everyone
+        return user && (user.role === 'admin' || user.role === 'moderator'); // Paid content only accessible to admin/moderator
       default:
         return true;
     }
@@ -64,12 +64,6 @@ const ChapterAccessGuard = ({ chapter, user, children }) => {
                 <p>Need {chapter.chapterBalance || 0} 🌾 to unlock. Please visit market!</p>
                 <div className="locked-chapter-actions">
                   <Link to="/market" className="go-to-market-btn">Go to market</Link>
-                  <button 
-                    className="back-to-novel-btn"
-                    onClick={() => navigate(`/novel/${chapter.novelId}`)}
-                  >
-                    Back to novel
-                  </button>
                 </div>
               </div>
             </div>
