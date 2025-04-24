@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faCog } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/components/ChapterAccessGuard.css';
 
 /**
@@ -11,6 +12,7 @@ import '../../styles/components/ChapterAccessGuard.css';
  */
 const ChapterAccessGuard = ({ chapter, user, children }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   
   // Check if user has access to chapter content based on mode
   const canAccessChapterContent = (chapter, user) => {
@@ -20,7 +22,7 @@ const ChapterAccessGuard = ({ chapter, user, children }) => {
       case 'published':
         return true; // Published is accessible to everyone
       case 'protected':
-        return !!user; // Protected requires user to be logged in
+        return isAuthenticated; // Protected requires user to be logged in
       case 'draft':
         return user?.role === 'admin' || user?.role === 'moderator'; // Draft accessible to admin and moderator
       case 'paid':

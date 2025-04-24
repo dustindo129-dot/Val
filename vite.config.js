@@ -88,6 +88,9 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias: {
         '~': path.resolve(__dirname, './src'),
+        'react': path.resolve(__dirname, './node_modules/react'),
+        'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+        '@tanstack/react-query': path.resolve(__dirname, './node_modules/@tanstack/react-query'),
       },
     },
     plugins: [react()],
@@ -113,6 +116,14 @@ export default defineConfig(({ command, mode }) => {
           }
         }
       },
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@tanstack/react-query'
+      ]
     }
   };
 });

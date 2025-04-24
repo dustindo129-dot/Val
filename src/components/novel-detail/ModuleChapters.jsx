@@ -2,6 +2,7 @@ import React, { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/components/ModuleChapters.css';
 
 // Helper function for date formatting
@@ -58,6 +59,7 @@ const ModuleChapters = memo(({
   canAccessPaidContent
 }) => {
   const [isReordering, setIsReordering] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const handleReorderClick = useCallback(async (chapterId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
@@ -103,8 +105,18 @@ const ModuleChapters = memo(({
       return true;
     }
     
-    // Regular users can only access published chapters
-    return !chapter.mode || chapter.mode === 'published';
+    // Regular users can access published chapters
+    if (!chapter.mode || chapter.mode === 'published') {
+      return true;
+    }
+    
+    // If chapter is protected, logged-in users can access it
+    if (chapter.mode === 'protected' && isAuthenticated) {
+      return true;
+    }
+    
+    // Other modes (paid, draft, etc.) are not accessible to regular users
+    return false;
   };
 
   return (

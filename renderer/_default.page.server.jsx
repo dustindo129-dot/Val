@@ -44,7 +44,6 @@ async function render(pageContext) {
           <body>
             <div id="root"></div>
             <script type="module" src="/@vite/client"></script>
-            <script type="module" src="/src/main.jsx"></script>
           </body>
         </html>`,
       pageContext: {

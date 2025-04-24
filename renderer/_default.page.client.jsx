@@ -1,5 +1,5 @@
 import React from 'react';
-import { hydrateRoot } from 'react-dom/client';
+import { hydrateRoot, createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from '../src/App';
@@ -31,28 +31,23 @@ async function render(pageContext) {
   
   const root = document.getElementById('root');
   
-  // If we were rendered by the server (as a bot), we need to hydrate
-  // Otherwise, just render normally
-  if (isBot) {
-    hydrateRoot(
-      root,
+  // The app component wrapped with providers
+  const app = (
+    <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <App />
         </BrowserRouter>
       </QueryClientProvider>
-    );
+    </React.StrictMode>
+  );
+  
+  // If we were rendered by the server (as a bot), we need to hydrate
+  // Otherwise, just render normally
+  if (isBot) {
+    hydrateRoot(root, app);
   } else {
     // This is normal CSR
-    const ReactDOM = await import('react-dom/client');
-    ReactDOM.createRoot(root).render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </QueryClientProvider>
-      </React.StrictMode>
-    );
+    createRoot(root).render(app);
   }
 } 

@@ -53,6 +53,6 @@
     "react-router-dom": "^7.5.1",
     "sirv": "3.0.1",
     "uuid": "^11.1.0",
-    "vite-plugin-ssr": "^0.4.85"
+    "vite-plugin-ssr": "0.4.142"
   }
 }
