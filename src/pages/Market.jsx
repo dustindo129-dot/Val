@@ -36,6 +36,8 @@ const Market = () => {
   const [likingRequests, setLikingRequests] = useState(new Set());
   const [isSearching, setIsSearching] = useState(false);
   const [showNovelResults, setShowNovelResults] = useState(false);
+  const [withdrawableRequests, setWithdrawableRequests] = useState(new Set());
+  const [withdrawingRequests, setWithdrawingRequests] = useState(new Set());
 
   // Fetch user balance and requests on component mount
   useEffect(() => {
@@ -122,6 +124,11 @@ const Market = () => {
       return;
     }
     
+    // Warn user about withdrawal policy
+    if (!confirm('IMPORTANT: You can only withdraw your request within the first 5 seconds after posting. Do you want to proceed?')) {
+      return;
+    }
+    
     setSubmitting(true);
     
     try {
@@ -142,8 +149,10 @@ const Market = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
+      const newRequest = response.data;
+      
       // Update requests list with new request
-      setRequests(prevRequests => [response.data, ...prevRequests]);
+      setRequests(prevRequests => [newRequest, ...prevRequests]);
       
       // Update user balance
       setUserBalance(prevBalance => prevBalance - Number(depositAmount));
@@ -154,7 +163,18 @@ const Market = () => {
       setSelectedNovel(null);
       setNovelSearchQuery('');
       
-      alert('Request submitted successfully');
+      // Mark this request as withdrawable for 5 seconds
+      setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
+      
+      // After 5 seconds, make the request no longer withdrawable
+      setTimeout(() => {
+        setWithdrawableRequests(prev => {
+          const next = new Set(prev);
+          next.delete(newRequest._id);
+          return next;
+        });
+      }, 5000);
+      
     } catch (err) {
       console.error('Failed to submit request:', err);
       alert(err.response?.data?.message || 'Failed to submit request');
@@ -302,6 +322,54 @@ const Market = () => {
     } catch (err) {
       console.error('Failed to decline request:', err);
       alert('Failed to decline request');
+    }
+  };
+
+  // Handle withdrawing a request
+  const handleWithdrawRequest = async (requestId) => {
+    if (!isAuthenticated) {
+      return;
+    }
+    
+    // Prevent multiple withdrawal attempts
+    if (withdrawingRequests.has(requestId)) {
+      return;
+    }
+    
+    if (!confirm('Are you sure you want to withdraw this request? Your deposit will be refunded.')) {
+      return;
+    }
+    
+    try {
+      // Add request to withdrawing state
+      setWithdrawingRequests(prev => new Set([...prev, requestId]));
+      
+      const response = await axios.post(
+        `${config.backendUrl}/api/requests/${requestId}/withdraw`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // If successful, remove the request from the list
+      if (response.status === 200) {
+        setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
+        
+        // Update user balance
+        const refundAmount = requests.find(req => req._id === requestId)?.deposit || 0;
+        setUserBalance(prev => prev + refundAmount);
+        
+        alert('Request withdrawn successfully. Your deposit has been refunded.');
+      }
+    } catch (err) {
+      console.error('Failed to withdraw request:', err);
+      alert(err.response?.data?.message || 'Failed to withdraw request');
+    } finally {
+      // Remove request from withdrawing state
+      setWithdrawingRequests(prev => {
+        const next = new Set(prev);
+        next.delete(requestId);
+        return next;
+      });
     }
   };
 
@@ -530,6 +598,20 @@ const Market = () => {
                           </span>
                           <span className="like-count">{request.likes ? request.likes.length : 0}</span>
                         </button>
+                        
+                        {/* Withdraw button - visible only for the user's own requests after 5 seconds */}
+                        {isAuthenticated && 
+                         user && 
+                         request.user._id === (user._id || user.id) && 
+                         !withdrawableRequests.has(request._id) && (
+                          <button 
+                            className="withdraw-button"
+                            onClick={() => handleWithdrawRequest(request._id)}
+                            disabled={withdrawingRequests.has(request._id)}
+                          >
+                            {withdrawingRequests.has(request._id) ? 'Withdrawing...' : 'Withdraw'}
+                          </button>
+                        )}
                         
                         {/* Admin actions */}
                         {user && user.role === 'admin' && (

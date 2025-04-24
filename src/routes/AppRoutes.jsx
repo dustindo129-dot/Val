@@ -32,6 +32,7 @@ function AppRoutes() {
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/feedback" element={<Feedback />} />
       <Route path="/donation" element={<Donation />} />
+      <Route path="/market" element={<Market />} />
       
       {/* User Routes */}
       <Route path="/user/:username/profile" element={<UserProfile />} />
@@ -44,14 +45,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminDashboard />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/market" 
-        element={
-          <ProtectedRoute>
-            <Market />
           </ProtectedRoute>
         } 
       />

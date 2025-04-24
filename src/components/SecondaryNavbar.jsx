@@ -156,12 +156,10 @@ const SecondaryNavbar = () => {
             <Link to="/donation" className={`nav-link ${isActive('/donation')}`} onClick={() => setIsMenuOpen(false)}>
               Donation
             </Link>
-            {/* Market link - only visible to admin */}
-            {user?.role === 'admin' && (
-              <Link to="/market" className={`nav-link ${isActive('/market')}`} onClick={() => setIsMenuOpen(false)}>
-                Market
-              </Link>
-            )}
+            {/* Market link - visible to everyone */}
+            <Link to="/market" className={`nav-link ${isActive('/market')}`} onClick={() => setIsMenuOpen(false)}>
+              Market
+            </Link>
             {/* Admin and Moderator dashboard link */}
             {(user?.role === 'admin' || user?.role === 'moderator') && (
               <Link to="/admin-dashboard" className={`nav-link ${isActive('/admin-dashboard')}`} onClick={() => setIsMenuOpen(false)}>
