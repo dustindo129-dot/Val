@@ -8,19 +8,25 @@ class SSEService {
     this.reconnectTimeout = null;
     this.clientId = null;
     
-    // Use localStorage to persist tab ID across refreshes
+    // Use sessionStorage to persist tab ID across refreshes
     this.tabId = this.getOrCreateTabId();
   }
 
-  // Get existing tab ID from localStorage or create a new one
+  // Get existing tab ID from sessionStorage or create a new one
   getOrCreateTabId() {
     const storageKey = 'sse_tab_id';
-    let tabId = localStorage.getItem(storageKey);
+    let tabId = sessionStorage.getItem(storageKey);
     
     // If no existing tab ID, create and store a new one
     if (!tabId) {
-      tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-      localStorage.setItem(storageKey, tabId);
+      // Generate a unique ID using timestamp and random string
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 10);
+      const uniqueId = `${timestamp}_${randomStr}`;
+      tabId = `tab_${uniqueId}`;
+      
+      // Store in sessionStorage (unique per tab)
+      sessionStorage.setItem(storageKey, tabId);
     }
     
     return tabId;
