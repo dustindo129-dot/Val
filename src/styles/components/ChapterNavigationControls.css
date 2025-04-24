@@ -1,0 +1,16 @@
+/* Paid content button styling */
+.paid-content-btn {
+  background-color: #f8f8f8;
+  border-color: #ddd;
+  color: #777;
+}
+
+.paid-content-btn .lock-icon-nav {
+  color: #e74c3c;
+  margin-right: 4px;
+}
+
+.paid-content-btn:hover {
+  background-color: #f0f0f0;
+  color: #555;
+} 

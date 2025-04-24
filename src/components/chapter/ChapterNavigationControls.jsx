@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes, faEllipsisV, faList, faCog,
-  faChevronLeft, faChevronRight, faSpinner
+  faChevronLeft, faChevronRight, faSpinner, faBars, faLock
 } from '@fortawesome/free-solid-svg-icons';
+import '../../styles/components/ChapterNavigationControls.css';
 
 /**
  * ChapterNavigationControls Component
@@ -25,8 +26,27 @@ const ChapterNavigationControls = ({
   isNavigating,
   isEditing,
   moduleChapters,
-  isModuleChaptersLoading
+  isModuleChaptersLoading,
+  user
 }) => {
+  // Check if user can access paid content
+  const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
+  
+  // Check if next chapter is paid content
+  const isNextChapterPaid = chapter?.nextChapter?.mode === 'paid';
+  
+  // Check if previous chapter is paid content
+  const isPrevChapterPaid = chapter?.prevChapter?.mode === 'paid';
+  
+  // Filter out paid chapters from the dropdown for non-admin/mod users
+  const filteredChapters = moduleChapters.filter(moduleChapter => {
+    // Admin/mods see all chapters
+    if (canAccessPaidContent) return true;
+    
+    // For regular users, filter out paid chapters
+    return moduleChapter.mode !== 'paid';
+  });
+
   return (
     <>
       {/* Toggle Button */}
@@ -75,9 +95,9 @@ const ChapterNavigationControls = ({
             <FontAwesomeIcon icon={faSpinner} spin/>
             <span>Loading chapters...</span>
           </div>
-        ) : moduleChapters && moduleChapters.length > 0 ? (
+        ) : filteredChapters.length > 0 ? (
           <ul className="chapter-dropdown-list">
-            {moduleChapters.map((chapterItem) => (
+            {filteredChapters.map((chapterItem) => (
               <li 
                 key={chapterItem._id}
                 className={chapterItem._id === chapterId ? 'active' : ''}

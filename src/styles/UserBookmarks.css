@@ -103,7 +103,7 @@
   flex-direction: column;
   flex-grow: 1;
   padding: 0.5rem;
-  min-width: 0; /* Allow text truncation to work */
+  min-width: 0;
 }
 
 /* Novel title text */

@@ -615,4 +615,167 @@
     align-items: flex-start;
     gap: 0.25rem;
   }
+}
+
+/* Request history styles */
+.history-tab {
+  margin-left: auto;
+}
+
+.request-history-container {
+  margin-bottom: 2rem;
+}
+
+.request-history-container h3 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #343a40;
+}
+
+.request-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.history-item {
+  border-radius: 6px;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #6c757d;
+}
+
+.history-item.status-approved {
+  border-left-color: #198754;
+}
+
+.history-item.status-declined {
+  border-left-color: #dc3545;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.history-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.history-username {
+  font-weight: 600;
+}
+
+.history-type {
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  background-color: #e9ecef;
+  border-radius: 12px;
+  color: #6c757d;
+}
+
+.history-status {
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.history-status.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.history-status.status-approved {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.history-status.status-declined {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.history-date {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.history-text {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.history-novel {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.history-novel a {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.history-novel a:hover {
+  text-decoration: underline;
+}
+
+.history-deposit {
+  font-weight: 500;
+  color: #198754;
+}
+
+.close-history-btn {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.close-history-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+/* Dark mode styles for history */
+:root.dark-mode .request-history-container h3 {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .history-item {
+  background-color: #343a40;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+:root.dark-mode .history-username {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .history-text {
+  color: #e9ecef;
+}
+
+:root.dark-mode .history-type {
+  background-color: #495057;
+  color: #adb5bd;
+}
+
+:root.dark-mode .close-history-btn {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #adb5bd;
+}
+
+:root.dark-mode .close-history-btn:hover {
+  background-color: #212529;
+  color: #e9ecef;
 } 

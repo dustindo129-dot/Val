@@ -2,6 +2,7 @@ import React, { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
+import '../../styles/components/ModuleChapters.css';
 
 // Helper function for date formatting
 const formatDateUtil = (date) => {
@@ -52,7 +53,9 @@ const ModuleChapters = memo(({
   canEdit,
   canDelete,
   handleChapterReorder, 
-  handleChapterDelete 
+  handleChapterDelete,
+  isPaidModule,
+  canAccessPaidContent
 }) => {
   const [isReordering, setIsReordering] = useState(false);
 
@@ -72,15 +75,36 @@ const ModuleChapters = memo(({
 
   // Function to determine if a chapter should be visible based on its mode
   const isChapterVisible = (chapter) => {
-    if (!chapter.mode || chapter.mode === 'published' || chapter.mode === 'protected' || chapter.mode === 'paid') {
-      return true; // These modes are visible to everyone
+    // Admin and moderators see all chapters
+    if (user?.role === 'admin' || user?.role === 'moderator') {
+      return true;
     }
     
-    if (chapter.mode === 'draft' && user?.role === 'admin') {
-      return true; // Draft is only visible to admin
+    if (!chapter.mode || chapter.mode === 'published') {
+      return true; // Free content is visible to everyone
     }
     
-    return false; // Not visible for other modes/user combinations
+    if (chapter.mode === 'protected' || chapter.mode === 'paid') {
+      // Protected and paid content is visible but locked for regular users
+      return true;
+    }
+    
+    if (chapter.mode === 'draft') {
+      return false; // Draft is only visible to admin/moderator (handled above)
+    }
+    
+    return false; // Not visible for other modes
+  };
+
+  // Check if a chapter is accessible (not just visible)
+  const canAccessChapter = (chapter) => {
+    // Admin and moderators can access all chapters
+    if (user?.role === 'admin' || user?.role === 'moderator') {
+      return true;
+    }
+    
+    // Regular users can only access published chapters
+    return !chapter.mode || chapter.mode === 'published';
   };
 
   return (
@@ -97,27 +121,48 @@ const ModuleChapters = memo(({
             
             // Determine CSS classes based on chapter mode
             const chapterModeClass = chapter.mode === 'draft' ? 'chapter-mode-draft' : '';
+            const isPaidChapter = chapter.mode === 'paid';
+            const chapterIsAccessible = canAccessChapter(chapter);
             
             return (
               <div 
                 key={`chapter-item-${chapterId}`}
-                className={`module-chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''}`}
+                className={`module-chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''} ${!chapterIsAccessible ? 'locked-chapter' : ''}`}
                 style={{ transition: 'all 0.3s ease' }}
               >
+                {/* Locked layer for paid chapters */}
+                {isPaidChapter && !canAccessPaidContent && (
+                  <div className="chapter-locked-layer">
+                    <div className="locked-content-info">
+                      <FontAwesomeIcon icon={faLock} className="lock-icon-small" />
+                      <span>Need {chapter.chapterBalance || 0} 🌾 to unlock.</span>
+                      <Link to="/market" className="go-to-market-btn-small">Go to market</Link>
+                    </div>
+                  </div>
+                )}
+
                 <div className="chapter-list-content" key={`chapter-content-${chapterId}`}>
                   <div className="chapter-number" key={`chapter-number-${chapterId}`}>
                     {typeof chapter.order === 'number' ? chapter.order : chapter.order || 0}
                   </div>
-                  <Link 
-                    to={`/novel/${novelId}/chapter/${chapterId}`} 
-                    className={`chapter-title-link ${chapterModeClass}`}
-                    key={`chapter-link-${chapterId}`}
-                  >
-                    {chapter.title}
-                    {isChapterNew(chapter.createdAt) && (
-                      <span className="new-tag" key={`new-tag-${chapterId}`}>NEW</span>
-                    )}
-                  </Link>
+                  
+                  {chapterIsAccessible ? (
+                    <Link 
+                      to={`/novel/${novelId}/chapter/${chapterId}`} 
+                      className={`chapter-title-link ${chapterModeClass}`}
+                      key={`chapter-link-${chapterId}`}
+                    >
+                      {chapter.title}
+                      {isChapterNew(chapter.createdAt) && (
+                        <span className="new-tag" key={`new-tag-${chapterId}`}>NEW</span>
+                      )}
+                    </Link>
+                  ) : (
+                    <div className="chapter-title-link locked">
+                      {chapter.title}
+                      <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
+                    </div>
+                  )}
                 </div>
                 
                 {canEdit && (
@@ -195,45 +240,5 @@ const ModuleChapters = memo(({
 });
 
 ModuleChapters.displayName = 'ModuleChapters';
-
-// Add inline styles for the mode tags
-const styles = `
-  .chapter-mode-indicator {
-    margin-left: 8px;
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  .mode-tag {
-    font-size: 10px;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-weight: bold;
-    color: white;
-  }
-  
-  .mode-published {
-    background-color: #2ecc71;
-  }
-  
-  .mode-draft {
-    background-color: #f39c12;
-  }
-  
-  .mode-protected {
-    background-color: #e74c3c;
-  }
-  
-  .mode-paid {
-    background-color: #3498db;
-  }
-`;
-
-// Add the styles to the document
-if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style');
-  styleElement.textContent = styles;
-  document.head.appendChild(styleElement);
-}
 
 export default ModuleChapters; 

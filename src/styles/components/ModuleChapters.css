@@ -1,0 +1,125 @@
+.chapter-mode-indicator {
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mode-tag {
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-weight: bold;
+  color: white;
+}
+
+.mode-published {
+  background-color: #2ecc71;
+}
+
+.mode-draft {
+  background-color: #f39c12;
+}
+
+.mode-protected {
+  background-color: #e74c3c;
+}
+
+.mode-paid {
+  background-color: #3498db;
+}
+
+/* Locked chapter styles */
+.locked-chapter {
+  position: relative;
+}
+
+.chapter-locked-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  overflow: hidden;
+  backdrop-filter: blur(1px);
+  transition: background 0.3s ease;
+}
+
+/* On hover, make background slightly more transparent */
+.chapter-locked-layer:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Ensure content behind the layer is fully visible */
+.locked-chapter .chapter-list-content {
+  opacity: 1;
+}
+
+.locked-content-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px 12px;
+}
+
+.lock-icon-small {
+  color: #e74c3c;
+  font-size: 14px;
+}
+
+.go-to-market-btn-small {
+  background: #2ecc71;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.go-to-market-btn-small:hover {
+  background: #27ae60;
+  text-decoration: none;
+}
+
+.chapter-title-link.locked {
+  color: #7f8c8d;
+  text-decoration: none;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+}
+
+.chapter-lock-icon {
+  margin-left: 8px;
+  color: #e74c3c;
+  font-size: 12px;
+}
+
+.paid-tag {
+  font-size: 10px;
+  margin-left: 6px;
+  padding: 1px 4px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+/* Make chapter items appear faded when they're part of a paid module */
+.module-chapter-item.chapter-mode-paid {
+  border-left: 2px solid #3498db;
+} 

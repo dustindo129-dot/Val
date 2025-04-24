@@ -1,0 +1,188 @@
+/* Module mode styling */
+.module-reorder-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.reorder-buttons-row {
+  display: flex;
+  gap: 4px;
+}
+
+.module-mode-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.module-balance-row {
+  display: flex;
+  justify-content: center;
+}
+
+.module-container.module-mode-paid {
+  border-left: 3px solid #3498db;
+}
+
+.module-balance {
+  font-size: 11px;
+  background: #2980b9;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  min-width: 24px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.mode-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.mode-paid {
+  background-color: #3498db;
+  color: white;
+}
+
+/* Locked content styling */
+.locked-content {
+  position: relative;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.locked-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: all;
+  backdrop-filter: blur(2px);
+  border-radius: 8px;
+}
+
+.locked-content-message {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 90%;
+}
+
+.lock-icon {
+  font-size: 32px;
+  color: #e74c3c;
+  margin-bottom: 12px;
+}
+
+.go-to-market-btn {
+  display: inline-block;
+  background: #2ecc71;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  margin-top: 12px;
+  transition: background 0.2s;
+}
+
+.go-to-market-btn:hover {
+  background: #27ae60;
+  text-decoration: none;
+}
+
+.module-content-wrapper {
+  position: relative;
+}
+
+/* Responsive styles for tablet */
+@media (max-width: 768px) {
+  .locked-content-message {
+    padding: 8px 12px;
+    max-width: 50%;
+    font-size: 90%;
+  }
+  
+  .lock-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  
+  .locked-layer {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(1px);
+  }
+  
+  .go-to-market-btn {
+    padding: 3px 10px;
+    font-size: 12px;
+    min-width: 80px;
+    margin-top: 4px;
+    line-height: 1.2;
+  }
+  
+  .locked-content-message p {
+    font-size: 13px;
+    margin: 3px 0;
+    line-height: 1.2;
+  }
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 576px) {
+  .locked-content-message {
+    padding: 8px;
+    max-width: 100%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    margin: 0 10px;
+  }
+  
+  .lock-icon {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  
+  .locked-layer {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(1px);
+  }
+  
+  .go-to-market-btn {
+    padding: 2px 6px;
+    font-size: 10px;
+    display: inline-block;
+    width: auto;
+    box-sizing: border-box;
+    text-align: center;
+    margin-top: 2px;
+    border-radius: 3px;
+    min-width: 50px;
+    line-height: 1.2;
+    height: auto;
+  }
+  
+  .locked-content-message p {
+    font-size: 10px;
+    margin: 4px 0;
+    line-height: 1.2;
+  }
+} 

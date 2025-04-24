@@ -1036,6 +1036,7 @@ const Chapter = () => {
         isEditing={isEditing}
         moduleChapters={moduleChapters}
         isModuleChaptersLoading={isModuleChaptersLoading}
+        user={user}
       />
 
       {/* Modals */}

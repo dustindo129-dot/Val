@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ModuleChapters from './ModuleChapters';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
+import '../../styles/components/ModuleList.css';
 
 const ModuleList = memo(({
   modules,
@@ -20,6 +21,8 @@ const ModuleList = memo(({
   const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
   // Check if user can delete
   const canDelete = user && user.role === 'admin';
+  // Check if user can access paid content
+  const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
 
   const handleReorderClick = useCallback(async (moduleId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
@@ -133,16 +136,31 @@ const ModuleList = memo(({
                 )}
               </div>
 
-              <ModuleChapters
-                chapters={module.chapters || []}
-                novelId={novelId}
-                moduleId={module._id}
-                user={user}
-                canEdit={canEdit}
-                canDelete={canDelete}
-                handleChapterReorder={handleChapterReorder}
-                handleChapterDelete={handleChapterDelete}
-              />
+              {/* Render module content with locking layer for paid modules */}
+              <div className={`module-content-wrapper ${module.mode === 'paid' && !canAccessPaidContent ? 'locked-content' : ''}`}>
+                {module.mode === 'paid' && !canAccessPaidContent && (
+                  <div className="locked-layer">
+                    <div className="locked-content-message">
+                      <FontAwesomeIcon icon={faLock} className="lock-icon" />
+                      <p>Need {module.moduleBalance} 🌾 to unlock. Please visit market!</p>
+                      <Link to="/market" className="go-to-market-btn">Go to market</Link>
+                    </div>
+                  </div>
+                )}
+
+                <ModuleChapters
+                  chapters={module.chapters || []}
+                  novelId={novelId}
+                  moduleId={module._id}
+                  user={user}
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                  handleChapterReorder={handleChapterReorder}
+                  handleChapterDelete={handleChapterDelete}
+                  isPaidModule={module.mode === 'paid'}
+                  canAccessPaidContent={canAccessPaidContent}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -150,72 +168,6 @@ const ModuleList = memo(({
     </div>
   );
 });
-
-// Update the styles
-const styles = `
-  /* Module mode styling */
-  .module-reorder-buttons {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .reorder-buttons-row {
-    display: flex;
-    gap: 4px;
-  }
-  
-  .module-mode-tag {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  
-  .module-balance-row {
-    display: flex;
-    justify-content: center;
-  }
-  
-  .module-container.module-mode-paid {
-    border-left: 3px solid #3498db;
-  }
-  
-  .module-balance {
-    font-size: 11px;
-    background: #2980b9;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    min-width: 24px;
-    text-align: center;
-    letter-spacing: 0.5px;
-  }
-
-  .mode-tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .mode-paid {
-    background-color: #3498db;
-    color: white;
-  }
-`;
-
-// Add the styles to the document
-if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style');
-  styleElement.textContent = styles;
-  document.head.appendChild(styleElement);
-}
 
 ModuleList.displayName = 'ModuleList';
 

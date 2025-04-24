@@ -35,6 +35,9 @@ const Market = () => {
   const [showNovelResults, setShowNovelResults] = useState(false);
   const [withdrawableRequests, setWithdrawableRequests] = useState(new Set());
   const [withdrawingRequests, setWithdrawingRequests] = useState(new Set());
+  const [showHistory, setShowHistory] = useState(false);
+  const [requestHistory, setRequestHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Fetch user balance and requests on component mount
   useEffect(() => {
@@ -122,7 +125,7 @@ const Market = () => {
     }
     
     // Warn user about withdrawal policy
-    if (!confirm('IMPORTANT: You can only withdraw your request within the first 5 seconds after posting. Do you want to proceed?')) {
+    if (!confirm('IMPORTANT: You can only withdraw your request after 24 hours have passed since posting. Do you want to proceed?')) {
       return;
     }
     
@@ -160,17 +163,10 @@ const Market = () => {
       setSelectedNovel(null);
       setNovelSearchQuery('');
       
-      // Mark this request as withdrawable for 5 seconds
-      setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
-      
-      // After 5 seconds, make the request no longer withdrawable
+      // Add request to withdrawableRequests after 24 hours
       setTimeout(() => {
-        setWithdrawableRequests(prev => {
-          const next = new Set(prev);
-          next.delete(newRequest._id);
-          return next;
-        });
-      }, 5000);
+        setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
+      }, 86400000); // 24 hours in milliseconds
       
     } catch (err) {
       console.error('Failed to submit request:', err);
@@ -209,6 +205,38 @@ const Market = () => {
     setDepositAmount('');
     setSelectedNovel(null);
     setNovelSearchQuery('');
+  };
+
+  // Fetch request history
+  const fetchRequestHistory = async () => {
+    if (!isAuthenticated || !(user.role === 'admin' || user.role === 'moderator')) {
+      return;
+    }
+    
+    setHistoryLoading(true);
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/requests/all`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      setRequestHistory(response.data);
+      setShowHistory(true);
+    } catch (err) {
+      console.error('Failed to fetch request history:', err);
+      alert('Failed to load request history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+  
+  // Toggle history view
+  const toggleHistory = () => {
+    if (showHistory) {
+      setShowHistory(false);
+    } else {
+      fetchRequestHistory();
+    }
   };
 
   // Handle liking a request
@@ -444,92 +472,142 @@ const Market = () => {
                 >
                   Request Module/Chapter Opening
                 </button>
+                
+                {/* Request History Button - Admin/Moderator Only */}
+                {isAuthenticated && user && (user.role === 'admin' || user.role === 'moderator') && (
+                  <button 
+                    className={`type-tab history-tab ${showHistory ? 'active' : ''}`} 
+                    onClick={toggleHistory}
+                  >
+                    Request History
+                  </button>
+                )}
               </div>
               
-              <form className="request-form" onSubmit={handleSubmit}>
-                {requestType === 'open' && (
-                  <div className="novel-search">
-                    <input
-                      type="text"
-                      placeholder="Search for a novel..."
-                      value={novelSearchQuery}
-                      onChange={(e) => setNovelSearchQuery(e.target.value)}
-                      onClick={() => setShowNovelResults(true)}
-                      className="novel-search-input"
-                    />
-                    {isSearching && <div className="searching-indicator">Searching...</div>}
-                    
-                    {showNovelResults && novelSearchResults.length > 0 && (
-                      <div className="novel-search-results">
-                        {novelSearchResults.map(novel => (
-                          <div 
-                            key={novel._id} 
-                            className="novel-result"
-                            onClick={() => handleNovelSelect(novel)}
-                          >
-                            <img 
-                              src={novel.illustration || 'https://placeholder.com/book'} 
-                              alt={novel.title} 
-                              className="novel-result-cover"
-                            />
-                            <div className="novel-result-info">
-                              <div className="novel-result-title">{novel.title}</div>
+              {showHistory ? (
+                <div className="request-history-container">
+                  <h3>Request History</h3>
+                  {historyLoading ? (
+                    <p>Loading history...</p>
+                  ) : requestHistory.length === 0 ? (
+                    <p>No request history found</p>
+                  ) : (
+                    <div className="request-history-list">
+                      {requestHistory.map(request => (
+                        <div key={request._id} className={`history-item status-${request.status}`}>
+                          <div className="history-header">
+                            <div className="history-user">
+                              <span className="history-username">{request.user.username}</span>
+                              <span className="history-type">{request.type === 'new' ? 'New Novel' : 'Module Opening'}</span>
+                              <span className={`history-status status-${request.status}`}>
+                                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                              </span>
+                            </div>
+                            <div className="history-date">
+                              {new Date(request.createdAt).toLocaleDateString()}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {showNovelResults && novelSearchQuery.length >= 3 && novelSearchResults.length === 0 && !isSearching && (
-                      <div className="no-results">No novels found</div>
-                    )}
-                  </div>
-                )}
-                
-                <textarea
-                  className="request-input"
-                  placeholder="Write your request..."
-                  value={requestText}
-                  onChange={(e) => setRequestText(e.target.value)}
-                  disabled={submitting}
-                  required
-                />
-                
-                <div className="deposit-input-container">
-                  <label htmlFor="deposit">Deposit:</label>
-                  <input
-                    type="number"
-                    id="deposit"
-                    min="1"
-                    step="1"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
+                          <div className="history-text">{request.text}</div>
+                          {request.novel && (
+                            <div className="history-novel">
+                              Novel: <Link to={`/novel/${request.novel._id}`}>{request.novel.title}</Link>
+                            </div>
+                          )}
+                          <div className="history-deposit">Deposit: {request.deposit}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button className="close-history-btn" onClick={() => setShowHistory(false)}>
+                    Back to Requests
+                  </button>
+                </div>
+              ) : (
+                <form className="request-form" onSubmit={handleSubmit}>
+                  {requestType === 'open' && (
+                    <div className="novel-search">
+                      <input
+                        type="text"
+                        placeholder="Search for a novel..."
+                        value={novelSearchQuery}
+                        onChange={(e) => setNovelSearchQuery(e.target.value)}
+                        onClick={() => setShowNovelResults(true)}
+                        className="novel-search-input"
+                      />
+                      {isSearching && <div className="searching-indicator">Searching...</div>}
+                      
+                      {showNovelResults && novelSearchResults.length > 0 && (
+                        <div className="novel-search-results">
+                          {novelSearchResults.map(novel => (
+                            <div 
+                              key={novel._id} 
+                              className="novel-result"
+                              onClick={() => handleNovelSelect(novel)}
+                            >
+                              <img 
+                                src={novel.illustration || 'https://placeholder.com/book'} 
+                                alt={novel.title} 
+                                className="novel-result-cover"
+                              />
+                              <div className="novel-result-info">
+                                <div className="novel-result-title">{novel.title}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {showNovelResults && novelSearchQuery.length >= 3 && novelSearchResults.length === 0 && !isSearching && (
+                        <div className="no-results">No novels found</div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <textarea
+                    className="request-input"
+                    placeholder="Write your request..."
+                    value={requestText}
+                    onChange={(e) => setRequestText(e.target.value)}
                     disabled={submitting}
                     required
-                    className="deposit-input"
                   />
-                  <span className="balance-display">Current balance: {userBalance}</span>
-                </div>
-                
-                <div className="request-form-actions">
-                  <button 
-                    type="submit" 
-                    className="submit-request-btn"
-                    disabled={submitting || !requestText.trim() || !depositAmount || 
-                             (requestType === 'open' && !selectedNovel) ||
-                             (depositAmount && Number(depositAmount) > userBalance)}
-                  >
-                    {submitting ? 'Posting...' : 'Post Request'}
-                  </button>
-                  <button 
-                    type="button" 
-                    className="discard-btn"
-                    onClick={handleClearForm}
-                  >
-                    Discard
-                  </button>
-                </div>
-              </form>
+                  
+                  <div className="deposit-input-container">
+                    <label htmlFor="deposit">Deposit:</label>
+                    <input
+                      type="number"
+                      id="deposit"
+                      min="1"
+                      step="1"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      disabled={submitting}
+                      required
+                      className="deposit-input"
+                    />
+                    <span className="balance-display">Current balance: {userBalance}</span>
+                  </div>
+                  
+                  <div className="request-form-actions">
+                    <button 
+                      type="submit" 
+                      className="submit-request-btn"
+                      disabled={submitting || !requestText.trim() || !depositAmount || 
+                               (requestType === 'open' && !selectedNovel) ||
+                               (depositAmount && Number(depositAmount) > userBalance)}
+                    >
+                      {submitting ? 'Posting...' : 'Post Request'}
+                    </button>
+                    <button 
+                      type="button" 
+                      className="discard-btn"
+                      onClick={handleClearForm}
+                    >
+                      Discard
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           ) : (
             <div className="login-to-request">
@@ -537,103 +615,105 @@ const Market = () => {
             </div>
           )}
           
-          <div className="requests-list">
-            {isLoading ? (
-              <p>Loading requests...</p>
-            ) : error ? (
-              <p className="error">{error}</p>
-            ) : requests.length === 0 ? (
-              <p>No requests found</p>
-            ) : (
-              requests.map(request => {
-                // Get the current user ID
-                const userId = user?.id || user?._id;
-                
-                // Check if the current user has liked this request
-                const isLikedByCurrentUser = isAuthenticated && userId && 
-                  request.likes && Array.isArray(request.likes) && 
-                  request.likes.some(likeId => likeId === userId);
-                
-                return (
-                  <div key={request._id} className="request-item">
-                    <div className="request-avatar">
-                      {request.user.avatar ? (
-                        <img src={request.user.avatar} alt={request.user.username} />
-                      ) : (
-                        <div className="default-avatar">
-                          {request.user.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className="request-content">
-                      <div className="request-header">
-                        <div className="request-user-info">
-                          <span className="request-username">{request.user.username}</span>
-                          <span className="request-type">
-                            {request.type === 'new' ? 'Request new novel' : 'Request module/chapter opening'}
-                          </span>
-                          {request.type === 'open' && request.novel && (
-                            <Link to={`/novel/${request.novel._id}`} className="novel-link">
-                              {request.novel.title}
-                            </Link>
-                          )}
-                        </div>
-                        <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
-                      </div>
-                      <div className="request-text">
-                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.text) }} />
-                        <div className="request-deposit">Deposit: {request.deposit}</div>
-                      </div>
-                      <div className="request-actions">
-                        <button 
-                          className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
-                          onClick={() => handleLikeRequest(request._id)}
-                          disabled={!isAuthenticated || likingRequests.has(request._id)}
-                        >
-                          <span className="like-icon">
-                            {likingRequests.has(request._id) ? '⏳' : isLikedByCurrentUser ? '❤️' : '🤍'}
-                          </span>
-                          <span className="like-count">{request.likes ? request.likes.length : 0}</span>
-                        </button>
-                        
-                        {/* Withdraw button - visible only for the user's own requests after 5 seconds */}
-                        {isAuthenticated && 
-                         user && 
-                         request.user._id === (user._id || user.id) && 
-                         !withdrawableRequests.has(request._id) && (
-                          <button 
-                            className="withdraw-button"
-                            onClick={() => handleWithdrawRequest(request._id)}
-                            disabled={withdrawingRequests.has(request._id)}
-                          >
-                            {withdrawingRequests.has(request._id) ? 'Withdrawing...' : 'Withdraw'}
-                          </button>
-                        )}
-                        
-                        {/* Admin actions */}
-                        {user && user.role === 'admin' && (
-                          <div className="admin-actions">
-                            <button 
-                              className="approve-btn"
-                              onClick={() => handleApproveRequest(request._id)}
-                            >
-                              Approve
-                            </button>
-                            <button 
-                              className="decline-btn"
-                              onClick={() => handleDeclineRequest(request._id)}
-                            >
-                              Decline
-                            </button>
+          {!showHistory && (
+            <div className="requests-list">
+              {isLoading ? (
+                <p>Loading requests...</p>
+              ) : error ? (
+                <p className="error">{error}</p>
+              ) : requests.length === 0 ? (
+                <p>No requests found</p>
+              ) : (
+                requests.map(request => {
+                  // Get the current user ID
+                  const userId = user?.id || user?._id;
+                  
+                  // Check if the current user has liked this request
+                  const isLikedByCurrentUser = isAuthenticated && userId && 
+                    request.likes && Array.isArray(request.likes) && 
+                    request.likes.some(likeId => likeId === userId);
+                  
+                  return (
+                    <div key={request._id} className="request-item">
+                      <div className="request-avatar">
+                        {request.user.avatar ? (
+                          <img src={request.user.avatar} alt={request.user.username} />
+                        ) : (
+                          <div className="default-avatar">
+                            {request.user.username.charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
+                      <div className="request-content">
+                        <div className="request-header">
+                          <div className="request-user-info">
+                            <span className="request-username">{request.user.username}</span>
+                            <span className="request-type">
+                              {request.type === 'new' ? 'Request new novel' : 'Request module/chapter opening'}
+                            </span>
+                            {request.type === 'open' && request.novel && (
+                              <Link to={`/novel/${request.novel._id}`} className="novel-link">
+                                {request.novel.title}
+                              </Link>
+                            )}
+                          </div>
+                          <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
+                        </div>
+                        <div className="request-text">
+                          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.text) }} />
+                          <div className="request-deposit">Deposit: {request.deposit}</div>
+                        </div>
+                        <div className="request-actions">
+                          <button 
+                            className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
+                            onClick={() => handleLikeRequest(request._id)}
+                            disabled={!isAuthenticated || likingRequests.has(request._id)}
+                          >
+                            <span className="like-icon">
+                              {likingRequests.has(request._id) ? '⏳' : isLikedByCurrentUser ? '❤️' : '🤍'}
+                            </span>
+                            <span className="like-count">{request.likes ? request.likes.length : 0}</span>
+                          </button>
+                          
+                          {/* Withdraw button - visible only for the user's own requests after 24 hours */}
+                          {isAuthenticated && 
+                           user && 
+                           request.user._id === (user._id || user.id) && 
+                           withdrawableRequests.has(request._id) && (
+                            <button 
+                              className="withdraw-button"
+                              onClick={() => handleWithdrawRequest(request._id)}
+                              disabled={withdrawingRequests.has(request._id)}
+                            >
+                              {withdrawingRequests.has(request._id) ? 'Withdrawing...' : 'Withdraw'}
+                            </button>
+                          )}
+                          
+                          {/* Admin actions */}
+                          {user && user.role === 'admin' && (
+                            <div className="admin-actions">
+                              <button 
+                                className="approve-btn"
+                                onClick={() => handleApproveRequest(request._id)}
+                              >
+                                Approve
+                              </button>
+                              <button 
+                                className="decline-btn"
+                                onClick={() => handleDeclineRequest(request._id)}
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </section>
       </div>
     </div>
