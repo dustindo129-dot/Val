@@ -42,6 +42,7 @@ const AUTH_LOGIN_STORAGE_KEY = 'authLoginEvent';
 export const AuthProvider = ({ children }) => {
   // State management for authentication
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -93,6 +94,7 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('user');
         if (storedUser && checkSessionValidity()) {
           setUser(JSON.parse(storedUser));
+          setIsAuthenticated(true);
           updateSessionExpiry();
         } else if (storedUser) {
           signOut();
@@ -143,6 +145,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       updateSessionExpiry();
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
     }
   }, [user]);
 
@@ -156,6 +161,7 @@ export const AuthProvider = ({ children }) => {
         // Another tab triggered a login
         const userData = JSON.parse(event.newValue);
         setUser(userData);
+        setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(userData));
         updateSessionExpiry();
       }
@@ -167,6 +173,7 @@ export const AuthProvider = ({ children }) => {
       } else if (event.type === AUTH_LOGIN_EVENT) {
         const userData = event.detail;
         setUser(userData);
+        setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(userData));
         updateSessionExpiry();
       }
@@ -206,6 +213,7 @@ export const AuthProvider = ({ children }) => {
       
       const userData = response.data.user;
       setUser(userData);
+      setIsAuthenticated(true);
       
       // Store user data and token
       localStorage.setItem('user', JSON.stringify(userData));
@@ -247,53 +255,69 @@ export const AuthProvider = ({ children }) => {
       
       const userData = response.data.user;
       setUser(userData);
+      setIsAuthenticated(true);
       
       // Store user data and token
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
       updateSessionExpiry();
       
+      // Notify other tabs about the login
+      localStorage.setItem(AUTH_LOGIN_STORAGE_KEY, JSON.stringify(userData));
+      
+      // Dispatch custom event for same tab
+      window.dispatchEvent(new CustomEvent(AUTH_LOGIN_EVENT, { detail: userData }));
+      
       return response.data;
     } catch (error) {
-      setError(error.response?.data?.message || 'Sign up failed');
+      setError(error.response?.data?.message || 'Signup failed');
       throw error;
     }
   };
 
   /**
    * Handles user logout
-   * @param {boolean} isSync - Whether this is a synchronized logout from another tab
+   * @param {boolean} isSync - Whether this is a synchronized logout
+   * @returns {Promise<void>}
    */
   const signOut = async (isSync = false) => {
     try {
+      // Only try to call the logout API if this is not a synchronized logout
       if (!isSync) {
-        // Only make the API call if this is the original logout
-        await axios.post(`${config.backendUrl}/api/auth/signout`, {},
-          { 
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-          }
-        );
-
+        try {
+          await axios.post(`${config.backendUrl}/api/auth/logout`, {},
+            { 
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            }
+          );
+        } catch (e) {
+          // Continue with local logout even if API call fails
+          console.warn('Backend logout failed, continuing with client-side logout');
+        }
+        
         // Notify other tabs about the logout
         localStorage.setItem(AUTH_STORAGE_KEY, Date.now().toString());
         
         // Dispatch custom event for same tab
         window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
       }
-    } catch (error) {
-      setError('Sign out failed');
-    } finally {
-      // Clear user data and redirect
-      setUser(null);
+      
+      // Clear user data and token
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       localStorage.removeItem('sessionExpiry');
-      if (window.location.pathname !== '/') {
-        navigate('/');
-      }
+      
+      // Update state
+      setUser(null);
+      setIsAuthenticated(false);
+      
+      // Local event to close any open modals
+      window.dispatchEvent(new CustomEvent('closeAuthModal'));
+      
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 
@@ -344,43 +368,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Context value object
-  const value = {
+  // Context value
+  const contextValue = {
     user,
+    isAuthenticated,
     loading,
     error,
     login,
     signUp,
     signOut,
+    setUser,
     forgotPassword,
-    resetPassword,
-    updateUser: setUser
+    resetPassword
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      ) : (
-        children
-      )}
+    <AuthContext.Provider value={contextValue}>
+      {children}
     </AuthContext.Provider>
   );
 };
 
 /**
- * Custom hook to use authentication context
- * @returns {Object} Authentication context value
- * @throws {Error} If used outside of AuthProvider
+ * Custom hook to use the auth context
+ * @returns {Object} Auth context value
  */
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return useContext(AuthContext);
 };
 
 export default AuthContext; 

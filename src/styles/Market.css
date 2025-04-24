@@ -1,0 +1,592 @@
+/**
+ * Market.css
+ * 
+ * Styles for the Market page with request functionality
+ * Based on CommentSection component styling
+ */
+
+/* Main container styles */
+.market-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.market-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.market-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.market-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #343a40;
+}
+
+/* Market header */
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Sort controls */
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-controls span {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.sort-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #495057;
+}
+
+.sort-btn.active {
+  background-color: #e9ecef;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Request form styles */
+.request-form-container {
+  margin-bottom: 2rem;
+}
+
+.request-type-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.type-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.type-tab.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.type-tab:hover:not(.active) {
+  background-color: #e9ecef;
+}
+
+.request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.request-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.request-input:focus {
+  outline: none;
+  border-color: #6c757d;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.deposit-input-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.deposit-input-container label {
+  font-weight: 500;
+}
+
+.deposit-input {
+  width: 100px;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.balance-display {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.request-form-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.submit-request-btn {
+  padding: 0.5rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-request-btn:hover:not(:disabled) {
+  background-color: #0069d9;
+}
+
+.submit-request-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.discard-btn {
+  padding: 0.5rem 1.5rem;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.discard-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+/* Login prompt styles */
+.login-to-request {
+  padding: 1rem;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.login-link {
+  background: none;
+  border: none;
+  color: #0d6efd;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.login-link:hover {
+  color: #0a58ca;
+}
+
+/* Novel search styles */
+.novel-search {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.novel-search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.novel-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ced4da;
+  border-radius: 0 0 4px 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.novel-result {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #ced4da;
+  transition: background-color 0.2s;
+}
+
+.novel-result:last-child {
+  border-bottom: none;
+}
+
+.novel-result:hover {
+  background-color: #f8f9fa;
+}
+
+.novel-result-cover {
+  width: 40px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.novel-result-title {
+  font-weight: 500;
+  color: #212529;
+}
+
+.searching-indicator {
+  padding: 0.5rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.no-results {
+  padding: 0.75rem;
+  color: #6c757d;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Requests list styles */
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.request-item {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.request-item:last-child {
+  border-bottom: none;
+}
+
+/* Avatar styles */
+.request-avatar {
+  flex-shrink: 0;
+}
+
+.request-avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.default-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Request content styles */
+.request-content {
+  flex-grow: 1;
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.request-user-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.request-username {
+  font-weight: 600;
+  color: #343a40;
+}
+
+.request-type {
+  font-size: 0.85rem;
+  color: #6c757d;
+  padding: 0.15rem 0.5rem;
+  background-color: #e9ecef;
+  border-radius: 12px;
+}
+
+.novel-link {
+  color: #0d6efd;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.novel-link:hover {
+  text-decoration: underline;
+}
+
+.request-time {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.request-text {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+  color: #212529;
+  word-break: break-word;
+}
+
+.request-deposit {
+  margin-top: 0.5rem;
+  font-weight: 500;
+  color: #198754;
+}
+
+/* Request actions styles */
+.request-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.like-button {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.like-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.like-button:not(:disabled):hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.like-button.liked {
+  color: #e74c3c;
+}
+
+.like-button.liked .like-icon {
+  transform: scale(1.1);
+}
+
+.like-count {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Admin actions */
+.admin-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.approve-btn, .decline-btn {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.approve-btn {
+  background-color: #198754;
+  color: white;
+  border: none;
+}
+
+.approve-btn:hover {
+  background-color: #157347;
+}
+
+.decline-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+}
+
+.decline-btn:hover {
+  background-color: #bb2d3b;
+}
+
+/* Loading and error states */
+.error {
+  color: #dc3545;
+}
+
+/* Dark mode */
+:root.dark-mode .market-section {
+  background-color: #343a40;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+:root.dark-mode .market-section h2,
+:root.dark-mode .request-username {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .request-text {
+  color: #e9ecef;
+}
+
+:root.dark-mode .request-deposit {
+  color: #5dba7d;
+}
+
+:root.dark-mode .type-tab {
+  background-color: #212529;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+:root.dark-mode .type-tab.active {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+:root.dark-mode .type-tab:hover:not(.active) {
+  background-color: #343a40;
+}
+
+:root.dark-mode .request-input,
+:root.dark-mode .deposit-input,
+:root.dark-mode .novel-search-input {
+  background-color: #212529;
+  border-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .request-input:focus,
+:root.dark-mode .deposit-input:focus,
+:root.dark-mode .novel-search-input:focus {
+  border-color: #6c757d;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+:root.dark-mode .novel-search-results,
+:root.dark-mode .novel-result {
+  background-color: #212529;
+  border-color: #495057;
+}
+
+:root.dark-mode .novel-result:hover {
+  background-color: #343a40;
+}
+
+:root.dark-mode .novel-result-title {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .request-type {
+  background-color: #343a40;
+  color: #adb5bd;
+}
+
+:root.dark-mode .discard-btn {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #adb5bd;
+}
+
+:root.dark-mode .discard-btn:hover {
+  background-color: #212529;
+  color: #e9ecef;
+}
+
+:root.dark-mode .request-item {
+  border-bottom-color: #495057;
+}
+
+:root.dark-mode .like-button:not(:disabled):hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark-mode .like-count {
+  color: #adb5bd;
+}
+
+:root.dark-mode .login-to-request {
+  background-color: #212529;
+  color: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+  .market-header,
+  .request-form-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .sort-controls {
+    margin-top: 0.5rem;
+  }
+  
+  .request-user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+} 

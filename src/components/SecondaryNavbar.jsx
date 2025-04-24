@@ -20,6 +20,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
 import '../styles/SecondaryNavbar.css';
+import axios from 'axios';
+import config from '../config/config';
 
 /**
  * SecondaryNavbar Component
@@ -33,11 +35,13 @@ const SecondaryNavbar = () => {
   // Get current location for active link highlighting
   const location = useLocation();
   // Get user authentication state for admin features
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   // State for dark mode toggle
   const [isDarkMode, setIsDarkMode] = useState(false);
   // State for mobile dropdown menu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // State for user balance
+  const [userBalance, setUserBalance] = useState(0);
   // Reference to the menu container for detecting outside clicks
   const menuRef = useRef(null);
 
@@ -52,6 +56,27 @@ const SecondaryNavbar = () => {
       document.documentElement.classList.add('dark-mode');
     }
   }, []);
+
+  /**
+   * Fetch user balance when authenticated
+   */
+  useEffect(() => {
+    const fetchUserBalance = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const response = await axios.get(
+            `${config.backendUrl}/api/users/${user.username}/profile`,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          setUserBalance(response.data.balance || 0);
+        } catch (error) {
+          console.error('Failed to fetch user balance:', error);
+        }
+      }
+    };
+
+    fetchUserBalance();
+  }, [isAuthenticated, user]);
 
   /**
    * Add click outside listener to close menu when clicking outside
@@ -131,6 +156,12 @@ const SecondaryNavbar = () => {
             <Link to="/donation" className={`nav-link ${isActive('/donation')}`} onClick={() => setIsMenuOpen(false)}>
               Donation
             </Link>
+            {/* Market link - only visible to admin */}
+            {user?.role === 'admin' && (
+              <Link to="/market" className={`nav-link ${isActive('/market')}`} onClick={() => setIsMenuOpen(false)}>
+                Market
+              </Link>
+            )}
             {/* Admin and Moderator dashboard link */}
             {(user?.role === 'admin' || user?.role === 'moderator') && (
               <Link to="/admin-dashboard" className={`nav-link ${isActive('/admin-dashboard')}`} onClick={() => setIsMenuOpen(false)}>
@@ -140,10 +171,27 @@ const SecondaryNavbar = () => {
           </div>
         </div>
         
-        {/* Theme toggle button */}
-        <button onClick={toggleTheme} className="theme-toggle">
-          {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-        </button>
+        {/* Button group for User Balance, Top-up and Theme toggle */}
+        <div className="button-group">
+          {/* User Balance - only visible when logged in */}
+          {isAuthenticated && (
+            <div className="user-balance">
+              <span>🌾: {userBalance}</span>
+            </div>
+          )}
+          
+          {/* Top-up button - only visible to admin */}
+          {user?.role === 'admin' && (
+            <Link to="/top-up" className="top-up-button">
+              Top-up
+            </Link>
+          )}
+          
+          {/* Theme toggle button */}
+          <button onClick={toggleTheme} className="theme-toggle">
+            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          </button>
+        </div>
       </div>
     </nav>
   );

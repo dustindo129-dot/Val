@@ -13,6 +13,8 @@ import ResetPassword from '../components/auth/ResetPassword';
 import Donation from '../pages/Donation';
 import Feedback from '../pages/Feedback';
 import OLN from '../pages/OLN';
+import Market from '../pages/Market';
+import TopUp from '../pages/TopUp';
 
 function AppRoutes() {
   return (
@@ -42,6 +44,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AdminDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/market" 
+        element={
+          <ProtectedRoute>
+            <Market />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/top-up" 
+        element={
+          <ProtectedRoute>
+            <TopUp />
           </ProtectedRoute>
         } 
       />

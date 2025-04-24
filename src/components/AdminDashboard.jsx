@@ -104,6 +104,10 @@ const AdminDashboard = () => {
   const editorRef = useRef(null);
   const noteEditorRef = useRef(null);
 
+  // State for editing novel balance
+  const [editingBalanceId, setEditingBalanceId] = useState(null);
+  const [balanceValue, setBalanceValue] = useState(0);
+
   // Fetch novels using React Query
   const { data: novels = [] } = useQuery({
     queryKey: ['novels'],
@@ -640,6 +644,69 @@ const AdminDashboard = () => {
     }
   };
 
+  /**
+   * Handles edit mode for novel balance
+   * @param {string} id - Novel ID
+   * @param {number} currentBalance - Current balance value
+   */
+  const handleEditBalance = (id, currentBalance) => {
+    setEditingBalanceId(id);
+    setBalanceValue(currentBalance || 0);
+  };
+
+  /**
+   * Cancels balance editing mode
+   */
+  const cancelEditBalance = () => {
+    setEditingBalanceId(null);
+    setBalanceValue(0);
+  };
+
+  /**
+   * Saves updated novel balance
+   * @param {string} id - Novel ID
+   */
+  const saveBalanceChange = async (id) => {
+    try {
+      // Find the novel in the current data
+      const novel = sortedNovels.find(novel => novel._id === id);
+      if (!novel) {
+        throw new Error('Novel not found');
+      }
+
+      // Send request to update only the balance without affecting updatedAt
+      const response = await fetch(`${config.backendUrl}/api/novels/${id}/balance`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ 
+          novelBalance: parseFloat(balanceValue) 
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update novel balance');
+      }
+
+      // Update the novel in cache
+      queryClient.setQueryData(['novels'], old => 
+        Array.isArray(old) 
+          ? old.map(novel => novel._id === id ? { ...novel, novelBalance: parseFloat(balanceValue) } : novel)
+          : []
+      );
+
+      // Exit edit mode
+      setEditingBalanceId(null);
+      setError('');
+    } catch (err) {
+      console.error('Error updating balance:', err);
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <h2 className="section-title">Novel Management</h2>
@@ -1026,12 +1093,54 @@ const AdminDashboard = () => {
             {sortedNovels.map(novel => (
               <li key={novel._id}>
                 <div className="novel-title-section">
-                  <Link 
-                    to={`/novel/${novel._id}`}
-                    className="novel-title-link"
-                  >
-                    {novel.title}
-                  </Link>
+                  <div className="novel-info">
+                    <Link 
+                      to={`/novel/${novel._id}`}
+                      className="novel-title-link"
+                    >
+                      {novel.title}
+                    </Link>
+                    <div className="novel-balance">
+                      {editingBalanceId === novel._id ? (
+                        <div className="balance-edit-container">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={balanceValue}
+                            onChange={(e) => setBalanceValue(e.target.value)}
+                            className="balance-edit-input"
+                          />
+                          <div className="balance-edit-actions">
+                            <button 
+                              onClick={() => saveBalanceChange(novel._id)}
+                              className="save-balance-btn"
+                            >
+                              Save
+                            </button>
+                            <button 
+                              onClick={cancelEditBalance}
+                              className="cancel-balance-btn"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          Novel balance: {novel.novelBalance || 0}
+                          {user?.role === 'admin' && (
+                            <button
+                              onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
+                              className="edit-balance-btn"
+                            >
+                              Edit
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="novel-actions">
                   <select
@@ -1043,7 +1152,9 @@ const AdminDashboard = () => {
                     <option value="Completed">Completed</option>
                     <option value="Hiatus">Hiatus</option>
                   </select>
-                  <button onClick={() => handleEdit(novel)}>Edit</button>
+                  {(user?.role === 'admin' || user?.role === 'moderator') && (
+                    <button onClick={() => handleEdit(novel)}>Edit</button>
+                  )}
                   {user?.role === 'admin' && (
                     <button 
                       className="delete"

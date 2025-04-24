@@ -527,4 +527,105 @@
 .illustration-upload-label:disabled {
   background-color: var(--disabled-color, #95a5a6);
   cursor: not-allowed;
+}
+
+/* Novel information section */
+.novel-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Enable flex shrinking */
+  flex: 1;
+}
+
+.novel-balance {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6c757d);
+  margin-top: 0.25rem;
+}
+
+.edit-balance-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color, #3498db);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
+
+.edit-balance-btn:hover {
+  color: var(--primary-dark, #2980b9);
+}
+
+.balance-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.balance-edit-input {
+  width: 80px;
+  padding: 0.25rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #ddd);
+  font-size: 0.8rem;
+}
+
+.balance-edit-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.save-balance-btn, 
+.cancel-balance-btn {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.save-balance-btn {
+  background: var(--success-color, #2ecc71);
+  color: white;
+}
+
+.cancel-balance-btn {
+  background: var(--secondary-color, #95a5a6);
+  color: white;
+}
+
+.save-balance-btn:hover {
+  background: var(--success-dark, #27ae60);
+}
+
+.cancel-balance-btn:hover {
+  background: var(--secondary-dark, #7f8c8d);
+}
+
+/* Dark mode support */
+:root.dark-mode .novel-balance {
+  color: var(--text-secondary-dark, #adb5bd);
+}
+
+:root.dark-mode .balance-edit-input {
+  background: var(--input-bg-dark, #2d3748);
+  border-color: var(--border-color-dark, #4a5568);
+  color: var(--text-color-dark, #e2e8f0);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .balance-edit-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .balance-edit-actions {
+    margin-top: 0.25rem;
+  }
 } 
