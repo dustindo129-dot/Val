@@ -141,39 +141,6 @@
     padding: 0 1rem;
   }
 
-  .nav-links {
-    display: flex;
-    justify-content: flex-start;
-    padding: 0;
-    padding-left: 0;
-    gap: 1rem;
-  }
-
-  .nav-link {
-    font-size: 0.85rem;
-    padding: 0.4rem 0;
-  }
-
-  .theme-toggle {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
-    margin: 0;
-    height: 28px;
-  }
-}
-
-@media (max-width: 576px) {
-  .secondary-navbar {
-    padding: 0.5rem 0;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .nav-container {
-    width: 100%;
-    padding: 0 0.5rem;
-  }
-
   .mobile-menu-container {
     display: flex; /* Show as normal container in mobile */
     position: relative;
@@ -272,11 +239,16 @@
     border-bottom: none;
   }
 
+  .button-group {
+    gap: 0.25rem;
+  }
+
+  .top-up-button,
   .theme-toggle {
-    font-size: 0.75rem;
-    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
     margin: 0;
-    height: 26px;
+    height: 28px;
   }
 
   /* Dark theme styles for mobile menu */
@@ -293,6 +265,43 @@
 
   :root.dark-mode .nav-link {
     border-bottom-color: #2d2d2d;
+  }
+  
+  .user-balance {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    height: 28px;
+  }
+}
+
+@media (max-width: 576px) {
+  .secondary-navbar {
+    padding: 0.5rem 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .nav-container {
+    width: 100%;
+    padding: 0 0.5rem;
+  }
+
+  .button-group {
+    gap: 0.25rem;
+  }
+
+  .top-up-button,
+  .theme-toggle {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    margin: 0;
+    height: 26px;
+  }
+  
+  .user-balance {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.5rem;
+    height: 26px;
   }
 }
 
@@ -335,35 +344,6 @@
   background-color: #3d8b40;
 }
 
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  .button-group {
-    gap: 0.25rem;
-  }
-
-  .top-up-button,
-  .theme-toggle {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
-    margin: 0;
-    height: 28px;
-  }
-}
-
-@media (max-width: 576px) {
-  .button-group {
-    gap: 0.25rem;
-  }
-
-  .top-up-button,
-  .theme-toggle {
-    font-size: 0.75rem;
-    padding: 0.35rem 0.6rem;
-    margin: 0;
-    height: 26px;
-  }
-}
-
 /* User balance display */
 .user-balance {
   display: flex;
@@ -391,21 +371,4 @@
   color: #e5e7eb;
   background-color: #2d2d2d;
   border-color: #444;
-}
-
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  .user-balance {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.6rem;
-    height: 28px;
-  }
-}
-
-@media (max-width: 576px) {
-  .user-balance {
-    font-size: 0.75rem;
-    padding: 0.35rem 0.5rem;
-    height: 26px;
-  }
 } 

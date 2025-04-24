@@ -39,17 +39,6 @@ const UserBookmarks = () => {
   const [error, setError] = useState(null);
   const [totalBookmarks, setTotalBookmarks] = useState(0);
 
-  // Check if user has permission to view these bookmarks
-  if (!user || user.username !== username) {
-    return (
-      <div className="bookmarks-container">
-        <div className="no-bookmarks">
-          <p>You don't have permission to view these bookmarks.</p>
-        </div>
-      </div>
-    );
-  }
-
   // Memoize fetchBookmarks to prevent unnecessary recreations
   const fetchBookmarks = useCallback(async () => {
     if (!user || user.username !== username) return;
@@ -101,6 +90,17 @@ const UserBookmarks = () => {
       fetchBookmarks();
     }
   };
+
+  // Check if user has permission to view these bookmarks
+  if (!user || user.username !== username) {
+    return (
+      <div className="bookmarks-container">
+        <div className="no-bookmarks">
+          <p>You don't have permission to view these bookmarks.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show empty state immediately if we know there are no bookmarks
   if (totalBookmarks === 0 && !loading) {
