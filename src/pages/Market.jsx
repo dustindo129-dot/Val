@@ -18,9 +18,6 @@ const Market = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
-  // Debug authentication state
-  console.log("Market - Auth State:", { isAuthenticated, user, token: localStorage.getItem('token') });
-  
   const [userBalance, setUserBalance] = useState(0);
   const [requestType, setRequestType] = useState('new'); // 'new' or 'open'
   const [requestText, setRequestText] = useState('');
@@ -354,8 +351,8 @@ const Market = () => {
       if (response.status === 200) {
         setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
         
-        // Update user balance
-        const refundAmount = requests.find(req => req._id === requestId)?.deposit || 0;
+        // Update user balance with refund amount from server response
+        const refundAmount = response.data.refundAmount;
         setUserBalance(prev => prev + refundAmount);
         
         alert('Request withdrawn successfully. Your deposit has been refunded.');
