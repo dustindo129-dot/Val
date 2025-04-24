@@ -28,7 +28,7 @@ import { Link } from 'react-router-dom';
 import { useNovelStatus } from '../context/NovelStatusContext';
 import { useNovel } from '../context/NovelContext';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import hybridCdnService from '../services/bunnyUploadService';
+import bunnyUploadService from '../services/bunnyUploadService';
 
 /**
  * AdminDashboard Component
@@ -319,11 +319,10 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
-      // Upload using hybrid CDN service
-      const imageUrl = await hybridCdnService.uploadFile(
+      // Upload using bunny CDN service
+      const imageUrl = await bunnyUploadService.uploadFile(
         file, 
-        'illustrations', 
-        config.cloudinary.uploadPresets.illustration
+        'illustrations'
       );
 
       // Update the novel state with the new illustration URL
@@ -951,8 +950,8 @@ const AdminDashboard = () => {
                     return new Promise((resolve, reject) => {
                       const file = blobInfo.blob();
                       
-                      // Use hybrid CDN service
-                      hybridCdnService.uploadFile(file, 'illustrations', config.cloudinary.uploadPresets.illustration)
+                      // Use bunny CDN service
+                      bunnyUploadService.uploadFile(file, 'illustrations')
                         .then(url => {
                           resolve(url);
                         })

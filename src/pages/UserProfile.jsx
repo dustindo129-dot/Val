@@ -135,11 +135,10 @@ const UserProfile = () => {
       setIsLoading(true);
       setMessage({ type: 'info', text: 'Uploading avatar...' });
 
-      // Upload to Bunny.net instead of Cloudinary
+      // Upload to Bunny.net
       const newAvatarUrl = await bunnyUploadService.uploadFile(
         file,
-        'avatars',
-        config.cloudinary.uploadPresets.avatar
+        'avatar'
       );
 
       // Create axios instance with proper config

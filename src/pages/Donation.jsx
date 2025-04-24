@@ -45,8 +45,7 @@ const Donation = () => {
     try {
       const url = await bunnyUploadService.uploadFile(
         blobInfo.blob(), 
-        'illustrations', 
-        config.cloudinary.uploadPresets.illustration
+        'illustrations'
       );
       return url;
     } catch (error) {

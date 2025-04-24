@@ -19,14 +19,16 @@ const cdnConfig = {
     return `${BUNNY_CDN_URL}/${normalizedPath}`;
   },
   
-  // Default placeholder images
+  // Default images
   defaultImages: {
-    // Use this as a fallback for missing images
-    missing: `${BUNNY_CDN_URL}/illustrations/missing-image.png`,
-    // Use this as a fallback for novel illustrations
-    novel: `${BUNNY_CDN_URL}/illustrations/default-novel-cover.png`,
-    // Use this as a fallback for user avatars
-    avatar: `${BUNNY_CDN_URL}/avatars/default-avatar.png`
+    // Default missing image
+    missing: `${BUNNY_CDN_URL}/defaults/missing-image.png`,
+    // Default novel cover
+    novel: `${BUNNY_CDN_URL}/defaults/default-novel-cover.png`,
+    // Default user avatar
+    avatar: `${BUNNY_CDN_URL}/defaults/default-avatar.png`,
+    // Default illustration
+    illustration: `${BUNNY_CDN_URL}/defaults/default-illustration.png`
   },
   
   // Legacy default image (kept for backward compatibility)

@@ -378,6 +378,7 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signOut,
     setUser,
+    updateUser: setUser,
     forgotPassword,
     resetPassword
   };

@@ -13,38 +13,20 @@ import axios from 'axios';
  * Upload a file to bunny.net storage
  * @param {File} file - The file to upload
  * @param {string} folder - Target folder (e.g., 'illustrations')
- * @param {string} preset - Former Cloudinary preset (used for folder mapping)
  * @returns {Promise<string>} - The CDN URL of the uploaded file
  */
-const uploadToBunny = async (file, folder = '', preset = '') => {
+const uploadToBunny = async (file, folder = '') => {
   try {
     if (!file) {
       throw new Error('No file provided for upload');
     }
 
-    // Define target folder based on preset or provided folder
+    // Define target folder
     let targetFolder = folder;
 
-    // Convert any 'novel-illustrations' to just 'illustrations' for compatibility
-    if (folder === 'novel-illustrations') {
-      targetFolder = 'illustrations';
-    }
-
-    if (preset) {
-      // Map Cloudinary presets to bunny.net folders
-      switch (preset) {
-        case config.cloudinary.uploadPresets.avatar:
-          targetFolder = 'avatars';
-          break;
-        case config.cloudinary.uploadPresets.illustration:
-          targetFolder = 'illustrations';
-          break;
-        case config.cloudinary.uploadPresets.comment:
-          targetFolder = 'comment-images';
-          break;
-        default:
-          targetFolder = folder || 'general';
-      }
+    // Map to predefined folders if needed
+    if (folder) {
+      targetFolder = config.bunny.folders[folder] || folder;
     }
 
     // Generate a unique filename to avoid collisions
@@ -83,12 +65,11 @@ const bunnyUploadService = {
   /**
    * Upload a file to bunny.net
    * @param {File} file - The file to upload
-   * @param {string} folder - Target folder (e.g., 'illustrations')
-   * @param {string} preset - Former Cloudinary preset (used for folder mapping)
+   * @param {string} folder - Target folder (e.g., 'illustration')
    * @returns {Promise<string>} - The CDN URL of the uploaded file
    */
-  uploadFile: async (file, folder = '', preset = '') => {
-    return uploadToBunny(file, folder, preset);
+  uploadFile: async (file, folder = '') => {
+    return uploadToBunny(file, folder);
   }
 };
 

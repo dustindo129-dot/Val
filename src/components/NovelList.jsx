@@ -25,6 +25,7 @@ import HotNovels from './HotNovels';
 import RecentComments from './RecentComments';
 import '../styles/NovelList.css';
 import config from '../config/config';
+import cdnConfig from '../config/bunny';
 
 /**
  * NovelImage Component
@@ -579,7 +580,7 @@ const NovelList = () => {
                                         <div className="novel-main">
                                             {/* Novel cover image with status and first chapter link */}
                                             <NovelImage
-                                                src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'}
+                                                src={novel.illustration || cdnConfig.defaultImages.novel}
                                                 alt={novel.title}
                                                 status={novel.status}
                                                 novelId={novel._id}

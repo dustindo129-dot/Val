@@ -386,7 +386,8 @@ const ChapterContent = ({
                   return new Promise((resolve, reject) => {
                     const file = blobInfo.blob();
                     
-                    hybridCdnService.uploadFile(file, 'illustrations', config.cloudinary.uploadPresets.illustration)
+                    // Use bunny CDN service
+                    hybridCdnService.uploadFile(file, 'illustrations')
                       .then(url => {
                         resolve(url);
                       })

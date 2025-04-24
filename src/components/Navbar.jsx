@@ -26,6 +26,7 @@ import axios from 'axios';
 import '../styles/Navbar.css';
 import config from '../config/config';
 import Modal from './auth/Modal';
+import cdnConfig from '../config/bunny';
 
 /**
  * Navbar Component
@@ -214,12 +215,11 @@ const Navbar = () => {
                       onClick={() => handleNovelClick(novel._id)}
                     >
                       <img 
-                        src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'} 
+                        src={novel.illustration || 'https://Valvrareteam.b-cdn.net/%C6%A0%20l%E1%BB%97i%20h%C3%ACnh%20m%E1%BA%A5t%20r%E1%BB%93i.png'}
                         alt={novel.title} 
                         className="search-result-cover"
                         onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png';
+                          e.target.src = cdnConfig.defaultImages.novel;
                         }}
                       />
                       <div className="search-result-info">

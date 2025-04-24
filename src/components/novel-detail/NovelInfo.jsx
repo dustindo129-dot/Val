@@ -30,6 +30,7 @@ import {
   faStar, 
   faBookmark 
 } from '@fortawesome/free-regular-svg-icons';
+import cdnConfig from '../../config/bunny';
 
 const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML }) => {
   const queryClient = useQueryClient();
@@ -429,10 +430,13 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
             {/* Header with cover and info */}
             <div className="rd-novel-header-content">
               <div className="rd-novel-cover">
-                <img 
-                  src={novelData.illustration || "https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png"}
-                  alt={`${novelData.title || 'Novel'} Cover`}
-                  className="rd-cover-image" 
+                <img
+                  src={novelData.illustration || 'https://Valvrareteam.b-cdn.net/%C6%A0%20l%E1%BB%97i%20h%C3%ACnh%20m%E1%BA%A5t%20r%E1%BB%93i.png'}
+                  alt={novelData.title}
+                  className="rd-cover-image"
+                  onError={(e) => {
+                    e.target.src = cdnConfig.defaultImages.novel;
+                  }}
                 />
                 <div className="rd-update-time">
                   Updated: {formatTimeAgo(novelData.updatedAt)}
