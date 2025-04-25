@@ -62,8 +62,8 @@ const Login = ({ onClose, onSignUp }) => {
     setError('');
 
     try {
-      // Attempt to login with form data
-      const response = await login(formData.username, formData.password);
+      // Attempt to login with form data and rememberMe preference
+      const response = await login(formData.username, formData.password, formData.rememberMe);
       onClose(); // Close modal on successful login
     } catch (err) {
       setError('Invalid username or password');

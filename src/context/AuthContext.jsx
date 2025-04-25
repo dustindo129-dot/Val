@@ -22,8 +22,10 @@ import config from '../config/config';
 // Create authentication context
 const AuthContext = createContext(null);
 
-// Session timeout duration (10 minutes)
+// Session timeout duration (30 minutes)
 const SESSION_TIMEOUT = 30 * 60 * 1000;
+// Extended session timeout (3 hours) when "Remember me" is checked
+const EXTENDED_SESSION_TIMEOUT = 3 * 60 * 60 * 1000;
 
 // Add constants for storage keys and events
 const AUTH_LOGOUT_EVENT = 'authLogout';
@@ -68,10 +70,14 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Updates the session expiry time
+   * @param {boolean} rememberMe - Whether to use extended session timeout
    */
-  const updateSessionExpiry = () => {
-    const expiryTime = Date.now() + SESSION_TIMEOUT;
+  const updateSessionExpiry = (rememberMe = false) => {
+    const timeout = rememberMe ? EXTENDED_SESSION_TIMEOUT : SESSION_TIMEOUT;
+    const expiryTime = Date.now() + timeout;
     localStorage.setItem('sessionExpiry', expiryTime.toString());
+    // Store the remember me preference for session restoration
+    localStorage.setItem('rememberMe', rememberMe.toString());
   };
 
   /**
@@ -80,7 +86,9 @@ export const AuthProvider = ({ children }) => {
   const resetSessionTimer = () => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      updateSessionExpiry();
+      // Use the stored remember me preference when resetting the timer
+      const rememberMe = localStorage.getItem('rememberMe') === 'true';
+      updateSessionExpiry(rememberMe);
     }
   };
 
@@ -95,7 +103,9 @@ export const AuthProvider = ({ children }) => {
         if (storedUser && checkSessionValidity()) {
           setUser(JSON.parse(storedUser));
           setIsAuthenticated(true);
-          updateSessionExpiry();
+          // Use the stored remember me preference
+          const rememberMe = localStorage.getItem('rememberMe') === 'true';
+          updateSessionExpiry(rememberMe);
         } else if (storedUser) {
           signOut();
         }
@@ -163,7 +173,9 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(userData));
-        updateSessionExpiry();
+        // Get rememberMe preference from localStorage
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        updateSessionExpiry(rememberMe);
       }
     };
 
@@ -175,7 +187,9 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(userData));
-        updateSessionExpiry();
+        // Get rememberMe preference from localStorage
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        updateSessionExpiry(rememberMe);
       }
     };
 
@@ -196,9 +210,10 @@ export const AuthProvider = ({ children }) => {
    * Handles user login
    * @param {string} username - User's username
    * @param {string} password - User's password
+   * @param {boolean} rememberMe - Whether to extend the session timeout
    * @returns {Promise<Object>} Response data from login API
    */
-  const login = async (username, password) => {
+  const login = async (username, password, rememberMe = false) => {
     try {
       setError(null);
       const response = await axios.post(`${config.backendUrl}/api/auth/login`,
@@ -218,7 +233,7 @@ export const AuthProvider = ({ children }) => {
       // Store user data and token
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
-      updateSessionExpiry();
+      updateSessionExpiry(rememberMe);
 
       // Notify other tabs about the login
       localStorage.setItem(AUTH_LOGIN_STORAGE_KEY, JSON.stringify(userData));
