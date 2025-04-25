@@ -69,7 +69,6 @@ export default defineConfig(({ command, mode }) => {
           changeOrigin: true,
         },
       },
-      // Only enable HMR in development
       hmr: isDevelopment ? {
         protocol: 'ws',
         host: 'localhost',
@@ -78,10 +77,8 @@ export default defineConfig(({ command, mode }) => {
       } : false,
       // Add history API fallback for client-side routing
       historyApiFallback: true,
-      // Explicitly disable WebSocket in production
-      ws: isDevelopment,
-      // Ensure HMR is completely disabled in production
-      watch: isDevelopment
+      // Disable WebSocket in production
+      ws: isDevelopment
     },
     preview: {
       port: 4173,
