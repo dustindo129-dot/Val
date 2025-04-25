@@ -42,7 +42,6 @@ class SSEService {
       this.eventSource = new EventSource(`${config.backendUrl}/api/novels/sse?tabId=${this.tabId}`);
       
       this.eventSource.onopen = () => {
-        console.log(`SSE connection established for tab ${this.tabId}`);
         this.isConnected = true;
         if (this.reconnectTimeout) {
           clearTimeout(this.reconnectTimeout);
@@ -51,13 +50,12 @@ class SSEService {
       };
 
       this.eventSource.onerror = (error) => {
-        console.error(`SSE connection error for tab ${this.tabId}:`, error);
+        console.error('SSE connection error:', error);
         this.isConnected = false;
         
         // Try to reconnect after a delay
         if (!this.reconnectTimeout) {
           this.reconnectTimeout = setTimeout(() => {
-            console.log(`Attempting to reconnect SSE for tab ${this.tabId}...`);
             this.disconnect();
             this.connect();
           }, 5000);
@@ -70,7 +68,6 @@ class SSEService {
           const data = JSON.parse(event.data);
           if (data.clientId) {
             this.clientId = data.clientId;
-            console.log(`Connected with client ID: ${this.clientId} for tab ${this.tabId}`);
           }
         } catch (error) {
           console.error('Error processing initial message:', error);
@@ -108,7 +105,6 @@ class SSEService {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
-    console.log(`Disconnected client ID: ${this.clientId} for tab ${this.tabId}`);
   }
 
   addEventListener(eventName, callback) {

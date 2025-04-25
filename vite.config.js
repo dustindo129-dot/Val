@@ -96,7 +96,17 @@ export default defineConfig(({ command, mode }) => {
         '@tanstack/react-query': path.resolve(__dirname, './node_modules/@tanstack/react-query'),
       },
     },
-    plugins: [react()],
+    plugins: [
+      react({
+        jsxRuntime: 'automatic',
+        jsxImportSource: 'react',
+        babel: {
+          plugins: [
+            ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+          ]
+        }
+      })
+    ],
     define: {
       ...sharedDefines,
       ...(isProduction ? productionDefines : developmentDefines),
