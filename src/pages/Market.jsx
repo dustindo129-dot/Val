@@ -346,7 +346,7 @@ const Market = () => {
 
   // Fetch request history
   const fetchRequestHistory = async () => {
-    if (!isAuthenticated || !(user.role === 'admin' || user.role === 'moderator')) {
+    if (!isAuthenticated) {
       return;
     }
     
@@ -833,8 +833,8 @@ const Market = () => {
                   Request Module/Chapter Opening
                 </button>
                 
-                {/* Request History Button - Admin/Moderator Only */}
-                {isAuthenticated && user && (user.role === 'admin' || user.role === 'moderator') && (
+                {/* Request History Button - Visible to all logged-in users */}
+                {isAuthenticated && (
                   <button 
                     className={`type-tab history-tab ${showHistory ? 'active' : ''}`} 
                     onClick={toggleHistory}
