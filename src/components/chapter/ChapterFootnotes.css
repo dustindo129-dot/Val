@@ -4,15 +4,28 @@
   border-top: 1px solid var(--border-color, #ddd);
 }
 
+:root.dark-mode .chapter-footnotes {
+  border-top-color: var(--border-color, #444);
+}
+
 .footnotes-title {
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
   color: var(--text-color, #333);
 }
 
+:root.dark-mode .footnotes-title {
+  color: var(--text-color, #e0e0e0);
+}
+
 .footnotes-list {
   font-size: 0.9rem;
   line-height: 1.6;
+  color: var(--text-color, #333);
+}
+
+:root.dark-mode .footnotes-list {
+  color: var(--text-color, #e0e0e0);
 }
 
 .footnote-item {
@@ -27,11 +40,20 @@
   animation: highlight-fade 2s ease-out;
 }
 
+:root.dark-mode .footnote-item:target {
+  background-color: var(--highlight-color, #2d2d2d);
+  animation: highlight-fade-dark 2s ease-out;
+}
+
 .footnote-backref {
   color: var(--link-color, #0066cc);
   text-decoration: none;
   margin-right: 0.75rem;
   font-weight: bold;
+}
+
+:root.dark-mode .footnote-backref {
+  color: var(--link-color, #66b3ff);
 }
 
 .footnote-backref:hover {
@@ -40,11 +62,21 @@
 
 .footnote-content {
   display: inline-block;
+  color: var(--text-color, #333);
+}
+
+:root.dark-mode .footnote-content {
+  color: #000;
 }
 
 /* Animation for highlighting when navigating to footnote */
 @keyframes highlight-fade {
   0% { background-color: var(--highlight-color, #fff3cd); }
+  100% { background-color: transparent; }
+}
+
+@keyframes highlight-fade-dark {
+  0% { background-color: var(--highlight-color, #2d2d2d); }
   100% { background-color: transparent; }
 }
 

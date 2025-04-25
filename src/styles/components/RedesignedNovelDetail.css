@@ -537,6 +537,15 @@
   position: relative;
 }
 
+.rd-section-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  background-color: #f39c12;
+  margin-right: 8px;
+}
+
 .rd-section-content {
   padding: 15px;
 }
@@ -664,6 +673,134 @@
   border-left: 4px solid #ff9800;
   line-height: 1.8;
   font-size: 14px;
+}
+
+/* Contribution section */
+.rd-contribution-section {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.rd-contribution-section-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 15px;
+  background-color: #2c3e50;
+  color: white;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rd-contribution-section-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  background-color: #f39c12;
+  margin-right: 8px;
+}
+
+.rd-contribution-list {
+  padding: 10px 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.rd-contribution-item {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
+}
+
+.rd-contribution-item:last-child {
+  border-bottom: none;
+}
+
+.rd-contribution-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.rd-contribution-content {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.rd-contributor-name {
+  font-weight: 600;
+  color: #16a085;
+}
+
+.rd-contribution-amount {
+  font-weight: 600;
+  color: #f39c12;
+}
+
+.rd-contribution-message {
+  font-style: italic;
+  color: #555;
+  margin-top: 5px;
+  padding-left: 10px;
+  border-left: 2px solid #e0e0e0;
+}
+
+.rd-contribution-date {
+  font-size: 12px;
+  color: #7f8c8d;
+  text-align: right;
+  margin-top: 5px;
+}
+
+.rd-no-contributions {
+  padding: 15px;
+  text-align: center;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* Dark mode support for contribution section */
+:root.dark-mode .rd-contribution-section {
+  background-color: #2a2a2a;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+:root.dark-mode .rd-contribution-section-title {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+}
+
+:root.dark-mode .rd-contribution-item {
+  border-color: #404040;
+}
+
+:root.dark-mode .rd-contribution-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+:root.dark-mode .rd-contributor-name {
+  color: #2ecc71;
+}
+
+:root.dark-mode .rd-contribution-amount {
+  color: #f1c40f;
+}
+
+:root.dark-mode .rd-contribution-message {
+  color: #bbb;
+  border-color: #555;
+}
+
+:root.dark-mode .rd-contribution-date {
+  color: #aaa;
+}
+
+:root.dark-mode .rd-no-contributions {
+  color: #aaa;
 }
 
 /* Responsive styles */

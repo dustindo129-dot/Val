@@ -46,7 +46,7 @@ export const SettingsModal = ({
               >
                 <option value="Arial, sans-serif">Arial</option>
                 <option value="Times New Roman, serif">Times New Roman</option>
-                <option value="Georgia, serif">Georgia</option>
+                <option value="'Noto Serif', serif">Noto Serif</option>
                 <option value="Verdana, sans-serif">Verdana</option>
                 <option value="Courier New, monospace">Courier New</option>
               </select>

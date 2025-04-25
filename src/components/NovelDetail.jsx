@@ -74,6 +74,92 @@ const truncateHTML = (html, maxLength) => {
 };
 
 /**
+ * NovelContributions Component
+ * 
+ * Displays approved contributions and requests for a novel in the sidebar
+ */
+const NovelContributions = ({ novelId }) => {
+  const { data: contributionsData, isLoading: isLoadingContributions } = useQuery({
+    queryKey: ['novel-contributions', novelId],
+    queryFn: async () => {
+      try {
+        // This fetches both approved contributions and approved requests
+        const response = await api.fetchNovelContributions(novelId);
+        return response;
+      } catch (error) {
+        console.error("Error fetching contributions:", error);
+        return { contributions: [], requests: [] };
+      }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Format date to readable format
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Combine and sort contributions and requests by date
+  const allItems = useMemo(() => {
+    const contributions = contributionsData?.contributions || [];
+    const requests = contributionsData?.requests || [];
+    
+    const combined = [
+      ...contributions.map(item => ({ ...item, type: 'contribution' })),
+      ...requests.map(item => ({ ...item, type: 'request' }))
+    ];
+    
+    // Sort by updatedAt date descending (newest first)
+    return combined.sort((a, b) => 
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+  }, [contributionsData]);
+
+  // Calculate total number of items
+  const totalCount = allItems.length;
+
+  return (
+    <div className="rd-contribution-section">
+      <div className="rd-contribution-section-title">
+        CONTRIBUTIONS ({totalCount})
+      </div>
+      <div className="rd-contribution-list">
+        {isLoadingContributions ? (
+          <div className="rd-loading-spinner-small">Loading...</div>
+        ) : allItems.length > 0 ? (
+          allItems.map((item, index) => (
+            <div key={`${item.type}-${item._id}`} className="rd-contribution-item">
+              <div className="rd-contribution-content">
+                Thank you <span className="rd-contributor-name">
+                  {item.user?.username || "Anonymous"}
+                </span> for contributing <span className="rd-contribution-amount">
+                  {item.type === 'contribution' ? item.amount : item.deposit} 🌾
+                </span>
+              </div>
+              {(item.note || item.text) && (
+                <div className="rd-contribution-message">
+                  "{item.note || item.text}"
+                </div>
+              )}
+              <div className="rd-contribution-date">
+                {formatDate(item.updatedAt)}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rd-no-contributions">No contributions yet</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
  * NovelDetail Component
  * 
  * Main component that displays comprehensive information about a novel
@@ -638,6 +724,7 @@ const NovelDetail = () => {
             handleModuleFormToggle={handleModuleFormToggle}
             truncateHTML={truncateHTML}
             chaptersData={chaptersData}
+            sidebar={<NovelContributions novelId={novelId} />}
           />
           
           <div className="chapter-list-container">

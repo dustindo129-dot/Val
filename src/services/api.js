@@ -218,7 +218,7 @@ const api = {
 
   uploadModuleCover: async (file) => {
     try {
-      return await hybridCdnService.uploadFile(file, 'illustrations', config.cloudinary.uploadPresets.illustration);
+      return await hybridCdnService.uploadFile(file, 'illustration');
     } catch (error) {
       console.error('Error uploading cover image:', error);
       throw new Error('Failed to upload cover image');
@@ -538,6 +538,23 @@ const api = {
       console.error('Failed to fetch bookmarks:', error);
       return [];
     }
+  },
+
+  getPendingNovelRequests: async (novelId) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/requests?novelId=${novelId}&status=pending&type=open`
+      );
+      return response.data.length || 0;
+    } catch (error) {
+      console.error('Failed to fetch pending requests count:', error);
+      return 0;
+    }
+  },
+
+  fetchNovelContributions: async (novelId) => {
+    const response = await axios.get(`${config.backendUrl}/api/novels/${novelId}/contributions`);
+    return response.data;
   }
 };
 

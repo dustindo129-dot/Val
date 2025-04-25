@@ -124,6 +124,22 @@
   transition: border-color 0.2s;
 }
 
+.request-title-input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.request-title-input:focus {
+  outline: none;
+  border-color: #6c757d;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
 .request-input:focus {
   outline: none;
   border-color: #6c757d;
@@ -222,7 +238,6 @@
 /* Novel search styles */
 .novel-search {
   position: relative;
-  margin-bottom: 1rem;
 }
 
 .novel-search-input {
@@ -538,6 +553,7 @@
 }
 
 :root.dark-mode .request-input,
+:root.dark-mode .request-title-input,
 :root.dark-mode .deposit-input,
 :root.dark-mode .novel-search-input {
   background-color: #212529;
@@ -546,6 +562,7 @@
 }
 
 :root.dark-mode .request-input:focus,
+:root.dark-mode .request-title-input:focus,
 :root.dark-mode .deposit-input:focus,
 :root.dark-mode .novel-search-input:focus {
   border-color: #6c757d;
@@ -713,8 +730,12 @@
 }
 
 .history-novel {
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .history-novel a {
@@ -778,4 +799,493 @@
 :root.dark-mode .close-history-btn:hover {
   background-color: #212529;
   color: #e9ecef;
+}
+
+/* Contribution button styles */
+.contribute-button {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #6c757d;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.contribute-button:hover {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #28a745;
+}
+
+/* Contributions container styles */
+.contributions-container {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #dee2e6;
+}
+
+.contribution-form {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.contribution-input-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.contribution-input-container label {
+  font-weight: 500;
+}
+
+.contribution-input {
+  width: 100px;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.contribution-note-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.contribution-form-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.submit-contribution-btn {
+  padding: 0.5rem 1rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-contribution-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.submit-contribution-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.cancel-contribution-btn {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-contribution-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.login-to-contribute {
+  padding: 0.75rem;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Contributions list styles */
+.contributions-list {
+  padding-top: 0.5rem;
+}
+
+.contributions-title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #343a40;
+  font-weight: 500;
+}
+
+.contribution-item {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.contribution-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.contribution-item.status-approved {
+  border-left: 2px solid #28a745;
+  padding-left: 0.5rem;
+}
+
+.contribution-item.status-declined {
+  border-left: 2px solid #dc3545;
+  padding-left: 0.5rem;
+}
+
+.contribution-avatar {
+  flex-shrink: 0;
+}
+
+.contribution-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.contribution-content {
+  flex-grow: 1;
+}
+
+.contribution-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.contribution-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.contribution-username {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.contribution-status {
+  font-size: 0.8rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 12px;
+}
+
+.contribution-status.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.contribution-status.status-approved {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.contribution-status.status-declined {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.contribution-time {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.contribution-text {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
+.contribution-amount {
+  font-weight: 500;
+  color: #28a745;
+  font-size: 0.9rem;
+}
+
+.contribution-admin-actions {
+  margin-top: 0.5rem;
+}
+
+/* Request history contributions styles */
+.view-contributions-btn {
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  color: #6c757d;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.view-contributions-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.history-contributions {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 2px solid #dee2e6;
+}
+
+.history-contributions h4 {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  color: #343a40;
+}
+
+.history-contribution {
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.history-contribution:last-child {
+  margin-bottom: 0;
+}
+
+.history-contribution.status-approved {
+  border-left: 2px solid #28a745;
+}
+
+.history-contribution.status-declined {
+  border-left: 2px solid #dc3545;
+}
+
+.contribution-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.contribution-date {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.contribution-note {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
+.history-note {
+  margin-top: 0.5rem;
+  font-style: italic;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+
+/* Dark mode support for contributions */
+:root.dark-mode .contributions-container {
+  background-color: #343a40;
+  border-color: #495057;
+}
+
+:root.dark-mode .contribution-form {
+  border-bottom-color: #495057;
+}
+
+:root.dark-mode .contribution-input,
+:root.dark-mode .contribution-note-input {
+  background-color: #212529;
+  border-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .cancel-contribution-btn {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #adb5bd;
+}
+
+:root.dark-mode .cancel-contribution-btn:hover {
+  background-color: #212529;
+  color: #e9ecef;
+}
+
+:root.dark-mode .login-to-contribute {
+  background-color: #212529;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .contributions-title {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .contribution-item {
+  border-bottom-color: #495057;
+}
+
+:root.dark-mode .contribution-username {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .contribution-text {
+  color: #e9ecef;
+}
+
+:root.dark-mode .view-contributions-btn {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #adb5bd;
+}
+
+:root.dark-mode .view-contributions-btn:hover {
+  background-color: #212529;
+  color: #e9ecef;
+}
+
+:root.dark-mode .history-contributions {
+  background-color: #343a40;
+  border-color: #495057;
+}
+
+:root.dark-mode .history-contributions h4 {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .history-contribution {
+  background-color: #212529;
+}
+
+:root.dark-mode .history-note {
+  color: #adb5bd;
+}
+
+/* Novel search container for all selection elements */
+.novel-search-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Shorter novel search input */
+.novel-search.short {
+  width: 40%;
+  position: relative;
+}
+
+.novel-search.short .novel-search-input {
+  width: 100%;
+}
+
+/* Module selector styling */
+.module-selector {
+  width: 25%;
+  position: relative;
+}
+
+.module-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  font-size: 14px;
+  height: 40px;
+}
+
+/* Chapter selector styling */
+.chapter-selector {
+  width: 25%;
+  position: relative;
+}
+
+.chapter-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  font-size: 14px;
+  height: 40px;
+}
+
+/* Loading indicator */
+.loading-indicator {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #888;
+}
+
+/* Dark mode styles */
+:root.dark-mode .module-select,
+:root.dark-mode .chapter-select {
+  background-color: #222;
+  color: #eee;
+  border-color: #444;
+}
+
+:root.dark-mode .loading-indicator {
+  color: #aaa;
+}
+
+/* Media query for mobile responsiveness */
+@media (max-width: 768px) {
+  .novel-search.short,
+  .module-selector,
+  .chapter-selector {
+    width: 100%;
+  }
+}
+
+/* Novel information in requests */
+.request-novel-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.module-info, 
+.chapter-info {
+    color: #495057;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+:root.dark-mode .module-info,
+:root.dark-mode .chapter-info {
+    color: #adb5bd;
 } 

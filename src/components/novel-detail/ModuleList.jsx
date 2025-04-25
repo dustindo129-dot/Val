@@ -1,9 +1,10 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ModuleChapters from './ModuleChapters';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
+import api from '../../services/api';
 
 const ModuleList = memo(({
   modules,
@@ -16,6 +17,7 @@ const ModuleList = memo(({
   handleChapterDelete
 }) => {
   const [isReordering, setIsReordering] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   // Check if user can edit
   const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
@@ -23,6 +25,18 @@ const ModuleList = memo(({
   const canDelete = user && user.role === 'admin';
   // Check if user can access paid content
   const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
+  
+  // Fetch pending requests count for this novel
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      if (novelId) {
+        const count = await api.getPendingNovelRequests(novelId);
+        setPendingRequestsCount(count);
+      }
+    };
+    
+    fetchPendingRequests();
+  }, [novelId]);
 
   const handleReorderClick = useCallback(async (moduleId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
@@ -143,6 +157,7 @@ const ModuleList = memo(({
                     <div className="locked-content-message">
                       <FontAwesomeIcon icon={faLock} className="lock-icon" />
                       <p>Need {module.moduleBalance} 🌾 to unlock. Please visit market!</p>
+                      <p>{pendingRequestsCount} request{pendingRequestsCount !== 1 ? 's' : ''} pending</p>
                       <Link to="/market" className="go-to-market-btn">Go to market</Link>
                     </div>
                   </div>
@@ -159,6 +174,7 @@ const ModuleList = memo(({
                   handleChapterDelete={handleChapterDelete}
                   isPaidModule={module.mode === 'paid'}
                   canAccessPaidContent={canAccessPaidContent}
+                  pendingRequestsCount={pendingRequestsCount}
                 />
               </div>
             </div>

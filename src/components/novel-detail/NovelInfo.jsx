@@ -32,7 +32,7 @@ import {
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
 
-const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML }) => {
+const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { updateBookmarkStatus } = useBookmarks();
@@ -395,406 +395,411 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   
   return (
     <>
-      {/* Novel Header with Title and Social Share */}
-      <div className="rd-novel-header">
-        <div className="rd-novel-title-wrapper">
-          <h1 className="rd-novel-title">
-            {novelTitle || 'Loading...'}
-          </h1>
-          <span className={`rd-status-badge rd-status-${novelData.status?.toLowerCase() || 'ongoing'}`}>
-            {novelData.status || 'Ongoing'}
-          </span>
-        </div>
-
-        <div className="rd-social-share">
-          <a href="#" className="rd-share-btn rd-facebook" title="Share on Facebook" onClick={(e) => handleShare('facebook', e)}>
-            <FontAwesomeIcon icon={faFacebookF} />
-          </a>
-          <a href="#" className="rd-share-btn rd-twitter" title="Share on Twitter" onClick={(e) => handleShare('twitter', e)}>
-            <FontAwesomeIcon icon={faTwitter} />
-          </a>
-          <a href="#" className="rd-share-btn rd-pinterest" title="Share on Pinterest" onClick={(e) => handleShare('pinterest', e)}>
-            <FontAwesomeIcon icon={faPinterestP} />
-          </a>
-          <a href="#" className="rd-share-btn rd-telegram" title="Share on Telegram" onClick={(e) => handleShare('telegram', e)}>
-            <FontAwesomeIcon icon={faTelegramPlane} />
-          </a>
-        </div>
-      </div>
-
-      {/* Novel Content Area with Main Content and Sidebar */}
-      <div className="rd-novel-content">
-        <div className="rd-novel-main">
-          {/* Novel Card with Cover and Info */}
-          <div className="rd-novel-card">
-            {/* Header with cover and info */}
-            <div className="rd-novel-header-content">
-              <div className="rd-novel-cover">
-                <img
-                  src={novelData.illustration || 'https://Valvrareteam.b-cdn.net/%C6%A0%20l%E1%BB%97i%20h%C3%ACnh%20m%E1%BA%A5t%20r%E1%BB%93i.png'}
-                  alt={novelData.title}
-                  className="rd-cover-image"
-                  onError={(e) => {
-                    e.target.src = cdnConfig.defaultImages.novel;
-                  }}
-                />
-                <div className="rd-update-time">
-                  Updated: {formatTimeAgo(novelData.updatedAt)}
-                </div>
-              </div>
-
-              <div className="rd-novel-info">
-                <div className="rd-chapter-count">
-                  <div className="rd-chapter-count-label">
-                    CHAPTERS
-                  </div>
-                  <div className="rd-chapter-count-value">
-                    {totalChapters}
-                  </div>
-                </div>
-
-                {novelData.alternativeTitles && novelData.alternativeTitles.length > 0 && (
-                  <h2 className="rd-alt-title">
-                    Alt name(s): {novelData.alternativeTitles.join('; ')}
-                  </h2>
-                )}
-
-                <div className="rd-info-rows">
-                  <div className="rd-info-row">
-                    <div className="rd-info-label">Author:</div>
-                    <div className="rd-info-value">
-                      <span className="rd-author-name">{novelData.author || 'Unknown'}</span>
-                    </div>
-                  </div>
-
-                  {novelData.illustrator && (
-                    <div className="rd-info-row">
-                      <div className="rd-info-label">Illustrator:</div>
-                      <div className="rd-info-value">
-                        <span className="rd-author-name">{novelData.illustrator || (novelData.artist || 'None')}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {novelData.genres && novelData.genres.length > 0 && (
-                    <div className="rd-genres-row">
-                      <div className="rd-genres-label">Genres:</div>
-                      <div className="rd-info-value">
-                        <div className="rd-genres-list">
-                          {(() => {
-                            // Sort genres using the same logic as NovelList
-                            const sortedGenres = (novelData.genres || []).map(genre => {
-                              if (genre.includes('Novel')) {
-                                let className = '';
-                                if (genre.includes('Japanese')) className = 'japanese-novel';
-                                else if (genre.includes('Chinese')) className = 'chinese-novel';
-                                else if (genre.includes('Korean')) className = 'korean-novel';
-                                else if (genre.includes('English')) className = 'english-novel';
-                                else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
-
-                                return {
-                                  name: genre,
-                                  type: 'format-origin',
-                                  class: className
-                                };
-                              } else if (genre === 'Mature') {
-                                return {
-                                  name: genre,
-                                  type: 'mature',
-                                  class: 'mature'
-                                };
-                              } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
-                                return {
-                                  name: genre,
-                                  type: 'target-audience',
-                                  class: ''
-                                };
-                              } else {
-                                return {
-                                  name: genre,
-                                  type: 'other',
-                                  class: ''
-                                };
-                              }
-                            }).sort((a, b) => {
-                              const typeOrder = {
-                                'format-origin': 1,
-                                'mature': 2,
-                                'target-audience': 3,
-                                'other': 4
-                              };
-                              return typeOrder[a.type] - typeOrder[b.type];
-                            });
-
-                            return sortedGenres.map((genre, index) => (
-                              <span 
-                                className={`rd-genre-tag ${genre.class}`}
-                                key={index}
-                              >
-                                {genre.name}
-                              </span>
-                            ));
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="rd-card-footer">
-              {/* Stats Row */}
-              <div className="rd-stats-row">
-                <div className="rd-stat-item">
-                  <div className="rd-stat-icon">
-                    <FontAwesomeIcon icon={faEye} />
-                  </div>
-                  <div className="rd-stat-value">{novelData.views?.total?.toLocaleString() || '0'} Views</div>
-                </div>
-
-                <div className="rd-stat-item" onClick={toggleLike} style={{ cursor: 'pointer' }}>
-                  <div className="rd-stat-icon">
-                    <FontAwesomeIcon icon={isLiked ? faHeartSolid : faHeart} style={{ color: isLiked ? '#e74c3c' : undefined }} />
-                  </div>
-                  <div className="rd-stat-value">{novelStats.totalLikes?.toLocaleString() || '0'} Likes</div>
-                </div>
-
-                <div className="rd-stat-item" onClick={handleRatingClick} style={{ cursor: 'pointer' }}>
-                  <div className="rd-stat-icon">
-                    <FontAwesomeIcon icon={currentRating > 0 ? faStarSolid : faStar} style={{ color: currentRating > 0 ? '#f1c40f' : undefined }} />
-                  </div>
-                  <div className="rd-stat-value">
-                    {novelStats.averageRating || '0'}/5, {novelStats.totalRatings?.toLocaleString() || '0'} Rates
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="rd-actions-row">
-                {chaptersData?.chapters?.length > 0 ? (
-                  <Link 
-                    to={`/novel/${novelId}/chapter/${chaptersData.chapters[0]?._id}`} 
-                    className="rd-btn rd-btn-primary"
-                  >
-                    <FontAwesomeIcon icon={faChevronRight} />
-                    First Chapter
-                  </Link>
-                ) : (
-                  <button className="rd-btn rd-btn-primary" disabled>
-                    <FontAwesomeIcon icon={faChevronRight} />
-                    No Chapters
-                  </button>
-                )}
-
-                {chaptersData?.chapters?.length > 0 ? (
-                  bookmarkData?.bookmarkedChapter ? (
-                    <Link 
-                      to={`/novel/${novelId}/chapter/${bookmarkData.bookmarkedChapter.id}`} 
-                      className="rd-btn rd-btn-primary"
-                      title={`Continue from: ${bookmarkData.bookmarkedChapter.title}`}
-                    >
-                      <FontAwesomeIcon icon={faForward} />
-                      Continue Reading
-                    </Link>
-                  ) : (
-                    <Link 
-                      to={`/novel/${novelId}/chapter/${chaptersData.chapters[chaptersData.chapters.length - 1]?._id}`} 
-                      className="rd-btn rd-btn-primary"
-                    >
-                      <FontAwesomeIcon icon={faForward} />
-                      Latest Chapter
-                    </Link>
-                  )
-                ) : (
-                  <button className="rd-btn rd-btn-primary" disabled>
-                    <FontAwesomeIcon icon={faForward} />
-                    No Chapters
-                  </button>
-                )}
-
-                <button 
-                  className={`rd-btn rd-btn-bookmark ${isBookmarked ? 'active' : ''}`}
-                  onClick={toggleBookmark}
-                >
-                  <FontAwesomeIcon icon={isBookmarked ? faBookmarkSolid : faBookmark} />
-                  {isBookmarked ? 'Bookmarked' : 'Bookmark'}
-                </button>
-              </div>
-            </div>
+      <div className="rd-novel-detail-container">
+        {/* Novel Header with Title and Social Share */}
+        <div className="rd-novel-header">
+          <div className="rd-novel-title-wrapper">
+            <h1 className="rd-novel-title">
+              {novelTitle || 'Loading...'}
+            </h1>
+            <span className={`rd-status-badge rd-status-${novelData.status?.toLowerCase() || 'ongoing'}`}>
+              {novelData.status || 'Ongoing'}
+            </span>
           </div>
 
-          {/* Description Section */}
-          <div className="rd-description-section">
-            <h2 className="rd-description-title">DESCRIPTION</h2>
-            <div className={`rd-description-content ${isDescriptionExpanded ? 'expanded' : ''}`}>
-              <div dangerouslySetInnerHTML={{ 
-                __html: isDescriptionExpanded 
-                  ? novelData.description 
-                  : truncateHTML(novelData.description, 300) 
-              }} />
-            </div>
-            <a href="#" className="rd-show-toggle" onClick={toggleDescription}>
-              {isDescriptionExpanded ? 'Show less' : 'Read more'}
+          <div className="rd-social-share">
+            <a href="#" className="rd-share-btn rd-facebook" title="Share on Facebook" onClick={(e) => handleShare('facebook', e)}>
+              <FontAwesomeIcon icon={faFacebookF} />
+            </a>
+            <a href="#" className="rd-share-btn rd-twitter" title="Share on Twitter" onClick={(e) => handleShare('twitter', e)}>
+              <FontAwesomeIcon icon={faTwitter} />
+            </a>
+            <a href="#" className="rd-share-btn rd-pinterest" title="Share on Pinterest" onClick={(e) => handleShare('pinterest', e)}>
+              <FontAwesomeIcon icon={faPinterestP} />
+            </a>
+            <a href="#" className="rd-share-btn rd-telegram" title="Share on Telegram" onClick={(e) => handleShare('telegram', e)}>
+              <FontAwesomeIcon icon={faTelegramPlane} />
             </a>
           </div>
         </div>
 
-        <div className="rd-novel-sidebar">
-          {/* Staff Section */}
-          <div className="rd-section">
-            <h3 className="rd-section-title">STAFF</h3>
-            <div className="rd-section-content">
-              {/* Active Staff */}
-              <div className="rd-staff-category rd-active-category">Active</div>
+        {/* Novel Content Area with Main Content and Sidebar */}
+        <div className="rd-novel-content">
+          <div className="rd-novel-main">
+            {/* Novel Card with Cover and Info */}
+            <div className="rd-novel-card">
+              {/* Header with cover and info */}
+              <div className="rd-novel-header-content">
+                <div className="rd-novel-cover">
+                  <img
+                    src={novelData.illustration || 'https://Valvrareteam.b-cdn.net/%C6%A0%20l%E1%BB%97i%20h%C3%ACnh%20m%E1%BA%A5t%20r%E1%BB%93i.png'}
+                    alt={novelData.title}
+                    className="rd-cover-image"
+                    onError={(e) => {
+                      e.target.src = cdnConfig.defaultImages.novel;
+                    }}
+                  />
+                  <div className="rd-update-time">
+                    Updated: {formatTimeAgo(novelData.updatedAt)}
+                  </div>
+                </div>
 
-              {/* Translators */}
-              <div className="rd-staff-role rd-role-translator">
-                <span className="rd-role-badge rd-translator-badge">
-                  <FontAwesomeIcon icon={faLanguage} /> Translator:
-                </span>
-              </div>
-              <div className="rd-staff-members">
-                {novelData.active?.translator && novelData.active.translator.length > 0 ? (
-                  novelData.active.translator.map((translator, index) => (
-                    <a href="#" className="rd-staff-name" key={index}>
-                      {translator}
-                    </a>
-                  ))
-                ) : (
-                  <span className="rd-staff-empty">None</span>
-                )}
-              </div>
+                <div className="rd-novel-info">
+                  <div className="rd-chapter-count">
+                    <div className="rd-chapter-count-label">
+                      CHAPTERS
+                    </div>
+                    <div className="rd-chapter-count-value">
+                      {totalChapters}
+                    </div>
+                  </div>
 
-              {/* Editors */}
-              <div className="rd-staff-role rd-role-editor">
-                <span className="rd-role-badge rd-editor-badge">
-                  <FontAwesomeIcon icon={faEdit} /> Editor:
-                </span>
-              </div>
-              <div className="rd-staff-members">
-                {novelData.active?.editor && novelData.active.editor.length > 0 ? (
-                  novelData.active.editor.map((editor, index) => (
-                    <a href="#" className="rd-staff-name" key={index}>
-                      {editor}
-                    </a>
-                  ))
-                ) : (
-                  <span className="rd-staff-empty">None</span>
-                )}
-              </div>
-
-              {/* Proofreaders */}
-              <div className="rd-staff-role rd-role-qc">
-                <span className="rd-role-badge rd-qc-badge">
-                  <FontAwesomeIcon icon={faCheckDouble} /> Proofreader:
-                </span>
-              </div>
-              <div className="rd-staff-members">
-                {novelData.active?.proofreader && novelData.active.proofreader.length > 0 ? (
-                  novelData.active.proofreader.map((proofreader, index) => (
-                    <a href="#" className="rd-staff-name" key={index}>
-                      {proofreader}
-                    </a>
-                  ))
-                ) : (
-                  <span className="rd-staff-empty">None</span>
-                )}
-              </div>
-
-              {/* Inactive Staff */}
-              {(novelData.inactive?.translator?.length > 0 ||
-                novelData.inactive?.editor?.length > 0 ||
-                novelData.inactive?.proofreader?.length > 0) && (
-                <>
-                  <div className="rd-staff-category rd-inactive-category">Inactive</div>
-                  
-                  {/* Inactive Translators */}
-                  {novelData.inactive?.translator && novelData.inactive.translator.length > 0 && (
-                    <>
-                      <div className="rd-staff-role rd-role-translator">
-                        <span className="rd-role-badge rd-translator-badge">
-                          <FontAwesomeIcon icon={faLanguage} /> Translator:
-                        </span>
-                      </div>
-                      <div className="rd-staff-members">
-                        {novelData.inactive.translator.map((translator, index) => (
-                          <a href="#" className="rd-staff-name" key={index}>
-                            {translator}
-                          </a>
-                        ))}
-                      </div>
-                    </>
+                  {novelData.alternativeTitles && novelData.alternativeTitles.length > 0 && (
+                    <h2 className="rd-alt-title">
+                      Alt name(s): {novelData.alternativeTitles.join('; ')}
+                    </h2>
                   )}
-                  
-                  {/* Inactive Editors */}
-                  {novelData.inactive?.editor && novelData.inactive.editor.length > 0 && (
-                    <>
-                      <div className="rd-staff-role rd-role-editor">
-                        <span className="rd-role-badge rd-editor-badge">
-                          <FontAwesomeIcon icon={faEdit} /> Editor:
-                        </span>
+
+                  <div className="rd-info-rows">
+                    <div className="rd-info-row">
+                      <div className="rd-info-label">Author:</div>
+                      <div className="rd-info-value">
+                        <span className="rd-author-name">{novelData.author || 'Unknown'}</span>
                       </div>
-                      <div className="rd-staff-members">
-                        {novelData.inactive.editor.map((editor, index) => (
-                          <a href="#" className="rd-staff-name" key={index}>
-                            {editor}
-                          </a>
-                        ))}
+                    </div>
+
+                    {novelData.illustrator && (
+                      <div className="rd-info-row">
+                        <div className="rd-info-label">Illustrator:</div>
+                        <div className="rd-info-value">
+                          <span className="rd-author-name">{novelData.illustrator || (novelData.artist || 'None')}</span>
+                        </div>
                       </div>
-                    </>
+                    )}
+
+                    {novelData.genres && novelData.genres.length > 0 && (
+                      <div className="rd-genres-row">
+                        <div className="rd-genres-label">Genres:</div>
+                        <div className="rd-info-value">
+                          <div className="rd-genres-list">
+                            {(() => {
+                              // Sort genres using the same logic as NovelList
+                              const sortedGenres = (novelData.genres || []).map(genre => {
+                                if (genre.includes('Novel')) {
+                                  let className = '';
+                                  if (genre.includes('Japanese')) className = 'japanese-novel';
+                                  else if (genre.includes('Chinese')) className = 'chinese-novel';
+                                  else if (genre.includes('Korean')) className = 'korean-novel';
+                                  else if (genre.includes('English')) className = 'english-novel';
+                                  else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
+
+                                  return {
+                                    name: genre,
+                                    type: 'format-origin',
+                                    class: className
+                                  };
+                                } else if (genre === 'Mature') {
+                                  return {
+                                    name: genre,
+                                    type: 'mature',
+                                    class: 'mature'
+                                  };
+                                } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
+                                  return {
+                                    name: genre,
+                                    type: 'target-audience',
+                                    class: ''
+                                  };
+                                } else {
+                                  return {
+                                    name: genre,
+                                    type: 'other',
+                                    class: ''
+                                  };
+                                }
+                              }).sort((a, b) => {
+                                const typeOrder = {
+                                  'format-origin': 1,
+                                  'mature': 2,
+                                  'target-audience': 3,
+                                  'other': 4
+                                };
+                                return typeOrder[a.type] - typeOrder[b.type];
+                              });
+
+                              return sortedGenres.map((genre, index) => (
+                                <span 
+                                  className={`rd-genre-tag ${genre.class}`}
+                                  key={index}
+                                >
+                                  {genre.name}
+                                </span>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rd-card-footer">
+                {/* Stats Row */}
+                <div className="rd-stats-row">
+                  <div className="rd-stat-item">
+                    <div className="rd-stat-icon">
+                      <FontAwesomeIcon icon={faEye} />
+                    </div>
+                    <div className="rd-stat-value">{novelData.views?.total?.toLocaleString() || '0'} Views</div>
+                  </div>
+
+                  <div className="rd-stat-item" onClick={toggleLike} style={{ cursor: 'pointer' }}>
+                    <div className="rd-stat-icon">
+                      <FontAwesomeIcon icon={isLiked ? faHeartSolid : faHeart} style={{ color: isLiked ? '#e74c3c' : undefined }} />
+                    </div>
+                    <div className="rd-stat-value">{novelStats.totalLikes?.toLocaleString() || '0'} Likes</div>
+                  </div>
+
+                  <div className="rd-stat-item" onClick={handleRatingClick} style={{ cursor: 'pointer' }}>
+                    <div className="rd-stat-icon">
+                      <FontAwesomeIcon icon={currentRating > 0 ? faStarSolid : faStar} style={{ color: currentRating > 0 ? '#f1c40f' : undefined }} />
+                    </div>
+                    <div className="rd-stat-value">
+                      {novelStats.averageRating || '0'}/5, {novelStats.totalRatings?.toLocaleString() || '0'} Rates
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="rd-actions-row">
+                  {chaptersData?.chapters?.length > 0 ? (
+                    <Link 
+                      to={`/novel/${novelId}/chapter/${chaptersData.chapters[0]?._id}`} 
+                      className="rd-btn rd-btn-primary"
+                    >
+                      <FontAwesomeIcon icon={faChevronRight} />
+                      First Chapter
+                    </Link>
+                  ) : (
+                    <button className="rd-btn rd-btn-primary" disabled>
+                      <FontAwesomeIcon icon={faChevronRight} />
+                      No Chapters
+                    </button>
                   )}
-                  
-                  {/* Inactive Proofreaders */}
-                  {novelData.inactive?.proofreader && novelData.inactive.proofreader.length > 0 && (
-                    <>
-                      <div className="rd-staff-role rd-role-qc">
-                        <span className="rd-role-badge rd-qc-badge">
-                          <FontAwesomeIcon icon={faCheckDouble} /> Proofreader:
-                        </span>
-                      </div>
-                      <div className="rd-staff-members">
-                        {novelData.inactive.proofreader.map((proofreader, index) => (
-                          <a href="#" className="rd-staff-name" key={index}>
-                            {proofreader}
-                          </a>
-                        ))}
-                      </div>
-                    </>
+
+                  {chaptersData?.chapters?.length > 0 ? (
+                    bookmarkData?.bookmarkedChapter ? (
+                      <Link 
+                        to={`/novel/${novelId}/chapter/${bookmarkData.bookmarkedChapter.id}`} 
+                        className="rd-btn rd-btn-primary"
+                        title={`Continue from: ${bookmarkData.bookmarkedChapter.title}`}
+                      >
+                        <FontAwesomeIcon icon={faForward} />
+                        Continue Reading
+                      </Link>
+                    ) : (
+                      <Link 
+                        to={`/novel/${novelId}/chapter/${chaptersData.chapters[chaptersData.chapters.length - 1]?._id}`} 
+                        className="rd-btn rd-btn-primary"
+                      >
+                        <FontAwesomeIcon icon={faForward} />
+                        Latest Chapter
+                      </Link>
+                    )
+                  ) : (
+                    <button className="rd-btn rd-btn-primary" disabled>
+                      <FontAwesomeIcon icon={faForward} />
+                      No Chapters
+                    </button>
                   )}
-                </>
-              )}
+
+                  <button 
+                    className={`rd-btn rd-btn-bookmark ${isBookmarked ? 'active' : ''}`}
+                    onClick={toggleBookmark}
+                  >
+                    <FontAwesomeIcon icon={isBookmarked ? faBookmarkSolid : faBookmark} />
+                    {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Description Section */}
+            <div className="rd-description-section">
+              <h2 className="rd-description-title">DESCRIPTION</h2>
+              <div className={`rd-description-content ${isDescriptionExpanded ? 'expanded' : ''}`}>
+                <div dangerouslySetInnerHTML={{ 
+                  __html: isDescriptionExpanded 
+                    ? novelData.description 
+                    : truncateHTML(novelData.description, 300) 
+                }} />
+              </div>
+              <a href="#" className="rd-show-toggle" onClick={toggleDescription}>
+                {isDescriptionExpanded ? 'Show less' : 'Read more'}
+              </a>
             </div>
           </div>
 
-          {/* Announcement Section */}
-          {novelData.note && (
+          <div className="rd-novel-sidebar">
+            {/* Staff Section */}
             <div className="rd-section">
-              <h3 className="rd-section-title">ANNOUNCEMENT</h3>
-              <div className="rd-section-content rd-announcement">
-                <div dangerouslySetInnerHTML={{ 
-                  __html: isNoteExpanded 
-                    ? novelData.note 
-                    : truncateHTML(novelData.note, 300) 
-                }} />
-                {novelData.note && (
-                  (() => {
-                    const div = document.createElement('div');
-                    div.innerHTML = novelData.note;
-                    const fullText = div.textContent || div.innerText || '';
-                    return fullText.length > 300 ? (
-                      <a href="#" className="rd-show-toggle" onClick={(e) => {
-                        e.preventDefault();
-                        setIsNoteExpanded(!isNoteExpanded);
-                      }}>
-                        {isNoteExpanded ? 'Show less' : 'Read more'}
+              <h3 className="rd-section-title">STAFF</h3>
+              <div className="rd-section-content">
+                {/* Active Staff */}
+                <div className="rd-staff-category rd-active-category">Active</div>
+
+                {/* Translators */}
+                <div className="rd-staff-role rd-role-translator">
+                  <span className="rd-role-badge rd-translator-badge">
+                    <FontAwesomeIcon icon={faLanguage} /> Translator:
+                  </span>
+                </div>
+                <div className="rd-staff-members">
+                  {novelData.active?.translator && novelData.active.translator.length > 0 ? (
+                    novelData.active.translator.map((translator, index) => (
+                      <a href="#" className="rd-staff-name" key={index}>
+                        {translator}
                       </a>
-                    ) : null;
-                  })()
+                    ))
+                  ) : (
+                    <span className="rd-staff-empty">None</span>
+                  )}
+                </div>
+
+                {/* Editors */}
+                <div className="rd-staff-role rd-role-editor">
+                  <span className="rd-role-badge rd-editor-badge">
+                    <FontAwesomeIcon icon={faEdit} /> Editor:
+                  </span>
+                </div>
+                <div className="rd-staff-members">
+                  {novelData.active?.editor && novelData.active.editor.length > 0 ? (
+                    novelData.active.editor.map((editor, index) => (
+                      <a href="#" className="rd-staff-name" key={index}>
+                        {editor}
+                      </a>
+                    ))
+                  ) : (
+                    <span className="rd-staff-empty">None</span>
+                  )}
+                </div>
+
+                {/* Proofreaders */}
+                <div className="rd-staff-role rd-role-qc">
+                  <span className="rd-role-badge rd-qc-badge">
+                    <FontAwesomeIcon icon={faCheckDouble} /> Proofreader:
+                  </span>
+                </div>
+                <div className="rd-staff-members">
+                  {novelData.active?.proofreader && novelData.active.proofreader.length > 0 ? (
+                    novelData.active.proofreader.map((proofreader, index) => (
+                      <a href="#" className="rd-staff-name" key={index}>
+                        {proofreader}
+                      </a>
+                    ))
+                  ) : (
+                    <span className="rd-staff-empty">None</span>
+                  )}
+                </div>
+
+                {/* Inactive Staff */}
+                {(novelData.inactive?.translator?.length > 0 ||
+                  novelData.inactive?.editor?.length > 0 ||
+                  novelData.inactive?.proofreader?.length > 0) && (
+                  <>
+                    <div className="rd-staff-category rd-inactive-category">Inactive</div>
+                    
+                    {/* Inactive Translators */}
+                    {novelData.inactive?.translator && novelData.inactive.translator.length > 0 && (
+                      <>
+                        <div className="rd-staff-role rd-role-translator">
+                          <span className="rd-role-badge rd-translator-badge">
+                            <FontAwesomeIcon icon={faLanguage} /> Translator:
+                          </span>
+                        </div>
+                        <div className="rd-staff-members">
+                          {novelData.inactive.translator.map((translator, index) => (
+                            <a href="#" className="rd-staff-name" key={index}>
+                              {translator}
+                            </a>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Inactive Editors */}
+                    {novelData.inactive?.editor && novelData.inactive.editor.length > 0 && (
+                      <>
+                        <div className="rd-staff-role rd-role-editor">
+                          <span className="rd-role-badge rd-editor-badge">
+                            <FontAwesomeIcon icon={faEdit} /> Editor:
+                          </span>
+                        </div>
+                        <div className="rd-staff-members">
+                          {novelData.inactive.editor.map((editor, index) => (
+                            <a href="#" className="rd-staff-name" key={index}>
+                              {editor}
+                            </a>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Inactive Proofreaders */}
+                    {novelData.inactive?.proofreader && novelData.inactive.proofreader.length > 0 && (
+                      <>
+                        <div className="rd-staff-role rd-role-qc">
+                          <span className="rd-role-badge rd-qc-badge">
+                            <FontAwesomeIcon icon={faCheckDouble} /> Proofreader:
+                          </span>
+                        </div>
+                        <div className="rd-staff-members">
+                          {novelData.inactive.proofreader.map((proofreader, index) => (
+                            <a href="#" className="rd-staff-name" key={index}>
+                              {proofreader}
+                            </a>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
                 )}
               </div>
             </div>
-          )}
+
+            {/* Contributions Section - Always show regardless of novel.note */}
+            {sidebar}
+
+            {/* Announcement Section */}
+            {novelData.note && (
+              <div className="rd-section">
+                <h3 className="rd-section-title">ANNOUNCEMENT</h3>
+                <div className="rd-section-content rd-announcement">
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: isNoteExpanded 
+                      ? novelData.note 
+                      : truncateHTML(novelData.note, 300) 
+                  }} />
+                  {novelData.note && (
+                    (() => {
+                      const div = document.createElement('div');
+                      div.innerHTML = novelData.note;
+                      const fullText = div.textContent || div.innerText || '';
+                      return fullText.length > 300 ? (
+                        <a href="#" className="rd-show-toggle" onClick={(e) => {
+                          e.preventDefault();
+                          setIsNoteExpanded(!isNoteExpanded);
+                        }}>
+                          {isNoteExpanded ? 'Show less' : 'Read more'}
+                        </a>
+                      ) : null;
+                    })()
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

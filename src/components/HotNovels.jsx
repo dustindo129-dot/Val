@@ -16,7 +16,7 @@
  * - Error handling
  */
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -64,12 +64,14 @@ const NovelCard = memo(({ novel }) => {
  * Sidebar component that displays trending or popular novels
  */
 const HotNovels = () => {
+  const [timeRange, setTimeRange] = useState('today');
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['hotNovels'],
+    queryKey: ['hotNovels', timeRange],
     queryFn: async () => {
       // Add cache busting parameter to force fresh data
       const cacheBuster = new Date().getTime();
-      const response = await axios.get(`${config.backendUrl}/api/novels/hot?_cb=${cacheBuster}`);
+      const response = await axios.get(`${config.backendUrl}/api/novels/hot?timeRange=${timeRange}&_cb=${cacheBuster}`);
       return response.data.novels || [];
     },
     staleTime: 24 * 60 * 60 * 1000, // Data remains fresh for 24 hours
@@ -79,13 +81,36 @@ const HotNovels = () => {
     refetchInterval: 24 * 60 * 60 * 1000 // Refresh every 24 hours
   });
 
+  const handleTimeRangeChange = (newTimeRange) => {
+    setTimeRange(newTimeRange);
+  };
+
     if (isLoading) {
         return (
             <div className="hot-novels">
-                <h2 className="hot-novels-title">
-                    HOT NOVEL
-                    <span className="hot-icon">ᐁ</span>
-                </h2>
+                <div className="hot-novels-header">
+                    <h2 className="hot-novels-title">
+                        HOT NOVEL
+                        <span className="hot-icon">ᐁ</span>
+                    </h2>
+                    <div className="hot-novels-sort">
+                        <span 
+                            className={`sort-option ${timeRange === 'today' ? 'active' : ''}`}
+                            onClick={() => handleTimeRangeChange('today')}>
+                            Today
+                        </span>
+                        <span 
+                            className={`sort-option ${timeRange === 'week' ? 'active' : ''}`}
+                            onClick={() => handleTimeRangeChange('week')}>
+                            Week
+                        </span>
+                        <span 
+                            className={`sort-option ${timeRange === 'alltime' ? 'active' : ''}`}
+                            onClick={() => handleTimeRangeChange('alltime')}>
+                            All Time
+                        </span>
+                    </div>
+                </div>
                 <div className="hot-novels-loading">
                     <div className="loading-spinner"></div>
                     <span>Loading hot novels...</span>
@@ -97,10 +122,29 @@ const HotNovels = () => {
     if (error) {
         return (
             <div className="hot-novels">
-                <h2 className="hot-novels-title">
-                    HOT NOVEL
-                    <span className="hot-icon">ᐁ</span>
-                </h2>
+                <div className="hot-novels-header">
+                    <h2 className="hot-novels-title">
+                        HOT NOVEL
+                        <span className="hot-icon">ᐁ</span>
+                    </h2>
+                    <div className="hot-novels-sort">
+                        <span 
+                            className={`sort-option ${timeRange === 'today' ? 'active' : ''}`}
+                            onClick={() => handleTimeRangeChange('today')}>
+                            Today
+                        </span>
+                        <span 
+                            className={`sort-option ${timeRange === 'week' ? 'active' : ''}`}
+                            onClick={() => handleTimeRangeChange('week')}>
+                            Week
+                        </span>
+                        <span 
+                            className={`sort-option ${timeRange === 'alltime' ? 'active' : ''}`}
+                            onClick={() => handleTimeRangeChange('alltime')}>
+                            All Time
+                        </span>
+                    </div>
+                </div>
                 <div className="hot-novels-error">Failed to load hot novels</div>
             </div>
         );
@@ -108,10 +152,29 @@ const HotNovels = () => {
 
     return (
         <div className="hot-novels">
-            <h2 className="hot-novels-title">
-                HOT NOVEL
-                <span className="hot-icon">ᐁ</span>
-            </h2>
+            <div className="hot-novels-header">
+                <h2 className="hot-novels-title">
+                    HOT NOVEL
+                    <span className="hot-icon">ᐁ</span>
+                </h2>
+                <div className="hot-novels-sort">
+                    <span 
+                        className={`sort-option ${timeRange === 'today' ? 'active' : ''}`}
+                        onClick={() => handleTimeRangeChange('today')}>
+                        Today
+                    </span>
+                    <span 
+                        className={`sort-option ${timeRange === 'week' ? 'active' : ''}`}
+                        onClick={() => handleTimeRangeChange('week')}>
+                        Week
+                    </span>
+                    <span 
+                        className={`sort-option ${timeRange === 'alltime' ? 'active' : ''}`}
+                        onClick={() => handleTimeRangeChange('alltime')}>
+                        All Time
+                    </span>
+                </div>
+            </div>
             <div className="hot-novels-list">
                 {data?.map((novel) => (
                     <NovelCard key={novel._id} novel={novel} />

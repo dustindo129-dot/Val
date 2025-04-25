@@ -23,20 +23,62 @@
   box-sizing: border-box;
 }
 
-/* Section title styles */
-.hot-novels-title {
-  font-size: 1.25rem;
-  color: #333;
-  margin: 0 0 1.25rem 0;
+/* Header and sort controls */
+.hot-novels-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
   background: linear-gradient(to right, #FF6B6B, #FFA69E);
   background-size: 100% 2px;
   background-position: 0 100%;
   background-repeat: no-repeat;
+}
+
+/* Section title styles */
+.hot-novels-title {
+  font-size: 1.25rem;
+  color: #333;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   white-space: nowrap;
+}
+
+/* Sort controls */
+.hot-novels-sort {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.sort-option {
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s ease;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.sort-option:hover {
+  color: #FF6B6B;
+}
+
+.sort-option.active {
+  color: #FF6B6B;
+  font-weight: 600;
+}
+
+.sort-option.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #FF6B6B;
 }
 
 /* Hot icon styles */
@@ -215,6 +257,17 @@
 @media (max-width: 768px) {
   .hot-novels {
     padding: 1rem;
+  }
+  
+  .hot-novels-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .hot-novels-sort {
+    width: 100%;
+    justify-content: space-between;
   }
   
   .hot-novel-cover {
