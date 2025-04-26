@@ -15,6 +15,7 @@ import Feedback from '../pages/Feedback';
 import OLN from '../pages/OLN';
 import Market from '../pages/Market';
 import TopUp from '../pages/TopUp';
+import TopUpManagement from '../pages/TopUpManagement';
 
 function AppRoutes() {
   return (
@@ -51,8 +52,14 @@ function AppRoutes() {
       <Route 
         path="/top-up" 
         element={
+          <TopUp />
+        } 
+      />
+      <Route 
+        path="/topup-management" 
+        element={
           <ProtectedRoute>
-            <TopUp />
+            <TopUpManagement />
           </ProtectedRoute>
         } 
       />

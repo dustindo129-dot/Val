@@ -119,28 +119,34 @@ const Novel = ({ searchQuery = "" }) => {
   if (error) return <div className="error">{error.message}</div>;
 
   return (
-    <div className="novels-container">
-      <div className="main-content">
-        {/* Section header */}
-        <div className="section-header">
-          <h2 className="section-title">
-            LATEST UPDATES
-            <StarIcon className="title-icon" />
-          </h2>
+    <>
+      <h1 className="welcome-heading">
+        Chào mừng đến với Valvrareteam - Thế giới Light Novel dành cho bạn!
+      </h1>
+      <div className="novels-container">
+        <div className="main-content">
+          {/* Section header */}
+          <div className="section-header">
+            <h2 className="section-title">
+              LATEST UPDATES
+              <StarIcon className="title-icon" />
+            </h2>
+          </div>
+  
+          {/* Novel list component */}
+          <NovelList 
+            novels={data?.novels || []} 
+            pagination={data?.pagination}
+            searchQuery={searchQuery}
+          />
         </div>
-
-        {/* Novel list component */}
-        <NovelList 
-          novels={data?.novels || []} 
-          pagination={data?.pagination}
-          searchQuery={searchQuery}
-        />
+  
+        {/* Sidebar with hot novels */}
+        <aside className="sidebar">
+          <HotNovels />
+        </aside>
       </div>
-      {/* Sidebar with hot novels */}
-      <aside className="sidebar">
-        <HotNovels />
-      </aside>
-    </div>
+    </>
   );
 };
 

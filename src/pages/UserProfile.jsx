@@ -307,21 +307,24 @@ const UserProfile = () => {
         {/* Avatar section */}
         <div className="avatar-section">
           <div className="avatar-container">
-            <img
-              src={avatar || '/default-avatar.png'}
-              alt="Profile"
-              className="profile-avatar"
-            />
-            <label className="avatar-upload-label">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                disabled={isLoading}
-                style={{ display: 'none' }}
+            <div className="avatar-wrapper">
+              <img
+                src={avatar || '/default-avatar.png'}
+                alt="Profile"
+                className="profile-avatar"
               />
-              Change Avatar
-            </label>
+              <label className="avatar-upload-overlay">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  disabled={isLoading}
+                  style={{ display: 'none' }}
+                />
+                <i className="fa-solid fa-camera"></i>
+              </label>
+            </div>
+            <h2 className="profile-username">{username}</h2>
           </div>
         </div>
 

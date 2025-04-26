@@ -50,6 +50,9 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Add state for dropdown
+  const [showDropdown, setShowDropdown] = useState(false);
+
   // Add event listener for openLoginModal event
   useEffect(() => {
     const handleOpenLoginModal = () => {
@@ -147,6 +150,38 @@ const Navbar = () => {
     setShowSignUp(false);
   };
 
+  /**
+   * Toggles the user dropdown menu
+   */
+  const toggleDropdown = () => {
+    setShowDropdown(prev => !prev);
+  };
+
+  /**
+   * Closes the dropdown menu
+   */
+  const closeDropdown = () => {
+    setShowDropdown(false);
+  };
+
+  // Add event listener to close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const dropdown = document.querySelector('.user-dropdown-container');
+      if (dropdown && !dropdown.contains(event.target)) {
+        closeDropdown();
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
+
   return (
     <>
       {/* Main navigation bar */}
@@ -236,13 +271,8 @@ const Navbar = () => {
             </form>
           </div>
 
-          {/* Right section with navigation and auth buttons */}
+          {/* Right section with auth buttons */}
           <div className="navbar-right">
-            {/* Navigation links */}
-            <div className="nav-links">
-              {/* Admin link will be added here if needed */}
-            </div>
-
             {/* Auth buttons */}
             {user ? (
               // Logged in user menu
@@ -264,20 +294,32 @@ const Navbar = () => {
                   </svg>
                   Bookmarks
                 </Link>
-                <div className="user-avatar">
-                  <img 
-                    src={user.avatar || '/default-avatar.png'} 
-                    alt={`${user.username}'s avatar`} 
-                    className="avatar-image"
-                  />
-                </div>
-                <div className="profile-logout-container">
-                  <Link to={`/user/${user.username}/profile`} className="auth-button profile-btn">
-                    Profile
-                  </Link>
-                  <button onClick={handleLogout} className="auth-button logout-btn">
-                    Logout
-                  </button>
+                <div className="user-info">
+                  <span className="user-username">{user.username}</span>
+                  <div className="user-dropdown-container">
+                    <div className="user-avatar" onClick={toggleDropdown}>
+                      <img 
+                        src={user.avatar || '/default-avatar.png'} 
+                        alt={`${user.username}'s avatar`} 
+                        className="avatar-image"
+                      />
+                    </div>
+                    {showDropdown && (
+                      <div className="user-dropdown">
+                        <Link to={`/user/${user.username}/profile`} className="dropdown-item" onClick={closeDropdown}>
+                          Profile
+                        </Link>
+                        {user?.role === 'admin' && (
+                          <Link to="/topup-management" className="dropdown-item" onClick={closeDropdown}>
+                            Top-up Management
+                          </Link>
+                        )}
+                        <button onClick={() => {handleLogout(); closeDropdown();}} className="dropdown-item">
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (

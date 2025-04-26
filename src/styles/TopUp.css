@@ -141,7 +141,7 @@
   font-size: 1.2rem;
 }
 
-.user-info {
+.topup-user-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
