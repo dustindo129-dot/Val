@@ -88,14 +88,16 @@ export default defineConfig(({ command, mode }) => {
       historyApiFallback: true
     },
     resolve: {
-      dedupe: ['react', 'react-dom', '@tanstack/react-query'],
+      // Enhanced deduplication - ensures all React packages use the same instance
+      dedupe: [
+        'react', 
+        'react-dom', 
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        '@tanstack/react-query'
+      ],
       alias: {
         '~': path.resolve(__dirname, './src'),
-        'react': path.resolve(__dirname, './node_modules/react'),
-        'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
-        'react/jsx-runtime': path.resolve(__dirname, './node_modules/react/jsx-runtime'),
-        'react/jsx-dev-runtime': path.resolve(__dirname, './node_modules/react/jsx-dev-runtime'),
-        '@tanstack/react-query': path.resolve(__dirname, './node_modules/@tanstack/react-query'),
       },
     },
     plugins: [
@@ -138,7 +140,9 @@ export default defineConfig(({ command, mode }) => {
         'react-dom',
         'react-router-dom',
         '@tanstack/react-query'
-      ]
+      ],
+      // Force Vite to use a single version of React
+      force: true
     }
   };
 });
