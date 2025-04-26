@@ -6,6 +6,11 @@
   overflow: hidden;
 }
 
+:root.dark-mode .report-panel {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 .report-panel-header {
   background-color: #e9ecef;
   padding: 12px 16px;
@@ -16,6 +21,11 @@
   border-bottom: 1px solid #dee2e6;
 }
 
+:root.dark-mode .report-panel-header {
+  background-color: #1a1a1a;
+  border-bottom-color: #444;
+}
+
 .report-panel-header h3 {
   margin: 0;
   font-size: 16px;
@@ -23,9 +33,18 @@
   color: #495057;
 }
 
+:root.dark-mode .report-panel-header h3 {
+  color: #e0e0e0;
+}
+
 .expand-icon {
   font-size: 14px;
   transition: transform 0.2s;
+  color: #495057;
+}
+
+:root.dark-mode .expand-icon {
+  color: #e0e0e0;
 }
 
 .expand-icon.expanded {
@@ -43,8 +62,17 @@
   font-style: italic;
 }
 
+:root.dark-mode .report-loading, 
+:root.dark-mode .no-reports {
+  color: #a0a0a0;
+}
+
 .report-error {
   color: #dc3545;
+}
+
+:root.dark-mode .report-error {
+  color: #ff6b6b;
 }
 
 .report-list {
@@ -63,6 +91,11 @@
   position: relative;
 }
 
+:root.dark-mode .report-card {
+  background-color: #1a1a1a;
+  border-color: #444;
+}
+
 .report-meta {
   display: flex;
   justify-content: space-between;
@@ -74,9 +107,17 @@
   color: #343a40;
 }
 
+:root.dark-mode .reporter-info {
+  color: #e0e0e0;
+}
+
 .report-timestamp {
   font-size: 12px;
   color: #6c757d;
+}
+
+:root.dark-mode .report-timestamp {
+  color: #a0a0a0;
 }
 
 .report-type {
@@ -90,10 +131,19 @@
   margin-bottom: 8px;
 }
 
+:root.dark-mode .report-type {
+  background-color: #1a365d;
+  color: #63b3ed;
+}
+
 .report-content-type {
   font-size: 12px;
   color: #6c757d;
   margin-bottom: 8px;
+}
+
+:root.dark-mode .report-content-type {
+  color: #a0a0a0;
 }
 
 .report-details {
@@ -107,6 +157,11 @@
   word-break: break-word;
   max-height: 100px;
   overflow-y: auto;
+}
+
+:root.dark-mode .report-details {
+  background-color: #2d2d2d;
+  color: #e0e0e0;
 }
 
 .report-actions {
@@ -150,6 +205,11 @@
   padding: 20px;
 }
 
+:root.dark-mode .rating-modal-container,
+:root.dark-mode .report-modal-container {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
 .rating-modal,
 .report-modal {
   background-color: white;
@@ -163,6 +223,11 @@
   flex-direction: column;
 }
 
+:root.dark-mode .rating-modal,
+:root.dark-mode .report-modal {
+  background-color: #2d2d2d;
+}
+
 .rating-modal-header,
 .report-modal-header {
   display: flex;
@@ -172,12 +237,22 @@
   border-bottom: 1px solid #e9ecef;
 }
 
+:root.dark-mode .rating-modal-header,
+:root.dark-mode .report-modal-header {
+  border-color: #444;
+}
+
 .rating-modal-header h3,
 .report-modal-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #212529;
+}
+
+:root.dark-mode .rating-modal-header h3,
+:root.dark-mode .report-modal-header h3 {
+  color: #fff;
 }
 
 .rating-modal-body,
@@ -195,6 +270,11 @@
   border-top: 1px solid #e9ecef;
 }
 
+:root.dark-mode .rating-modal-footer,
+:root.dark-mode .report-modal-footer {
+  border-color: #444;
+}
+
 .cancel-rating-btn,
 .cancel-report-btn {
   background-color: #f8f9fa;
@@ -207,9 +287,21 @@
   transition: background-color 0.2s;
 }
 
+:root.dark-mode .cancel-rating-btn,
+:root.dark-mode .cancel-report-btn {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
 .cancel-rating-btn:hover,
 .cancel-report-btn:hover {
   background-color: #e9ecef;
+}
+
+:root.dark-mode .cancel-rating-btn:hover,
+:root.dark-mode .cancel-report-btn:hover {
+  background-color: #363636;
 }
 
 .submit-rating-btn,
@@ -264,6 +356,10 @@
   color: #495057;
 }
 
+:root.dark-mode .report-details-container label {
+  color: #e0e0e0;
+}
+
 .report-details-container textarea {
   width: 100%;
   padding: 8px 12px;
@@ -273,10 +369,21 @@
   resize: vertical;
 }
 
+:root.dark-mode .report-details-container textarea {
+  background-color: #1a1a1a;
+  color: #fff;
+  border-color: #444;
+}
+
 .report-details-container textarea:focus {
   outline: none;
   border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+:root.dark-mode .report-details-container textarea:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 0.2rem rgba(99, 179, 237, 0.25);
 }
 
 .report-error {
@@ -314,6 +421,10 @@
   font-weight: 500;
 }
 
+:root.dark-mode .content-link {
+  color: #63b3ed;
+}
+
 .content-link:hover {
   text-decoration: underline;
 }
@@ -332,8 +443,16 @@
   text-decoration: none;
 }
 
+:root.dark-mode .view-content-btn {
+  background-color: #0f6674;
+}
+
 .view-content-btn:hover {
   background-color: #138496;
   text-decoration: none;
   color: white;
+}
+
+:root.dark-mode .view-content-btn:hover {
+  background-color: #0c525d;
 } 

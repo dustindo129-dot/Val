@@ -80,13 +80,13 @@
 .profile-username {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-color, #333);
+  color: #333;
   margin: 0 0 16px 0;
   text-align: center;
 }
 
-[data-theme='dark'] .profile-username {
-  color: var(--text-color-dark, #fff);
+:root.dark-mode .profile-username {
+  color: #fff;
 }
 
 /* Avatar upload overlay */
@@ -137,6 +137,11 @@
   margin-bottom: 20px;
 }
 
+:root.dark-mode .settings-form {
+  background-color: #2d2d2d;
+  color: #fff;
+}
+
 /* Settings form title */
 .settings-form h2 {
   font-size: 18px;
@@ -144,6 +149,12 @@
   margin-bottom: 16px;
   padding-bottom: 8px;
   border-bottom: 1px solid #dee2e6;
+  color: #333;
+}
+
+:root.dark-mode .settings-form h2 {
+  color: #fff;
+  border-bottom-color: #444;
 }
 
 /* Form group container */
@@ -156,6 +167,11 @@
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
+  color: #333;
+}
+
+:root.dark-mode .form-group label {
+  color: #fff;
 }
 
 /* Form input styling */
@@ -165,6 +181,14 @@
   border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 16px;
+  background-color: #fff;
+  color: #333;
+}
+
+:root.dark-mode .form-control {
+  background-color: #1a1a1a;
+  border-color: #444;
+  color: #fff;
 }
 
 /* Form input focus state */
@@ -250,9 +274,19 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+:root.dark-mode .blocked-users-section {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .blocked-users-section h2 {
   font-size: 18px;
   margin-bottom: 16px;
+  color: #333;
+}
+
+:root.dark-mode .blocked-users-section h2 {
+  color: #fff;
 }
 
 .blocked-users-list {
@@ -262,6 +296,11 @@
   max-height: 300px;
   overflow-y: auto;
   border: 1px solid #e9ecef;
+}
+
+:root.dark-mode .blocked-users-list {
+  background-color: #1a1a1a;
+  border-color: #444;
 }
 
 .blocked-user-item {
@@ -277,13 +316,18 @@
   transition: background-color 0.2s ease;
 }
 
+:root.dark-mode .blocked-user-item {
+  background-color: #2d2d2d;
+  border-bottom-color: #444;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 .blocked-user-item:hover {
   background-color: #f8f9fa;
 }
 
-.blocked-user-item:last-child {
-  margin-bottom: 0;
-  border-bottom: none;
+:root.dark-mode .blocked-user-item:hover {
+  background-color: #363636;
 }
 
 .blocked-user-info {
@@ -303,6 +347,10 @@
 .blocked-username {
   font-weight: 500;
   color: #495057;
+}
+
+:root.dark-mode .blocked-username {
+  color: #e0e0e0;
 }
 
 .unblock-btn {
@@ -328,6 +376,10 @@
   font-style: italic;
 }
 
+:root.dark-mode .no-blocked-users {
+  color: #a0a0a0;
+}
+
 /* Reports Section */
 .reports-section {
   grid-area: reports;
@@ -336,6 +388,11 @@
   border-radius: 8px;
   padding: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+:root.dark-mode .reports-section {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Mobile responsive styles */
@@ -377,6 +434,11 @@
   transition: transform 0.2s;
   font-size: 1.2rem;
   margin-left: 8px;
+  color: #495057;
+}
+
+:root.dark-mode .block-btn {
+  color: #e0e0e0;
 }
 
 /* Block confirmation modal */
@@ -393,6 +455,10 @@
   z-index: 1000;
 }
 
+:root.dark-mode .block-confirm-modal {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
 .block-confirm-content {
   background-color: white;
   padding: 2rem;
@@ -402,9 +468,17 @@
   text-align: center;
 }
 
+:root.dark-mode .block-confirm-content {
+  background-color: #2d2d2d;
+}
+
 .block-confirm-content p {
   margin-bottom: 1rem;
   color: #333;
+}
+
+:root.dark-mode .block-confirm-content p {
+  color: #fff;
 }
 
 .block-confirm-actions {
@@ -427,23 +501,18 @@
   border: none;
 }
 
+:root.dark-mode .block-confirm-actions button:first-child {
+  background-color: #b02a37;
+}
+
 .block-confirm-actions button:last-child {
   background-color: #f8f9fa;
   border: 1px solid #ddd;
   color: #333;
 }
 
-/* Dark theme support */
-:root.dark-mode .block-confirm-content {
-  background-color: #1a1a1a;
-}
-
-:root.dark-mode .block-confirm-content p {
-  color: #fff;
-}
-
 :root.dark-mode .block-confirm-actions button:last-child {
-  background-color: #2d2d2d;
+  background-color: #1a1a1a;
   border-color: #444;
   color: #fff;
 }
