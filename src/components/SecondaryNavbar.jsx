@@ -142,25 +142,25 @@ const SecondaryNavbar = () => {
           {/* Main navigation links */}
           <div className={`nav-links ${isMenuOpen ? 'show' : ''}`}>
             <Link to="/" className={`nav-link ${isActive('/')}`} onClick={() => setIsMenuOpen(false)}>
-              Home
+              Trang chủ
             </Link>
             <Link to="/novel-directory" className={`nav-link ${isActive('/novel-directory')}`} onClick={() => setIsMenuOpen(false)}>
-              Novel Directory
+              Danh sách truyện
             </Link>
             <Link to="/oln" className={`nav-link ${isActive('/oln')}`} onClick={() => setIsMenuOpen(false)}>
-              OLN
+              Truyện sáng tác
             </Link>
             <Link to="/feedback" className={`nav-link ${isActive('/feedback')}`} onClick={() => setIsMenuOpen(false)}>
-              Feedback
+              Phản hồi
             </Link>
             {/* Market link - visible to everyone */}
             <Link to="/market" className={`nav-link ${isActive('/market')}`} onClick={() => setIsMenuOpen(false)}>
-              Market
+              Bảng yêu cầu
             </Link>
             {/* Admin and Moderator dashboard link */}
             {(user?.role === 'admin' || user?.role === 'moderator') && (
               <Link to="/admin-dashboard" className={`nav-link ${isActive('/admin-dashboard')}`} onClick={() => setIsMenuOpen(false)}>
-                Admin Dashboard
+                Bảng quản trị
               </Link>
             )}
           </div>
@@ -178,13 +178,13 @@ const SecondaryNavbar = () => {
           {/* Top-up button - only visible to admin */}
           {user?.role === 'admin' && (
             <Link to="/top-up" className="top-up-button">
-              Top-up
+              Nạp thêm
             </Link>
           )}
           
           {/* Theme toggle button */}
           <button onClick={toggleTheme} className="theme-toggle">
-            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+            {isDarkMode ? 'Chế độ sáng' : 'Chế độ tối'}
           </button>
         </div>
       </div>

@@ -311,11 +311,11 @@ const Navbar = () => {
                         </Link>
                         {user?.role === 'admin' && (
                           <Link to="/topup-management" className="dropdown-item" onClick={closeDropdown}>
-                            Top-up Management
+                            Quản lý giao dịch
                           </Link>
                         )}
                         <button onClick={() => {handleLogout(); closeDropdown();}} className="dropdown-item">
-                          Logout
+                          Đăng xuất
                         </button>
                       </div>
                     )}
@@ -326,10 +326,10 @@ const Navbar = () => {
               // Guest user menu
               <div className="auth-buttons">
                 <button onClick={handleLoginClick} className="auth-button login">
-                  Log In
+                  Đăng nhập
                 </button>
                 <button onClick={handleSignUpClick} className="auth-button sign-up">
-                  Sign Up
+                  Đăng ký
                 </button>
               </div>
             )}
@@ -341,7 +341,7 @@ const Navbar = () => {
       <Modal 
         isOpen={showLogin} 
         onClose={handleCloseModals}
-        title="Login"
+        title="Đăng nhập"
       >
         <Login onClose={handleCloseModals} onSignUp={handleSignUpClick} />
       </Modal>
@@ -350,7 +350,7 @@ const Navbar = () => {
       <Modal 
         isOpen={showSignUp} 
         onClose={handleCloseModals}
-        title="Sign Up"
+        title="Đăng ký"
       >
         <SignUp onClose={handleCloseModals} onLogin={handleLoginClick} />
       </Modal>

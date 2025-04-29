@@ -170,6 +170,17 @@
   font-size: 0.9rem;
 }
 
+.min-deposit-notice {
+  color: #dc3545;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+:root.dark-mode .min-deposit-notice {
+  color: #f97583;
+}
+
 .request-form-actions {
   display: flex;
   gap: 1rem;
@@ -702,6 +713,22 @@
   padding: 0.2rem 0.5rem;
   border-radius: 12px;
   font-weight: 500;
+}
+
+.history-open-now-badge,
+.request-open-now-badge {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  background-color: #007bff;
+  color: white;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+:root.dark-mode .history-open-now-badge,
+:root.dark-mode .request-open-now-badge {
+  background-color: #0d6efd;
 }
 
 .history-status.status-pending {
@@ -1288,4 +1315,225 @@
 :root.dark-mode .module-info,
 :root.dark-mode .chapter-info {
     color: #adb5bd;
+}
+
+/* Radio option styles for Open Now vs Post */
+.request-options {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  border-left: 3px solid #dee2e6;
+}
+
+.options-title {
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: #343a40;
+}
+
+.radio-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.option-label {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  min-width: 200px;
+  flex: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.option-label:hover:not(.disabled) {
+  background-color: #e9ecef;
+}
+
+.option-label.selected {
+  border-color: #007bff;
+  background-color: #f0f7ff;
+}
+
+.option-label.selected:hover {
+  background-color: #e0f0ff;
+}
+
+.option-label.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #f1f1f1;
+}
+
+.option-label input[type="radio"] {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.option-text {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  padding-right: 1.5rem;
+}
+
+.option-description {
+  font-size: 0.85rem;
+  color: #6c757d;
+  max-width: 90%;
+}
+
+.option-info {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.option-info p {
+  margin: 0.25rem 0;
+}
+
+.refund-info {
+  color: #28a745;
+  font-weight: 500;
+}
+
+/* Dark mode styles for radio options */
+:root.dark-mode .request-options {
+  background-color: #343a40;
+  border-color: #495057;
+}
+
+:root.dark-mode .options-title {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .option-label {
+  border-color: #495057;
+  background-color: #212529;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .option-label:hover:not(.disabled) {
+  background-color: #2c3237;
+}
+
+:root.dark-mode .option-label.selected {
+  border-color: #0d6efd;
+  background-color: #0d3c72;
+}
+
+:root.dark-mode .option-label.selected:hover {
+  background-color: #0e4381;
+}
+
+:root.dark-mode .option-label.disabled {
+  background-color: #1a1d20;
+}
+
+:root.dark-mode .option-description {
+  color: #adb5bd;
+}
+
+:root.dark-mode .option-info {
+  background-color: #212529;
+  color: #e9ecef;
+}
+
+:root.dark-mode .refund-info {
+  color: #5dba7d;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .radio-options {
+    flex-direction: column;
+  }
+}
+
+.market-overview {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.overview-section {
+  margin-bottom: 1.5rem;
+}
+
+.overview-section h3 {
+  font-size: 1.1rem;
+  color: #343a40;
+  margin-bottom: 0.75rem;
+}
+
+.overview-section ul {
+  list-style-type: none;
+  padding-left: 1rem;
+  margin: 0;
+}
+
+.overview-section li {
+  margin-bottom: 0.5rem;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.overview-section li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #007bff;
+}
+
+.important-note {
+  color: #dc3545;
+  margin-bottom: 0.5rem;
+}
+
+.note {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.update-date {
+  text-align: right;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+/* Dark mode styles */
+:root.dark-mode .market-overview {
+  background-color: #343a40;
+}
+
+:root.dark-mode .overview-section h3 {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .overview-section li {
+  color: #e9ecef;
+}
+
+:root.dark-mode .overview-section li:before {
+  color: #0d6efd;
+}
+
+:root.dark-mode .important-note {
+  color: #f97583;
+}
+
+:root.dark-mode .note,
+:root.dark-mode .update-date {
+  color: #adb5bd;
 } 

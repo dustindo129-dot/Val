@@ -51,6 +51,11 @@ const Market = () => {
   const [submittingContribution, setSubmittingContribution] = useState(false);
   const [contributions, setContributions] = useState({});
   const [loadingContributions, setLoadingContributions] = useState(new Set());
+  // New state for the open now option
+  const [openNowOption, setOpenNowOption] = useState('post'); // 'post' or 'openNow'
+  // State to store the selected module/chapter details
+  const [selectedModuleData, setSelectedModuleData] = useState(null);
+  const [selectedChapterData, setSelectedChapterData] = useState(null);
 
   // Fetch user balance and requests on component mount
   useEffect(() => {
@@ -149,6 +154,8 @@ const Market = () => {
         setChapters([]);
         setSelectedModule(null);
         setSelectedChapter(null);
+        setSelectedModuleData(null);
+        setSelectedChapterData(null);
         return;
       }
       
@@ -176,6 +183,8 @@ const Market = () => {
         // Clear selected module and chapter since the novel changed
         setSelectedModule(null);
         setSelectedChapter(null);
+        setSelectedModuleData(null);
+        setSelectedChapterData(null);
       } catch (err) {
         console.error('Failed to fetch modules:', err);
       } finally {
@@ -187,10 +196,40 @@ const Market = () => {
     fetchModules();
   }, [selectedNovel]);
 
+  // Update selected module data when module selection changes
+  useEffect(() => {
+    if (selectedModule) {
+      const moduleData = modules.find(m => m._id === selectedModule);
+      setSelectedModuleData(moduleData);
+      setSelectedChapterData(null);
+    } else {
+      setSelectedModuleData(null);
+    }
+  }, [selectedModule, modules]);
+
+  // Update selected chapter data when chapter selection changes
+  useEffect(() => {
+    if (selectedChapter) {
+      const chapterData = chapters.find(c => c._id === selectedChapter);
+      setSelectedChapterData(chapterData);
+    } else {
+      setSelectedChapterData(null);
+    }
+  }, [selectedChapter, chapters]);
+
+  // Reset open now option when selections change
+  useEffect(() => {
+    // If no paid module or chapter is selected, reset to "Post"
+    if (!selectedModuleData && !selectedChapterData) {
+      setOpenNowOption('post');
+    }
+  }, [selectedModuleData, selectedChapterData]);
+
   // Clear chapter selection when module selection changes
   useEffect(() => {
     if (selectedModule !== null) {
       setSelectedChapter(null);
+      setSelectedChapterData(null);
     }
   }, [selectedModule]);
 
@@ -199,92 +238,221 @@ const Market = () => {
     e.preventDefault();
     
     if (!isAuthenticated) {
-      alert('Please log in to make a request');
+      alert('Vui lòng đăng nhập để gửi yêu cầu');
       return;
     }
     
     // Only validate requestText if it's a new novel request
     if (requestType === 'new' && !requestText.trim()) {
-      alert('Please enter a request title');
+      alert('Vui lòng điền tên truyện bạn muốn yêu cầu');
       return;
     }
     
     if (!depositAmount || isNaN(depositAmount) || Number(depositAmount) <= 0) {
-      alert('Please enter a valid deposit amount');
+      alert('Vui lòng điền số cọc hợp lệ');
+      return;
+    }
+    
+    // Validate minimum deposit amount
+    if (Number(depositAmount) < 100) {
+      alert('Số 🌾 cọc tối thiểu là 100');
       return;
     }
     
     if (Number(depositAmount) > userBalance) {
-      alert('Deposit amount cannot exceed your balance');
+      alert('Số cọc không được vượt quá số 🌾 hiện tại');
       return;
     }
     
     if (requestType === 'open' && !selectedNovel) {
-      alert('Please select a novel for chapter opening request');
+      alert('Vui lòng chọn truyện bạn muốn mở chương');
       return;
     }
     
-    // Warn user about withdrawal policy
-    if (!confirm('IMPORTANT: You can only withdraw your request after 24 hours have passed since posting. Do you want to proceed?')) {
+    // For "Open now!" option, only allow if a paid module or chapter is selected
+    if (openNowOption === 'openNow' && !selectedModuleData && !selectedChapterData) {
+      alert('Vui lòng chọn một tập/chương đang khóa để sử dụng tùy chọn "Mở ngay"');
+      return;
+    }
+    
+    // Different confirmation message based on selected option
+    let confirmMessage = '';
+    if (openNowOption === 'post') {
+      confirmMessage = 'QUAN TRỌNG: Bạn chỉ có thể rút yêu cầu sau 24 giờ đã gửi. Bạn có muốn tiếp tục không?';
+    } else { // openNow option
+      confirmMessage = 'QUAN TRỌNG: Điều này sẽ mở tập/chương đã chọn ngay lập tức bằng cọc của bạn. Hành động này không thể hoàn tác. Bạn có muốn tiếp tục không?';
+    }
+    
+    if (!confirm(confirmMessage)) {
       return;
     }
     
     setSubmitting(true);
     
     try {
-      const requestData = {
-        type: requestType,
-        text: DOMPurify.sanitize(requestText || ""), // Use empty string if no text
-        deposit: Number(depositAmount)
-      };
-      
-      // Add note if provided for new novel requests
-      if (requestType === 'new' && requestNote.trim()) {
-        requestData.note = DOMPurify.sanitize(requestNote);
-      }
-      
-      // Add novel ID if request type is 'open'
-      if (requestType === 'open' && selectedNovel) {
-        requestData.novelId = selectedNovel._id;
+      if (openNowOption === 'openNow') {
+        // Handle "Open now!" option
+        const deposit = Number(depositAmount);
+        let refundAmount = 0;
         
-        // Add module ID if selected
-        if (selectedModule) {
-          requestData.moduleId = selectedModule;
+        if (selectedModuleData) {
+          // If deposit is greater than moduleBalance, calculate refund
+          if (deposit > selectedModuleData.moduleBalance) {
+            refundAmount = deposit - selectedModuleData.moduleBalance;
+          }
+          
+          // Update module mode to "published" if balance will be 0 after this transaction
+          const newMode = selectedModuleData.moduleBalance <= deposit ? 'published' : 'paid';
+          const newBalance = Math.max(0, selectedModuleData.moduleBalance - deposit);
+          
+          // Call API to update module
+          await axios.put(
+            `${config.backendUrl}/api/modules/${selectedNovel._id}/modules/${selectedModuleData._id}`,
+            {
+              title: selectedModuleData.title,
+              mode: newMode,
+              moduleBalance: newBalance
+            },
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          
+          // Create a request record with 'approved' status
+          const requestData = {
+            type: 'open',
+            text: DOMPurify.sanitize(requestText || "Auto-approved open now request"),
+            deposit: deposit,
+            novelId: selectedNovel._id,
+            moduleId: selectedModuleData._id,
+            status: 'approved',
+            openNow: true
+          };
+          
+          await axios.post(
+            `${config.backendUrl}/api/requests`,
+            requestData,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          
+        } else if (selectedChapterData) {
+          // If deposit is greater than chapterBalance, calculate refund
+          if (deposit > selectedChapterData.chapterBalance) {
+            refundAmount = deposit - selectedChapterData.chapterBalance;
+          }
+          
+          // Update chapter mode to "published" if balance will be 0 after this transaction
+          const newMode = selectedChapterData.chapterBalance <= deposit ? 'published' : 'paid';
+          const newBalance = Math.max(0, selectedChapterData.chapterBalance - deposit);
+          
+          // Call API to update chapter
+          await axios.put(
+            `${config.backendUrl}/api/chapters/${selectedChapterData._id}`,
+            {
+              title: selectedChapterData.title,
+              mode: newMode,
+              chapterBalance: newBalance
+            },
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          
+          // Create a request record with 'approved' status
+          const requestData = {
+            type: 'open',
+            text: DOMPurify.sanitize(requestText || "Auto-approved open now request"),
+            deposit: deposit,
+            novelId: selectedNovel._id,
+            chapterId: selectedChapterData._id,
+            status: 'approved',
+            openNow: true
+          };
+          
+          await axios.post(
+            `${config.backendUrl}/api/requests`,
+            requestData,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
         }
         
-        // Add chapter ID if selected
-        if (selectedChapter) {
-          requestData.chapterId = selectedChapter;
+        // Handle refund if necessary
+        if (refundAmount > 0) {
+          await axios.post(
+            `${config.backendUrl}/api/users/refund`,
+            { amount: refundAmount },
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          
+          // Update local user balance to reflect refund
+          setUserBalance(prevBalance => prevBalance - deposit + refundAmount);
+          
+          alert(`Yêu cầu đã được xử lí thành công. Mục đã được mở! Một số dư hoàn lại ${refundAmount} đã được thêm vào số 🌾 hiện tại của bạn.`);
+        } else {
+          // Update local user balance
+          setUserBalance(prevBalance => prevBalance - deposit);
+          
+          alert('Yêu cầu của bạn đã được xử lý thành công. Mục đã được mở!');
         }
+        
+        // Refresh the page or fetch updated data
+        await fetchData();
+        
+      } else {
+        // Normal "Post" option - existing code
+        const requestData = {
+          type: requestType,
+          text: DOMPurify.sanitize(requestText || ""), // Use empty string if no text
+          deposit: Number(depositAmount)
+        };
+        
+        // Add note if provided for new novel requests
+        if (requestType === 'new' && requestNote.trim()) {
+          requestData.note = DOMPurify.sanitize(requestNote);
+        }
+        
+        // Add novel ID if request type is 'open'
+        if (requestType === 'open' && selectedNovel) {
+          requestData.novelId = selectedNovel._id;
+          
+          // Add module ID if selected
+          if (selectedModule) {
+            requestData.moduleId = selectedModule;
+          }
+          
+          // Add chapter ID if selected
+          if (selectedChapter) {
+            requestData.chapterId = selectedChapter;
+          }
+        }
+        
+        const response = await axios.post(
+          `${config.backendUrl}/api/requests`,
+          requestData,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        const newRequest = response.data;
+        
+        // Update requests list with new request
+        setRequests(prevRequests => [newRequest, ...prevRequests]);
+        
+        // Update user balance
+        setUserBalance(prevBalance => prevBalance - Number(depositAmount));
+        
+        // Add request to withdrawableRequests after 24 hours
+        setTimeout(() => {
+          setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
+        }, 86400000); // 24 hours in milliseconds
       }
       
-      const response = await axios.post(
-        `${config.backendUrl}/api/requests`,
-        requestData,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      const newRequest = response.data;
-      
-      // Update requests list with new request
-      setRequests(prevRequests => [newRequest, ...prevRequests]);
-      
-      // Update user balance
-      setUserBalance(prevBalance => prevBalance - Number(depositAmount));
-      
-      // Reset form
+      // Reset form in all cases
       setRequestText('');
       setRequestNote('');
       setDepositAmount('');
       setSelectedNovel(null);
       setSelectedModule(null);
       setSelectedChapter(null);
+      setSelectedModuleData(null);
+      setSelectedChapterData(null);
       setNovelSearchQuery('');
-      
-      // Add request to withdrawableRequests after 24 hours
-      setTimeout(() => {
-        setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
-      }, 86400000); // 24 hours in milliseconds
+      setOpenNowOption('post');
       
     } catch (err) {
       console.error('Failed to submit request:', err);
@@ -305,7 +473,10 @@ const Market = () => {
     setSelectedNovel(null);
     setSelectedModule(null);
     setSelectedChapter(null);
+    setSelectedModuleData(null);
+    setSelectedChapterData(null);
     setNovelSearchQuery('');
+    setOpenNowOption('post');
   };
 
   // Handle novel selection
@@ -315,18 +486,30 @@ const Market = () => {
     setShowNovelResults(false);
     setSelectedModule(null);
     setSelectedChapter(null);
+    setSelectedModuleData(null);
+    setSelectedChapterData(null);
+    setOpenNowOption('post');
   };
 
   // Handle module selection
   const handleModuleSelect = (e) => {
     setSelectedModule(e.target.value);
     setSelectedChapter(null);
+    setSelectedChapterData(null);
   };
 
   // Handle chapter selection
   const handleChapterSelect = (e) => {
     setSelectedChapter(e.target.value);
   };
+
+  // Handle option change (Post or Open now)
+  const handleOptionChange = (option) => {
+    setOpenNowOption(option);
+  };
+
+  // Check if "Open now!" option can be enabled
+  const canOpenNow = selectedModuleData || selectedChapterData;
 
   // Handle request sorting
   const handleSortChange = (newSortOrder) => {
@@ -341,7 +524,10 @@ const Market = () => {
     setSelectedNovel(null);
     setSelectedModule(null);
     setSelectedChapter(null);
+    setSelectedModuleData(null);
+    setSelectedChapterData(null);
     setNovelSearchQuery('');
+    setOpenNowOption('post');
   };
 
   // Fetch request history
@@ -360,8 +546,8 @@ const Market = () => {
       setRequestHistory(response.data);
       setShowHistory(true);
     } catch (err) {
-      console.error('Failed to fetch request history:', err);
-      alert('Failed to load request history');
+      console.error('Không thể tải lịch sử yêu cầu:', err);
+      alert('Không thể tải lịch sử yêu cầu');
     } finally {
       setHistoryLoading(false);
     }
@@ -379,7 +565,7 @@ const Market = () => {
   // Handle liking a request
   const handleLikeRequest = async (requestId) => {
     if (!isAuthenticated) {
-      alert('Please log in to like requests');
+      alert('Vui lòng đăng nhập để thích yêu cầu');
       return;
     }
 
@@ -477,10 +663,10 @@ const Market = () => {
       // Remove the request from the list
       setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
       
-      alert('Request approved successfully');
+      alert('Yêu cầu đã được phê duyệt thành công');
     } catch (err) {
-      console.error('Failed to approve request:', err);
-      alert('Failed to approve request');
+      console.error('Không thể phê duyệt yêu cầu:', err);
+      alert('Không thể phê duyệt yêu cầu');
     }
   };
 
@@ -782,37 +968,84 @@ const Market = () => {
 
   return (
     <div className="market-container">
-      <h1>Market</h1>
+      <h1>Bảng Yêu Cầu</h1>
       <div className="market-content">
         <section className="market-section">
-          <h2>Market Overview</h2>
-          <p>Welcome to the Market page. Here you can request new novels or chapter openings by making a deposit.</p>
+          <h2>Hướng dẫn chung</h2>
+          <div className="market-overview">
+            <p>Đây là nơi bạn có thể dùng 🌾 để yêu cầu truyện dịch mới hoặc yêu cầu mở chương/tập mới/sẵn có.</p>
+            
+            <div className="overview-section">
+              <h3>Quy tắc chung:</h3>
+              <ul>
+                <li>Số 🌾 cọc tối thiểu là 100.</li>
+                <li>Yêu cầu có thể rút lại sau 24h (sau 24h nút rút lại sẽ hiện ra), trừ trường hợp chọn Mở ngay!</li>
+                <li>Có thể góp lúa vào yêu cầu có sẵn, bằng nút "góp" ở mỗi yêu cầu.</li>
+                <li>Nếu yêu cầu bị từ chối, số 🌾 cọc sẽ được trả lại cho người dùng.</li>
+                <li>Nếu số 🌾 cọc vượt quá số 🌾 cần để mở chương/tập mới, số dư sẽ được trả lại cho người dùng.</li>
+              </ul>
+            </div>
+
+            <div className="overview-section">
+              <h3>Đối với yêu cầu truyện mới:</h3>
+              <ul>
+                <li>Điền tên bộ truyện bạn muốn yêu cầu + nhắn nhủ thêm nếu có</li>
+                <li>Cọc một số 🌾 bất kì (tối thiểu 100). Nếu dịch giả quyết định chạy bộ truyện yêu cầu, sẽ dựa vào con số này để quyết định làm bao nhiêu khi mới bắt đầu chạy, ví dụ 100 🌾 thì chắc vừa đủ mở project hoặc cùng lắm làm cái mở đầu hoặc đăng minh họa, nên cách tốt nhất hãy kêu gọi mọi người góp 🌾 cùng.</li>
+                <li>Đăng yêu cầu và chờ đợi. Bên team dịch sẽ chỉ chấp nhận yêu cầu khi có thể đảm bảo tiến độ và chất lượng, nên sẽ mất chút thời gian để tìm được người dịch phù hợp nhất tùy theo yêu cầu.</li>
+              </ul>
+            </div>
+
+            <div className="overview-section">
+              <h3>Đối với mở chương/tập có sẵn:</h3>
+              <ul>
+                <li>Chọn bộ truyện trong thanh tìm kiếm.</li>
+                <li>Chọn chương/tập bạn muốn mở + nhắn nhủ thêm nếu có.</li>
+                <li>Điền số 🌾 cọc.</li>
+                <li>Chọn 1 trong 2 option: Mở ngay hoặc Đăng bài gọi vốn.
+                   <p>Nếu chọn mở ngay, số cọc sẽ lập tức được trừ vào số 🌾 cần để mở chương/tập, tự động mở nếu con số giảm xuống 0.</p>
+                   <p>Nếu chọn Đăng bài gọi vốn, thì giống như gửi yêu cầu ở trên, có thể rút lại sau 24h, admin sẽ chấp nhận yêu cầu khi thấy số lượng 🌾 do mọi người góp đủ để mở chương/tập, hoặc sau quãng thời gian đủ lâu.</p></li>
+              </ul>
+            </div>
+
+            <div className="overview-section">
+              <p className="important-note"><strong><em>Không có giới hạn cho bất kì yêu cầu nào của bạn, dù là truyện Eng hay Jap, bất cứ gì cũng có thể được dịch ra tiếng Việt.</em></strong></p>
+              <p className="important-note"><strong><em>Giá niêm yết: 4đ/1 chữ với truyện Eng, 6đ/1 chữ với truyện Jap.</em></strong></p>
+            </div>
+
+            <div className="overview-section">
+              <p className="note">Lưu ý: Đối với những yêu cầu liên quan đến truyện bản quyền hoặc 18+, vui lòng liên hệ <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer">fanpage</a> để được tư vấn thêm.</p>
+            </div>
+
+            <div className="update-date">
+              <em>Cập nhật ngày 29/04/2025</em>
+            </div>
+          </div>
         </section>
         
         <section className="market-section">
           <div className="market-header">
-            <h2>Requests ({requests.length})</h2>
+            <h2>Yêu cầu ({requests.length})</h2>
             
             {/* Sort controls */}
             <div className="sort-controls">
-              <span>Sort by: </span>
+              <span>Sắp xếp theo: </span>
               <button 
                 className={`sort-btn ${sortOrder === 'newest' ? 'active' : ''}`}
                 onClick={() => handleSortChange('newest')}
               >
-                Newest
+                Mới nhất
               </button>
               <button 
                 className={`sort-btn ${sortOrder === 'oldest' ? 'active' : ''}`}
                 onClick={() => handleSortChange('oldest')}
               >
-                Oldest
+                Cũ nhất
               </button>
               <button 
                 className={`sort-btn ${sortOrder === 'likes' ? 'active' : ''}`}
                 onClick={() => handleSortChange('likes')}
               >
-                Most Liked
+                Nhiều lượt thích nhất
               </button>
             </div>
           </div>
@@ -824,13 +1057,13 @@ const Market = () => {
                   className={`type-tab ${requestType === 'new' ? 'active' : ''}`} 
                   onClick={() => handleTypeChange('new')}
                 >
-                  Request New Novel
+                  Yêu cầu truyện mới
                 </button>
                 <button 
                   className={`type-tab ${requestType === 'open' ? 'active' : ''}`} 
                   onClick={() => handleTypeChange('open')}
                 >
-                  Request Module/Chapter Opening
+                  Yêu cầu mở chương/tập có sẵn
                 </button>
                 
                 {/* Request History Button - Visible to all logged-in users */}
@@ -839,7 +1072,7 @@ const Market = () => {
                     className={`type-tab history-tab ${showHistory ? 'active' : ''}`} 
                     onClick={toggleHistory}
                   >
-                    Request History
+                    Lịch sử yêu cầu
                   </button>
                 )}
               </div>
@@ -862,6 +1095,11 @@ const Market = () => {
                               <span className={`history-status status-${request.status}`}>
                                 {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                               </span>
+                              {request.openNow && (
+                                <span className="history-open-now-badge">
+                                  Mở ngay
+                                </span>
+                              )}
                             </div>
                             <div className="history-date">
                               {new Date(request.createdAt).toLocaleDateString()}
@@ -918,7 +1156,7 @@ const Market = () => {
                     </div>
                   )}
                   <button className="close-history-btn" onClick={() => setShowHistory(false)}>
-                    Back to Requests
+                    Quay lại yêu cầu
                   </button>
                 </div>
               ) : (
@@ -928,7 +1166,7 @@ const Market = () => {
                       <div className="novel-search short">
                         <input
                           type="text"
-                          placeholder="Search for a novel..."
+                          placeholder="Tìm kiếm truyện..."
                           value={novelSearchQuery}
                           onChange={(e) => setNovelSearchQuery(e.target.value)}
                           onClick={() => setShowNovelResults(true)}
@@ -1005,7 +1243,7 @@ const Market = () => {
                       <input
                         type="text"
                         className="request-title-input"
-                        placeholder="Title of the novel you want..."
+                        placeholder="Tên truyện bạn muốn yêu cầu..."
                         value={requestText}
                         onChange={(e) => setRequestText(e.target.value)}
                         disabled={submitting}
@@ -1013,7 +1251,7 @@ const Market = () => {
                       />
                       <textarea
                         className="request-input"
-                        placeholder="Additional note... (optional)"
+                        placeholder="Nhắn nhủ thêm... (nếu có)"
                         value={requestNote}
                         onChange={(e) => setRequestNote(e.target.value)}
                         disabled={submitting}
@@ -1022,19 +1260,98 @@ const Market = () => {
                   ) : (
                     <textarea
                       className="request-input"
-                      placeholder="Write your request... (optional)"
+                      placeholder="Nhắn nhủ thêm... (nếu có)"
                       value={requestText}
                       onChange={(e) => setRequestText(e.target.value)}
                       disabled={submitting}
                     />
                   )}
                   
+                  {/* Request options for "open" type requests */}
+                  {requestType === 'open' && selectedNovel && (
+                    <div className="request-options">
+                      <div className="options-title">Request type:</div>
+                      <div className="radio-options">
+                        <label className={`option-label ${openNowOption === 'post' ? 'selected' : ''}`}>
+                          <input
+                            type="radio"
+                            name="requestOption"
+                            value="post"
+                            checked={openNowOption === 'post'}
+                            onChange={() => handleOptionChange('post')}
+                          />
+                          <span className="option-text">Post Request</span>
+                          <span className="option-description">Submit for admin approval (24h wait to withdraw)</span>
+                        </label>
+                        
+                        <label 
+                          className={`option-label ${openNowOption === 'openNow' ? 'selected' : ''} ${!canOpenNow ? 'disabled' : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name="requestOption"
+                            value="openNow"
+                            checked={openNowOption === 'openNow'}
+                            onChange={() => handleOptionChange('openNow')}
+                            disabled={!canOpenNow}
+                          />
+                          <span className="option-text">Open Now!</span>
+                          <span className="option-description">
+                            {canOpenNow 
+                              ? `Immediately open the ${selectedModuleData ? 'module' : 'chapter'} using your deposit`
+                              : 'Select a paid module or chapter to enable this option'}
+                          </span>
+                        </label>
+                      </div>
+                      
+                      {openNowOption === 'openNow' && selectedModuleData && (
+                        <div className="option-info">
+                          <p>Module balance: {selectedModuleData.moduleBalance}</p>
+                          {Number(depositAmount) > 0 && (
+                            <>
+                              <p>
+                                {Number(depositAmount) >= selectedModuleData.moduleBalance 
+                                  ? 'This will fully unlock the module and change its mode to "Published"' 
+                                  : `This will reduce the module balance to ${Math.max(0, selectedModuleData.moduleBalance - Number(depositAmount))}`}
+                              </p>
+                              {Number(depositAmount) > selectedModuleData.moduleBalance && (
+                                <p className="refund-info">
+                                  You will be refunded {Number(depositAmount) - selectedModuleData.moduleBalance}
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
+                      {openNowOption === 'openNow' && selectedChapterData && (
+                        <div className="option-info">
+                          <p>Chapter balance: {selectedChapterData.chapterBalance}</p>
+                          {Number(depositAmount) > 0 && (
+                            <>
+                              <p>
+                                {Number(depositAmount) >= selectedChapterData.chapterBalance 
+                                  ? 'This will fully unlock the chapter and change its mode to "Published"' 
+                                  : `This will reduce the chapter balance to ${Math.max(0, selectedChapterData.chapterBalance - Number(depositAmount))}`}
+                              </p>
+                              {Number(depositAmount) > selectedChapterData.chapterBalance && (
+                                <p className="refund-info">
+                                  You will be refunded {Number(depositAmount) - selectedChapterData.chapterBalance}
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="deposit-input-container">
-                    <label htmlFor="deposit">Deposit:</label>
+                    <label htmlFor="deposit">Cọc:</label>
                     <input
                       type="number"
                       id="deposit"
-                      min="1"
+                      min="100"
                       step="1"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
@@ -1042,7 +1359,8 @@ const Market = () => {
                       required
                       className="deposit-input"
                     />
-                    <span className="balance-display">Current balance: {userBalance}</span>
+                    <span className="balance-display">🌾 hiện tại: {userBalance}</span>
+                    <span className="min-deposit-notice">Số cọc tối thiểu: 100</span>
                   </div>
                   
                   <div className="request-form-actions">
@@ -1052,17 +1370,18 @@ const Market = () => {
                       disabled={submitting || 
                                (requestType === 'new' && !requestText.trim()) || 
                                !depositAmount || 
+                               Number(depositAmount) < 100 ||
                                (requestType === 'open' && !selectedNovel) ||
                                (depositAmount && Number(depositAmount) > userBalance)}
                     >
-                      {submitting ? 'Posting...' : 'Post Request'}
+                      {submitting ? 'Đang gửi...' : 'Gửi Yêu Cầu'}
                     </button>
                     <button 
                       type="button" 
                       className="discard-btn"
                       onClick={handleClearForm}
                     >
-                      Discard
+                      Bỏ bản nháp
                     </button>
                   </div>
                 </form>
@@ -1077,11 +1396,11 @@ const Market = () => {
           {!showHistory && (
             <div className="requests-list">
               {isLoading ? (
-                <p>Loading requests...</p>
+                <p>Đang tải yêu cầu...</p>
               ) : error ? (
                 <p className="error">{error}</p>
               ) : requests.length === 0 ? (
-                <p>No requests found</p>
+                <p>Không có yêu cầu nào</p>
               ) : (
                 requests.map(request => {
                   // Get the current user ID
@@ -1110,6 +1429,11 @@ const Market = () => {
                             <span className="request-type">
                               {request.type === 'new' ? 'Request new novel' : 'Request module/chapter opening'}
                             </span>
+                            {request.openNow && (
+                              <span className="request-open-now-badge">
+                                Mở ngay
+                              </span>
+                            )}
                             {request.type === 'open' && request.novel && (
                               <div className="request-novel-info">
                                 <Link to={`/novel/${request.novel._id}`} className="novel-link">
