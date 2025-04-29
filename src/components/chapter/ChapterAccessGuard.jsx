@@ -46,15 +46,15 @@ const ChapterAccessGuard = ({ chapter, user, children }) => {
         {chapter?.mode === 'protected' && (
           <div className="protected-content">
             <FontAwesomeIcon icon={faLock} size="3x" />
-            <h3>Protected Content</h3>
-            <p>Please log in to read this chapter.</p>
+            <h3>Nội dung bảo mật</h3>
+            <p>Vui lòng đăng nhập để đọc chương này.</p>
           </div>
         )}
         {chapter?.mode === 'draft' && (
           <div className="draft-content">
             <FontAwesomeIcon icon={faCog} size="3x" />
-            <h3>Draft Content</h3>
-            <p>This chapter is still in draft mode and not available for public viewing.</p>
+            <h3>Nội dung nháp</h3>
+            <p>Chương này đang ở chế độ nháp và không khả dụng cho người dùng.</p>
           </div>
         )}
         {isPaidChapter && !canAccessPaidContent && (
@@ -62,10 +62,10 @@ const ChapterAccessGuard = ({ chapter, user, children }) => {
             <div className="locked-chapter-container">
               <div className="locked-chapter-content">
                 <FontAwesomeIcon icon={faLock} className="locked-chapter-icon" />
-                <h3>This chapter requires payment to access</h3>
-                <p>Need {chapter.chapterBalance || 0} 🌾 to unlock. Please visit market!</p>
+                <h3>Chương này yêu cầu thanh toán để truy cập</h3>
+                <p>Cần {chapter.chapterBalance || 0} 🌾 để mở khóa. Vui lòng truy cập bảng yêu cầu!</p>
                 <div className="locked-chapter-actions">
-                  <Link to="/market" className="go-to-market-btn">Go to market</Link>
+                  <Link to="/market" className="go-to-market-btn">Truy cập bảng yêu cầu</Link>
                 </div>
               </div>
             </div>

@@ -182,12 +182,12 @@ const TopUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedAmount) {
-      setError('Please select an amount');
+      setError('Vui lòng chọn số tiền');
       return;
     }
 
     if (!paymentMethod) {
-      setError('Please select a payment method');
+      setError('Vui lòng chọn phương thức thanh toán');
       return;
     }
 
@@ -284,7 +284,7 @@ const TopUp = () => {
 
   // Handle canceling a pending request
   const handleCancelRequest = async (requestId) => {
-    if (!confirm('Are you sure you want to cancel this request?')) {
+    if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu này không?')) {
       return;
     }
     
@@ -297,16 +297,16 @@ const TopUp = () => {
       // Update pending requests
       setPendingRequests(pendingRequests.filter(req => req._id !== requestId));
       
-      alert('Request cancelled successfully');
+      alert('Yêu cầu đã được hủy thành công');
     } catch (err) {
-      console.error('Failed to cancel request:', err);
-      alert(err.response?.data?.message || 'Failed to cancel request');
+      console.error('Không thể hủy yêu cầu:', err);
+      alert(err.response?.data?.message || 'Không thể hủy yêu cầu');
     }
   };
 
   return (
     <div className="top-up-container">
-      <h1>Top-up Your Account</h1>
+      <h1>Nạp 🌾 vào tài khoản</h1>
       
       {/* Rules section */}
       <section className="top-up-section rules-section">
@@ -337,7 +337,7 @@ const TopUp = () => {
       <div className="top-up-content">
         {/* Payment method selection */}
         <section className="top-up-section">
-          <h2>Select Payment Method</h2>
+          <h2>Chọn phương thức thanh toán</h2>
           <div className="payment-methods">
             <div 
               className={`payment-method-card ${paymentMethod === 'ewallet' ? 'selected' : ''}`}
@@ -351,7 +351,7 @@ const TopUp = () => {
                   <img src="https://Valvrareteam.b-cdn.net/zalopay.webp" alt="ZaloPay" />
                 </div>
               </div>
-              <p>Pay with Momo and ZaloPay</p>
+              <p>Thanh toán bằng Momo và ZaloPay</p>
             </div>
 
             <div 
@@ -363,7 +363,7 @@ const TopUp = () => {
                   <img src="https://Valvrareteam.b-cdn.net/techcombank.png" alt="Banks" />
                 </div>
               </div>
-              <p>Bank Transfer</p>
+              <p>Chuyển khoản ngân hàng</p>
             </div>
 
             <div 
@@ -381,7 +381,7 @@ const TopUp = () => {
                   <img src="https://Valvrareteam.b-cdn.net/mobiphone.png" alt="Mobiphone" />
                 </div>
               </div>
-              <p>Prepaid Cards (Thẻ cào)</p>
+              <p>Thẻ trả trước (Thẻ cào)</p>
             </div>
           </div>
         </section>
@@ -389,11 +389,11 @@ const TopUp = () => {
         {/* Payment details section - shown only when a payment method is selected */}
         {paymentMethod && (
           <section className="top-up-section">
-            <h2>Payment Details</h2>
+            <h2>Chi tiết thanh toán</h2>
             
             {/* Select Amount section as radio options */}
             <div className="amount-selection">
-              <h3>Select Amount</h3>
+              <h3>Chọn số tiền</h3>
               <div className="amount-options">
                 {pricingOptions.map((option, index) => (
                   <label key={index} className="amount-option">
@@ -442,13 +442,13 @@ const TopUp = () => {
                 {subMethod === 'momo' && (
                   <div className="method-form">
                     <div className="form-group">
-                      <label htmlFor="momo-phone">Momo Phone Number</label>
+                      <label htmlFor="momo-phone">Số điện thoại Momo</label>
                       <input 
                         type="text" 
                         id="momo-phone" 
                         value={formData.momo.phoneNumber}
                         onChange={(e) => handleInputChange('momo', 'phoneNumber', e.target.value)}
-                        placeholder="Enter your Momo phone number"
+                        placeholder="Nhập số điện thoại Momo của bạn"
                       />
                     </div>
                   </div>
@@ -457,13 +457,13 @@ const TopUp = () => {
                 {subMethod === 'zalopay' && (
                   <div className="method-form">
                     <div className="form-group">
-                      <label htmlFor="zalopay-phone">ZaloPay Phone Number</label>
+                      <label htmlFor="zalopay-phone">Số điện thoại ZaloPay</label>
                       <input 
                         type="text" 
                         id="zalopay-phone" 
                         value={formData.zalopay.phoneNumber}
                         onChange={(e) => handleInputChange('zalopay', 'phoneNumber', e.target.value)}
-                        placeholder="Enter your ZaloPay phone number"
+                        placeholder="Nhập số điện thoại ZaloPay của bạn"
                       />
                     </div>
                   </div>
@@ -555,36 +555,36 @@ const TopUp = () => {
               <div className="payment-details">
                 <div className="method-form">
                   <div className="form-group">
-                    <label htmlFor="card-provider">Card Provider</label>
+                    <label htmlFor="card-provider">Nhà mạng</label>
                     <select 
                       id="card-provider"
                       value={formData.prepaidCard.provider}
                       onChange={(e) => handleInputChange('prepaidCard', 'provider', e.target.value)}
                     >
-                      <option value="">Select provider</option>
+                      <option value="">Chọn nhà mạng</option>
                       <option value="viettel">Viettel</option>
                       <option value="vinaphone">Vinaphone</option>
                       <option value="mobiphone">Mobiphone</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="card-number">Card Number</label>
+                    <label htmlFor="card-number">Số thẻ</label>
                     <input 
                       type="text" 
                       id="card-number" 
                       value={formData.prepaidCard.cardNumber}
                       onChange={(e) => handleInputChange('prepaidCard', 'cardNumber', e.target.value)}
-                      placeholder="Enter card number/serial"
+                      placeholder="Nhập số thẻ/seri"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="card-pin">Card PIN</label>
+                    <label htmlFor="card-pin">Mã PIN</label>
                     <input 
                       type="text" 
                       id="card-pin" 
                       value={formData.prepaidCard.cardPin}
                       onChange={(e) => handleInputChange('prepaidCard', 'cardPin', e.target.value)}
-                      placeholder="Enter card PIN"
+                      placeholder="Nhập mã PIN"
                     />
                   </div>
                 </div>
@@ -597,7 +597,7 @@ const TopUp = () => {
               onClick={handleSubmit}
               disabled={loading || !selectedAmount || !paymentMethod}
             >
-              {loading ? 'Processing...' : 'Submit Payment Request'}
+              {loading ? 'Đang xử lý...' : 'Gửi yêu cầu thanh toán'}
             </button>
 
             {/* Error message */}
@@ -611,7 +611,7 @@ const TopUp = () => {
             className="history-button"
             onClick={handleViewHistory}
           >
-            {viewHistory ? 'Hide Transaction History' : 'View Transaction History'}
+            {viewHistory ? 'Ẩn lịch sử giao dịch' : 'Xem lịch sử giao dịch'}
           </button>
         </div>
 
@@ -619,19 +619,19 @@ const TopUp = () => {
         {viewHistory && (
           <section className="top-up-section">
             <div className="transaction-header-container">
-              <h2>Transaction History</h2>
+              <h2>Lịch sử giao dịch</h2>
               <button 
                 className="refresh-button"
                 onClick={handleViewHistory}
                 disabled={fetchingHistory}
               >
-                {fetchingHistory ? 'Refreshing...' : 'Refresh History'}
+                {fetchingHistory ? 'Đang tải lại...' : 'Tải lại lịch sử'}
               </button>
             </div>
             {fetchingHistory ? (
-              <p>Loading transaction history...</p>
+              <p>Đang tải lịch sử giao dịch...</p>
             ) : history.length === 0 ? (
-              <p>No transaction history found</p>
+              <p>Không có lịch sử giao dịch</p>
             ) : (
               <div className="transaction-history">
                 {history.map(transaction => (
@@ -644,15 +644,15 @@ const TopUp = () => {
                       <div className="transaction-amounts">
                         <div className="transaction-price">{formatPrice(transaction.amount)}</div>
                         <div className="transaction-credits">
-                          {transaction.balance} balance
+                          {transaction.balance} 🌾
                         </div>
                       </div>
                       <div className="transaction-method">
                         {transaction.paymentMethod === 'ewallet' 
                           ? `${transaction.subMethod.charAt(0).toUpperCase() + transaction.subMethod.slice(1)}` 
                           : transaction.paymentMethod === 'bank' 
-                            ? 'Bank Transfer' 
-                            : 'Prepaid Card'}
+                            ? 'Chuyển khoản ngân hàng' 
+                            : 'Thẻ trả trước'}
                       </div>
                     </div>
                     {transaction.status === 'Pending' && (
@@ -661,7 +661,7 @@ const TopUp = () => {
                           className="cancel-button"
                           onClick={() => handleCancelRequest(transaction._id)}
                         >
-                          Cancel
+                          Hủy bỏ
                         </button>
                       </div>
                     )}

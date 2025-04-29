@@ -423,7 +423,7 @@ const NovelDirectory = () => {
     );
   };
 
-  if (isLoading) return <div className="directory-loading">Loading novels...</div>;
+  if (isLoading) return <div className="directory-loading">Đang tải truyện...</div>;
   if (error) return <div className="directory-error">{error.message}</div>;
 
   const { novels, totalItems } = filteredAndPaginatedNovels;
@@ -434,16 +434,16 @@ const NovelDirectory = () => {
           <div className="content-layout directory">
             <div className="main-content directory">
               <div className="section-headers directory">
-                <h2>NOVEL DIRECTORY</h2>
+                <h2>DANH SÁCH TRUYỆN</h2>
               </div>
-              <div className="no-results directory">No novels match your selected filters.</div>
-              <button className="reset-all-filters directory" onClick={resetFilters}>Clear all filters</button>
+              <div className="no-results directory">Không có truyện nào phù hợp với các bộ lọc đã chọn.</div>
+              <button className="reset-all-filters directory" onClick={resetFilters}>Xóa tất cả bộ lọc</button>
             </div>
 
             {/* Sidebar with genre filters */}
             <div className="sidebar" ref={sidebarRef}>
               <div className="filter-panel">
-                <h3>Filter by Genres</h3>
+                <h3>Lọc theo thể loại</h3>
 
                 {Object.entries(genreCategories).map(([category, genres]) => (
                     <div key={category} className="genre-category">
@@ -468,10 +468,10 @@ const NovelDirectory = () => {
 
                 <div className="filter-actions">
                   <button className="filter-button apply-filters" onClick={applyFilters}>
-                    Apply Filters
+                    Áp dụng bộ lọc
                   </button>
                   <button className="filter-button reset-filters" onClick={resetFilters}>
-                    Reset Filters
+                    Xóa bộ lọc
                   </button>
                 </div>
               </div>
@@ -487,9 +487,9 @@ const NovelDirectory = () => {
           {/* Main content area */}
           <div className="main-content directory">
             <div className="section-headers directory">
-              <h2>NOVEL DIRECTORY</h2>
+              <h2>DANH SÁCH TRUYỆN</h2>
               <div className="results-count directory">
-                Showing {novels.length} of {totalItems} novels
+                Hiển thị {novels.length} truyện trong tổng số {totalItems} truyện
               </div>
             </div>
             <div className="novel-grid directory">
@@ -574,7 +574,7 @@ const NovelDirectory = () => {
           {/* Sidebar with genre filters */}
           <div className="sidebar" ref={sidebarRef}>
             <div className="filter-panel">
-              <h3>Filter by Genres</h3>
+              <h3>Lọc theo thể loại</h3>
 
               {/* Genre category sections */}
               {Object.entries(genreCategories).map(([category, genres]) => (
@@ -601,10 +601,10 @@ const NovelDirectory = () => {
               {/* Filter actions */}
               <div className="filter-actions">
                 <button className="filter-button apply-filters" onClick={applyFilters}>
-                  Apply Filters
+                  Áp dụng bộ lọc
                 </button>
                 <button className="filter-button reset-filters" onClick={resetFilters}>
-                  Reset Filters
+                  Xóa bộ lọc
                 </button>
               </div>
             </div>

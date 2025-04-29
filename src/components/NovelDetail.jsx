@@ -130,7 +130,7 @@ const NovelContributions = ({ novelId }) => {
       </div>
       <div className="rd-contribution-list">
         {isLoadingContributions ? (
-          <div className="rd-loading-spinner-small">Loading...</div>
+          <div className="rd-loading-spinner-small">Đang tải...</div>
         ) : allItems.length > 0 ? (
           allItems.map((item, index) => (
             <div key={`${item.type}-${item._id}`} className="rd-contribution-item">
@@ -152,7 +152,7 @@ const NovelContributions = ({ novelId }) => {
             </div>
           ))
         ) : (
-          <div className="rd-no-contributions">No contributions yet</div>
+          <div className="rd-no-contributions">Chưa có đóng góp</div>
         )}
       </div>
     </div>
@@ -189,14 +189,14 @@ const NovelDetail = () => {
   const handleDeleteModule = useCallback(async (moduleId) => {
     if (!user || (user.role !== 'admin')) return;
     
-    if (window.confirm('Are you sure you want to delete this module?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa module này?')) {
       try {
         await api.deleteModule(novelId, moduleId);
         // Refresh the data
         queryClient.invalidateQueries(['novel', novelId]);
       } catch (error) {
-        console.error('Failed to delete module:', error);
-        alert('Failed to delete module. Please try again.');
+        console.error('Không thể xóa module:', error);
+        alert('Không thể xóa module. Vui lòng thử lại.');
       }
     }
   }, [user, novelId, queryClient]);
@@ -227,7 +227,7 @@ const NovelDetail = () => {
           
           // Validate move is possible
           if (targetIndex < 0 || targetIndex >= currentData.modules.length) {
-            throw new Error('Cannot move module further in that direction');
+            throw new Error('Không thể di chuyển module hơn nữa về hướng đó');
           }
 
           // Cancel any pending queries for this novel
@@ -444,8 +444,8 @@ const NovelDetail = () => {
       });
       setEditingModule(null);
     } catch (error) {
-      console.error('Module submission error:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to save module. Please try again.';
+      console.error('Lỗi gửi module:', error);
+      const errorMessage = error.response?.data?.message || 'Không thể lưu module. Vui lòng thử lại.';
       setModuleForm(prev => ({ 
         ...prev, 
         loading: false,
@@ -461,7 +461,7 @@ const NovelDetail = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (user && !token) {
-      console.error("Auth issue: User is authenticated but token is missing");
+      console.error("Vấn đề xác thực: Người dùng đã đăng nhập nhưng token bị thiếu");
     }
   }, [user]);
   
@@ -576,7 +576,7 @@ const NovelDetail = () => {
           
           // Validate move is possible
           if (targetIndex < 0 || targetIndex >= chapters.length) {
-            throw new Error('Cannot move chapter further in that direction');
+            throw new Error('Không thể di chuyển chương hơn nữa về hướng đó');
           }
 
           // Cancel any pending queries for this novel
@@ -611,7 +611,7 @@ const NovelDetail = () => {
         }
       }
     } catch (error) {
-      console.error('Failed to reorder chapter:', error);
+      console.error('Không thể di chuyển chương:', error);
       // Force a refetch to ensure we're in sync with server
       queryClient.invalidateQueries(['novel', novelId]);
     }
@@ -620,13 +620,13 @@ const NovelDetail = () => {
   const handleChapterDelete = useCallback(async (moduleId, chapterId) => {
     if (!user || user.role !== 'admin') return;
     
-    if (window.confirm('Are you sure you want to delete this chapter? This action cannot be undone.')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa chương này? Hành động này không thể hoàn tác.')) {
       try {
         await api.deleteChapter(chapterId);
         // Refresh the data
         queryClient.invalidateQueries(['novel', novelId]);
       } catch (error) {
-        console.error('Failed to delete chapter:', error);
+        console.error('Không thể xóa chương:', error);
       }
     }
   }, [user, novelId, queryClient]);
@@ -663,7 +663,7 @@ const NovelDetail = () => {
       setModuleForm(prev => ({
         ...prev,
         loading: false,
-        error: 'Failed to upload cover image. Please try again.' 
+        error: 'Không thể tải ảnh bìa. Vui lòng thử lại.' 
       }));
     }
   }, []);
@@ -712,7 +712,7 @@ const NovelDetail = () => {
       {isLoading ? (
         <LoadingSpinner />
       ) : error ? (
-        <div className="error-message">Error loading novel: {error.message}</div>
+        <div className="error-message">Lỗi tải truyện: {error.message}</div>
       ) : data ? (
         <>
           <NovelInfo 
@@ -805,12 +805,12 @@ const NovelDetail = () => {
               {isCommentsOpen ? (
                 <>
                   <LockIcon size={18} style={{ marginRight: '8px' }} />
-                  Hide Comments
+                  Ẩn bình luận
                 </>
               ) : (
                 <>
                   <CommentIcon size={18} style={{ marginRight: '8px' }} />
-                  Show Comments
+                  Hiển thị bình luận
                 </>
               )}
             </button>
@@ -839,7 +839,7 @@ const NovelDetail = () => {
           <ScrollToTop threshold={400} />
         </>
       ) : (
-        <div className="error-message">Novel not found</div>
+        <div className="error-message">Truyện không tồn tại</div>
       )}
     </div>
   );

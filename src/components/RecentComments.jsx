@@ -126,11 +126,11 @@ const RecentComments = () => {
     return (
       <div className="recent-comments">
         <h2 className="recent-comments-title">
-          Recent Comments
+          Bình luận gần đây
         </h2>
         <div className="recent-comments-loading">
           <div className="loading-spinner"></div>
-          <span>Loading recent comments...</span>
+          <span>Đang tải bình luận gần đây...</span>
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ const RecentComments = () => {
         <h2 className="recent-comments-title">
             Recent Comments
         </h2>
-        <div className="recent-comments-error">Failed to load recent comments</div>
+        <div className="recent-comments-error">Không thể tải bình luận gần đây</div>
       </div>
     );
   }
@@ -150,7 +150,7 @@ const RecentComments = () => {
   return (
     <div className="recent-comments">
       <h2 className="recent-comments-title">
-          Recent Comments
+          Bình luận gần đây
       </h2>
       <div className="recent-comments-list">
         {data?.length > 0 ? (
@@ -158,7 +158,7 @@ const RecentComments = () => {
             <CommentCard key={comment._id} comment={comment} />
           ))
         ) : (
-          <div className="no-comments-message">No recent comments</div>
+          <div className="no-comments-message">Không có bình luận gần đây</div>
         )}
       </div>
     </div>

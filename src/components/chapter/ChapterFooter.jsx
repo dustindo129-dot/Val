@@ -15,7 +15,7 @@ const ChapterFooter = ({
   return (
     <div className="footer-nav-container">
       <div className="breadcrumb-nav">
-        <Link to="/"><FontAwesomeIcon icon={faHome}/> Home</Link>
+        <Link to="/"><FontAwesomeIcon icon={faHome}/> Trang chủ</Link>
         <span className="breadcrumb-separator">/</span>
         <Link to={`/novel/${novelId}`}>{novel.title}</Link>
         <span className="breadcrumb-separator">/</span>
@@ -27,14 +27,14 @@ const ChapterFooter = ({
           className="btn-report"
           onClick={() => setShowReportModal(true)}
         >
-          <FontAwesomeIcon icon={faFlag}/> Report
+          <FontAwesomeIcon icon={faFlag}/> Báo cáo
         </button>
         <button
           className={`btn-bookmark ${isBookmarked ? 'active' : ''}`}
           onClick={handleBookmark}
         >
           <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
-          {isBookmarked ? 'Bookmarked' : 'Bookmark chapter'}
+          {isBookmarked ? 'Đã lưu' : 'Lưu chương'}
         </button>
       </div>
     </div>

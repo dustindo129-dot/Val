@@ -115,7 +115,7 @@ const Novel = ({ searchQuery = "" }) => {
     keepPreviousData: true // Keep showing previous page data while loading next page
   });
 
-  if (isLoading) return <div className="loading">Loading novels...</div>;
+  if (isLoading) return <div className="loading">Đang tải truyện...</div>;
   if (error) return <div className="error">{error.message}</div>;
 
   return (
@@ -128,7 +128,7 @@ const Novel = ({ searchQuery = "" }) => {
           {/* Section header */}
           <div className="section-header">
             <h2 className="section-title">
-              LATEST UPDATES
+              MỚI CẬP NHẬT 
               <StarIcon className="title-icon" />
             </h2>
           </div>

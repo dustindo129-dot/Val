@@ -486,7 +486,7 @@ const AdminDashboard = () => {
    * @param {string} id - ID of the novel to delete
    */
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this novel?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa truyện này không?')) return;
 
     // Reset form first to discard any unsaved work
     resetForm();
@@ -617,7 +617,7 @@ const AdminDashboard = () => {
         // If update failed, revert the cache to previous state
         queryClient.setQueryData(['novels'], previousData);
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update novel status');
+        throw new Error(errorData.message || 'Không thể cập nhật trạng thái truyện');
       }
       
       // Get updated novel data
@@ -687,7 +687,7 @@ const AdminDashboard = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update novel balance');
+        throw new Error(errorData.message || 'Không thể cập nhật số dư truyện');
       }
 
       // Update the novel in cache
@@ -701,25 +701,25 @@ const AdminDashboard = () => {
       setEditingBalanceId(null);
       setError('');
     } catch (err) {
-      console.error('Error updating balance:', err);
+      console.error('Lỗi cập nhật số dư:', err);
       setError(err.message);
     }
   };
 
   return (
     <div className="admin-dashboard">
-      <h2 className="section-title">Novel Management</h2>
+      <h2 className="section-title">Quản lý truyện</h2>
       {error && <div className="error">{error}</div>}
       
       <div className="dashboard-grid">
         {/* Novel Form Section */}
         <div className="novel-form">
-          <h3 className="section-title">{editingNovel ? 'Edit Novel' : 'Add New Novel'}</h3>
+          <h3 className="section-title">{editingNovel ? 'Chỉnh sửa truyện' : 'Thêm truyện mới'}</h3>
           <form onSubmit={handleSubmit}>
             <input
               type="text"
               name="title"
-              placeholder="Title"
+              placeholder="Tiêu đề"
               value={editingNovel ? editingNovel.title : newNovel.title}
               onChange={handleInputChange}
               required
@@ -727,14 +727,14 @@ const AdminDashboard = () => {
             <input
               type="text"
               name="alternativeTitles"
-              placeholder="Alternative titles"
+              placeholder="Tiêu đề khác"
               value={editingNovel ? editingNovel.alternativeTitles || '' : newNovel.alternativeTitles}
               onChange={handleInputChange}
             />
             <input
               type="text"
               name="author"
-              placeholder="Author(s)"
+              placeholder="Tác giả"
               value={editingNovel ? editingNovel.author : newNovel.author}
               onChange={handleInputChange}
               required
@@ -742,7 +742,7 @@ const AdminDashboard = () => {
             <input
               type="text"
               name="illustrator"
-              placeholder="Illustrator(s)"
+              placeholder="Họa sĩ"
               value={editingNovel ? editingNovel.illustrator : newNovel.illustrator}
               onChange={handleInputChange}
             />
@@ -750,7 +750,7 @@ const AdminDashboard = () => {
             {/* Staff Section - Active */}
             <div className="staff-section">
               <div className="staff-header">
-                <h4>Active Staff</h4>
+                <h4>Nhân sự hoạt động</h4>
                 <button 
                   type="button" 
                   className="add-staff-btn" 
@@ -773,9 +773,9 @@ const AdminDashboard = () => {
                       value={item.role}
                       onChange={(e) => handleStaffItemChange('active', item.id, 'role', e.target.value)}
                     >
-                      <option value="translator">Translator</option>
-                      <option value="editor">Editor</option>
-                      <option value="proofreader">Proofreader</option>
+                      <option value="translator">Dịch giả</option>
+                      <option value="editor">Biên tập viên</option>
+                      <option value="proofreader">Người kiểm tra chất lượng</option>
                     </select>
                     <button 
                       type="button" 
@@ -791,7 +791,7 @@ const AdminDashboard = () => {
               
               {/* Staff Section - Inactive */}
               <div className="staff-header">
-                <h4>Inactive Staff</h4>
+                <h4>Nhân sự không hoạt động</h4>
                 <button 
                   type="button" 
                   className="add-staff-btn" 
@@ -814,9 +814,9 @@ const AdminDashboard = () => {
                       value={item.role}
                       onChange={(e) => handleStaffItemChange('inactive', item.id, 'role', e.target.value)}
                     >
-                      <option value="translator">Translator</option>
-                      <option value="editor">Editor</option>
-                      <option value="proofreader">Proofreader</option>
+                      <option value="translator">Dịch giả</option>
+                      <option value="editor">Biên tập viên</option>
+                      <option value="proofreader">Người kiểm tra chất lượng</option>
                     </select>
                     <button 
                       type="button" 
@@ -836,7 +836,7 @@ const AdminDashboard = () => {
               <input
                 type="text"
                 name="genres"
-                placeholder="Selected genres"
+                placeholder="Thể loại đã chọn"
                 value={(editingNovel ? editingNovel.genres : newNovel.genres)?.join('; ') || ''}
                 readOnly
               />
@@ -883,7 +883,7 @@ const AdminDashboard = () => {
                   content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                   skin: 'oxide',
                   content_css: 'default',
-                  placeholder: 'Write novel description... (max 1000 words)',
+                  placeholder: 'Viết mô tả truyện... (tối đa 1000 từ)',
                   statusbar: false,
                   resize: false,
                   branding: false,
@@ -990,7 +990,7 @@ const AdminDashboard = () => {
                   content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                   skin: 'oxide',
                   content_css: 'default',
-                  placeholder: 'Write your note here...',
+                  placeholder: 'Viết ghi chú của bạn ở đây...',
                   statusbar: true,
                   resize: false,
                   branding: false,
@@ -1065,20 +1065,20 @@ const AdminDashboard = () => {
                   disabled={loading}
                   style={{ display: 'none' }}
                 />
-                {loading ? 'Uploading...' : 'Upload Cover Image'}
+                {loading ? 'Đang tải...' : 'Tải ảnh bìa'}
               </label>
             </div>
             <div className="form-buttons">
               <button type="submit" disabled={loading}>
-                {loading ? 'Processing...' : (editingNovel ? 'Update Novel' : 'Add Novel')}
+                {loading ? 'Đang xử lý...' : (editingNovel ? 'Cập nhật truyện' : 'Thêm truyện')}
               </button>
               {editingNovel ? (
                 <button type="button" onClick={resetForm} className="cancel-button">
-                  Cancel Edit
+                  Hủy bỏ
                 </button>
               ) : (
                 <button type="button" onClick={resetForm} className="discard-button">
-                  Discard
+                  Hủy bỏ bản nháp
                 </button>
               )}
             </div>
@@ -1087,7 +1087,7 @@ const AdminDashboard = () => {
 
         {/* Novel List Section */}
         <div className="novel-list">
-          <h3 className="section-title">Novel List</h3>
+          <h3 className="section-title">Danh sách truyện</h3>
           <ul>
             {sortedNovels.map(novel => (
               <li key={novel._id}>
@@ -1127,13 +1127,13 @@ const AdminDashboard = () => {
                         </div>
                       ) : (
                         <>
-                          Novel balance: {novel.novelBalance || 0}
+                          Số dư truyện: {novel.novelBalance || 0}
                           {user?.role === 'admin' && (
                             <button
                               onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
                               className="edit-balance-btn"
                             >
-                              Edit
+                              Chỉnh sửa
                             </button>
                           )}
                         </>
@@ -1147,18 +1147,18 @@ const AdminDashboard = () => {
                     value={novel.status || 'Ongoing'}
                     onChange={(e) => handleStatusChange(novel._id, e.target.value)}
                   >
-                    <option value="Ongoing">Ongoing</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Hiatus">Hiatus</option>
+                    <option value="Ongoing">Đang tiếp tục</option>
+                    <option value="Completed">Đã hoàn thành</option>
+                    <option value="Hiatus">Tạm dừng</option>
                   </select>
                   {(user?.role === 'admin' || user?.role === 'moderator') && (
-                    <button onClick={() => handleEdit(novel)}>Edit</button>
+                    <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
                   )}
                   {user?.role === 'admin' && (
                     <button 
                       className="delete"
                       onClick={() => handleDelete(novel._id)}
-                    >Delete</button>
+                    >Xóa</button>
                   )}
                 </div>
               </li>

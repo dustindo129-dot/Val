@@ -45,7 +45,7 @@ const ForgotPassword = ({ onClose, onBack }) => {
       await forgotPassword(email);
       setSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send reset email');
+      setError(err.response?.data?.message || 'Không thể gửi email đặt lại mật khẩu');
     } finally {
       setLoading(false);
     }
@@ -56,8 +56,8 @@ const ForgotPassword = ({ onClose, onBack }) => {
       {/* Success message */}
       {success && (
         <div className="success-message">
-          <h3>Reset Link Sent!</h3>
-          <p>Please check your email for password reset instructions.</p>
+          <h3>Email đặt lại mật khẩu đã được gửi!</h3>
+          <p>Vui lòng kiểm tra email của bạn để nhận hướng dẫn đặt lại mật khẩu.</p>
         </div>
       )}
 
@@ -83,7 +83,7 @@ const ForgotPassword = ({ onClose, onBack }) => {
         className="submit-button" 
         disabled={loading}
       >
-        {loading ? 'Sending...' : 'Send Reset Link'}
+        {loading ? 'Đang gửi...' : 'Gửi liên kết đặt lại mật khẩu'}
       </button>
 
       {/* Back to login link */}
@@ -92,7 +92,7 @@ const ForgotPassword = ({ onClose, onBack }) => {
         className="back-to-login" 
         onClick={onBack}
       >
-        Back to Login
+        Trở lại đăng nhập
       </button>
     </form>
   );

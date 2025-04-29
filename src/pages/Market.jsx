@@ -1389,7 +1389,7 @@ const Market = () => {
             </div>
           ) : (
             <div className="login-to-request">
-              Please <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">log in</button> to make a request.
+              Vui lòng <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">đăng nhập</button> để tạo yêu cầu.
             </div>
           )}
           

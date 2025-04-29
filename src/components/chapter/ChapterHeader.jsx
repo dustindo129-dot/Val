@@ -80,11 +80,11 @@ const ChapterHeader = ({
                   >
                     {isSaving ? (
                       <>
-                        <FontAwesomeIcon icon={faSpinner} spin /> Saving...
+                        <FontAwesomeIcon icon={faSpinner} spin /> Đang lưu...
                       </>
                     ) : (
                       <>
-                        <FontAwesomeIcon icon={faSave} /> Save Changes
+                        <FontAwesomeIcon icon={faSave} /> Lưu thay đổi
                       </>
                     )}
                   </button>
@@ -93,7 +93,7 @@ const ChapterHeader = ({
                     onClick={() => setIsEditing(false)}
                     disabled={isSaving}
                   >
-                    Cancel Edit
+                    Hủy bỏ thay đổi
                   </button>
                 </>
               ) : (
@@ -101,13 +101,13 @@ const ChapterHeader = ({
                   className="edit-chapter-btn" 
                   onClick={() => setIsEditing(true)}
                 >
-                  <FontAwesomeIcon icon={faEdit} /> Edit Chapter
+                  <FontAwesomeIcon icon={faEdit} /> Chỉnh sửa chương
                 </button>
               )}
               
               {canDelete && (
                 <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
-                  Delete Chapter
+                  Xóa chương
                 </button>
               )}
             </div>

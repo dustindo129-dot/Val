@@ -23,8 +23,8 @@ const ChangePassword = () => {
 
   return (
     <div className="container mt-4">
-      <h1>Change Email & Password</h1>
-      <p>Form to change email and password will appear here</p>
+      <h1>Thay đổi email và mật khẩu</h1>
+      <p>Form để thay đổi email và mật khẩu sẽ xuất hiện ở đây</p>
     </div>
   );
 };

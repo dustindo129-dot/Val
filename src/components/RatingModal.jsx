@@ -123,7 +123,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     <div className="rating-modal-overlay">
       <div className="rating-modal">
         <div className="rating-modal-header">
-          <h2>Rate This Novel</h2>
+          <h2>Đánh giá truyện</h2>
           <button className="close-button" onClick={handleCancel}>×</button>
         </div>
         
@@ -144,7 +144,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
         </div>
         
         <div className="rating-value-display">
-          {selectedRating > 0 ? `${selectedRating} / 5` : 'Select Rating'}
+          {selectedRating > 0 ? `${selectedRating} / 5` : 'Chọn đánh giá'}
         </div>
 
         {error && (
@@ -159,7 +159,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
             onClick={handleCancel}
             disabled={rateMutation.isLoading}
           >
-            Cancel
+            Hủy bỏ
           </button>
           
           <button 
@@ -168,10 +168,10 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
             disabled={rateMutation.isLoading || selectedRating === 0}
           >
             {rateMutation.isLoading 
-              ? 'Submitting...' 
+              ? 'Đang gửi...' 
               : currentRating > 0 
-                ? 'Update Rating' 
-                : 'Submit Rating'
+                ? 'Cập nhật đánh giá' 
+                : 'Gửi đánh giá'
             }
           </button>
         </div>

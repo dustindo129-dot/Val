@@ -41,13 +41,13 @@ const ResetPassword = () => {
     
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Mật khẩu không khớp');
       return;
     }
 
     // Validate password length
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError('Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
 
@@ -62,7 +62,7 @@ const ResetPassword = () => {
         navigate('/');
       }, 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to reset password');
+      setError(err.response?.data?.message || 'Không thể đặt lại mật khẩu');
     } finally {
       setLoading(false);
     }
@@ -73,8 +73,8 @@ const ResetPassword = () => {
       <form className="auth-form" onSubmit={handleSubmit}>
         {/* Success message */}
         <div className="success-message">
-          <h3>Password Reset Successful!</h3>
-          <p>Your password has been updated. You can now log in with your new password.</p>
+          <h3>Đặt lại mật khẩu thành công!</h3>
+          <p>Mật khẩu của bạn đã được cập nhật. Bạn có thể đăng nhập với mật khẩu mới.</p>
         </div>
 
         {/* Password fields */}
@@ -84,7 +84,7 @@ const ResetPassword = () => {
             name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="New Password (*)"
+            placeholder="Mật khẩu mới (*)"
             className="auth-input"
             required
           />
@@ -96,7 +96,7 @@ const ResetPassword = () => {
             name="confirmPassword"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm New Password (*)"
+            placeholder="Xác nhận mật khẩu mới (*)"
             className="auth-input"
             required
           />
@@ -111,7 +111,7 @@ const ResetPassword = () => {
           className="submit-button" 
           disabled={loading}
         >
-          {loading ? 'Resetting Password...' : 'Reset Password'}
+          {loading ? 'Đang đặt lại mật khẩu...' : 'Đặt lại mật khẩu'}
         </button>
       </form>
     );
@@ -121,7 +121,7 @@ const ResetPassword = () => {
     <form className="auth-form" onSubmit={handleSubmit}>
       <h2>Reset Your Password</h2>
       <p className="form-description">
-        Please enter your new password below.
+        Vui lòng nhập mật khẩu mới dưới đây.
       </p>
 
       {/* Password fields */}
@@ -131,7 +131,7 @@ const ResetPassword = () => {
           name="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="New Password (*)"
+          placeholder="Mật khẩu mới (*)"
           className="auth-input"
           required
         />
@@ -143,7 +143,7 @@ const ResetPassword = () => {
           name="confirmPassword"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm New Password (*)"
+          placeholder="Xác nhận mật khẩu mới (*)"
           className="auth-input"
           required
         />
@@ -158,7 +158,7 @@ const ResetPassword = () => {
         className="submit-button" 
         disabled={loading}
       >
-        {loading ? 'Resetting Password...' : 'Reset Password'}
+        {loading ? 'Đang đặt lại mật khẩu...' : 'Đặt lại mật khẩu'}
       </button>
     </form>
   );

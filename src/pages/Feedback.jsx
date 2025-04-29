@@ -36,7 +36,7 @@ const Feedback = () => {
         {isLoading ? (
           <div className="loading-spinner">
             <FontAwesomeIcon icon={faSpinner} spin size="2x" />
-            <p>Loading comments...</p>
+            <p>Đang tải bình luận...</p>
           </div>
         ) : error ? (
           <div className="error-message">

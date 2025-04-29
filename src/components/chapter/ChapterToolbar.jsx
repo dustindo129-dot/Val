@@ -20,27 +20,27 @@ const ChapterToolbar = ({
       {/* Staff Info */}
       <div className="staff-info">
         <span className="staff-member translator">
-          <FontAwesomeIcon icon={faLanguage}/> {chapter.translator || 'No Translator'}
+          <FontAwesomeIcon icon={faLanguage}/> {chapter.translator || 'Không có dịch giả'}
         </span>
         <span className="staff-member editor">
-          <FontAwesomeIcon icon={faEdit}/> {chapter.editor || 'No Editor'}
+          <FontAwesomeIcon icon={faEdit}/> {chapter.editor || 'Không có biên tập'}
         </span>
         <span className="staff-member proofreader">
-          <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader || 'No Proofreader'}
+          <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader || 'Không có người kiểm tra chất lượng'}
         </span>
       </div>
 
       <div className="action-toolbar-right">
         <span className="chapter-view-date">
-          {chapter?.updatedAt ? formatDate(chapter.updatedAt) : 'Unknown date'}
+          {chapter?.updatedAt ? formatDate(chapter.updatedAt) : 'Ngày không xác định'}
         </span>
         {/* Stats */}
         <div className="chapter-stats">
           <span className="chapter-stat-item">
-            <FontAwesomeIcon icon={faEye}/> {viewCount} views
+            <FontAwesomeIcon icon={faEye}/> {viewCount} lượt xem
           </span>
           <span className="chapter-stat-item">
-            <FontAwesomeIcon icon={faFont}/> {wordCount} words
+            <FontAwesomeIcon icon={faFont}/> {wordCount} từ
           </span>
         </div>
       </div>

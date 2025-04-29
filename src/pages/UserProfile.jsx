@@ -70,7 +70,7 @@ const UserProfile = () => {
       );
       setBlockedUsers(response.data);
     } catch (error) {
-      console.error('Failed to fetch blocked users:', error);
+      console.error('Không thể tải người dùng bị chặn:', error);
     }
   };
 
@@ -82,7 +82,7 @@ const UserProfile = () => {
       );
       setBannedUsers(response.data);
     } catch (error) {
-      console.error('Failed to fetch banned users:', error);
+      console.error('Không thể tải người dùng bị chặn:', error);
     }
   };
 
@@ -93,9 +93,9 @@ const UserProfile = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setBlockedUsers(prev => prev.filter(user => user.username !== blockedUsername));
-      setMessage({ type: 'success', text: 'User unblocked successfully' });
+      setMessage({ type: 'success', text: 'Người dùng đã được mở chặn thành công' });
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to unblock user' });
+      setMessage({ type: 'error', text: 'Không thể mở chặn người dùng' });
     }
   };
 
@@ -106,9 +106,9 @@ const UserProfile = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setBannedUsers(prev => prev.filter(user => user.username !== bannedUsername));
-      setMessage({ type: 'success', text: 'User unbanned successfully' });
+      setMessage({ type: 'success', text: 'Người dùng đã được mở chặn thành công' });
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to unban user' });
+      setMessage({ type: 'error', text: 'Không thể mở chặn người dùng' });
     }
   };
 
@@ -122,18 +122,18 @@ const UserProfile = () => {
 
     // Validate file type and size
     if (!file.type.match('image.*')) {
-      setMessage({ type: 'error', text: 'Please select an image file' });
+      setMessage({ type: 'error', text: 'Vui lòng chọn tệp ảnh' });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      setMessage({ type: 'error', text: 'Image size should be less than 5MB' });
+      setMessage({ type: 'error', text: 'Kích thước ảnh phải nhỏ hơn 5MB' });
       return;
     }
 
     try {
       setIsLoading(true);
-      setMessage({ type: 'info', text: 'Uploading avatar...' });
+      setMessage({ type: 'info', text: 'Đang tải ảnh đại diện...' });
 
       // Upload to Bunny.net
       const newAvatarUrl = await bunnyUploadService.uploadFile(
@@ -167,13 +167,13 @@ const UserProfile = () => {
       localStorage.setItem('user', JSON.stringify(updatedUser));
       updateUser(updatedUser);
       
-      setMessage({ type: 'success', text: 'Avatar updated successfully' });
+      setMessage({ type: 'success', text: 'Ảnh đại diện đã được cập nhật thành công' });
       
     } catch (error) {
-      console.error('Avatar upload error:', error);
+      console.error('Lỗi tải ảnh đại diện:', error);
       setMessage({ 
         type: 'error', 
-        text: 'Failed to update avatar. Please try again.' 
+        text: 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.' 
       });
     } finally {
       setIsLoading(false);
@@ -190,18 +190,18 @@ const UserProfile = () => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setMessage({ type: 'error', text: 'Please enter a valid email address' });
+      setMessage({ type: 'error', text: 'Vui lòng nhập địa chỉ email hợp lệ' });
       return;
     }
 
     if (!emailCurrentPassword) {
-      setMessage({ type: 'error', text: 'Please enter your current password' });
+      setMessage({ type: 'error', text: 'Vui lòng nhập mật khẩu hiện tại' });
       return;
     }
 
     try {
       setIsLoading(true);
-      setMessage({ type: 'info', text: 'Updating email...' });
+      setMessage({ type: 'info', text: 'Đang cập nhật email...' });
 
       // Create axios instance with proper config
       const api = axios.create({
@@ -226,13 +226,13 @@ const UserProfile = () => {
       localStorage.setItem('user', JSON.stringify(updatedUser));
       updateUser(updatedUser);
 
-      setMessage({ type: 'success', text: 'Email updated successfully' });
+      setMessage({ type: 'success', text: 'Email đã được cập nhật thành công' });
       setEmailCurrentPassword('');
     } catch (error) {
       console.error('Email update error:', error);
       setMessage({ 
         type: 'error', 
-        text: error.response?.data?.message || 'Failed to update email. Please try again.' 
+        text: error.response?.data?.message || 'Không thể cập nhật email. Vui lòng thử lại.' 
       });
     } finally {
       setIsLoading(false);
@@ -246,7 +246,7 @@ const UserProfile = () => {
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match' });
+      setMessage({ type: 'error', text: 'Mật khẩu không khớp' });
       return;
     }
 
@@ -265,7 +265,7 @@ const UserProfile = () => {
           }
         }
       );
-      setMessage({ type: 'success', text: 'Password updated successfully. Please log in with your new password.' });
+      setMessage({ type: 'success', text: 'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại với mật khẩu mới.' });
       
       // Clear form
       setPasswordCurrentPassword('');
@@ -278,7 +278,7 @@ const UserProfile = () => {
       }, 2000);
       
     } catch (error) {
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update password' });
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Không thể cập nhật mật khẩu' });
     } finally {
       setIsLoading(false);
     }
@@ -286,14 +286,14 @@ const UserProfile = () => {
 
   // Check if user has permission to view this profile
   if (!user || user.username !== username) {
-    return <div className="container mt-4">You don't have permission to view this profile.</div>;
+    return <div className="container mt-4">Bạn không có quyền xem trang cá nhân này.</div>;
   }
 
   return (
     <div className="profile-container">
       {/* Profile header */}
       <div className="profile-header">
-        <h1>Profile Settings</h1>
+        <h1>Cài đặt trang cá nhân</h1>
       </div>
 
       {/* Status message display */}
@@ -332,7 +332,7 @@ const UserProfile = () => {
         <div className="account-settings">
           {/* Email update form */}
           <form onSubmit={handleEmailUpdate} className="settings-form">
-            <h2>Email Settings</h2>
+            <h2>Cài đặt email</h2>
             <div className="form-group">
               <label>Email Address</label>
               <input
@@ -345,7 +345,7 @@ const UserProfile = () => {
               />
             </div>
             <div className="form-group">
-              <label>Current Password</label>
+              <label>Mật khẩu hiện tại</label>
               <input
                 type="password"
                 value={emailCurrentPassword}
@@ -356,15 +356,15 @@ const UserProfile = () => {
               />
             </div>
             <button type="submit" className="btn btn-primary" disabled={isLoading}>
-              Update Email
+              Cập nhật email
             </button>
           </form>
 
           {/* Password update form */}
           <form onSubmit={handlePasswordUpdate} className="settings-form">
-            <h2>Password Settings</h2>
+            <h2>Cài đặt mật khẩu</h2>
             <div className="form-group">
-              <label>Current Password</label>
+              <label>Mật khẩu hiện tại</label>
               <input
                 type="password"
                 value={passwordCurrentPassword}
@@ -375,7 +375,7 @@ const UserProfile = () => {
               />
             </div>
             <div className="form-group">
-              <label>New Password</label>
+              <label>Mật khẩu mới</label>
               <input
                 type="password"
                 value={newPassword}
@@ -386,7 +386,7 @@ const UserProfile = () => {
               />
             </div>
             <div className="form-group">
-              <label>Confirm New Password</label>
+              <label>Xác nhận mật khẩu mới</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -397,14 +397,14 @@ const UserProfile = () => {
               />
             </div>
             <button type="submit" className="btn btn-primary" disabled={isLoading}>
-              Update Password
+              Cập nhật mật khẩu
             </button>
           </form>
         </div>
 
         {/* Blocked/Banned Users Section */}
         <div className="blocked-users-section">
-          <h2>{user?.role === 'admin' ? `Banned Users (${bannedUsers.length}/50)` : `Blocked Users (${blockedUsers.length}/50)`}</h2>
+          <h2>{user?.role === 'admin' ? `Người dùng bị cấm (${bannedUsers.length}/50)` : `Người dùng bị chặn (${blockedUsers.length}/50)`}</h2>
           <div className="blocked-users-list">
             {user?.role === 'admin' ? (
               bannedUsers.map(bannedUser => (
@@ -420,7 +420,7 @@ const UserProfile = () => {
                   <button
                     className="unblock-btn"
                     onClick={() => handleUnban(bannedUser.username)}
-                    title="Unban user"
+                    title="Mở chặn người dùng"
                   >
                     ×
                   </button>
@@ -440,7 +440,7 @@ const UserProfile = () => {
                   <button
                     className="unblock-btn"
                     onClick={() => handleUnblock(blockedUser.username)}
-                    title="Unblock user"
+                    title="Mở chặn người dùng"
                   >
                     ×
                   </button>

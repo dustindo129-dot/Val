@@ -91,7 +91,7 @@ const Login = ({ onClose, onSignUp }) => {
           name="username"
           value={formData.username}
           onChange={handleChange}
-          placeholder="Username (*)"
+          placeholder="Tên người dùng (*)"
           className="auth-input"
           required
         />
@@ -104,7 +104,7 @@ const Login = ({ onClose, onSignUp }) => {
           name="password"
           value={formData.password}
           onChange={handleChange}
-          placeholder="Password (*)"
+          placeholder="Mật khẩu (*)"
           className="auth-input"
           required
         />
@@ -119,14 +119,14 @@ const Login = ({ onClose, onSignUp }) => {
             checked={formData.rememberMe}
             onChange={handleChange}
           />
-          Remember me
+          Nhớ đăng nhập
         </label>
         <button 
           type="button" 
           className="forgot-password-link"
           onClick={() => setShowForgotPassword(true)}
         >
-          Forgot password?
+          Quên mật khẩu?
         </button>
       </div>
 
@@ -139,18 +139,18 @@ const Login = ({ onClose, onSignUp }) => {
         className="submit-button" 
         disabled={loading}
       >
-        {loading ? 'Logging in...' : 'Log In'}
+        {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
       </button>
 
       {/* Sign up link */}
       <div className="auth-footer">
-        <span>Don't have an account? </span>
+        <span>Không có tài khoản? </span>
         <button 
           type="button" 
           className="sign-up-link" 
           onClick={onSignUp}
         >
-          Sign Up!
+          Đăng ký!
         </button>
       </div>
     </form>

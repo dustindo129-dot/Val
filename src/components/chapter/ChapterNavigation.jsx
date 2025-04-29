@@ -32,14 +32,14 @@ const ChapterNavigation = ({
         className={`nav-button ${!chapter?.prevChapter ? 'nav-button-disabled' : ''} ${isPrevChapterPaid && !canAccessPaidContent ? 'paid-content-btn' : ''}`}
         title={chapter?.prevChapter 
           ? isPrevChapterPaid && !canAccessPaidContent 
-            ? `Previous: ${chapter.prevChapter.title} (Paid Content)` 
-            : `Previous: ${chapter.prevChapter.title}`
-          : 'No previous chapter available'}
+            ? `Chương trước: ${chapter.prevChapter.title} (Nội dung trả phí)` 
+            : `Chương trước: ${chapter.prevChapter.title}`
+          : 'Không có chương trước'}
       >
         <FontAwesomeIcon icon={faChevronLeft}/>
-        {isNavigating ? 'Loading...' : (
+        {isNavigating ? 'Đang tải...' : (
           <>
-            {chapter?.prevChapter ? 'Previous Chapter' : 'No Previous Chapter'}
+            {chapter?.prevChapter ? 'Chương trước' : 'Không có chương trước'}
             {isPrevChapterPaid && !canAccessPaidContent && (
               <FontAwesomeIcon icon={faLock} className="lock-icon-nav" style={{ marginLeft: '5px' }} />
             )}
@@ -53,13 +53,13 @@ const ChapterNavigation = ({
         className={`nav-button ${!chapter?.nextChapter ? 'nav-button-disabled' : ''} ${isNextChapterPaid && !canAccessPaidContent ? 'paid-content-btn' : ''}`}
         title={chapter?.nextChapter 
           ? isNextChapterPaid && !canAccessPaidContent 
-            ? `Next: ${chapter.nextChapter.title} (Paid Content)` 
-            : `Next: ${chapter.nextChapter.title}`
-          : 'No next chapter available'}
+            ? `Chương tiếp theo: ${chapter.nextChapter.title} (Nội dung trả phí)` 
+            : `Chương tiếp theo: ${chapter.nextChapter.title}`
+          : 'Không có chương tiếp theo'}
       >
-        {isNavigating ? 'Loading...' : (
+        {isNavigating ? 'Đang tải...' : (
           <>
-            {chapter?.nextChapter ? 'Next Chapter' : 'No Next Chapter'}
+            {chapter?.nextChapter ? 'Chương tiếp theo' : 'Không có chương tiếp theo'}
             {isNextChapterPaid && !canAccessPaidContent && (
               <FontAwesomeIcon icon={faLock} className="lock-icon-nav" style={{ marginLeft: '5px' }} />
             )}

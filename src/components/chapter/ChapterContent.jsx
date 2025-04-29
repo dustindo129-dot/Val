@@ -261,8 +261,8 @@ const ChapterContent = ({
         ADD_ATTR: ['href', 'id', 'class', 'data-footnote']
       });
     } catch (error) {
-      console.error('Error processing content:', error);
-      return 'Error loading chapter content';
+      console.error('Lỗi xử lý nội dung:', error);
+      return 'Lỗi tải chương nội dung';
     }
   };
 
@@ -284,29 +284,29 @@ const ChapterContent = ({
         </h2>
         {canEdit && isEditing && (
           <div className="chapter-controls">
-            <label>Chapter Mode:</label>
+            <label>Chế độ chương:</label>
             <select
               value={editedMode}
               onChange={(e) => handleModeChange(e.target.value)}
               className="mode-dropdown"
             >
-              <option value="published">Published (Visible to everyone)</option>
-              <option value="draft">Draft (Admin/Mod only)</option>
-              <option value="protected">Protected (Login required)</option>
+              <option value="published">Đã xuất bản (Hiển thị cho tất cả)</option>
+              <option value="draft">Nháp (Chỉ admin/mod)</option>
+              <option value="protected">Bảo mật (Yêu cầu đăng nhập)</option>
               {userRole === 'admin' && (
-                <option value="paid">Paid Content</option>
+                <option value="paid">Nội dung trả phí</option>
               )}
             </select>
             
             {editedMode === 'paid' && userRole === 'admin' && (
               <div className="chapter-balance-input">
-                <label>Chapter Balance:</label>
+                <label>Số dư chương:</label>
                 <input
                   type="number"
                   min="0"
                   value={editedChapterBalance}
                   onChange={(e) => setEditedChapterBalance(e.target.value)}
-                  placeholder="Enter chapter balance"
+                  placeholder="Nhập số dư chương"
                 />
               </div>
             )}
@@ -456,7 +456,7 @@ const ChapterContent = ({
               className="add-footnote-btn"
               onClick={addFootnote}
             >
-              <FontAwesomeIcon icon={faPlus} /> Add Footnote
+              <FontAwesomeIcon icon={faPlus} /> Thêm footnote
             </button>
           </div>
         </>

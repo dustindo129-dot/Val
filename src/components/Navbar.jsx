@@ -77,7 +77,7 @@ const Navbar = () => {
     
     // Validate search query length
     if (value.length > 0 && value.length < 3) {
-      setError("Please enter at least 3 characters...");
+      setError("Vui lòng nhập ít nhất 3 ký tự...");
       setSearchResults([]);
     } else if (value.length >= 3) {
       try {
@@ -87,7 +87,7 @@ const Navbar = () => {
         setError("");
       } catch (err) {
         console.error('Search failed:', err);
-        setError("Failed to search for novels");
+        setError("Không thể tìm kiếm truyện");
         setSearchResults([]);
       }
     } else {
@@ -216,7 +216,7 @@ const Navbar = () => {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearch}
-                  placeholder="Search novels..."
+                  placeholder="Tìm kiếm truyện..."
                   className="search-input"
                 />
                 {/* Clear search button */}
@@ -260,7 +260,7 @@ const Navbar = () => {
                       <div className="search-result-info">
                         <div className="search-result-title">{novel.title}</div>
                         <div className="search-result-details">
-                          <span>Total chapters: {novel.totalChapters || 0}</span>{' '}
+                          <span>Tổng chương: {novel.totalChapters || 0}</span>{' '}
                           <span>{novel.status}</span>
                         </div>
                       </div>
@@ -307,7 +307,7 @@ const Navbar = () => {
                     {showDropdown && (
                       <div className="user-dropdown">
                         <Link to={`/user/${user.username}/profile`} className="dropdown-item" onClick={closeDropdown}>
-                          Profile
+                          Trang cá nhân
                         </Link>
                         {user?.role === 'admin' && (
                           <Link to="/topup-management" className="dropdown-item" onClick={closeDropdown}>

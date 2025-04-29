@@ -51,7 +51,7 @@ const UserBookmarks = () => {
       setBookmarkedNovels(bookmarksData.map(bookmark => bookmark._id));
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch bookmarks');
+      setError('Không thể tải truyện đã đánh dấu');
       setLoading(false);
     }
   }, [username, user, setBookmarkedNovels]);
@@ -86,7 +86,7 @@ const UserBookmarks = () => {
       setTotalBookmarks(prev => prev - 1);
       updateBookmarkStatus(novelId, false);
     } catch (err) {
-      console.error('Failed to remove bookmark:', err);
+      console.error('Không thể xóa truyện đã đánh dấu:', err);
       // Only refetch on error
       fetchBookmarks();
     }
@@ -97,7 +97,7 @@ const UserBookmarks = () => {
     return (
       <div className="bookmarks-container">
         <div className="no-bookmarks">
-          <p>You don't have permission to view these bookmarks.</p>
+          <p>Bạn không có quyền xem các truyện đã đánh dấu này.</p>
         </div>
       </div>
     );
@@ -108,13 +108,13 @@ const UserBookmarks = () => {
     return (
       <div className="bookmarks-container">
         <div className="bookmarks-header">
-          <h1>My Bookmarks</h1>
-          <p>0 Novels</p>
+          <h1>Truyện đã đánh dấu</h1>
+          <p>0 truyện</p>
         </div>
         <div className="no-bookmarks">
-          <p>You haven't bookmarked any novels yet.</p>
+          <p>Bạn chưa đánh dấu bất kỳ truyện nào.</p>
           <Link to="/novel-directory/page/1" className="browse-novels-btn">
-            Browse Novels
+            Xem truyện
           </Link>
         </div>
       </div>
@@ -126,7 +126,7 @@ const UserBookmarks = () => {
       <div className="bookmarks-container">
         <div className="loading">
           <div className="loading-spinner"></div>
-          <p>Loading bookmarks...</p>
+          <p>Đang tải...</p>
         </div>
       </div>
     );
@@ -138,7 +138,7 @@ const UserBookmarks = () => {
         <div className="error">
           <p>{error}</p>
           <button onClick={fetchBookmarks} className="retry-btn">
-            Retry
+            Thử lại
           </button>
         </div>
       </div>
@@ -148,8 +148,8 @@ const UserBookmarks = () => {
   return (
     <div className="bookmarks-container">
       <div className="bookmarks-header">
-        <h1>My Bookmarks</h1>
-        <p>{totalBookmarks} Novel(s)</p>
+        <h1>Truyện đã đánh dấu</h1>
+        <p>{totalBookmarks} truyện</p>
       </div>
 
       <div className="bookmarks-list">
@@ -170,17 +170,17 @@ const UserBookmarks = () => {
                   {novel.status || 'Ongoing'}
                 </span>
                 <span className="bookmark-chapters">
-                  {novel.totalChapters > 0 ? `${novel.totalChapters} Chapters` : 'No chapters yet'}
+                  {novel.totalChapters > 0 ? `${novel.totalChapters} chương` : 'Chưa có chương'}
                 </span>
                 <span className="bookmark-latest-chapter">
-                  {novel.latestChapter ? `Latest: Chapter ${novel.latestChapter.number} - ${novel.latestChapter.title}` : 'No chapters yet'}
+                  {novel.latestChapter ? `Chương mới nhất: Chương ${novel.latestChapter.number} - ${novel.latestChapter.title}` : 'Chưa có chương'}
                 </span>
               </div>
             </Link>
             <button 
               onClick={(e) => handleRemoveBookmark(novel._id, e)}
               className="remove-bookmark"
-              title="Remove from bookmarks"
+              title="Xóa khỏi truyện đã đánh dấu"
             >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 

@@ -29,7 +29,7 @@ const ChapterActions = ({
         className={`action-btn like ${isLiked ? 'active' : ''}`}
       >
         <FontAwesomeIcon icon={isLiked ? faHeart : farHeart}/>
-        {isLiked ? 'Liked' : 'Like'}
+        {isLiked ? 'Đã thích' : 'Thích'}
         <span className="like-count">{likeCount}</span>
       </button>
 
@@ -38,7 +38,7 @@ const ChapterActions = ({
         className={`action-btn rate ${currentRating > 0 ? 'active' : ''}`}
       >
         <FontAwesomeIcon icon={currentRating > 0 ? faStar : farStar}/>
-        Rate
+        Đánh giá
         <span className="rate-count">{averageRating}/5 • {ratingCount}</span>
       </button>
     </div>

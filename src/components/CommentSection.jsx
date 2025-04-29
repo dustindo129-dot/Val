@@ -117,9 +117,9 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           const contentType = response.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to fetch comments');
+            throw new Error(errorData.message || 'Không thể tải bình luận');
           } else {
-            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            throw new Error(`Server trả về ${response.status}: ${response.statusText}`);
           }
         }
         
@@ -128,7 +128,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         setComments(organizeComments(data));
         setIsLoading(false);
       } catch (err) {
-        console.error('Error fetching comments:', err);
+        console.error('Lỗi tải bình luận:', err);
         setError(err.message);
         setIsLoading(false);
       }
@@ -141,12 +141,12 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     e.preventDefault();
     
     if (!isAuthenticated) {
-      alert('Please log in to leave a comment');
+      alert('Vui lòng đăng nhập để để lại bình luận');
       return;
     }
 
     if (isBanned) {
-      alert('You cannot comment because you have been banned');
+      alert('Bạn không thể bình luận vì đã bị chặn');
       return;
     }
     
@@ -167,7 +167,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       });
       
       if (!response.ok) {
-        throw new Error('Failed to post comment');
+        throw new Error('Không thể đăng bình luận');
       }
       
       const data = await response.json();
@@ -191,7 +191,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       setNewComment('');
     } catch (err) {
       console.error('Error posting comment:', err);
-      alert('Failed to post comment. Please try again.');
+      alert('Không thể đăng bình luận. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
@@ -202,11 +202,11 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     if (!isAuthenticated || deleting) return;
     
     if (!user || (!user._id && !user.id)) {
-      alert('User information is missing. Please try logging in again.');
+      alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
       return;
     }
     
-    if (!window.confirm('Are you sure you want to delete this comment?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bình luận này không?')) {
       return;
     }
     
@@ -221,7 +221,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete comment');
+        throw new Error('Không thể xóa bình luận');
       }
       
       // Update the comments list based on whether it's a reply or main comment
@@ -244,7 +244,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       });
     } catch (err) {
       console.error('Error deleting comment:', err);
-      alert('Failed to delete comment. Please try again.');
+      alert('Không thể xóa bình luận. Vui lòng thử lại.');
     } finally {
       setDeleting(false);
     }
@@ -257,16 +257,16 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     const diffInSeconds = Math.floor((now - date) / 1000);
     
     if (diffInSeconds < 60) {
-      return 'just now';
+      return 'vừa xong';
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+      return `${minutes} phút${minutes > 1 ? 's' : ''} trước`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      return `${hours} giờ${hours > 1 ? 's' : ''} trước`;
     } else if (diffInSeconds < 2592000) {
       const days = Math.floor(diffInSeconds / 86400);
-      return `${days} day${days > 1 ? 's' : ''} ago`;
+      return `${days} ngày${days > 1 ? 's' : ''} trước`;
     } else {
       return date.toLocaleDateString();
     }
@@ -312,13 +312,13 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   // Add this function before the RenderComment component
   const handleLike = async (commentId) => {
     if (!isAuthenticated) {
-      alert('Please log in to like comments');
+      alert('Vui lòng đăng nhập để thích bình luận');
       return;
     }
 
     if (!user || (!user._id && !user.id)) {
-      alert('User information is missing. Please try logging in again.');
-      console.error('Missing user information:', user);
+      alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
+      console.error('Thông tin người dùng bị thiếu:', user);
       return;
     }
 
@@ -331,7 +331,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     const userId = user.id || user._id;
 
     if (isBanned) {
-      alert('You cannot like comments because you have been banned');
+      alert('Bạn không thể thích bình luận vì đã bị chặn');
       return;
     }
 
@@ -351,7 +351,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
 
       if (!response.ok) {
         // Try to get more detailed error information
-        let errorMessage = 'Failed to like comment';
+        let errorMessage = 'Không thể thích bình luận';
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
@@ -396,7 +396,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       );
     } catch (err) {
       console.error('Error liking comment:', err);
-      alert(`Failed to like comment: ${err.message}`);
+      alert(`Không thể thích bình luận: ${err.message}`);
     } finally {
       // Remove comment from loading state
       setLikingComments(prev => {
@@ -425,17 +425,17 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     // Local handleReplySubmit function
     const handleReplySubmit = async () => {
       if (!isAuthenticated) {
-        alert('Please log in to reply to comments');
+        alert('Vui lòng đăng nhập để trả lời bình luận');
         return;
       }
   
       if (!user || (!user._id && !user.id)) {
-        alert('User information is missing. Please try logging in again.');
+        alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
         return;
       }
   
       if (isBanned) {
-        alert('You cannot reply because you have been banned');
+        alert('Bạn không thể trả lời vì đã bị chặn');
         return;
       }
       
@@ -462,7 +462,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to post reply');
+          throw new Error(errorData.message || 'Không thể đăng trả lời');
         }
         
         const data = await response.json();
@@ -525,7 +525,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         
       } catch (err) {
         console.error('Error posting reply:', err);
-        alert(err.message || 'Failed to post reply. Please try again.');
+        alert(err.message || 'Không thể đăng trả lời. Vui lòng thử lại.');
       } finally {
         // Reset submitting state to false at the end
         setSubmittingReply(false);
@@ -591,7 +591,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                   className="reply-button"
                   onClick={() => setIsReplying(!isReplying)}
                 >
-                  Reply
+                  Trả lời
                 </button>
                 {isAuthenticated && user && (user.username === comment.user.username || user.role === 'admin') && (
                   <button 
@@ -599,7 +599,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                     onClick={() => handleDelete(comment._id, level > 0, comment.parentId)}
                     disabled={deleting}
                   >
-                    {deleting ? 'Deleting...' : 'Delete'}
+                    {deleting ? 'Đang xóa...' : 'Xóa'}
                   </button>
                 )}
               </>
@@ -623,7 +623,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                   onClick={handleReplySubmit}
                   disabled={!replyText.trim() || submittingReply}
                 >
-                  {submittingReply ? 'Posting...' : 'Post Reply'}
+                  {submittingReply ? 'Đang đăng...' : 'Đăng trả lời'}
                 </button>
                 <button 
                   className="reply-cancel-btn"
@@ -632,7 +632,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                     setReplyText('');
                   }}
                 >
-                  Cancel
+                  Hủy bỏ
                 </button>
               </div>
             </div>
@@ -661,50 +661,50 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   };
 
   if (isLoading) {
-    return <div className="comments-loading">Loading comments...</div>;
+    return <div className="comments-loading">Đang tải bình luận...</div>;
   }
   
   if (error) {
-    return <div className="comments-error">Error loading comments: {error}</div>;
+    return <div className="comments-error">Lỗi tải bình luận: {error}</div>;
   }
   
   return (
     <div className="comments-section">
-      <h3 className="comments-title">Comments ({comments.length})</h3>
+      <h3 className="comments-title">Bình luận ({comments.length})</h3>
       
       {/* Sort controls */}
       <div className="sort-controls">
-        <span>Sort by: </span>
+        <span>Sắp xếp theo: </span>
         <button 
           className={`sort-btn ${sortOrder === 'newest' ? 'active' : ''}`}
           onClick={() => handleSortChange('newest')}
         >
-          Newest
+          Mới nhất
         </button>
         <button 
           className={`sort-btn ${sortOrder === 'oldest' ? 'active' : ''}`}
           onClick={() => handleSortChange('oldest')}
         >
-          Oldest
+          Cũ nhất
         </button>
         <button 
           className={`sort-btn ${sortOrder === 'likes' ? 'active' : ''}`}
           onClick={() => handleSortChange('likes')}
         >
-          Most Liked
+          Thích nhiều nhất
         </button>
       </div>
       
       {isAuthenticated ? (
         isBanned ? (
           <div className="banned-message">
-            You are currently banned and cannot post comments or replies.
+            Bạn đang bị chặn và không thể đăng bình luận hoặc trả lời.
           </div>
         ) : (
           <form className="comment-form" onSubmit={handleSubmit}>
             <textarea
               className="comment-input"
-              placeholder="Add a comment..."
+              placeholder="Thêm bình luận..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               disabled={submitting}
@@ -715,13 +715,13 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
               className="comment-submit-btn"
               disabled={submitting || !newComment.trim()}
             >
-              {submitting ? 'Posting...' : 'Post Comment'}
+              {submitting ? 'Đang đăng...' : 'Đăng bình luận'}
             </button>
           </form>
         )
       ) : (
         <div className="login-to-comment">
-          Please <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">log in</button> to leave a comment.
+          Vui lòng <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">đăng nhập</button> để để lại bình luận.
         </div>
       )}
       
@@ -733,7 +733,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         </div>
       ) : (
         <div className="no-comments">
-          <p>No comments yet. Be the first to comment!</p>
+          <p>Chưa có bình luận. Hãy là người đầu tiên bình luận!</p>
         </div>
       )}
 
@@ -741,16 +741,16 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       {showBlockModal && (
         <div className="block-confirm-modal">
           <div className="block-confirm-content">
-            <p>Are you sure you want to {user.role === 'admin' ? 'ban' : 'block'} {userToBlock.username}?</p>
+            <p>Bạn có chắc chắn muốn {user.role === 'admin' ? 'chặn' : 'chặn'} {userToBlock.username}?</p>
             <div className="block-confirm-actions">
               <button onClick={handleBlock}>
-                {user.role === 'admin' ? 'Ban User' : 'Block User'}
+                {user.role === 'admin' ? 'Chặn User' : 'Chặn User'}
               </button>
               <button onClick={() => {
                 setShowBlockModal(false);
                 setUserToBlock(null);
               }}>
-                Cancel
+                Hủy bỏ
               </button>
             </div>
           </div>

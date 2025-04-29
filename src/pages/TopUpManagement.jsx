@@ -165,16 +165,16 @@ const TopUpManagement = () => {
       // Refresh transactions
       fetchTransactions();
       
-      alert('Request confirmed successfully');
+      alert('Yêu cầu đã được xác nhận thành công');
     } catch (err) {
-      console.error('Failed to confirm request:', err);
-      alert(err.response?.data?.message || 'Failed to confirm request');
+      console.error('Không thể xác nhận yêu cầu:', err);
+      alert(err.response?.data?.message || 'Không thể xác nhận yêu cầu');
     }
   };
 
   // Handle decline request
   const handleDeclineRequest = async (requestId) => {
-    if (!confirm('Are you sure you want to decline this request?')) {
+    if (!confirm('Bạn có chắc chắn muốn từ chối yêu cầu này không?')) {
       return;
     }
     
@@ -191,10 +191,10 @@ const TopUpManagement = () => {
       // Refresh transactions
       fetchTransactions();
       
-      alert('Request declined successfully');
+      alert('Yêu cầu đã được từ chối thành công');
     } catch (err) {
-      console.error('Failed to decline request:', err);
-      alert(err.response?.data?.message || 'Failed to decline request');
+      console.error('Không thể từ chối yêu cầu:', err);
+      alert(err.response?.data?.message || 'Không thể từ chối yêu cầu');
     }
   };
 
@@ -203,7 +203,7 @@ const TopUpManagement = () => {
     e.preventDefault();
 
     if (!username.trim() || !amount || Number(amount) <= 0) {
-      alert('Please enter a valid username and amount');
+      alert('Vui lòng nhập tên người dùng và số tiền hợp lệ');
       return;
     }
 
@@ -225,10 +225,10 @@ const TopUpManagement = () => {
       setUserSearch('');
       setSelectedUser(null);
 
-      alert('Top-up processed successfully');
+      alert('Giao dịch đã được xử lý thành công');
     } catch (err) {
-      console.error('Top-up failed:', err);
-      alert(err.response?.data?.message || 'Failed to process top-up');
+      console.error('Giao dịch thất bại:', err);
+      alert(err.response?.data?.message || 'Không thể xử lý giao dịch');
     } finally {
       setSubmitting(false);
     }
@@ -258,13 +258,13 @@ const TopUpManagement = () => {
 
   return (
     <div className="top-up-container">
-      <h1>Top-up Management</h1>
+      <h1>Quản lý giao dịch</h1>
       <div className="top-up-content">
         <section className="top-up-section">
-          <h2>Add New Top-up</h2>
+          <h2>Thêm giao dịch mới</h2>
           <form className="top-up-form" onSubmit={handleSubmit}>
             <div className="form-group user-search-container">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username">Tên người dùng</label>
               <input 
                 type="text" 
                 id="username" 
@@ -275,7 +275,7 @@ const TopUpManagement = () => {
                   setShowSearch(true);
                 }}
                 onClick={() => setShowSearch(true)}
-                placeholder="Search for a user..."
+                placeholder="Tìm kiếm người dùng..."
                 required 
               />
               {showSearch && searchResults.length > 0 && (
@@ -297,18 +297,18 @@ const TopUpManagement = () => {
                       </div>
                       <div className="topup-user-info">
                         <div className="user-username">{user.username}</div>
-                        <div className="topup-user-balance">Current balance: {user.balance || 0}</div>
+                        <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
               {showSearch && userSearch.length >= 2 && searchResults.length === 0 && (
-                <div className="no-results">No users found</div>
+                <div className="no-results">Không tìm thấy người dùng</div>
               )}
             </div>
             <div className="form-group">
-              <label htmlFor="amount">Amount</label>
+              <label htmlFor="amount">Số 🌾</label>
               <input 
                 type="number" 
                 id="amount" 
@@ -325,18 +325,18 @@ const TopUpManagement = () => {
               className="submit-button"
               disabled={submitting || !username.trim() || !amount || Number(amount) <= 0}
             >
-              {submitting ? 'Processing...' : 'Process Top-up'}
+              {submitting ? 'Đang xử lý...' : 'Xử lý giao dịch'}
             </button>
           </form>
         </section>
 
         {/* New section: Pending Requests */}
         <section className="top-up-section pending-section">
-          <h2>Pending Requests</h2>
+          <h2>Yêu cầu chờ xử lý</h2>
           {pendingLoading ? (
-            <p>Loading pending requests...</p>
+            <p>Đang tải yêu cầu chờ xử lý...</p>
           ) : pendingRequests.length === 0 ? (
-            <p>No pending requests</p>
+            <p>Không có yêu cầu chờ xử lý</p>
           ) : (
             <div className="pending-requests-list">
               {pendingRequests.map((request) => (
@@ -392,15 +392,15 @@ const TopUpManagement = () => {
         </section>
 
         <section className="top-up-section">
-          <h2>Recent Transactions</h2>
+          <h2>Giao dịch gần đây</h2>
           {loading ? (
-            <p>Loading transactions...</p>
+            <p>Đang tải giao dịch...</p>
           ) : error ? (
             <p className="error">{error}</p>
           ) : (
             <div className="transactions-list">
               {transactions.length === 0 ? (
-                <p>No transactions found</p>
+                <p>Không tìm thấy giao dịch</p>
               ) : (
                 transactions.map((transaction) => (
                   <div key={transaction._id} className="transaction-item">
@@ -414,7 +414,7 @@ const TopUpManagement = () => {
                     <div className="transaction-details">
                       {transaction.transactionType === 'admin' ? (
                         // Admin transaction
-                        <div className="transaction-amount">Balance Added: +{transaction.amount}</div>
+                        <div className="transaction-amount">Số dư đã thêm: +{transaction.amount}</div>
                       ) : (
                         // User transaction
                         <>
@@ -426,7 +426,7 @@ const TopUpManagement = () => {
                                 : 'Prepaid Card'}
                           </div>
                           <div className="transaction-amount">
-                            Payment: {formatPrice(transaction.amount)} | Balance: +{transaction.balance}
+                            Thanh toán: {formatPrice(transaction.amount)} | Số dư: +{transaction.balance}
                           </div>
                         </>
                       )}

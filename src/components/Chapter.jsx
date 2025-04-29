@@ -153,12 +153,12 @@ const Chapter = () => {
               }
             } catch (viewErr) {
               // Log but don't disrupt user experience for view count errors
-              console.error('Error recording view:', viewErr);
+              console.error('Lỗi ghi nhận lượt xem:', viewErr);
             }
           }, 500); // Small delay to prioritize chapter content loading
         } catch (err) {
           // Silent catch - view count errors shouldn't disrupt reading
-          console.error('Error setting up view recording:', err);
+          console.error('Lỗi thiết lập ghi nhận lượt xem:', err);
         }
       }
 
@@ -427,8 +427,8 @@ const Chapter = () => {
         // Scroll after navigation
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
-        console.error('Error navigating to previous chapter:', error);
-        setError('Failed to navigate to previous chapter.');
+        console.error('Lỗi điều hướng đến chương trước:', error);
+        setError('Không thể điều hướng đến chương trước.');
         setIsNavigating(false);
       }
     }
@@ -453,8 +453,8 @@ const Chapter = () => {
         // Scroll after navigation
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
-        console.error('Error navigating to next chapter:', error);
-        setError('Failed to navigate to next chapter.');
+        console.error('Lỗi điều hướng đến chương tiếp theo:', error);
+        setError('Không thể điều hướng đến chương tiếp theo.');
         setIsNavigating(false);
       }
     }
@@ -464,7 +464,7 @@ const Chapter = () => {
    * Handles deletion of a chapter (admin function)
    */
   const handleDeleteChapter = async () => {
-    if (!window.confirm('Are you sure you want to delete this chapter?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa chương này không?')) {
       return;
     }
 
@@ -491,8 +491,8 @@ const Chapter = () => {
       // Navigate back to novel page
       navigate(`/novel/${novelId}`, {replace: true});
     } catch (err) {
-      console.error('Failed to delete chapter:', err);
-      setError('Failed to delete chapter. Please try again.');
+      console.error('Không thể xóa chương:', err);
+      setError('Không thể xóa chương. Vui lòng thử lại.');
     }
   };
 
@@ -586,8 +586,8 @@ const Chapter = () => {
       });
 
     } catch (err) {
-      console.error('Failed to update chapter:', err);
-      setError('Failed to update chapter. Please try again.');
+      console.error('Không thể cập nhật chương:', err);
+      setError('Không thể cập nhật chương. Vui lòng thử lại.');
 
       // Refetch data to ensure consistency
       queryClient.refetchQueries({queryKey: ['chapter', chapterId]});
@@ -601,7 +601,7 @@ const Chapter = () => {
    */
   const handleLike = async () => {
     if (!user) {
-      alert('Please log in to like this chapter');
+      alert('Vui lòng đăng nhập để thích chương này');
       return;
     }
 
@@ -650,7 +650,7 @@ const Chapter = () => {
    */
   const handleBookmark = async () => {
     if (!user) {
-      alert('Please log in to bookmark this chapter');
+      alert('Vui lòng đăng nhập để đánh dấu chương này');
       return;
     }
 
@@ -680,7 +680,7 @@ const Chapter = () => {
         queryKey: ['bookmarked-chapter', novelId, user?.id]
       });
     } catch (err) {
-      console.error('Failed to bookmark/unbookmark chapter:', err);
+      console.error('Không thể đánh dấu/bỏ đánh dấu chương:', err);
       // Revert optimistic update on error
       setIsBookmarked(previousBookmarked);
     }
@@ -782,21 +782,21 @@ const Chapter = () => {
    */
   const handleSubmitRating = async () => {
     if (!user) {
-      alert('Please log in to rate this chapter');
+      alert('Vui lòng đăng nhập để đánh giá chương này');
       setShowRatingModal(false);
       return;
     }
 
     if (currentRating === 0) {
-      alert('Please select a rating');
+      alert('Vui lòng chọn đánh giá');
       return;
     }
 
     try {
       await rateMutation.mutateAsync(currentRating);
     } catch (error) {
-      console.error('Failed to rate chapter:', error);
-      alert('Failed to submit rating. Please try again.');
+      console.error('Không thể đánh giá chương:', error);
+      alert('Không thể gửi đánh giá. Vui lòng thử lại.');
     }
   };
 
@@ -870,7 +870,7 @@ const Chapter = () => {
       queryClient.invalidateQueries(['chapter', chapterId]);
       
       // Display error to user (optional)
-      setError('Failed to update chapter mode. Please try again.');
+      setError('Không thể cập nhật chế độ chương. Vui lòng thử lại.');
     }
   };
 
@@ -1005,7 +1005,7 @@ const Chapter = () => {
 
       {/* Issue Alert */}
       <div className="issue-alert">
-        Please report any issues (missing images, wrong chapter, ...) with the report button.
+        Vui lòng báo cáo bất kỳ vấn đề nào (thiếu hình ảnh, chương sai, ...) với nút báo cáo.
       </div>
 
       {/* Comments section */}

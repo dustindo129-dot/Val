@@ -67,11 +67,11 @@ const ReportPanel = ({ user }) => {
       {isExpanded && (
         <div className="report-panel-content">
           {isLoading ? (
-            <div className="report-loading">Loading reports...</div>
+            <div className="report-loading">Đang tải báo cáo...</div>
           ) : error ? (
-            <div className="report-error">Error loading reports</div>
+            <div className="report-error">Không thể tải báo cáo</div>
           ) : reports.length === 0 ? (
-            <div className="no-reports">No pending reports</div>
+            <div className="no-reports">Không có báo cáo chờ xử lý</div>
           ) : (
             <div className="report-list">
               {reports.map(report => (
@@ -111,8 +111,8 @@ const ReportPanel = ({ user }) => {
                       disabled={resolveMutation.isPending}
                     >
                       {resolveMutation.isPending && resolveMutation.variables === report._id
-                        ? 'Resolving...'
-                        : 'Resolve'
+                        ? 'Đang xử lý...'
+                        : 'Xử lý'
                       }
                     </button>
                   </div>

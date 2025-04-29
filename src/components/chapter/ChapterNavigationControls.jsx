@@ -53,7 +53,7 @@ const ChapterNavigationControls = ({
       <button
         className="toggle-btn"
         onClick={() => setShowNavControls(!showNavControls)}
-        title="Toggle Navigation Controls"
+        title="Bật/Tắt bảng điều khiển điều hướng"
       >
         <FontAwesomeIcon icon={showNavControls ? faTimes : faEllipsisV}/>
       </button>
@@ -63,7 +63,7 @@ const ChapterNavigationControls = ({
         <button
           className="control-btn"
           onClick={() => setShowChapterList(!showChapterList)}
-          title="Chapter List"
+          title="Danh sách chương"
           id="chapterListBtn"
         >
           <FontAwesomeIcon icon={faList}/>
@@ -72,7 +72,7 @@ const ChapterNavigationControls = ({
         <button
           className="control-btn"
           onClick={() => setShowSettingsModal(true)}
-          title="Reading Settings"
+          title="Cài đặt đọc truyện"
         >
           <FontAwesomeIcon icon={faCog}/>
         </button>
@@ -81,7 +81,7 @@ const ChapterNavigationControls = ({
       {/* Chapter List Dropdown */}
       <div className={`chapter-dropdown ${showChapterList ? 'active' : ''}`} id="chapterDropdown">
         <div className="chapter-dropdown-header">
-          <h3>Chapters</h3>
+          <h3>Chương</h3>
           <button 
             onClick={() => setShowChapterList(false)}
             className="close-dropdown"
@@ -93,7 +93,7 @@ const ChapterNavigationControls = ({
         {isModuleChaptersLoading ? (
           <div className="dropdown-loading">
             <FontAwesomeIcon icon={faSpinner} spin/>
-            <span>Loading chapters...</span>
+            <span>Đang tải chương...</span>
           </div>
         ) : filteredChapters.length > 0 ? (
           <ul className="chapter-dropdown-list">
@@ -109,7 +109,7 @@ const ChapterNavigationControls = ({
             ))}
           </ul>
         ) : (
-          <div className="no-chapters">No chapters available</div>
+          <div className="no-chapters">Không có chương nào</div>
         )}
       </div>
     </>

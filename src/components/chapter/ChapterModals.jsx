@@ -26,7 +26,7 @@ export const SettingsModal = ({
     <div className={`settings-modal ${showSettingsModal ? 'active' : ''}`}>
       <div className="settings-container">
         <div className="settings-modal-header">
-          <h3>Reading Settings</h3>
+          <h3>Cài đặt</h3>
           <button 
             className="close-modal-btn"
             onClick={() => setShowSettingsModal(false)}
@@ -54,7 +54,7 @@ export const SettingsModal = ({
           </div>
           
           <div className="settings-section">
-            <h4>Font Size</h4>
+            <h4>Kích cỡ chữ</h4>
             <div className="font-size-control">
               <button 
                 onClick={decreaseFontSize}
@@ -73,7 +73,7 @@ export const SettingsModal = ({
           </div>
           
           <div className="settings-section">
-            <h4>Line Height</h4>
+            <h4>Khoảng cách dòng</h4>
             <div className="line-height-control">
               <input
                 type="range"
@@ -89,13 +89,13 @@ export const SettingsModal = ({
           </div>
           
           <div className="settings-section">
-            <h4>Theme</h4>
+            <h4>Chủ đề</h4>
             <div className="theme-selector">
               <button 
                 className={`theme-btn light ${theme === 'light' ? 'active' : ''}`}
                 onClick={() => applyTheme('light')}
               >
-                Light
+                Sáng
                 {theme === 'light' && <FontAwesomeIcon icon={fasStar} className="theme-check" />}
               </button>
               <button 
@@ -109,7 +109,7 @@ export const SettingsModal = ({
                 className={`theme-btn dark ${theme === 'dark' ? 'active' : ''}`}
                 onClick={() => applyTheme('dark')}
               >
-                Dark
+                Tối
                 {theme === 'dark' && <FontAwesomeIcon icon={fasStar} className="theme-check" />}
               </button>
             </div>
@@ -134,7 +134,7 @@ export const RatingModal = ({
     <div className="rating-modal-container">
       <div className="rating-modal">
         <div className="rating-modal-header">
-          <h3>Rate this Chapter</h3>
+          <h3>Đánh giá chương</h3>
           <button 
             className="close-modal-btn"
             onClick={() => setShowRatingModal(false)}
@@ -208,7 +208,7 @@ export const ReportModal = ({
   
   const submitReport = async () => {
     if (!reportReason) {
-      setError('Please select a reason for your report');
+      setError('Vui lòng chọn lý do cho báo cáo của bạn');
       return;
     }
     
@@ -233,10 +233,10 @@ export const ReportModal = ({
       setShowReportModal(false);
       
       // Show success message
-      alert('Thank you for your report. We will review it soon.');
+      alert('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét nó ngay khi có thể.');
     } catch (err) {
-      setError('Failed to submit report. Please try again.');
-      console.error('Report submission error:', err);
+      setError('Không thể gửi báo cáo. Vui lòng thử lại.');
+      console.error('Lỗi gửi báo cáo:', err);
     } finally {
       setSubmitting(false);
     }
@@ -246,7 +246,7 @@ export const ReportModal = ({
     <div className="report-modal-container">
       <div className="report-modal">
         <div className="report-modal-header">
-          <h3>Report this Chapter</h3>
+          <h3>Báo cáo chương</h3>
           <button 
             className="close-modal-btn"
             onClick={() => setShowReportModal(false)}
@@ -266,7 +266,7 @@ export const ReportModal = ({
                 checked={reportReason === 'Translation error'}
                 onChange={() => setReportReason('Translation error')}
               />
-              <label htmlFor="translation-error">Translation error</label>
+              <label htmlFor="translation-error">Lỗi dịch thuật</label>
             </div>
             <div className="report-option">
               <input 
@@ -277,7 +277,7 @@ export const ReportModal = ({
                 checked={reportReason === 'Inappropriate content'}
                 onChange={() => setReportReason('Inappropriate content')}
               />
-              <label htmlFor="inappropriate-content">Inappropriate content</label>
+              <label htmlFor="inappropriate-content">Nội dung không phù hợp</label>
             </div>
             <div className="report-option">
               <input 
@@ -288,7 +288,7 @@ export const ReportModal = ({
                 checked={reportReason === 'Formatting issue'}
                 onChange={() => setReportReason('Formatting issue')}
               />
-              <label htmlFor="formatting-issue">Formatting issue</label>
+              <label htmlFor="formatting-issue">Vấn đề định dạng</label>
             </div>
             <div className="report-option">
               <input 
@@ -299,18 +299,18 @@ export const ReportModal = ({
                 checked={reportReason === 'Other'}
                 onChange={() => setReportReason('Other')}
               />
-              <label htmlFor="other-issue">Other</label>
+              <label htmlFor="other-issue">Khác</label>
             </div>
           </div>
           
           <div className="report-details-container">
-            <label htmlFor="report-details">Please provide more details about the issue...</label>
+            <label htmlFor="report-details">Vui lòng cung cấp thêm chi tiết về vấn đề...</label>
             <textarea 
               id="report-details"
               value={reportDetails}
               onChange={e => setReportDetails(e.target.value)}
               rows={4}
-              placeholder="Describe the issue in detail"
+              placeholder="Mô tả vấn đề chi tiết"
             ></textarea>
           </div>
           
@@ -327,14 +327,14 @@ export const ReportModal = ({
             onClick={() => setShowReportModal(false)}
             disabled={submitting}
           >
-            Cancel
+            Hủy bỏ
           </button>
           <button 
             className="submit-report-btn"
             onClick={submitReport}
             disabled={submitting}
           >
-            {submitting ? 'Submitting...' : 'Submit Report'}
+            {submitting ? 'Đang gửi...' : 'Gửi báo cáo'}
           </button>
         </div>
       </div>

@@ -57,11 +57,11 @@ const SignUp = ({ onClose }) => {
    */
   const validateForm = () => {
     if (!formData.username || !formData.email || !formData.password || !formData.verifyPassword) {
-      setError('All fields are required');
+      setError('Vui lòng điền tất cả thông tin');
       return false;
     }
     if (formData.password !== formData.verifyPassword) {
-      setError('Passwords do not match');
+      setError('Mật khẩu không khớp');
       return false;
     }
     return true;
@@ -83,11 +83,11 @@ const SignUp = ({ onClose }) => {
     } catch (err) {
       // Handle specific error cases
       if (err.response?.data?.message?.includes('username')) {
-        setError('Username already exists. Please choose a different username.');
+        setError('Tên người dùng đã tồn tại. Vui lòng chọn tên người dùng khác.');
       } else if (err.response?.data?.message?.includes('email')) {
-        setError('Email already exists. Please use a different email.');
+        setError('Email đã tồn tại. Vui lòng sử dụng email khác.');
       } else {
-        setError(err.response?.data?.message || 'Failed to create account');
+        setError(err.response?.data?.message || 'Không thể tạo tài khoản');
       }
     } finally {
       setLoading(false);
@@ -103,7 +103,7 @@ const SignUp = ({ onClose }) => {
           name="username"
           value={formData.username}
           onChange={handleChange}
-          placeholder="Username (*)"
+          placeholder="Tên người dùng (*)"
           className="auth-input"
           required
         />
@@ -129,7 +129,7 @@ const SignUp = ({ onClose }) => {
           name="password"
           value={formData.password}
           onChange={handleChange}
-          placeholder="Password (*)"
+          placeholder="Mật khẩu (*)"
           className="auth-input"
           required
         />
@@ -142,7 +142,7 @@ const SignUp = ({ onClose }) => {
           name="verifyPassword"
           value={formData.verifyPassword}
           onChange={handleChange}
-          placeholder="Verify password (*)"
+          placeholder="Xác nhận mật khẩu (*)"
           className="auth-input"
           required
         />
@@ -157,18 +157,18 @@ const SignUp = ({ onClose }) => {
         className="submit-button" 
         disabled={loading}
       >
-        {loading ? 'Creating Account...' : 'Create Account'}
+        {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
       </button>
 
       {/* Login link */}
       <div className="auth-footer">
-        <span>Already have an account? </span>
+        <span>Đã có tài khoản? </span>
         <button 
           type="button" 
           className="login-link" 
           onClick={onClose}
         >
-          Log In!
+          Đăng nhập!
         </button>
       </div>
     </form>

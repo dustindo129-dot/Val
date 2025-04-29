@@ -242,8 +242,8 @@ const ChapterDashboard = () => {
         }
       }
     } catch (err) {
-      console.error('Error fetching chapter data:', err);
-      setError('Failed to load chapter data. Please try again.');
+      console.error('Lỗi lấy dữ liệu chương:', err);
+      setError('Không thể tải dữ liệu chương. Vui lòng thử lại.');
     }
   }, [chapterId, extractFootnotes]);
 
@@ -317,7 +317,7 @@ const ChapterDashboard = () => {
 
     // Validate moduleId
     if (!moduleId) {
-      setError('No module selected. Please select a module first.');
+      setError('Không có module được chọn. Vui lòng chọn module trước.');
       setSaving(false);
       return;
     }
@@ -336,7 +336,7 @@ const ChapterDashboard = () => {
       // Check content size
       const contentSizeMB = (cleanedContent.length / (1024 * 1024)).toFixed(2);
       if (cleanedContent.length > 40 * 1024 * 1024) {
-        setError('Content is too large. Please reduce formatting or split into multiple chapters.');
+        setError('Nội dung quá lớn. Vui lòng giảm độ định dạng hoặc chia thành nhiều chương.');
         setSaving(false);
         return;
       }
@@ -401,7 +401,7 @@ const ChapterDashboard = () => {
             }
         );
 
-        setSuccess('Chapter updated successfully!');
+        setSuccess('Chương đã được cập nhật thành công!');
       } else {
         // Optimistically update the UI before the API call completes
         if (currentNovelData) {
@@ -457,7 +457,7 @@ const ChapterDashboard = () => {
             }
         );
 
-        setSuccess('Chapter created successfully!');
+        setSuccess('Chương đã được tạo thành công!');
       }
 
       // More aggressively invalidate ALL related queries
@@ -491,7 +491,7 @@ const ChapterDashboard = () => {
       }
     } catch (err) {
       console.error('Error details:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to save chapter. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Không thể lưu chương. Vui lòng thử lại.');
 
       // On error, refetch to ensure data consistency
       queryClient.refetchQueries({ queryKey: ['novel', novelId] });
@@ -501,14 +501,14 @@ const ChapterDashboard = () => {
 
   // Check if user has admin privileges
   if (user?.role !== 'admin' && user?.role !== 'moderator') {
-    return <div className="error">Access denied. Admin and moderator only.</div>;
+    return <div className="error">Không có quyền truy cập. Chỉ dành cho admin và moderator.</div>;
   }
 
   // Show loading state
   if (loading) {
     return (
         <div className="loading">
-          <div>Loading...</div>
+          <div>Đang tải...</div>
           <div className="loading-spinner"></div>
         </div>
     );
@@ -518,8 +518,8 @@ const ChapterDashboard = () => {
   if (moduleError && moduleId && !loading) {
     return (
         <div className="error-message">
-          <FontAwesomeIcon icon={faExclamationTriangle} /> Module not found.
-          <Link to={`/novel/${novelId}`} className="return-link"> Return to novel</Link>
+          <FontAwesomeIcon icon={faExclamationTriangle} /> Module không tồn tại.
+          <Link to={`/novel/${novelId}`} className="return-link"> Trở lại trang novel</Link>
         </div>
     );
   }
@@ -529,12 +529,12 @@ const ChapterDashboard = () => {
         {/* Header section with novel title and back button */}
         <div className="chapter-dashboard-header">
           <div className="header-content">
-            <h1>{isEditMode ? 'Edit Chapter' : 'Add New Chapter'}</h1>
+            <h1>{isEditMode ? 'Chỉnh sửa chương' : 'Thêm chương mới'}</h1>
             <h2>{novel?.title}</h2>
             {module && <div className="module-title">Module: {module.title}</div>}
           </div>
           <Link to={`/novel/${novelId}`} className="back-to-novel">
-            <FontAwesomeIcon icon={faArrowLeft} /> Back to Novel
+            <FontAwesomeIcon icon={faArrowLeft} /> Trở lại trang novel
           </Link>
         </div>
 
@@ -556,39 +556,39 @@ const ChapterDashboard = () => {
           <div className="form-section">
             <div className="chapter-title-status-group">
               <div className="chapter-title-input">
-                <label>Chapter Title:</label>
+                <label>Tiêu đề chương:</label>
                 <input
                     type="text"
                     value={chapterTitle}
                     onChange={(e) => setChapterTitle(e.target.value)}
-                    placeholder="Enter chapter title"
+                    placeholder="Nhập tiêu đề chương"
                     required
                 />
               </div>
               <div className="chapter-mode-input">
-                <label>Chapter Mode:</label>
+                <label>Chế độ chương:</label>
                 <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value)}
                     className="mode-dropdown"
                 >
-                  <option value="published">Published (Visible to everyone)</option>
-                  <option value="draft">Draft (Admin/Mod only)</option>
-                  <option value="protected">Protected (Login required)</option>
+                  <option value="published">Đã xuất bản (Hiển thị cho tất cả mọi người)</option>
+                  <option value="draft">Bản nháp (Chỉ admin/mod)</option>
+                  <option value="protected">Bảo vệ (Yêu cầu đăng nhập)</option>
                   {user?.role === 'admin' && (
-                    <option value="paid">Paid Content</option>
+                    <option value="paid">Nội dung trả phí</option>
                   )}
                 </select>
               </div>
               {mode === 'paid' && user?.role === 'admin' && (
                 <div className="chapter-balance-input">
-                  <label>Chapter Balance:</label>
+                  <label>Số tiền chương:</label>
                   <input
                     type="number"
                     min="0"
                     value={chapterBalance}
                     onChange={(e) => setChapterBalance(e.target.value)}
-                    placeholder="Enter chapter balance"
+                    placeholder="Nhập số tiền chương"
                   />
                 </div>
               )}
@@ -600,13 +600,13 @@ const ChapterDashboard = () => {
             <div className="form-row">
               {/* Translator dropdown */}
               <div className="form-group">
-                <label className="form-label">Translator:</label>
+                <label className="form-label">Dịch giả:</label>
                 <select
                     className="staff-dropdown mode-dropdown"
                     value={translator}
                     onChange={(e) => setTranslator(e.target.value)}
                 >
-                  <option value="">None</option>
+                  <option value="">Không có</option>
                   {novel?.novel?.active?.translator?.map((staff, index) => (
                       <option key={`translator-${index}`} value={staff}>
                         {staff}
@@ -617,13 +617,13 @@ const ChapterDashboard = () => {
 
               {/* Editor dropdown */}
               <div className="form-group">
-                <label className="form-label">Editor:</label>
+                <label className="form-label">Biên tập viên:</label>
                 <select
                     className="staff-dropdown mode-dropdown"
                     value={editor}
                     onChange={(e) => setEditor(e.target.value)}
                 >
-                  <option value="">None</option>
+                  <option value="">Không có</option>
                   {novel?.novel?.active?.editor?.map((staff, index) => (
                       <option key={`editor-${index}`} value={staff}>
                         {staff}
@@ -634,13 +634,13 @@ const ChapterDashboard = () => {
 
               {/* Proofreader dropdown */}
               <div className="form-group">
-                <label className="form-label">Proofreader:</label>
+                <label className="form-label">Người kiểm tra chất lượng:</label>
                 <select
                     className="staff-dropdown mode-dropdown"
                     value={proofreader}
                     onChange={(e) => setProofreader(e.target.value)}
                 >
-                  <option value="">None</option>
+                  <option value="">Không có</option>
                   {novel?.novel?.active?.proofreader?.map((staff, index) => (
                       <option key={`proofreader-${index}`} value={staff}>
                         {staff}
@@ -653,7 +653,7 @@ const ChapterDashboard = () => {
 
           {/* Chapter content editor */}
           <div className="form-section">
-            <h3 className="form-section-title">Chapter Content</h3>
+            <h3 className="form-section-title">Nội dung chương</h3>
 
             <div className="chapter-content-group">
               <div className="chapter-content-editor">
@@ -833,7 +833,7 @@ const ChapterDashboard = () => {
                 className="add-footnote-btn"
                 onClick={addFootnote}
             >
-              <FontAwesomeIcon icon={faPlus} /> Add Footnote
+              <FontAwesomeIcon icon={faPlus} /> Thêm footnote
             </button>
           </div>
 
@@ -842,16 +842,16 @@ const ChapterDashboard = () => {
             <button type="submit" disabled={saving} className="submit-btn">
               {saving ? (
                   <>
-                    <FontAwesomeIcon icon={faSpinner} spin /> {isEditMode ? 'Updating...' : 'Saving...'}
+                    <FontAwesomeIcon icon={faSpinner} spin /> {isEditMode ? 'Đang cập nhật...' : 'Đang lưu...'}
                   </>
               ) : (
                   <>
-                    <FontAwesomeIcon icon={faSave} /> {isEditMode ? 'Update Chapter' : 'Save Chapter'}
+                    <FontAwesomeIcon icon={faSave} /> {isEditMode ? 'Cập nhật chương' : 'Lưu chương'}
                   </>
               )}
             </button>
             <Link to={`/novel/${novelId}`} className="cancel-btn">
-              <FontAwesomeIcon icon={faTimes} /> Cancel
+              <FontAwesomeIcon icon={faTimes} /> Hủy bỏ
             </Link>
           </div>
         </form>

@@ -78,7 +78,7 @@ const FacebookPlugin = memo(() => {
             {!isLoaded && (
                 <div className="fb-loading">
                     <div className="fb-loading-spinner"></div>
-                    <div className="fb-loading-text">Loading Facebook timeline...</div>
+                    <div className="fb-loading-text">Đang tải bảng tin Facebook...</div>
                 </div>
             )}
             
@@ -103,13 +103,13 @@ const FacebookPlugin = memo(() => {
             
             {hasError && (
                 <div className="fb-error">
-                    <p>Unable to load Facebook content.</p>
+                    <p>Không thể tải nội dung Facebook.</p>
                     <a 
                         href="https://www.facebook.com/profile.php?id=100064392503502" 
                         target="_blank" 
                         rel="noopener noreferrer"
                     >
-                        Visit our Facebook page
+                        Truy cập trang Facebook của chúng tôi
                     </a>
                 </div>
             )}
@@ -457,9 +457,9 @@ const OLN = () => {
         setSortOrder(e.target.value);
     };
 
-    if (isLoading) return <div className="loading">Loading novels...</div>;
+    if (isLoading) return <div className="loading">Đang tải truyện...</div>;
     if (error) return <div className="error">{error.message}</div>;
-    if (!novels || novels.length === 0) return <div className="loading">No Vietnamese novels available.</div>;
+    if (!novels || novels.length === 0) return <div className="loading">Không có truyện sáng tác có sẵn.</div>;
 
     return (
         <>
@@ -468,9 +468,9 @@ const OLN = () => {
                     {/* Main content area */}
                     <div className="main-content">
                         <div className="section-headers">
-                            <h2>ORIGINAL LIGHT NOVEL</h2>
+                            <h2>TRUYỆN SÁNG TÁC</h2>
                             <div className="sort-controls-container">
-                                <label htmlFor="sort-order" className="sort-label">Sort by:</label>
+                                <label htmlFor="sort-order" className="sort-label">Sắp xếp theo:</label>
                                 <select 
                                     id="sort-order" 
                                     value={sortOrder} 
@@ -478,8 +478,8 @@ const OLN = () => {
                                     className="sort-select"
                                 >
                                     <option value="alphabet">A-Z</option>
-                                    <option value="newest">Newest</option>
-                                    <option value="updated">Recently Updated</option>
+                                    <option value="newest">Mới nhất</option>
+                                    <option value="updated">Cập nhật gần đây</option>
                                 </select>
                             </div>
                         </div>
