@@ -68,7 +68,7 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
       </span>
             {firstChapter && (
                 <Link to={`/novel/${novelId}/chapter/${firstChapter._id}`} className="first-chapter">
-                    &gt;&gt; First Chapter
+                    &gt;&gt; Chương đầu
                 </Link>
             )}
         </div>
@@ -173,7 +173,7 @@ const FacebookPlugin = memo(() => {
             {!isLoaded && (
                 <div className="fb-loading">
                     <div className="fb-loading-spinner"></div>
-                    <div className="fb-loading-text">Loading Facebook timeline...</div>
+                    <div className="fb-loading-text">Đang tải bảng tin Facebook...</div>
                 </div>
             )}
             
@@ -198,13 +198,13 @@ const FacebookPlugin = memo(() => {
             
             {hasError && (
                 <div className="fb-error">
-                    <p>Unable to load Facebook content.</p>
+                    <p>Không thể tải nội dung Facebook.</p>
                     <a 
                         href="https://www.facebook.com/profile.php?id=100064392503502" 
                         target="_blank" 
                         rel="noopener noreferrer"
                     >
-                        Visit our Facebook page
+                        Truy cập trang Facebook
                     </a>
                 </div>
             )}
@@ -528,9 +528,9 @@ const NovelList = () => {
         };
     };
 
-    if (isLoading) return <div className="loading">Loading novels...</div>;
+    if (isLoading) return <div className="loading">Đang tải truyện...</div>;
     if (error) return <div className="error">{error.message}</div>;
-    if (!novels || novels.length === 0) return <div className="loading">No novels available.</div>;
+    if (!novels || novels.length === 0) return <div className="loading">Không có truyện nào.</div>;
 
     return (
         <>
@@ -539,7 +539,7 @@ const NovelList = () => {
                     {/* Main content area */}
                     <div className="main-content">
                         <div className="section-headers">
-                            <h2>LATEST UPDATES</h2>
+                            <h2>MỚI CẬP NHẬT</h2>
                         </div>
                         {/* Novel grid */}
                         <div className="novel-grid">

@@ -90,30 +90,30 @@ const HotNovels = () => {
             <div className="hot-novels">
                 <div className="hot-novels-header">
                     <h2 className="hot-novels-title">
-                        HOT NOVEL
+                        NỔI BẬT
                         <span className="hot-icon">ᐁ</span>
                     </h2>
                     <div className="hot-novels-sort">
                         <span 
                             className={`sort-option ${timeRange === 'today' ? 'active' : ''}`}
                             onClick={() => handleTimeRangeChange('today')}>
-                            Today
+                            Ngày
                         </span>
                         <span 
                             className={`sort-option ${timeRange === 'week' ? 'active' : ''}`}
                             onClick={() => handleTimeRangeChange('week')}>
-                            Week
+                            Tuần
                         </span>
                         <span 
                             className={`sort-option ${timeRange === 'alltime' ? 'active' : ''}`}
                             onClick={() => handleTimeRangeChange('alltime')}>
-                            All Time
+                            Toàn thời gian
                         </span>
                     </div>
                 </div>
                 <div className="hot-novels-loading">
                     <div className="loading-spinner"></div>
-                    <span>Loading hot novels...</span>
+                    <span>Đang tải truyện nổi bật...</span>
                 </div>
             </div>
         );
@@ -124,28 +124,28 @@ const HotNovels = () => {
             <div className="hot-novels">
                 <div className="hot-novels-header">
                     <h2 className="hot-novels-title">
-                        HOT NOVEL
+                        TRUYỆN NỔI BẬT
                         <span className="hot-icon">ᐁ</span>
                     </h2>
                     <div className="hot-novels-sort">
                         <span 
                             className={`sort-option ${timeRange === 'today' ? 'active' : ''}`}
                             onClick={() => handleTimeRangeChange('today')}>
-                            Today
+                            Ngày
                         </span>
                         <span 
                             className={`sort-option ${timeRange === 'week' ? 'active' : ''}`}
                             onClick={() => handleTimeRangeChange('week')}>
-                            Week
+                            Tuần
                         </span>
                         <span 
                             className={`sort-option ${timeRange === 'alltime' ? 'active' : ''}`}
                             onClick={() => handleTimeRangeChange('alltime')}>
-                            All Time
+                            Toàn thời gian
                         </span>
                     </div>
                 </div>
-                <div className="hot-novels-error">Failed to load hot novels</div>
+                <div className="hot-novels-error">Không thể tải truyện nổi bật</div>
             </div>
         );
     }
@@ -154,24 +154,24 @@ const HotNovels = () => {
         <div className="hot-novels">
             <div className="hot-novels-header">
                 <h2 className="hot-novels-title">
-                    HOT NOVEL
+                    NỔI BẬT
                     <span className="hot-icon">ᐁ</span>
                 </h2>
                 <div className="hot-novels-sort">
                     <span 
                         className={`sort-option ${timeRange === 'today' ? 'active' : ''}`}
                         onClick={() => handleTimeRangeChange('today')}>
-                        Today
+                        Ngày
                     </span>
                     <span 
                         className={`sort-option ${timeRange === 'week' ? 'active' : ''}`}
                         onClick={() => handleTimeRangeChange('week')}>
-                        Week
+                        Tuần
                     </span>
                     <span 
                         className={`sort-option ${timeRange === 'alltime' ? 'active' : ''}`}
                         onClick={() => handleTimeRangeChange('alltime')}>
-                        All Time
+                        Toàn thời gian
                     </span>
                 </div>
             </div>
