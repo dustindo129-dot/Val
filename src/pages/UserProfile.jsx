@@ -2,13 +2,13 @@
  * UserProfile Component
  * 
  * User profile management page that allows users to:
- * - Update profile avatar using Cloudinary
+ * - Update profile avatar
  * - Change email address
  * - Update password
  * - View profile information
  * 
  * Features:
- * - Cloudinary image upload
+ * - Image upload
  * - Form validation
  * - Error handling
  * - Loading states

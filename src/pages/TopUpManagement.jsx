@@ -25,6 +25,11 @@ const TopUpManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  
+  // New state variables for pending requests
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [requestAdjustments, setRequestAdjustments] = useState({});
 
   // Protect the route - redirect non-admin users
   useEffect(() => {
@@ -33,25 +38,68 @@ const TopUpManagement = () => {
     }
   }, [user, navigate]);
 
-  // Fetch top-up transactions
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `${config.backendUrl}/api/topup/transactions`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        setTransactions(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch transactions');
-        setLoading(false);
-      }
-    };
+  // Fetch top-up transactions (both types)
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      
+      // Get admin-initiated transactions
+      const adminResponse = await axios.get(
+        `${config.backendUrl}/api/topup-admin/transactions`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Get user-initiated completed requests
+      const userResponse = await axios.get(
+        `${config.backendUrl}/api/topup-admin/completed-requests`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Combine and format both types of transactions
+      const adminTransactions = adminResponse.data.map(tx => ({
+        ...tx,
+        transactionType: 'admin'
+      }));
+      
+      const userTransactions = userResponse.data.map(tx => ({
+        ...tx,
+        transactionType: 'user'
+      }));
+      
+      // Combine and sort by date
+      const allTransactions = [...adminTransactions, ...userTransactions]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      setTransactions(allTransactions);
+      setLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch transactions:', err);
+      setError('Failed to fetch transactions');
+      setLoading(false);
+    }
+  };
 
+  // Fetch pending requests
+  const fetchPendingRequests = async () => {
+    try {
+      setPendingLoading(true);
+      const response = await axios.get(
+        `${config.backendUrl}/api/topup-admin/pending-requests`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setPendingRequests(response.data);
+      setPendingLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch pending requests:', err);
+      setPendingLoading(false);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
     if (user?.role === 'admin') {
       fetchTransactions();
+      fetchPendingRequests();
     }
   }, [user]);
 
@@ -65,7 +113,7 @@ const TopUpManagement = () => {
 
       try {
         const response = await axios.get(
-          `${config.backendUrl}/api/users/search?query=${encodeURIComponent(userSearch)}`,
+          `${config.backendUrl}/api/topup-admin/search-users?query=${encodeURIComponent(userSearch)}`,
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
         );
         setSearchResults(response.data.slice(0, 5)); // Limit to 5 results
@@ -86,6 +134,70 @@ const TopUpManagement = () => {
     setShowSearch(false);
   };
 
+  // Handle balance adjustment
+  const handleAdjustBalance = (requestId, value) => {
+    setRequestAdjustments({
+      ...requestAdjustments,
+      [requestId]: Number(value)
+    });
+  };
+
+  // Handle confirm request
+  const handleConfirmRequest = async (requestId) => {
+    if (!confirm('Are you sure you want to confirm this request?')) {
+      return;
+    }
+    
+    try {
+      const adjustedBalance = requestAdjustments[requestId];
+      const response = await axios.post(
+        `${config.backendUrl}/api/topup-admin/process-request/${requestId}`,
+        { 
+          action: 'confirm',
+          adjustedBalance 
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Update UI
+      setPendingRequests(pendingRequests.filter(req => req._id !== requestId));
+      
+      // Refresh transactions
+      fetchTransactions();
+      
+      alert('Request confirmed successfully');
+    } catch (err) {
+      console.error('Failed to confirm request:', err);
+      alert(err.response?.data?.message || 'Failed to confirm request');
+    }
+  };
+
+  // Handle decline request
+  const handleDeclineRequest = async (requestId) => {
+    if (!confirm('Are you sure you want to decline this request?')) {
+      return;
+    }
+    
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/topup-admin/process-request/${requestId}`,
+        { action: 'decline' },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Update UI
+      setPendingRequests(pendingRequests.filter(req => req._id !== requestId));
+      
+      // Refresh transactions
+      fetchTransactions();
+      
+      alert('Request declined successfully');
+    } catch (err) {
+      console.error('Failed to decline request:', err);
+      alert(err.response?.data?.message || 'Failed to decline request');
+    }
+  };
+
   // Handle top-up form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,13 +211,13 @@ const TopUpManagement = () => {
 
     try {
       const response = await axios.post(
-        `${config.backendUrl}/api/topup`,
+        `${config.backendUrl}/api/topup-admin`,
         { username, amount: Number(amount) },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
 
-      // Add new transaction to list
-      setTransactions(prevTransactions => [response.data, ...prevTransactions]);
+      // Refresh transactions
+      fetchTransactions();
 
       // Reset form
       setUsername('');
@@ -132,6 +244,11 @@ const TopUpManagement = () => {
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
+  };
+
+  // Format price for display
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN').format(price) + '₫';
   };
 
   // If not admin, don't render the component
@@ -213,6 +330,67 @@ const TopUpManagement = () => {
           </form>
         </section>
 
+        {/* New section: Pending Requests */}
+        <section className="top-up-section pending-section">
+          <h2>Pending Requests</h2>
+          {pendingLoading ? (
+            <p>Loading pending requests...</p>
+          ) : pendingRequests.length === 0 ? (
+            <p>No pending requests</p>
+          ) : (
+            <div className="pending-requests-list">
+              {pendingRequests.map((request) => (
+                <div key={request._id} className="pending-request-item">
+                  <div className="request-header">
+                    <div className="request-user">
+                      <span className="username">{request.user.username}</span>
+                      <span className="request-id">ID: {request._id}</span>
+                    </div>
+                    <span className="request-date">{formatDate(request.createdAt)}</span>
+                  </div>
+                  <div className="request-details">
+                    <div className="request-method">
+                      Method: {request.paymentMethod === 'ewallet' 
+                        ? `${request.subMethod.charAt(0).toUpperCase() + request.subMethod.slice(1)}` 
+                        : request.paymentMethod === 'bank' 
+                          ? 'Bank Transfer' 
+                          : 'Prepaid Card'}
+                    </div>
+                    <div className="request-amount">
+                      Amount: {formatPrice(request.amount)}
+                    </div>
+                    <div className="request-balance">
+                      Balance: {request.balance}
+                    </div>
+                  </div>
+                  <div className="request-actions">
+                    <div className="balance-adjustment">
+                      <label>Adjust Balance:</label>
+                      <input 
+                        type="number" 
+                        value={requestAdjustments[request._id] || request.balance}
+                        onChange={(e) => handleAdjustBalance(request._id, e.target.value)} 
+                      />
+                    </div>
+                    <button 
+                      className="confirm-button"
+                      onClick={() => handleConfirmRequest(request._id)}
+                    >
+                      Confirm
+                    </button>
+                    <button 
+                      className="decline-button"
+                      onClick={() => handleDeclineRequest(request._id)}
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <section className="top-up-section">
           <h2>Recent Transactions</h2>
           {loading ? (
@@ -234,14 +412,40 @@ const TopUpManagement = () => {
                       <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
                     </div>
                     <div className="transaction-details">
-                      <div className="transaction-amount">Amount: +{transaction.amount}</div>
+                      {transaction.transactionType === 'admin' ? (
+                        // Admin transaction
+                        <div className="transaction-amount">Balance Added: +{transaction.amount}</div>
+                      ) : (
+                        // User transaction
+                        <>
+                          <div className="transaction-method">
+                            Method: {transaction.paymentMethod === 'ewallet' 
+                              ? `${transaction.subMethod.charAt(0).toUpperCase() + transaction.subMethod.slice(1)}` 
+                              : transaction.paymentMethod === 'bank' 
+                                ? 'Bank Transfer' 
+                                : 'Prepaid Card'}
+                          </div>
+                          <div className="transaction-amount">
+                            Payment: {formatPrice(transaction.amount)} | Balance: +{transaction.balance}
+                          </div>
+                        </>
+                      )}
                       <div className={`transaction-status ${transaction.status.toLowerCase()}`}>
                         {transaction.status}
                       </div>
                     </div>
                     <div className="transaction-admin">
-                      Processed by: {transaction.admin.username}
+                      {transaction.adminId ? 
+                        `Processed by: ${transaction.adminId.username}` : 
+                        transaction.transactionType === 'admin' ? 
+                          `Processed by: ${transaction.admin.username}` : 
+                          'Auto-processed'}
                     </div>
+                    {transaction.notes && (
+                      <div className="transaction-notes">
+                        Note: {transaction.notes}
+                      </div>
+                    )}
                   </div>
                 ))
               )}

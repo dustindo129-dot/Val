@@ -48,11 +48,11 @@ const TopUp = () => {
       } catch (err) {
         console.error('Failed to fetch pricing options:', err);
         setPricingOptions([
-          { price: 12000, balance: 100, bonus: 10, note: "Good start! Try our service." },
-          { price: 20000, balance: 200, bonus: 20, note: "Smart pick for regular readers!" },
-          { price: 50000, balance: 550, bonus: 55, note: "Best value for unlocking more!" },
-          { price: 250000, balance: 2800, bonus: 280, note: "Perfect for full volumes!" },
-          { price: 350000, balance: 4000, bonus: 400, note: "For serious readers — huge savings!" }
+          { price: 12000, balance: 100, note: "Chỉ với 12.000đ mỗi tháng bạn sẽ không bao giờ thấy bất kì quảng cáo nào trên page trong cuộc đời này" },
+          { price: 20000, balance: 200, note: "Gói bình dân hạt dẻ" },
+          { price: 50000, balance: 550, note: "Thêm tí bonus gọi là" },
+          { price: 250000, balance: 2800, note: "Với gói này phú hào có thể unlock ngay một tập truyện dịch từ Eng" },
+          { price: 350000, balance: 4000, note: "Với gói này đại gia đủ sức bao trọn một tập truyện bất kì dịch từ Jap" }
         ]);
       } finally {
         setFetchingPricing(false);
@@ -95,6 +95,18 @@ const TopUp = () => {
   // Handle amount selection
   const handleAmountSelect = (option) => {
     setSelectedAmount(option);
+    
+    // Update bank transfer content if bank payment is selected
+    if (paymentMethod === 'bank') {
+      const transferContent = `Nạp ${option.balance} cho người dùng ${user?.username}`;
+      setFormData(prev => ({
+        ...prev,
+        bank: {
+          ...prev.bank,
+          transferContent: transferContent
+        }
+      }));
+    }
   };
 
   // Handle form input changes
@@ -141,20 +153,40 @@ const TopUp = () => {
     setLoading(true);
 
     try {
+      // Prepare request data based on payment method
+      let requestData = {
+        amount: selectedAmount.price,
+        balance: selectedAmount.balance,
+        paymentMethod,
+        subMethod
+      };
+
+      // Add method-specific details
+      if (paymentMethod === 'ewallet') {
+        requestData.details = subMethod ? formData[subMethod] : {};
+      } else if (paymentMethod === 'bank') {
+        // For bank transfers, use a default transfer content without requiring user bank details
+        const transferContent = `Nạp ${selectedAmount.balance} lúa cho người dùng ${user?.username}`;
+        requestData.details = {
+          // These are placeholder values that satisfy the backend validation
+          // since we're now using QR code/fixed bank account approach
+          bankName: "Techcombank",
+          accountName: "TRUONG TAN TAI",
+          accountNumber: "19030912273013",
+          transferContent: transferContent
+        };
+      } else if (paymentMethod === 'prepaidCard') {
+        requestData.details = formData[paymentMethod];
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/topup/request`,
-        {
-          amount: selectedAmount.price,
-          balance: selectedAmount.balance,
-          paymentMethod,
-          subMethod,
-          details: subMethod ? formData[subMethod] : formData[paymentMethod]
-        },
+        requestData,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
       // Show success message
-      alert(response.data.message + (response.data.bonus ? `\n${response.data.bonus}` : ''));
+      alert(response.data.message);
       
       // Reset form
       setPaymentMethod(null);
@@ -188,11 +220,18 @@ const TopUp = () => {
     setFetchingHistory(true);
     
     try {
-      const response = await axios.get(
+      // Get all transactions including pending ones from the history endpoint
+      const historyResponse = await axios.get(
         `${config.backendUrl}/api/topup/history`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      setHistory(response.data);
+      
+      // Set history data
+      setHistory(historyResponse.data);
+      
+      // Extract pending requests for cancel functionality
+      const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
+      setPendingRequests(pendingRequests);
     } catch (err) {
       console.error('Failed to fetch history:', err);
     } finally {
@@ -222,6 +261,16 @@ const TopUp = () => {
     }
   };
 
+  // Handle saving QR code image
+  const handleSaveQRCode = () => {
+    const link = document.createElement('a');
+    link.href = 'https://Valvrareteam.b-cdn.net/Screenshot%202025-04-28%20192829.png';
+    link.download = 'payment-qr-code.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="top-up-container">
       <h1>Top-up Your Account</h1>
@@ -231,72 +280,26 @@ const TopUp = () => {
         <div className="rules-list">
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>Balance is the virtual currency used within our system</p>
+            <p>🌾 là đơn vị tiền ảo trong hệ thống</p>
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>Balance can only be used to unlock chapters, purchase features, and support authors</p>
+            <p>🌾 chỉ có thể được dùng để mở chương/tập, mở khóa chức năng, và hỗ trợ dịch giả/tác giả</p>
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>Purchased balance cannot be refunded for any reason</p>
+            <p>🌾 đã nạp không thể hoàn lại dù bất cứ lý do gì</p>
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>Balance will be added to your account once we confirm your payment</p>
+            <p>🌾 sẽ được thêm vào tài khoản của bạn sau khi chúng tôi xác nhận thanh toán</p>
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>You can purchase balance through one of the payment methods below</p>
+            <p>Bạn có thể mua 🌾 bằng các phương thức thanh toán dưới đây</p>
           </div>
         </div>
       </section>
-
-      {/* Pending requests section - shown if there are pending requests */}
-      {pendingRequests.length > 0 && (
-        <section className="top-up-section pending-section">
-          <h2>Pending Requests</h2>
-          <div className="pending-requests">
-            {pendingRequests.map(request => (
-              <div key={request._id} className="pending-request">
-                <div className="request-details">
-                  <div className="request-amount">
-                    <span className="amount-label">Amount:</span>
-                    <span className="amount-value">{formatPrice(request.amount)}</span>
-                  </div>
-                  <div className="request-credits">
-                    <span className="credits-label">Balance:</span>
-                    <span className="credits-value">{request.balance}</span>
-                    {request.bonus > 0 && (
-                      <span className="bonus-value">+{request.bonus} bonus</span>
-                    )}
-                  </div>
-                  <div className="request-method">
-                    <span className="method-label">Method:</span>
-                    <span className="method-value">
-                      {request.paymentMethod === 'ewallet' 
-                        ? `${request.subMethod.charAt(0).toUpperCase() + request.subMethod.slice(1)}` 
-                        : request.paymentMethod === 'bank' 
-                          ? 'Bank Transfer' 
-                          : 'Prepaid Card'}
-                    </span>
-                  </div>
-                  <div className="request-date">
-                    <span className="date-label">Requested:</span>
-                    <span className="date-value">{formatDate(request.createdAt)}</span>
-                  </div>
-                </div>
-                <button 
-                  className="cancel-button"
-                  onClick={() => handleCancelRequest(request._id)}
-                >
-                  Cancel
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       <div className="top-up-content">
         {/* Payment method selection */}
@@ -324,7 +327,7 @@ const TopUp = () => {
             >
               <div className="payment-logos">
                 <div className="payment-logo">
-                  <img src="https://via.placeholder.com/100x40?text=Banks" alt="Banks" />
+                  <img src="https://Valvrareteam.b-cdn.net/techcombank.png" alt="Banks" />
                 </div>
               </div>
               <p>Bank Transfer</p>
@@ -350,39 +353,32 @@ const TopUp = () => {
           </div>
         </section>
 
-        {/* Pricing table */}
-        <section className="top-up-section">
-          <h2>Select Amount</h2>
-          {fetchingPricing ? (
-            <p>Loading pricing options...</p>
-          ) : (
-            <div className="pricing-table">
-              <div className="pricing-header">
-                <div className="pricing-cell">Price</div>
-                <div className="pricing-cell">Balance</div>
-                <div className="pricing-cell">First-Time Bonus (10%)</div>
-                <div className="pricing-cell">Note</div>
-              </div>
-              {pricingOptions.map((option, index) => (
-                <div 
-                  key={index} 
-                  className={`pricing-row ${selectedAmount === option ? 'selected' : ''}`}
-                  onClick={() => handleAmountSelect(option)}
-                >
-                  <div className="pricing-cell">{formatPrice(option.price)}</div>
-                  <div className="pricing-cell">{option.balance} balance</div>
-                  <div className="pricing-cell">+{option.bonus} balance</div>
-                  <div className="pricing-cell note">{option.note}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
         {/* Payment details section - shown only when a payment method is selected */}
         {paymentMethod && (
           <section className="top-up-section">
             <h2>Payment Details</h2>
+            
+            {/* Select Amount section as radio options */}
+            <div className="amount-selection">
+              <h3>Select Amount</h3>
+              <div className="amount-options">
+                {pricingOptions.map((option, index) => (
+                  <label key={index} className="amount-option">
+                    <input 
+                      type="radio" 
+                      name="amount" 
+                      checked={selectedAmount === option}
+                      onChange={() => handleAmountSelect(option)}
+                    />
+                    <div className="option-details">
+                      <span className="option-price">{formatPrice(option.price)}</span>
+                      <span className="option-balance">{option.balance} 🌾</span>
+                      <span className="option-note">{option.note}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
             
             {/* E-wallet payment details */}
             {paymentMethod === 'ewallet' && (
@@ -447,54 +443,70 @@ const TopUp = () => {
               <div className="payment-details">
                 <div className="method-form">
                   <div className="bank-instructions">
-                    <p>Transfer the exact amount to our bank account:</p>
-                    <div className="bank-info">
-                      <p><strong>Bank Name:</strong> Example Bank</p>
-                      <p><strong>Account Number:</strong> 1234567890</p>
-                      <p><strong>Account Holder:</strong> Your Company Name</p>
-                      <p><strong>Reference:</strong> {user?.username}</p>
+                    <p>Quét mã QR hoặc chuyển khoản theo thông tin dưới đây:</p>
+                    <div className="bank-qr-container">
+                      <img 
+                        src="https://Valvrareteam.b-cdn.net/Screenshot%202025-04-28%20192829.png" 
+                        alt="QR Code" 
+                        className="bank-qr-code"
+                      />
+                      <button className="qr-save-button" onClick={handleSaveQRCode}>Lưu ảnh QR Code</button>
                     </div>
-                    <p>After making the transfer, please fill in your details below:</p>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="bank-name">Your Bank Name</label>
-                    <input 
-                      type="text" 
-                      id="bank-name" 
-                      value={formData.bank.bankName}
-                      onChange={(e) => handleInputChange('bank', 'bankName', e.target.value)}
-                      placeholder="Enter your bank name"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="account-name">Account Holder Name</label>
-                    <input 
-                      type="text" 
-                      id="account-name" 
-                      value={formData.bank.accountName}
-                      onChange={(e) => handleInputChange('bank', 'accountName', e.target.value)}
-                      placeholder="Enter account holder name"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="account-number">Your Account Number</label>
-                    <input 
-                      type="text" 
-                      id="account-number" 
-                      value={formData.bank.accountNumber}
-                      onChange={(e) => handleInputChange('bank', 'accountNumber', e.target.value)}
-                      placeholder="Enter your account number"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="transfer-content">Transfer Content/Reference</label>
-                    <input 
-                      type="text" 
-                      id="transfer-content" 
-                      value={formData.bank.transferContent}
-                      onChange={(e) => handleInputChange('bank', 'transferContent', e.target.value)}
-                      placeholder="Enter transfer reference"
-                    />
+                    
+                    <div className="bank-transfer-info">
+                      <div className="info-row">
+                        <span className="info-label">Ngân hàng:</span>
+                        <span className="info-value">Techcombank</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Tài khoản nhận:</span>
+                        <span className="info-value">19030912273013</span>
+                        <button className="copy-button" onClick={() => {navigator.clipboard.writeText("19030912273013")}}>[ Copy ]</button>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Tên người nhận:</span>
+                        <span className="info-value">TRUONG TAN TAI</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Nội dung:</span>
+                        <span className="info-value">
+                          {selectedAmount ? `Nạp ${selectedAmount.balance} lúa cho người dùng ${user?.username}` : 'Vui lòng chọn số tiền nạp'}
+                        </span>
+                        <button 
+                          className="copy-button"
+                          onClick={() => {
+                            if (selectedAmount) {
+                              navigator.clipboard.writeText(`Nạp ${selectedAmount.balance} cho người dùng ${user?.username}`)
+                            }
+                          }}
+                          disabled={!selectedAmount}
+                        >
+                          [ Copy ]
+                        </button>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">Số tiền:</span>
+                        <span className="info-value info-amount">
+                          {selectedAmount ? formatPrice(selectedAmount.price) : 'Vui lòng chọn số tiền nạp'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="transfer-notes">
+                      <div className="note-title">Chú ý</div>
+                      <ol className="note-list">
+                        <li>Để lúa được cập nhật nhanh chóng, quý khách vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản ở trên.</li>
+                        <li>Không điền thêm bất kỳ chữ cái hoặc ký tự nào ngoài nội dung đã được cung cấp.</li>
+                        <li>Số dư sẽ được cập nhật trong vòng tối đa 24h sau khi chúng tôi nhận được thanh toán.</li>
+                        <li>
+                          Nếu có thắc mắc về vấn đề chuyển khoản, vui lòng inbox fanpage{' '}  
+                          <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                            Hội những người yêu thích Light Novel
+                          </a>{' '}
+                           để được hỗ trợ.
+                        </li>
+                      </ol>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -560,16 +572,24 @@ const TopUp = () => {
           <button 
             className="history-button"
             onClick={handleViewHistory}
-            disabled={viewHistory && fetchingHistory}
           >
-            {viewHistory ? 'Refresh History' : 'View Transaction History'}
+            {viewHistory ? 'Hide Transaction History' : 'View Transaction History'}
           </button>
         </div>
 
         {/* Transaction history */}
         {viewHistory && (
           <section className="top-up-section">
-            <h2>Transaction History</h2>
+            <div className="transaction-header-container">
+              <h2>Transaction History</h2>
+              <button 
+                className="refresh-button"
+                onClick={handleViewHistory}
+                disabled={fetchingHistory}
+              >
+                {fetchingHistory ? 'Refreshing...' : 'Refresh History'}
+              </button>
+            </div>
             {fetchingHistory ? (
               <p>Loading transaction history...</p>
             ) : history.length === 0 ? (
@@ -587,9 +607,6 @@ const TopUp = () => {
                         <div className="transaction-price">{formatPrice(transaction.amount)}</div>
                         <div className="transaction-credits">
                           {transaction.balance} balance
-                          {transaction.bonus > 0 && (
-                            <span className="transaction-bonus">+{transaction.bonus} bonus</span>
-                          )}
                         </div>
                       </div>
                       <div className="transaction-method">
@@ -600,6 +617,16 @@ const TopUp = () => {
                             : 'Prepaid Card'}
                       </div>
                     </div>
+                    {transaction.status === 'Pending' && (
+                      <div className="transaction-actions">
+                        <button 
+                          className="cancel-button"
+                          onClick={() => handleCancelRequest(transaction._id)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
