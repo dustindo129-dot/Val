@@ -133,11 +133,8 @@ const OLN = () => {
     const { data, isLoading, error } = useQuery({
         queryKey: ['vietnameseNovels', currentPage, sortOrder],
         queryFn: async () => {
-            console.log('Fetching Vietnamese novels...');
             // Get all novels instead of paginated results to ensure we don't miss any Vietnamese novels
             const response = await axios.get(`${config.backendUrl}/api/novels?limit=100`);
-            
-            console.log('Total novels received:', response.data.novels?.length || 0);
             
             // Filter novels with "Vietnamese Novel" genre tag
             const allNovels = response.data.novels || [];
@@ -148,8 +145,6 @@ const OLN = () => {
                 }
                 return hasVietnameseTag;
             });
-            
-            console.log('Total Vietnamese novels found:', vietnameseNovels.length);
             
             // Sort novels
             if (sortOrder === 'alphabet') {

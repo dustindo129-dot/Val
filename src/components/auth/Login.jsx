@@ -150,7 +150,7 @@ const Login = ({ onClose, onSignUp }) => {
           className="sign-up-link" 
           onClick={onSignUp}
         >
-          Đăng ký!
+          Đăng ký ngay!
         </button>
       </div>
     </form>
