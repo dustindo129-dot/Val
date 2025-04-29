@@ -108,8 +108,8 @@ const Market = () => {
       
       setWithdrawableRequests(withdrawable);
     } catch (err) {
-      console.error('Failed to fetch data:', err);
-      setError('Failed to load data. Please try again later.');
+      console.error('Không thể tải dữ liệu:', err);
+      setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
     } finally {
       setIsLoading(false);
     }
@@ -607,8 +607,8 @@ const Market = () => {
         })
       );
     } catch (err) {
-      console.error('Error liking request:', err);
-      alert('Failed to like request');
+      console.error('Không thể thích yêu cầu:', err);
+      alert('Không thể thích yêu cầu');
     } finally {
       // Remove request from loading state
       setLikingRequests(prev => {
@@ -625,7 +625,7 @@ const Market = () => {
       return;
     }
 
-    if (!confirm('Are you sure you want to approve this request? This will also approve all pending contributions.')) {
+    if (!confirm('Bạn có chắc chắn muốn phê duyệt yêu cầu này? Điều này sẽ phê duyệt tất cả các đóng góp đang chờ.')) {
       return;
     }
 
@@ -655,7 +655,7 @@ const Market = () => {
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
         } catch (contributionErr) {
-          console.error('Failed to approve contributions:', contributionErr);
+          console.error('Không thể phê duyệt đóng góp:', contributionErr);
           // Don't throw here, as the request was already approved
         }
       }
@@ -676,7 +676,7 @@ const Market = () => {
       return;
     }
 
-    if (!confirm('Are you sure you want to decline this request? This will also decline all pending contributions and refund them.')) {
+    if (!confirm('Bạn có chắc chắn muốn từ chối yêu cầu này? Điều này sẽ từ chối tất cả các đóng góp đang chờ và trả lại 🌾 cho người dùng.')) {
       return;
     }
 
@@ -706,7 +706,7 @@ const Market = () => {
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
         } catch (contributionErr) {
-          console.error('Failed to decline contributions:', contributionErr);
+          console.error('Không thể từ chối đóng góp:', contributionErr);
           // Don't throw here, as the request was already declined
         }
       }
@@ -714,10 +714,10 @@ const Market = () => {
       // Remove the request from the list
       setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
       
-      alert('Request declined successfully');
+      alert('Yêu cầu đã được từ chối thành công');
     } catch (err) {
-      console.error('Failed to decline request:', err);
-      alert('Failed to decline request');
+      console.error('Không thể từ chối yêu cầu:', err);
+      alert('Không thể từ chối yêu cầu');
     }
   };
 
@@ -732,7 +732,7 @@ const Market = () => {
       return;
     }
     
-    if (!confirm('Are you sure you want to withdraw this request? Your deposit will be refunded.')) {
+    if (!confirm('Bạn có chắc chắn muốn rút lại yêu cầu này? Số 🌾 cọc sẽ được trả lại.')) {
       return;
     }
     
@@ -754,11 +754,11 @@ const Market = () => {
         const refundAmount = response.data.refundAmount;
         setUserBalance(prev => prev + refundAmount);
         
-        alert('Request withdrawn successfully. Your deposit has been refunded.');
+        alert('Yêu cầu đã được rút lại thành công. Số 🌾 cọc đã được trả lại.');
       }
     } catch (err) {
-      console.error('Failed to withdraw request:', err);
-      alert(err.response?.data?.message || 'Failed to withdraw request');
+      console.error('Không thể rút lại yêu cầu:', err);
+      alert(err.response?.data?.message || 'Không thể rút lại yêu cầu');
     } finally {
       // Remove request from withdrawing state
       setWithdrawingRequests(prev => {
@@ -787,7 +787,7 @@ const Market = () => {
         [requestId]: response.data
       }));
     } catch (err) {
-      console.error('Failed to fetch contributions:', err);
+      console.error('Không thể tải đóng góp:', err);
     } finally {
       setLoadingContributions(prev => {
         const next = new Set(prev);
@@ -818,18 +818,18 @@ const Market = () => {
   // Handle contribution submission
   const handleSubmitContribution = async (requestId) => {
     if (!isAuthenticated) {
-      alert('Please log in to contribute');
+      alert('Vui lòng đăng nhập để góp🌾');
       return;
     }
     
     // Validate inputs
     if (!contributionAmount || isNaN(contributionAmount) || Number(contributionAmount) <= 0) {
-      alert('Please enter a valid contribution amount');
+      alert('Vui lòng nhập số🌾 góp hợp lệ');
       return;
     }
     
     if (Number(contributionAmount) > userBalance) {
-      alert('Contribution amount cannot exceed your balance');
+      alert('Số🌾 góp không được vượt quá số🌾 có trong tài khoản');
       return;
     }
     
@@ -1427,7 +1427,7 @@ const Market = () => {
                           <div className="request-user-info">
                             <span className="request-username">{request.user.username}</span>
                             <span className="request-type">
-                              {request.type === 'new' ? 'Request new novel' : 'Request module/chapter opening'}
+                              {request.type === 'new' ? 'Yêu cầu truyện mới' : 'Yêu cầu mở chương/tập có sẵn'}
                             </span>
                             {request.openNow && (
                               <span className="request-open-now-badge">
@@ -1457,7 +1457,7 @@ const Market = () => {
                               <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
                             </div>
                           )}
-                          <div className="request-deposit">Deposit: {request.deposit}</div>
+                          <div className="request-deposit">🌾 Cọc: {request.deposit}</div>
                         </div>
                         <div className="request-actions">
                           <button 
@@ -1477,7 +1477,7 @@ const Market = () => {
                               className="contribute-button"
                               onClick={() => handleShowContributionForm(request._id)}
                             >
-                              {showContributionForm === request._id ? 'Cancel' : 'Contribute'}
+                              {showContributionForm === request._id ? 'Hủy bỏ' : 'Góp 🌾'}
                             </button>
                           )}
                           
@@ -1491,7 +1491,7 @@ const Market = () => {
                               onClick={() => handleWithdrawRequest(request._id)}
                               disabled={withdrawingRequests.has(request._id)}
                             >
-                              {withdrawingRequests.has(request._id) ? 'Withdrawing...' : 'Withdraw'}
+                              {withdrawingRequests.has(request._id) ? 'Đang rút...' : 'Rút lại yêu cầu'}
                             </button>
                           )}
                           
@@ -1502,13 +1502,13 @@ const Market = () => {
                                 className="approve-btn"
                                 onClick={() => handleApproveRequest(request._id)}
                               >
-                                Approve
+                                Duyệt
                               </button>
                               <button 
                                 className="decline-btn"
                                 onClick={() => handleDeclineRequest(request._id)}
                               >
-                                Decline
+                                Từ chối
                               </button>
                             </div>
                           )}
@@ -1522,7 +1522,7 @@ const Market = () => {
                             {showContributionForm === request._id && isAuthenticated && (
                               <div className="contribution-form">
                                 <div className="contribution-input-container">
-                                  <label htmlFor={`contribution-amount-${request._id}`}>Contribute amount:</label>
+                                  <label htmlFor={`contribution-amount-${request._id}`}>Góp số🌾:</label>
                                   <input
                                     type="number"
                                     id={`contribution-amount-${request._id}`}
@@ -1534,12 +1534,12 @@ const Market = () => {
                                     required
                                     className="contribution-input"
                                   />
-                                  <span className="balance-display">Current balance: {userBalance}</span>
+                                  <span className="balance-display">🌾 hiện tại: {userBalance}</span>
                                 </div>
                                 
                                 <textarea
                                   className="contribution-note-input"
-                                  placeholder="Additional note... (optional)"
+                                  placeholder="Nhắn nhủ thêm... (nếu có)"
                                   value={contributionNote}
                                   onChange={(e) => setContributionNote(e.target.value)}
                                   disabled={submittingContribution}
@@ -1552,7 +1552,7 @@ const Market = () => {
                                     disabled={submittingContribution || !contributionAmount || 
                                             (contributionAmount && Number(contributionAmount) > userBalance)}
                                   >
-                                    {submittingContribution ? 'Contributing...' : 'Confirm'}
+                                    {submittingContribution ? 'Đang góp...' : 'Xác nhận'}
                                   </button>
                                   <button 
                                     type="button" 
@@ -1563,7 +1563,7 @@ const Market = () => {
                                       setContributionNote('');
                                     }}
                                   >
-                                    Cancel
+                                    Hủy bỏ
                                   </button>
                                 </div>
                               </div>
@@ -1572,7 +1572,7 @@ const Market = () => {
                             {/* Show login prompt in the form area if not authenticated */}
                             {showContributionForm === request._id && !isAuthenticated && (
                               <div className="login-to-contribute">
-                                Please <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">log in</button> to contribute.
+                                Vui lòng <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">đăng nhập</button> để góp🌾.
                               </div>
                             )}
                             
@@ -1581,8 +1581,8 @@ const Market = () => {
                               <div className="contributions-list">
                                 <h4 className="contributions-title">
                                   {loadingContributions.has(request._id) 
-                                    ? 'Loading contributions...' 
-                                    : `Contributions (${contributions[request._id].length})`}
+                                    ? 'Đang tải đóng góp...' 
+                                    : `Đóng góp (${contributions[request._id].length})`}
                                 </h4>
                                 
                                 {contributions[request._id].map(contribution => (
@@ -1611,7 +1611,7 @@ const Market = () => {
                                           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contribution.note) }} />
                                         </div>
                                       )}
-                                      <div className="contribution-amount">Contribution: {contribution.amount}</div>
+                                      <div className="contribution-amount">Góp🌾: {contribution.amount}</div>
                                       
                                       {/* Admin actions for contributions */}
                                       {user && user.role === 'admin' && contribution.status === 'pending' && (
@@ -1620,13 +1620,13 @@ const Market = () => {
                                             className="approve-btn"
                                             onClick={() => handleApproveContribution(contribution._id, request._id)}
                                           >
-                                            Approve
+                                            Duyệt
                                           </button>
                                           <button 
                                             className="decline-btn"
                                             onClick={() => handleDeclineContribution(contribution._id, request._id)}
                                           >
-                                            Decline
+                                            Từ chối
                                           </button>
                                         </div>
                                       )}
