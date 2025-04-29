@@ -26,6 +26,9 @@ const TopUp = () => {
   const [viewHistory, setViewHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [fetchingHistory, setFetchingHistory] = useState(false);
+  const [transferContent, setTransferContent] = useState('');
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   // Form data for different payment methods
   const [formData, setFormData] = useState({
@@ -85,6 +88,10 @@ const TopUp = () => {
   const handleMethodSelect = (method) => {
     setPaymentMethod(method);
     setSubMethod(method === 'ewallet' ? 'momo' : null);
+    // Reset QR code when changing payment method
+    setShowQRCode(false);
+    setQrCodeUrl('');
+    setTransferContent('');
   };
 
   // Handle sub-method selection (for e-wallets)
@@ -92,21 +99,55 @@ const TopUp = () => {
     setSubMethod(method);
   };
 
+  // Generate random transfer content
+  const generateRandomContent = (length = 8) => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  };
+
+  // Generate QR code using VietQR API
+  const generateQRCode = () => {
+    if (!selectedAmount) {
+      alert('Vui lòng chọn số tiền nạp');
+      return;
+    }
+
+    // Generate random transfer content
+    const newTransferContent = generateRandomContent(8);
+    setTransferContent(newTransferContent);
+
+    // Create VietQR URL
+    const bankId = "TCB"; // Techcombank code
+    const accountNo = "19030912273013";
+    const vietQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${selectedAmount.price}&addInfo=${newTransferContent}`;
+    
+    // Update QR code URL
+    setQrCodeUrl(vietQrUrl);
+    
+    // Show QR code section
+    setShowQRCode(true);
+
+    // Update bank form data with the new transfer content
+    setFormData(prev => ({
+      ...prev,
+      bank: {
+        ...prev.bank,
+        transferContent: newTransferContent
+      }
+    }));
+  };
+
   // Handle amount selection
   const handleAmountSelect = (option) => {
     setSelectedAmount(option);
     
-    // Update bank transfer content if bank payment is selected
-    if (paymentMethod === 'bank') {
-      const transferContent = `Nạp ${option.balance} cho người dùng ${user?.username}`;
-      setFormData(prev => ({
-        ...prev,
-        bank: {
-          ...prev.bank,
-          transferContent: transferContent
-        }
-      }));
-    }
+    // Reset QR code when changing amount
+    setShowQRCode(false);
+    setQrCodeUrl('');
   };
 
   // Handle form input changes
@@ -165,15 +206,14 @@ const TopUp = () => {
       if (paymentMethod === 'ewallet') {
         requestData.details = subMethod ? formData[subMethod] : {};
       } else if (paymentMethod === 'bank') {
-        // For bank transfers, use a default transfer content without requiring user bank details
-        const transferContent = `Nạp ${selectedAmount.balance} lúa cho người dùng ${user?.username}`;
+        // For bank transfers, use the random transfer content if available
+        const bankTransferContent = transferContent || generateRandomContent(8);
+        
         requestData.details = {
-          // These are placeholder values that satisfy the backend validation
-          // since we're now using QR code/fixed bank account approach
           bankName: "Techcombank",
           accountName: "TRUONG TAN TAI",
           accountNumber: "19030912273013",
-          transferContent: transferContent
+          transferContent: bankTransferContent
         };
       } else if (paymentMethod === 'prepaidCard') {
         requestData.details = formData[paymentMethod];
@@ -192,6 +232,9 @@ const TopUp = () => {
       setPaymentMethod(null);
       setSubMethod(null);
       setSelectedAmount(null);
+      setShowQRCode(false);
+      setQrCodeUrl('');
+      setTransferContent('');
       setFormData({
         momo: { phoneNumber: '' },
         zalopay: { phoneNumber: '' },
@@ -259,16 +302,6 @@ const TopUp = () => {
       console.error('Failed to cancel request:', err);
       alert(err.response?.data?.message || 'Failed to cancel request');
     }
-  };
-
-  // Handle saving QR code image
-  const handleSaveQRCode = () => {
-    const link = document.createElement('a');
-    link.href = 'https://Valvrareteam.b-cdn.net/Screenshot%202025-04-28%20192829.png';
-    link.download = 'payment-qr-code.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   return (
@@ -444,14 +477,22 @@ const TopUp = () => {
                 <div className="method-form">
                   <div className="bank-instructions">
                     <p>Quét mã QR hoặc chuyển khoản theo thông tin dưới đây:</p>
-                    <div className="bank-qr-container">
-                      <img 
-                        src="https://Valvrareteam.b-cdn.net/Screenshot%202025-04-28%20192829.png" 
-                        alt="QR Code" 
-                        className="bank-qr-code"
-                      />
-                      <button className="qr-save-button" onClick={handleSaveQRCode}>Lưu ảnh QR Code</button>
-                    </div>
+                    
+                    {/* QR code generate button - always visible */}
+                    <button className="qr-button" onClick={generateQRCode} disabled={!selectedAmount}>
+                      Tạo mã QR
+                    </button>
+                    
+                    {/* QR code section - only shown after QR is generated */}
+                    {showQRCode && qrCodeUrl && (
+                      <div className="bank-qr-container">
+                        <img 
+                          src={qrCodeUrl}
+                          alt="QR Code" 
+                          className="bank-qr-code"
+                        />
+                      </div>
+                    )}
                     
                     <div className="bank-transfer-info">
                       <div className="info-row">
@@ -470,19 +511,16 @@ const TopUp = () => {
                       <div className="info-row">
                         <span className="info-label">Nội dung:</span>
                         <span className="info-value">
-                          {selectedAmount ? `Nạp ${selectedAmount.balance} lúa cho người dùng ${user?.username}` : 'Vui lòng chọn số tiền nạp'}
+                          {transferContent || (selectedAmount ? 'Vui lòng nhấn "Tạo mã QR"' : 'Vui lòng chọn số tiền nạp')}
                         </span>
-                        <button 
-                          className="copy-button"
-                          onClick={() => {
-                            if (selectedAmount) {
-                              navigator.clipboard.writeText(`Nạp ${selectedAmount.balance} cho người dùng ${user?.username}`)
-                            }
-                          }}
-                          disabled={!selectedAmount}
-                        >
-                          [ Copy ]
-                        </button>
+                        {transferContent && (
+                          <button 
+                            className="copy-button"
+                            onClick={() => navigator.clipboard.writeText(transferContent)}
+                          >
+                            [ Copy ]
+                          </button>
+                        )}
                       </div>
                       <div className="info-row">
                         <span className="info-label">Số tiền:</span>
