@@ -444,7 +444,7 @@ const NovelList = () => {
         }
 
         return novel.genres.map(genre => {
-            if (genre.includes('Novel')) {
+            if (genre.includes('Novel') && !['Web Novel', 'One shot'].includes(genre)) {
                 let className = '';
                 if (genre.includes('Japanese')) className = 'japanese-novel';
                 else if (genre.includes('Chinese')) className = 'chinese-novel';
@@ -457,11 +457,11 @@ const NovelList = () => {
                     type: 'format-origin',
                     class: className
                 };
-            } else if (genre === 'Mature') {
+            } else if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One shot') {
                 return {
                     name: genre,
                     type: 'mature',
-                    class: 'mature'
+                    class: genre === 'Mature' ? 'mature' : ''
                 };
             } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
                 return {
