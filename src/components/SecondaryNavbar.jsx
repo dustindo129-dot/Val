@@ -153,9 +153,6 @@ const SecondaryNavbar = () => {
             <Link to="/feedback" className={`nav-link ${isActive('/feedback')}`} onClick={() => setIsMenuOpen(false)}>
               Feedback
             </Link>
-            <Link to="/donation" className={`nav-link ${isActive('/donation')}`} onClick={() => setIsMenuOpen(false)}>
-              Donation
-            </Link>
             {/* Market link - visible to everyone */}
             <Link to="/market" className={`nav-link ${isActive('/market')}`} onClick={() => setIsMenuOpen(false)}>
               Market

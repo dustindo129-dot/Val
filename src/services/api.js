@@ -413,38 +413,6 @@ const api = {
     }
   },
 
-  // Donation related API calls
-  getDonationContent: async () => {
-    try {
-      const response = await axios.get(
-        `${config.backendUrl}/api/donation`
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch donation content:', error);
-      throw error;
-    }
-  },
-
-  updateDonationContent: async (content) => {
-    try {
-      const response = await axios.put(
-        `${config.backendUrl}/api/donation`,
-        { content },
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Failed to update donation content:', error);
-      throw error;
-    }
-  },
-
   // Report related API calls
   submitReport: async (contentType, contentId, reportType, details, contentTitle, novelId) => {
     try {
