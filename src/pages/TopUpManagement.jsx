@@ -31,6 +31,17 @@ const TopUpManagement = () => {
   const [pendingLoading, setPendingLoading] = useState(true);
   const [requestAdjustments, setRequestAdjustments] = useState({});
 
+  // New state variables for user transactions
+  const [userTransactions, setUserTransactions] = useState([]);
+  const [transactionLoading, setTransactionLoading] = useState(true);
+  const [transactionUsername, setTransactionUsername] = useState('');
+  const [transactionSearchResults, setTransactionSearchResults] = useState([]);
+  const [showTransactionSearch, setShowTransactionSearch] = useState(false);
+  const [selectedTransactionUser, setSelectedTransactionUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [transactionsPerPage] = useState(20);
+
   // Protect the route - redirect non-admin users
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -73,8 +84,8 @@ const TopUpManagement = () => {
       setTransactions(allTransactions);
       setLoading(false);
     } catch (err) {
-      console.error('Failed to fetch transactions:', err);
-      setError('Failed to fetch transactions');
+      console.error('Lỗi khi tải giao dịch:', err);
+      setError('Lỗi khi tải giao dịch');
       setLoading(false);
     }
   };
@@ -110,11 +121,53 @@ const TopUpManagement = () => {
     }
   };
 
+  // Fetch user transactions - modified to handle connection errors more gracefully
+  const fetchUserTransactions = async (page = 1, username = null) => {
+    try {
+      setTransactionLoading(true);
+      
+      // If no username provided, clear transactions and return
+      if (!username) {
+        setUserTransactions([]);
+        setTransactionLoading(false);
+        return;
+      }
+      
+      const offset = (page - 1) * transactionsPerPage;
+      const limit = transactionsPerPage;
+      
+      let url = `${config.backendUrl}/api/transactions/user-transactions?limit=${limit}&offset=${offset}`;
+      
+      // Add username filter if provided
+      if (username) {
+        url += `&username=${encodeURIComponent(username)}`;
+      }
+      
+      const response = await axios.get(
+        url,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      setUserTransactions(response.data.transactions || []);
+      setTotalPages(Math.ceil((response.data.pagination?.total || 0) / transactionsPerPage));
+      setCurrentPage(page);
+      setTransactionLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch user transactions:', err);
+      setUserTransactions([]);
+      setTransactionLoading(false);
+      // Show a notification or alert for the error
+      alert('Không thể tải nhật ký giao dịch. Vui lòng thử lại sau.');
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
     if (user?.role === 'admin') {
       fetchTransactions();
       fetchPendingRequests();
+      // Remove default fetch of all transactions
+      // fetchUserTransactions();
     }
   }, [user]);
 
@@ -141,12 +194,45 @@ const TopUpManagement = () => {
     return () => clearTimeout(timer);
   }, [userSearch]);
 
+  // Search for users for transaction filtering
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!transactionUsername || transactionUsername.length < 2) {
+        setTransactionSearchResults([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${config.backendUrl}/api/topup-admin/search-users?query=${encodeURIComponent(transactionUsername)}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setTransactionSearchResults(response.data.slice(0, 5)); // Limit to 5 results
+      } catch (err) {
+        console.error('User search failed:', err);
+      }
+    };
+
+    const timer = setTimeout(searchUsers, 500);
+    return () => clearTimeout(timer);
+  }, [transactionUsername]);
+
   // Handle user selection from search results
   const handleUserSelect = (user) => {
     setSelectedUser(user);
     setUsername(user.username);
     setUserSearch(user.username);
     setShowSearch(false);
+  };
+
+  // Handle user selection for transaction filtering
+  const handleTransactionUserSelect = (user) => {
+    setSelectedTransactionUser(user);
+    setTransactionUsername(user.username);
+    setShowTransactionSearch(false);
+    
+    // Fetch transactions for selected user
+    fetchUserTransactions(1, user.username);
   };
 
   // Handle balance adjustment
@@ -179,6 +265,7 @@ const TopUpManagement = () => {
       
       // Refresh transactions
       fetchTransactions();
+      fetchUserTransactions(currentPage, selectedTransactionUser?.username);
       
       alert('Yêu cầu đã được xác nhận thành công');
     } catch (err) {
@@ -205,12 +292,27 @@ const TopUpManagement = () => {
       
       // Refresh transactions
       fetchTransactions();
+      fetchUserTransactions(currentPage, selectedTransactionUser?.username);
       
       alert('Yêu cầu đã được từ chối thành công');
     } catch (err) {
       console.error('Không thể từ chối yêu cầu:', err);
       alert(err.response?.data?.message || 'Không thể từ chối yêu cầu');
     }
+  };
+
+  // Handle pagination
+  const handlePageChange = (page) => {
+    fetchUserTransactions(page, selectedTransactionUser?.username);
+  };
+
+  // Handle reset user filter
+  const handleResetFilter = () => {
+    setSelectedTransactionUser(null);
+    setTransactionUsername('');
+    setUserTransactions([]); // Clear transactions instead of fetching all
+    setCurrentPage(1);
+    setTotalPages(1);
   };
 
   // Handle top-up form submission
@@ -233,6 +335,7 @@ const TopUpManagement = () => {
 
       // Refresh transactions
       fetchTransactions();
+      fetchUserTransactions(currentPage, selectedTransactionUser?.username);
 
       // Reset form
       setUsername('');
@@ -266,6 +369,24 @@ const TopUpManagement = () => {
     return new Intl.NumberFormat('vi-VN').format(price) + '₫';
   };
 
+  // Get transaction type display text
+  const getTransactionTypeText = (type) => {
+    const typeMap = {
+      'topup': 'Nạp tiền (tự động)',
+      'admin_topup': 'Nạp tiền (admin)',
+      'request': 'Yêu cầu',
+      'refund': 'Hoàn tiền',
+      'withdrawal': 'Rút tiền',
+      'other': 'Khác'
+    };
+    return typeMap[type] || type;
+  };
+
+  // Get transaction amount class based on whether it's positive or negative
+  const getAmountClass = (amount) => {
+    return amount >= 0 ? 'amount-positive' : 'amount-negative';
+  };
+
   // If not admin, don't render the component
   if (!user || user.role !== 'admin') {
     return null;
@@ -276,7 +397,7 @@ const TopUpManagement = () => {
       <h1>Quản lý giao dịch</h1>
       <div className="top-up-content">
         <section className="top-up-section">
-          <h2>Thêm giao dịch mới - Phát 🌾</h2>
+          <h2>Phát 🌾 cho người dùng</h2>
           <form className="top-up-form" onSubmit={handleSubmit}>
             <div className="form-group user-search-container">
               <label htmlFor="username">Tên người dùng</label>
@@ -322,27 +443,178 @@ const TopUpManagement = () => {
                 <div className="no-results">Không tìm thấy người dùng</div>
               )}
             </div>
-            <div className="form-group">
-              <label htmlFor="amount">Số 🌾 giao dịch</label>
-              <input 
-                type="number" 
-                id="amount" 
-                name="amount" 
-                min="1" 
-                step="1"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required 
-              />
+            
+            <div className="amount-input-row">
+              <div className="form-group">
+                <label htmlFor="amount">Số 🌾 phát</label>
+                <input 
+                  type="number" 
+                  id="amount" 
+                  name="amount" 
+                  min="1" 
+                  step="1"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required 
+                />
+              </div>
+              <button 
+                type="submit" 
+                className="submit-button"
+                disabled={submitting || !username.trim() || !amount || Number(amount) <= 0}
+              >
+                {submitting ? 'Đang phát...' : 'Phát 🌾'}
+              </button>
             </div>
-            <button 
-              type="submit" 
-              className="submit-button"
-              disabled={submitting || !username.trim() || !amount || Number(amount) <= 0}
-            >
-              {submitting ? 'Đang xử lý...' : 'Xử lý giao dịch'}
-            </button>
           </form>
+        </section>
+
+        {/* User Transactions Section - Modified to show instructions when no user selected */}
+        <section className="top-up-section transaction-section">
+          <div className="transaction-header-container">
+            <h2>Nhật ký giao dịch người dùng</h2>
+            <div className="transaction-filter">
+              <div className="user-search-container">
+                <input 
+                  type="text" 
+                  placeholder="Tìm kiếm người dùng để xem giao dịch..."
+                  value={transactionUsername}
+                  onChange={(e) => {
+                    setTransactionUsername(e.target.value);
+                    setShowTransactionSearch(true);
+                  }}
+                  onClick={() => setShowTransactionSearch(true)}
+                />
+                {showTransactionSearch && transactionSearchResults.length > 0 && (
+                  <div className="user-search-results">
+                    {transactionSearchResults.map(user => (
+                      <div 
+                        key={user._id} 
+                        className="user-result"
+                        onClick={() => handleTransactionUserSelect(user)}
+                      >
+                        <div className="user-avatar">
+                          {user.avatar ? (
+                            <img src={user.avatar} alt={user.username} />
+                          ) : (
+                            <div className="default-avatar">
+                              {user.username.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="topup-user-info">
+                          <div className="user-username">{user.username}</div>
+                          <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {selectedTransactionUser && (
+                <>
+                  <button 
+                    className="reset-filter-button"
+                    onClick={handleResetFilter}
+                  >
+                    Xóa bộ lọc
+                  </button>
+                  <button 
+                    className="refresh-button"
+                    onClick={() => fetchUserTransactions(currentPage, selectedTransactionUser?.username)}
+                    disabled={transactionLoading}
+                  >
+                    {transactionLoading ? 'Đang tải...' : 'Tải lại'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {!selectedTransactionUser ? (
+            <div className="no-user-selected">
+              <p>Hãy tìm kiếm và chọn người dùng để xem lịch sử giao dịch</p>
+            </div>
+          ) : transactionLoading ? (
+            <p>Đang tải nhật ký giao dịch...</p>
+          ) : userTransactions.length === 0 ? (
+            <p>Không tìm thấy giao dịch nào cho người dùng này</p>
+          ) : (
+            <>
+              <div className="user-transactions-list">
+                {userTransactions.map((transaction) => (
+                  <div key={transaction._id} className="user-transaction-item">
+                    <div className="transaction-header">
+                      <div className="transaction-user">
+                        <span className="username">{transaction.user.username}</span>
+                        <span className="transaction-id">ID: {transaction._id}</span>
+                      </div>
+                      <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
+                    </div>
+                    <div className="transaction-details">
+                      <div className="transaction-type">
+                        {getTransactionTypeText(transaction.type)}
+                      </div>
+                      <div className={`transaction-amount ${getAmountClass(transaction.amount)}`}>
+                        {transaction.amount >= 0 ? '+' : ''}{transaction.amount} 🌾
+                      </div>
+                      <div className="transaction-balance-after">
+                        Số dư sau giao dịch: {transaction.balanceAfter} 🌾
+                      </div>
+                    </div>
+                    <div className="transaction-description">
+                      {transaction.description}
+                    </div>
+                    {transaction.performedBy && (
+                      <div className="transaction-admin">
+                        Thực hiện bởi: {transaction.performedBy.username}
+                      </div>
+                    )}
+                    {transaction.sourceModel && (
+                      <div className="transaction-source">
+                        Nguồn: {transaction.sourceModel} (ID: {transaction.sourceId})
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    &laquo;
+                  </button>
+                  <button 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    &lt;
+                  </button>
+                  
+                  <span className="page-info">
+                    Trang {currentPage} / {totalPages}
+                  </span>
+                  
+                  <button 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    &gt;
+                  </button>
+                  <button 
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    &raquo;
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </section>
 
         {/* New section: Pending Requests */}
@@ -413,6 +685,12 @@ const TopUpManagement = () => {
                           <span className="transaction-id">
                             ID: {transaction.transactionId}
                           </span>
+                          {transaction.description && (
+                            <div className="transaction-description">
+                              <span className="description-label">Nội dung chuyển khoản gốc:</span>
+                              <div className="description-text">{transaction.description}</div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -473,11 +751,11 @@ const TopUpManagement = () => {
                         // User transaction
                         <>
                           <div className="transaction-method">
-                            Method: {transaction.paymentMethod === 'ewallet' 
+                            Phương thức: {transaction.paymentMethod === 'ewallet' 
                               ? `${transaction.subMethod.charAt(0).toUpperCase() + transaction.subMethod.slice(1)}` 
                               : transaction.paymentMethod === 'bank' 
-                                ? 'Bank Transfer' 
-                                : 'Prepaid Card'}
+                                ? 'Chuyển khoản ngân hàng' 
+                                : 'Thẻ cào'}
                           </div>
                           <div className="transaction-amount">
                             Thanh toán: {formatPrice(transaction.amount)} | Số dư: +{transaction.balance}
@@ -497,7 +775,7 @@ const TopUpManagement = () => {
                     </div>
                     {transaction.notes && (
                       <div className="transaction-notes">
-                        Note: {transaction.notes}
+                        Ghi chú: {transaction.notes}
                       </div>
                     )}
                   </div>

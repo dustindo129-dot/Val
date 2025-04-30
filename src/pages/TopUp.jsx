@@ -101,12 +101,33 @@ const TopUp = () => {
 
   // Generate random transfer content
   const generateRandomContent = (length = 8) => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    // Use a mix of uppercase letters and numbers
+    const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // removed I and O which can be confused with 1 and 0
+    const numbers = '123456789'; // removed 0 which can be confused with O
+    
+    // Ensure at least one uppercase letter and one number
     let result = '';
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    
+    // Add at least 2 uppercase letters
+    for (let i = 0; i < 3; i++) {
+      result += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
     }
-    return result;
+    
+    // Add at least 2 numbers
+    for (let i = 0; i < 2; i++) {
+      result += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    }
+    
+    // Fill remaining characters randomly
+    const remaining = length - result.length;
+    const allChars = uppercase + numbers;
+    
+    for (let i = 0; i < remaining; i++) {
+      result += allChars.charAt(Math.floor(Math.random() * allChars.length));
+    }
+    
+    // Shuffle the result to make it more random
+    return result.split('').sort(() => 0.5 - Math.random()).join('');
   };
 
   // Generate QR code using VietQR API
@@ -337,7 +358,7 @@ const TopUp = () => {
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>Hiện tại phương thức thanh toán bằng Momo, ZaloPay chưa khả dụng vì admin lười lập tài khoản .</p>
+            <p>Hiện tại phương thức thanh toán bằng Momo, ZaloPay và thẻ cào chưa khả dụng vì admin lười lập tài khoản .</p>
           </div>
         </div>
         
@@ -349,8 +370,8 @@ const TopUp = () => {
           <h2>Chọn phương thức thanh toán</h2>
           <div className="payment-methods">
             <div 
-              className={`payment-method-card ${paymentMethod === 'ewallet' ? 'selected' : ''}`}
-              onClick={() => handleMethodSelect('ewallet')}
+              className={`payment-method-card ${paymentMethod === 'ewallet' ? 'selected' : ''} disabled`}
+              onClick={() => {}}
             >
               <div className="payment-logos">
                 <div className="payment-logo">
@@ -376,8 +397,8 @@ const TopUp = () => {
             </div>
 
             <div 
-              className={`payment-method-card ${paymentMethod === 'prepaidCard' ? 'selected' : ''}`}
-              onClick={() => handleMethodSelect('prepaidCard')}
+              className={`payment-method-card ${paymentMethod === 'prepaidCard' ? 'selected' : ''} disabled`}
+              onClick={() => {}}
             >
               <div className="payment-logos">
                 <div className="payment-logo">
