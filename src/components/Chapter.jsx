@@ -117,57 +117,88 @@ const Chapter = () => {
         headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
       });
 
-      // Check localStorage for view timestamp before incrementing view count
-      const viewKeyLocal = `chapter_${chapterId}_last_viewed`;
-      const lastViewed = localStorage.getItem(viewKeyLocal);
-      const now = Date.now();
-      const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
-      const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > fourHours;
-
-      // Only call the view endpoint if we haven't viewed this chapter recently
-      if (shouldCountView) {
-        try {
-          // Use a timeout to ensure the view request doesn't block chapter loading
-          setTimeout(async () => {
-            try {
-              const viewResponse = await axios.post(`${config.backendUrl}/api/userchapterinteractions/view/${chapterId}`, {}, {
-                headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {},
-                timeout: 5000 // 5 second timeout for view recording
-              });
-              
-              // If the view was counted by the server, update our localStorage timestamp
-              if (viewResponse.data.counted) {
-                localStorage.setItem(viewKeyLocal, now.toString());
-                
-                // Update the view count in the UI if it was a successful count
-                if (viewResponse.data.views) {
-                  queryClient.setQueryData(['chapter', chapterId], oldData => {
-                    if (!oldData) return oldData;
-                    return {
-                      ...oldData,
-                      chapter: {
-                        ...oldData.chapter,
-                        views: viewResponse.data.views
-                      }
-                    };
-                  });
-                }
-              }
-            } catch (viewErr) {
-              // Log but don't disrupt user experience for view count errors
-              console.error('Lỗi ghi nhận lượt xem:', viewErr);
-            }
-          }, 500); // Small delay to prioritize chapter content loading
-        } catch (err) {
-          // Silent catch - view count errors shouldn't disrupt reading
-          console.error('Lỗi thiết lập ghi nhận lượt xem:', err);
-        }
-      }
-
       return chapterRes.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!chapterId
+  });
+
+  // Check if we should count a view
+  const viewKeyLocal = `chapter_${chapterId}_last_viewed`;
+  const lastViewed = localStorage.getItem(viewKeyLocal);
+  const now = Date.now();
+  const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+  const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > fourHours;
+
+  // Separate query for view count with fire-and-forget approach
+  useQuery({
+    queryKey: ['chapter-view', chapterId],
+    queryFn: async () => {
+      try {
+        // Create a controller to manually abort the request if needed
+        const controller = new AbortController();
+        
+        // Give the server more time to process the request - 5 seconds
+        setTimeout(() => {
+          controller.abort();
+        }, 5000); // Abort after 5 seconds instead of 3
+        
+        // Update localStorage immediately to prevent repeated attempts
+        localStorage.setItem(viewKeyLocal, now.toString());
+        
+        // Make the view count request
+        try {
+          const viewResponse = await axios.post(
+            `${config.backendUrl}/api/user-chapter-interactions/view/${chapterId}`, 
+            {}, 
+            {
+              headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {},
+              signal: controller.signal
+            }
+          );
+          
+          // If we got a response, update the view count in the UI
+          if (viewResponse?.data?.views) {
+            // Update directly in state for immediate UI update
+            setViewCount(viewResponse.data.views);
+            
+            // Also update the cached data
+            queryClient.setQueryData(['chapter', chapterId], oldData => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                chapter: {
+                  ...oldData.chapter,
+                  views: viewResponse.data.views
+                }
+              };
+            });
+          }
+        } catch (viewErr) {
+          // Don't log abort errors as they're expected
+          if (viewErr.name === 'CanceledError' || viewErr.name === 'AbortError') {
+            console.log('View count request aborted after timeout (expected behavior)');
+          } else {
+            console.error('Lỗi ghi nhận lượt xem:', viewErr);
+          }
+        }
+        
+        // Return something to satisfy React Query
+        return { success: true };
+      } catch (err) {
+        // This should never be reached with our approach, but include it for safety
+        console.error('Lỗi thiết lập ghi nhận lượt xem:', err);
+        return { success: false };
+      }
+    },
+    enabled: !!chapterId && !!chapterData && shouldCountView,
+    retry: false,
+    staleTime: fourHours,
+    // Prevent refetching on focus/reconnect
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    // Avoid caching errors to allow retry on next visit
+    cacheTime: 0 
   });
 
   // Extract chapter and novel data
