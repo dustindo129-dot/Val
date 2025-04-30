@@ -1098,4 +1098,25 @@
     align-items: flex-start;
     gap: 0.75rem;
   }
+}
+
+.transfer-content {
+  color: #2196F3;
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.actual-amount {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+
+.actual-amount:empty {
+  display: none;
+}
+
+/* Dark mode style for actual amount */
+:root.dark-mode .actual-amount {
+  color: #e9ecef;
 } 

@@ -144,7 +144,7 @@ const TopUpManagement = () => {
 
   // Handle confirm request
   const handleConfirmRequest = async (requestId) => {
-    if (!confirm('Are you sure you want to confirm this request?')) {
+    if (!confirm('Bạn có chắc chắn muốn xác nhận yêu cầu này không?')) {
       return;
     }
     
@@ -261,7 +261,7 @@ const TopUpManagement = () => {
       <h1>Quản lý giao dịch</h1>
       <div className="top-up-content">
         <section className="top-up-section">
-          <h2>Thêm giao dịch mới</h2>
+          <h2>Thêm giao dịch mới - Phát 🌾</h2>
           <form className="top-up-form" onSubmit={handleSubmit}>
             <div className="form-group user-search-container">
               <label htmlFor="username">Tên người dùng</label>
@@ -308,7 +308,7 @@ const TopUpManagement = () => {
               )}
             </div>
             <div className="form-group">
-              <label htmlFor="amount">Số 🌾</label>
+              <label htmlFor="amount">Số 🌾 giao dịch</label>
               <input 
                 type="number" 
                 id="amount" 
@@ -344,28 +344,37 @@ const TopUpManagement = () => {
                   <div className="request-header">
                     <div className="request-user">
                       <span className="username">{request.user.username}</span>
-                      <span className="request-id">ID: {request._id}</span>
+                      <span className="request-id">ID: {request._id}
+                        {request.paymentMethod === 'bank' && request.details?.transferContent && 
+                          <span className="transfer-content"> | Nội dung chuyển khoản: {request.details.transferContent}</span>
+                        }
+                      </span>
                     </div>
                     <span className="request-date">{formatDate(request.createdAt)}</span>
                   </div>
                   <div className="request-details">
                     <div className="request-method">
-                      Method: {request.paymentMethod === 'ewallet' 
+                      Phương thức: {request.paymentMethod === 'ewallet' 
                         ? `${request.subMethod.charAt(0).toUpperCase() + request.subMethod.slice(1)}` 
                         : request.paymentMethod === 'bank' 
-                          ? 'Bank Transfer' 
-                          : 'Prepaid Card'}
+                          ? 'Chuyển khoản ngân hàng' 
+                          : 'Thẻ cào'}
                     </div>
                     <div className="request-amount">
-                      Amount: {formatPrice(request.amount)}
+                      Số tiền: {formatPrice(request.amount)}
+                      {request.paymentMethod === 'bank' && (
+                        <span className="actual-amount">
+                          {' | '}Số tiền thực nhận: {formatPrice(request.details?.actualAmount || 0)}
+                        </span>
+                      )}
                     </div>
                     <div className="request-balance">
-                      Balance: {request.balance}
+                      Số 🌾: {request.balance}
                     </div>
                   </div>
                   <div className="request-actions">
                     <div className="balance-adjustment">
-                      <label>Adjust Balance:</label>
+                      <label>Điều chỉnh số 🌾:</label>
                       <input 
                         type="number" 
                         value={requestAdjustments[request._id] || request.balance}
@@ -376,13 +385,13 @@ const TopUpManagement = () => {
                       className="confirm-button"
                       onClick={() => handleConfirmRequest(request._id)}
                     >
-                      Confirm
+                      Xác nhận
                     </button>
                     <button 
                       className="decline-button"
                       onClick={() => handleDeclineRequest(request._id)}
                     >
-                      Decline
+                      Từ chối
                     </button>
                   </div>
                 </div>
@@ -414,7 +423,7 @@ const TopUpManagement = () => {
                     <div className="transaction-details">
                       {transaction.transactionType === 'admin' ? (
                         // Admin transaction
-                        <div className="transaction-amount">Số dư đã thêm: +{transaction.amount}</div>
+                        <div className="transaction-amount">Số 🌾 đã thêm: +{transaction.amount}</div>
                       ) : (
                         // User transaction
                         <>
@@ -436,10 +445,10 @@ const TopUpManagement = () => {
                     </div>
                     <div className="transaction-admin">
                       {transaction.adminId ? 
-                        `Processed by: ${transaction.adminId.username}` : 
+                        `Đã xử lý bởi: ${transaction.adminId.username}` : 
                         transaction.transactionType === 'admin' ? 
-                          `Processed by: ${transaction.admin.username}` : 
-                          'Auto-processed'}
+                          `Đã xử lý bởi: ${transaction.admin.username}` : 
+                          'Tự động xử lý'}
                     </div>
                     {transaction.notes && (
                       <div className="transaction-notes">

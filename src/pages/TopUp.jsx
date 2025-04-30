@@ -335,6 +335,10 @@ const TopUp = () => {
             <span className="rule-icon">🦋</span>
             <p>Nếu bạn sử dụng các phương thức thanh toán khác như Visa/Mastercard/Paypal/Vcoin..., vui lòng liên hệ <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>fanpage</a> để được hỗ trợ</p>
           </div>
+          <div className="rule-item">
+            <span className="rule-icon">🦋</span>
+            <p>Hiện tại phương thức thanh toán bằng Momo, ZaloPay chưa khả dụng vì admin lười lập tài khoản .</p>
+          </div>
         </div>
         
       </section>
@@ -538,11 +542,12 @@ const TopUp = () => {
                     <div className="transfer-notes">
                       <div className="note-title">Chú ý</div>
                       <ol className="note-list">
-                        <li>Để lúa được cập nhật nhanh chóng, quý khách vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản ở trên.</li>
-                        <li>Không điền thêm bất kỳ chữ cái hoặc ký tự nào ngoài nội dung đã được cung cấp.</li>
-                        <li>Số dư sẽ được cập nhật trong vòng tối đa 24h sau khi chúng tôi nhận được thanh toán.</li>
+                        <li><strong>QUAN TRỌNG:</strong> Bấm "Gửi yêu cầu thanh toán" sau khi đã quét mã QR hoặc chuyển khoản để hoàn thành giao dịch.</li>
+                        <li>Hiện tại phương thức chuyển khoản ngân hàng chỉ hỗ trợ Vietinbank.</li>
+                        <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản ở trên.</li>
+                        <li>Số dư sẽ được cập nhật trong vòng tối đa 1h sau khi chuyển khoản thành công.</li>
                         <li>
-                          Nếu có thắc mắc về vấn đề chuyển khoản, vui lòng inbox fanpage{' '}  
+                          Nếu có thắc mắc về vấn đề chuyển khoản hoặc chưa nhận được 🌾 1h sau khi thanh toán, vui lòng inbox fanpage{' '}  
                           <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
                             Hội những người yêu thích Light Novel
                           </a>{' '}
