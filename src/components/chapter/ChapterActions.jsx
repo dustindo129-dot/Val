@@ -30,7 +30,7 @@ const ChapterActions = ({
       >
         <FontAwesomeIcon icon={isLiked ? faHeart : farHeart}/>
         {isLiked ? 'Đã thích' : 'Thích'}
-        <span className="like-count">{likeCount}</span>
+        <span className="chapter-like-count">{likeCount}</span>
       </button>
 
       <button

@@ -652,7 +652,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 {/* Translators */}
                 <div className="rd-staff-role rd-role-translator">
                   <span className="rd-role-badge rd-translator-badge">
-                    <FontAwesomeIcon icon={faLanguage} /> Dịch giả:
+                    <FontAwesomeIcon icon={faLanguage} style={{ marginRight: '4px' }} /> Dịch giả:
                   </span>
                 </div>
                 <div className="rd-staff-members">
@@ -663,14 +663,14 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       </a>
                     ))
                   ) : (
-                    <span className="rd-staff-empty">None</span>
+                    <span className="rd-staff-empty">Không có</span>
                   )}
                 </div>
 
                 {/* Editors */}
                 <div className="rd-staff-role rd-role-editor">
                   <span className="rd-role-badge rd-editor-badge">
-                    <FontAwesomeIcon icon={faEdit} /> Biên tập viên:
+                    <FontAwesomeIcon icon={faEdit} style={{ marginRight: '4px' }} /> Biên tập:
                   </span>
                 </div>
                 <div className="rd-staff-members">
@@ -688,7 +688,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 {/* Proofreaders */}
                 <div className="rd-staff-role rd-role-qc">
                   <span className="rd-role-badge rd-qc-badge">
-                    <FontAwesomeIcon icon={faCheckDouble} /> Kiểm tra chất lượng:
+                    <FontAwesomeIcon icon={faCheckDouble} style={{ marginRight: '4px' }} /> Kiểm tra chất lượng:
                   </span>
                 </div>
                 <div className="rd-staff-members">
@@ -715,7 +715,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       <>
                         <div className="rd-staff-role rd-role-translator">
                           <span className="rd-role-badge rd-translator-badge">
-                            <FontAwesomeIcon icon={faLanguage} /> Dịch giả:
+                            <FontAwesomeIcon icon={faLanguage} style={{ marginRight: '4px' }} /> Dịch giả:
                           </span>
                         </div>
                         <div className="rd-staff-members">
@@ -733,7 +733,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       <>
                         <div className="rd-staff-role rd-role-editor">
                           <span className="rd-role-badge rd-editor-badge">
-                            <FontAwesomeIcon icon={faEdit} /> Biên tập viên:
+                            <FontAwesomeIcon icon={faEdit} style={{ marginRight: '4px' }} /> Biên tập:
                           </span>
                         </div>
                         <div className="rd-staff-members">
@@ -751,7 +751,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       <>
                         <div className="rd-staff-role rd-role-qc">
                           <span className="rd-role-badge rd-qc-badge">
-                            <FontAwesomeIcon icon={faCheckDouble} /> Kiểm tra chất lượng:
+                            <FontAwesomeIcon icon={faCheckDouble} style={{ marginRight: '4px' }} /> Kiểm tra chất lượng:
                           </span>
                         </div>
                         <div className="rd-staff-members">

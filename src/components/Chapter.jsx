@@ -113,7 +113,9 @@ const Chapter = () => {
   const { data: chapterData, error: chapterError, isLoading } = useQuery({
     queryKey: ['chapter', chapterId],
     queryFn: async () => {
-      const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}`);
+      const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}/full`, {
+        headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
+      });
 
       // Check localStorage for view timestamp before incrementing view count
       const viewKeyLocal = `chapter_${chapterId}_last_viewed`;
@@ -171,6 +173,17 @@ const Chapter = () => {
   // Extract chapter and novel data
   const chapter = chapterData?.chapter;
   const novel = chapter?.novel || novelData?.novel || {title: "Novel"};
+  // Extract interaction data from the consolidated endpoint
+  const interactions = chapterData?.interactions || {
+    totalLikes: 0,
+    totalRatings: 0,
+    averageRating: '0.0',
+    userInteraction: {
+      liked: false,
+      rating: null,
+      bookmarked: false
+    }
+  };
 
   // Query for module data when we have a moduleId
   const { data: moduleData } = useQuery({
@@ -240,19 +253,6 @@ const Chapter = () => {
   // Use the module chapter list for the dropdown
   const moduleChapters = getModuleChapterList();
 
-  // Query for likes, bookmarks and ratings
-  const { data: interactionData } = useQuery({
-    queryKey: ['chapter-interactions', chapterId],
-    queryFn: async () => {
-      const res = await axios.get(`${config.backendUrl}/api/userchapterinteractions/stats/${chapterId}`, {
-        headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
-      });
-      return res.data;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!chapterId
-  });
-
   // Query for comments
   const { data: comments = [], isLoading: isCommentsLoading } = useQuery({
     queryKey: ['comments', `${novelId}-${chapterId}`],
@@ -275,26 +275,24 @@ const Chapter = () => {
     }
   });
 
-  // Query for user's specific interactions
-  const { data: userInteractions } = useQuery({
-    queryKey: ['user-interactions', chapterId, user?.id],
-    queryFn: async () => {
-      const res = await axios.get(`${config.backendUrl}/api/userchapterinteractions/user/${chapterId}`, {
-        headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
-      });
-      return res.data;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!chapterId && !!user
-  });
-
   // Effect to update interaction stats
   useEffect(() => {
-    if (interactionData) {
-      setLikeCount(interactionData.totalLikes || 0);
-      setRatingCount(interactionData.totalRatings || 0);
-      setAverageRating(interactionData.averageRating || 0);
+    if (interactions) {
+      setLikeCount(interactions.totalLikes || 0);
+      setRatingCount(interactions.totalRatings || 0);
+      setAverageRating(interactions.averageRating || 0);
       setViewCount(chapter?.views || 0);
+      
+      // Update user-specific interaction state if available
+      if (user && interactions.userInteraction) {
+        setIsLiked(interactions.userInteraction.liked || false);
+        setIsBookmarked(interactions.userInteraction.bookmarked || false);
+        setCurrentRating(interactions.userInteraction.rating || 0);
+      } else if (!user) {
+        // Check localStorage for non-logged in users
+        const isBookmarkedLocally = localStorage.getItem(`bookmark_${novelId}_${chapterId}`) === 'true';
+        setIsBookmarked(isBookmarkedLocally);
+      }
     } else {
       // Default to 0 if no interaction data is available
       setLikeCount(0);
@@ -302,27 +300,7 @@ const Chapter = () => {
       setAverageRating(0);
       setViewCount(chapter?.views || 0);
     }
-  }, [interactionData, chapter]);
-
-  // Effect to set user interaction status
-  useEffect(() => {
-    if (userInteractions) {
-      setIsLiked(userInteractions.liked || false);
-      setIsBookmarked(userInteractions.bookmarked || false);
-      setCurrentRating(userInteractions.rating || 0);
-    } else if (user) {
-      // Default state for logged in users without interaction data
-      setIsLiked(false);
-      setIsBookmarked(false);
-      setCurrentRating(0);
-    }
-
-    // Check localStorage for non-logged in users
-    if (!user) {
-      const isBookmarkedLocally = localStorage.getItem(`bookmark_${novelId}_${chapterId}`) === 'true';
-      setIsBookmarked(isBookmarkedLocally);
-    }
-  }, [userInteractions, user, novelId, chapterId]);
+  }, [interactions, chapter, user, novelId, chapterId]);
 
   // Effect to calculate word count
   useEffect(() => {
@@ -620,7 +598,7 @@ const Chapter = () => {
     setLikeCount(newLikeCount);
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/like`,
         { chapterId },
         {
@@ -630,18 +608,28 @@ const Chapter = () => {
         }
       );
 
-      // Invalidate related queries
-      queryClient.invalidateQueries({
-        queryKey: ['chapter-interactions', chapterId]
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['user-interactions', chapterId, user?.id]
+      // Update the local cache with the new like status
+      queryClient.setQueryData(['chapter', chapterId], oldData => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          interactions: {
+            ...oldData.interactions,
+            totalLikes: response.data.totalLikes,
+            userInteraction: {
+              ...oldData.interactions.userInteraction,
+              liked: response.data.liked
+            }
+          }
+        };
       });
     } catch (err) {
       console.error('Failed to like/unlike chapter:', err);
       // Revert optimistic update on error
       setIsLiked(previousLiked);
       setLikeCount(likeCount);
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries(['chapter', chapterId]);
     }
   };
 
@@ -660,7 +648,7 @@ const Chapter = () => {
 
     try {
       // Make API call to bookmark/unbookmark
-      await axios.post(
+      const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/bookmark`,
         { chapterId },
         {
@@ -670,9 +658,19 @@ const Chapter = () => {
         }
       );
 
-      // Invalidate user interactions query
-      queryClient.invalidateQueries({
-        queryKey: ['user-interactions', chapterId, user?.id]
+      // Update the local cache with the new bookmark status
+      queryClient.setQueryData(['chapter', chapterId], oldData => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          interactions: {
+            ...oldData.interactions,
+            userInteraction: {
+              ...oldData.interactions.userInteraction,
+              bookmarked: response.data.bookmarked
+            }
+          }
+        };
       });
       
       // Also invalidate the bookmarked chapter query
@@ -683,6 +681,8 @@ const Chapter = () => {
       console.error('Không thể đánh dấu/bỏ đánh dấu chương:', err);
       // Revert optimistic update on error
       setIsBookmarked(previousBookmarked);
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries(['chapter', chapterId]);
     }
   };
 
@@ -705,17 +705,15 @@ const Chapter = () => {
     },
     onMutate: async (newRating) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries(['chapter-interactions', chapterId]);
-      await queryClient.cancelQueries(['user-interactions', chapterId, user?.id]);
+      await queryClient.cancelQueries(['chapter', chapterId]);
 
-      // Snapshot the previous values
-      const previousStats = queryClient.getQueryData(['chapter-interactions', chapterId]);
-      const previousInteraction = queryClient.getQueryData(['user-interactions', chapterId, user?.id]);
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['chapter', chapterId]);
 
       // Calculate new average rating
-      const oldRating = previousInteraction?.rating || 0;
-      const totalRatings = previousStats?.totalRatings || 0;
-      const currentAvgRating = parseFloat(previousStats?.averageRating || '0');
+      const oldRating = previousData?.interactions?.userInteraction?.rating || 0;
+      const totalRatings = previousData?.interactions?.totalRatings || 0;
+      const currentAvgRating = parseFloat(previousData?.interactions?.averageRating || '0');
 
       let newTotalRatings = totalRatings;
       let newAvgRating = currentAvgRating;
@@ -729,49 +727,43 @@ const Chapter = () => {
         newAvgRating = ((currentAvgRating * totalRatings) - oldRating + newRating) / totalRatings;
       }
 
-      // Optimistically update stats
-      queryClient.setQueryData(['chapter-interactions', chapterId], old => ({
+      // Optimistically update
+      queryClient.setQueryData(['chapter', chapterId], old => ({
         ...old,
-        totalRatings: newTotalRatings,
-        averageRating: newAvgRating.toFixed(1)
+        interactions: {
+          ...old.interactions,
+          totalRatings: newTotalRatings,
+          averageRating: newAvgRating.toFixed(1),
+          userInteraction: {
+            ...old.interactions.userInteraction,
+            rating: newRating
+          }
+        }
       }));
 
-      // Optimistically update user interaction
-      queryClient.setQueryData(['user-interactions', chapterId, user?.id], old => ({
-        ...old,
-        rating: newRating
-      }));
-
-      return { previousStats, previousInteraction };
+      return { previousData };
     },
     onError: (err, variables, context) => {
       // Reset to previous values on error
-      if (context?.previousStats) {
-        queryClient.setQueryData(['chapter-interactions', chapterId], context.previousStats);
-      }
-      if (context?.previousInteraction) {
-        queryClient.setQueryData(['user-interactions', chapterId, user?.id], context.previousInteraction);
+      if (context?.previousData) {
+        queryClient.setQueryData(['chapter', chapterId], context.previousData);
       }
       console.error('Failed to update rating:', err);
     },
     onSuccess: (response) => {
       // Update with actual server data
-      queryClient.setQueryData(['chapter-interactions', chapterId], old => ({
+      queryClient.setQueryData(['chapter', chapterId], old => ({
         ...old,
-        totalRatings: response.ratingsCount || old?.totalRatings || 0,
-        averageRating: response.averageRating
+        interactions: {
+          ...old.interactions,
+          totalRatings: response.totalRatings || old?.interactions?.totalRatings || 0,
+          averageRating: response.averageRating,
+          userInteraction: {
+            ...old.interactions.userInteraction,
+            rating: response.rating
+          }
+        }
       }));
-
-      queryClient.setQueryData(['user-interactions', chapterId, user?.id], old => ({
-        ...old,
-        rating: response.rating
-      }));
-
-      // Invalidate queries to ensure consistency
-      queryClient.invalidateQueries({
-        queryKey: ['chapter-interactions', chapterId],
-        exact: true
-      });
 
       setShowRatingModal(false);
     }
@@ -884,7 +876,7 @@ const Chapter = () => {
     return (
       <div className="loading">
         <FontAwesomeIcon icon={faSpinner} spin style={{fontSize: '2rem', marginBottom: '1rem'}}/>
-        <p>Loading chapter...</p>
+        <p>Đang tải chương...</p>
       </div>
     );
   }
@@ -896,7 +888,7 @@ const Chapter = () => {
 
   // Show not found state
   if (!chapter || !novel) {
-    return <div className="error">Chapter not found</div>;
+    return <div className="error">Không tìm thấy chương</div>;
   }
 
   return (
