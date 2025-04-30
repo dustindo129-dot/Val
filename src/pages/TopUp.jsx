@@ -121,8 +121,8 @@ const TopUp = () => {
     setTransferContent(newTransferContent);
 
     // Create VietQR URL
-    const bankId = "TCB"; // Techcombank code
-    const accountNo = "19030912273013";
+    const bankId = "ICB"; // Vietinbank code
+    const accountNo = "100868151423";
     const vietQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${selectedAmount.price}&addInfo=${newTransferContent}`;
     
     // Update QR code URL
@@ -210,9 +210,9 @@ const TopUp = () => {
         const bankTransferContent = transferContent || generateRandomContent(8);
         
         requestData.details = {
-          bankName: "Techcombank",
+          bankName: "VIETINBANK",
           accountName: "TRUONG TAN TAI",
-          accountNumber: "19030912273013",
+          accountNumber: "100868151423",
           transferContent: bankTransferContent
         };
       } else if (paymentMethod === 'prepaidCard') {
@@ -360,7 +360,7 @@ const TopUp = () => {
             >
               <div className="payment-logos">
                 <div className="payment-logo">
-                  <img src="https://Valvrareteam.b-cdn.net/techcombank.png" alt="Banks" />
+                  <img src="https://Valvrareteam.b-cdn.net/vietinbank.jpg" alt="Banks" />
                 </div>
               </div>
               <p>Chuyển khoản ngân hàng</p>
@@ -497,12 +497,12 @@ const TopUp = () => {
                     <div className="bank-transfer-info">
                       <div className="info-row">
                         <span className="info-label">Ngân hàng:</span>
-                        <span className="info-value">Techcombank</span>
+                        <span className="info-value">Vietinbank</span>
                       </div>
                       <div className="info-row">
                         <span className="info-label">Tài khoản nhận:</span>
-                        <span className="info-value">19030912273013</span>
-                        <button className="copy-button" onClick={() => {navigator.clipboard.writeText("19030912273013")}}>[ Copy ]</button>
+                        <span className="info-value">100868151423</span>
+                        <button className="copy-button" onClick={() => {navigator.clipboard.writeText("100868151423")}}>[ Copy ]</button>
                       </div>
                       <div className="info-row">
                         <span className="info-label">Tên người nhận:</span>

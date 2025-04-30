@@ -1399,11 +1399,11 @@ const Market = () => {
               
               {showHistory ? (
                 <div className="request-history-container">
-                  <h3>Request History</h3>
+                  <h3>Lịch sử yêu cầu</h3>
                   {historyLoading ? (
-                    <p>Loading history...</p>
+                    <p>Đang tải lịch sử...</p>
                   ) : requestHistory.length === 0 ? (
-                    <p>No request history found</p>
+                    <p>Không có lịch sử yêu cầu</p>
                   ) : (
                     <div className="request-history-list">
                       {requestHistory.map(request => (
@@ -1411,7 +1411,7 @@ const Market = () => {
                           <div className="history-header">
                             <div className="history-user">
                               <span className="history-username">{request.user.username}</span>
-                              <span className="history-type">{request.type === 'new' ? 'New Novel' : 'Module Opening'}</span>
+                              <span className="history-type">{request.type === 'new' ? 'Truyện mới' : 'Mở chương/tập có sẵn'}</span>
                               <span className={`history-status status-${request.status}`}>
                                 {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                               </span>
@@ -1431,7 +1431,7 @@ const Market = () => {
                           )}
                           {request.novel && (
                             <div className="history-novel">
-                              <span>Novel: </span>
+                              <span>Truyện: </span>
                               <Link to={`/novel/${request.novel._id}`}>{request.novel.title}</Link>
                               {request.module && (
                                 <span className="module-info">- {request.module.title}</span>
@@ -1441,15 +1441,15 @@ const Market = () => {
                               )}
                             </div>
                           )}
-                          <div className="history-deposit">Deposit: {request.deposit}</div>
+                          <div className="history-deposit">Cọc: {request.deposit}</div>
                           
                           {/* Only show contributions section if contributions exist */}
                           {contributions[request._id] && contributions[request._id].length > 0 && (
                             <div className="history-contributions">
                               <h4>
                                 {loadingContributions.has(request._id) 
-                                  ? 'Loading contributions...' 
-                                  : `Contributions (${contributions[request._id].length})`}
+                                  ? 'Đang tải đóng góp...' 
+                                  : `Đóng góp (${contributions[request._id].length})`}
                               </h4>
                               
                               {contributions[request._id].map(contribution => (
@@ -1466,7 +1466,7 @@ const Market = () => {
                                   {contribution.note && (
                                     <div className="contribution-note">{contribution.note}</div>
                                   )}
-                                  <div className="contribution-amount">Amount: {contribution.amount}</div>
+                                  <div className="contribution-amount">Góp 🌾: {contribution.amount}</div>
                                 </div>
                               ))}
                             </div>
