@@ -62,6 +62,13 @@ const Market = () => {
     fetchData();
   }, [isAuthenticated, user, sortOrder]);
 
+  // Add new effect to load contributions for all requests when requests change
+  useEffect(() => {
+    if (requests.length > 0) {
+      fetchAllContributions();
+    }
+  }, [requests]);
+
   // Fetch user balance and active requests
   const fetchData = async () => {
     if (!isAuthenticated) {
@@ -112,6 +119,45 @@ const Market = () => {
       setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // New function to fetch contributions for all loaded requests
+  const fetchAllContributions = async () => {
+    try {
+      // Create a Set of request IDs to avoid duplicate requests
+      const requestIds = new Set(requests.map(req => req._id));
+      
+      // Create a temporary object to store contributions by request ID
+      const newContributions = { ...contributions };
+      
+      // For each request, fetch contributions if not already loaded
+      for (const requestId of requestIds) {
+        if (!contributions[requestId] && !loadingContributions.has(requestId)) {
+          setLoadingContributions(prev => new Set([...prev, requestId]));
+          
+          try {
+            const response = await axios.get(
+              `${config.backendUrl}/api/contributions/request/${requestId}`
+            );
+            
+            // Only store and display if there are actual contributions
+            if (response.data.length > 0) {
+              newContributions[requestId] = response.data;
+            }
+          } finally {
+            setLoadingContributions(prev => {
+              const next = new Set(prev);
+              next.delete(requestId);
+              return next;
+            });
+          }
+        }
+      }
+      
+      setContributions(newContributions);
+    } catch (err) {
+      console.error('Failed to fetch contributions:', err);
     }
   };
 
@@ -769,9 +815,9 @@ const Market = () => {
     }
   };
 
-  // Fetch contributions for a request
+  // Fetch contributions for a request - modify to avoid duplicate fetches
   const fetchContributions = async (requestId) => {
-    if (loadingContributions.has(requestId)) {
+    if (loadingContributions.has(requestId) || contributions[requestId]) {
       return;
     }
 
@@ -1004,6 +1050,7 @@ const Market = () => {
                 <li>Chọn 1 trong 2 option: Mở ngay hoặc Đăng bài gọi vốn.
                    <p>Nếu chọn mở ngay, số cọc sẽ lập tức được trừ vào số 🌾 cần để mở chương/tập, tự động mở nếu con số giảm xuống 0.</p>
                    <p>Nếu chọn Đăng bài gọi vốn, thì giống như gửi yêu cầu ở trên, có thể rút lại sau 24h, admin sẽ chấp nhận yêu cầu khi thấy số lượng 🌾 do mọi người góp đủ để mở chương/tập, hoặc sau quãng thời gian đủ lâu.</p></li>
+                <li>Nếu chương/tập không có sẵn, và bạn muốn yêu cầu dịch giả dịch phần tiếp, hãy chọn tên bộ truyện, bỏ trống phần chương/tập, và chọn đăng bài gọi vốn.</li>
               </ul>
             </div>
 
@@ -1196,7 +1243,7 @@ const Market = () => {
                         )}
                         
                         {showNovelResults && novelSearchQuery.length >= 3 && novelSearchResults.length === 0 && !isSearching && (
-                          <div className="no-results">No novels found</div>
+                          <div className="no-results">Không tìm thấy truyện</div>
                         )}
                       </div>
                       
@@ -1214,7 +1261,7 @@ const Market = () => {
                               </option>
                             ))}
                           </select>
-                          {loadingModules && <span className="loading-indicator">Loading...</span>}
+                          {loadingModules && <span className="loading-indicator">Đang tải...</span>}
                         </div>
                       )}
                       
@@ -1232,7 +1279,7 @@ const Market = () => {
                               </option>
                             ))}
                           </select>
-                          {loadingChapters && <span className="loading-indicator">Loading...</span>}
+                          {loadingChapters && <span className="loading-indicator">Đang tải...</span>}
                         </div>
                       )}
                     </div>
