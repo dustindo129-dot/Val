@@ -429,12 +429,12 @@ const NovelList = () => {
         const diffMonth = Math.floor(diffDay / 30);
         const diffYear = Math.floor(diffMonth / 12);
 
-        if (diffYear > 0) return `${diffYear} ${diffYear === 1 ? 'year' : 'years'} ago`;
-        if (diffMonth > 0) return `${diffMonth} ${diffMonth === 1 ? 'month' : 'months'} ago`;
-        if (diffDay > 0) return `${diffDay} ${diffDay === 1 ? 'day' : 'days'} ago`;
-        if (diffHour > 0) return `${diffHour} ${diffHour === 1 ? 'hour' : 'hours'} ago`;
-        if (diffMin > 0) return `${diffMin} ${diffMin === 1 ? 'minute' : 'minutes'} ago`;
-        return 'Just now';
+        if (diffYear > 0) return `${diffYear} năm trước`;
+        if (diffMonth > 0) return `${diffMonth} tháng trước`;
+        if (diffDay > 0) return `${diffDay} ngày trước`;
+        if (diffHour > 0) return `${diffHour} giờ trước`;
+        if (diffMin > 0) return `${diffMin} phút trước`;
+        return 'Vừa xong';
     };
 
     // Function to get genre tags with proper styling

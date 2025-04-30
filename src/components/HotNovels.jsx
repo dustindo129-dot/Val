@@ -45,12 +45,12 @@ const NovelCard = memo(({ novel }) => {
             </div>
             <div className="hot-novel-info">
                 <h3 className="hot-novel-title">{novel.title}</h3>
-                <span className="hot-novel-status" data-status={novel.status || 'Ongoing'}>
-          {novel.status || 'Ongoing'}
-        </span>
+                <span className="hot-novel-status" data-status={novel.status || 'Đang tiến hành'}>
+                    {novel.status || 'Đang tiến hành'}
+                </span>
                 {latestChapter && (
                     <span className="hot-novel-chapter">
-            {latestChapter.title || `Chapter ${latestChapter.chapterNumber}`}
+                {latestChapter.title || `Chương ${latestChapter.chapterNumber}`}
           </span>
                 )}
             </div>
