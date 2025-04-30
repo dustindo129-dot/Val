@@ -27,16 +27,16 @@ const formatRelativeTime = (dateString) => {
   const diffInSeconds = Math.floor((now - date) / 1000);
   
   if (diffInSeconds < 60) {
-    return 'just now';
+    return 'Vừa xong';
   } else if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60);
-    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return `${minutes} phút trước`;
   } else if (diffInSeconds < 86400) {
     const hours = Math.floor(diffInSeconds / 3600);
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return `${hours} giờ trước`;
   } else if (diffInSeconds < 2592000) {
     const days = Math.floor(diffInSeconds / 86400);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
+    return `${days} ngày trước`;
   } else {
     return date.toLocaleDateString();
   }

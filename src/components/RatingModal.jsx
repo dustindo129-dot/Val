@@ -99,7 +99,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
   
   const handleSubmit = async () => {
     if (selectedRating === 0) {
-      setError('Please select a rating before submitting.');
+      setError('Vui lòng chọn đánh giá trước khi gửi.');
       return;
     }
 
@@ -107,7 +107,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
       await rateMutation.mutateAsync(selectedRating);
     } catch (error) {
       console.error('Error submitting rating:', error);
-      setError('Failed to update rating. Please try again.');
+      setError('Không thể cập nhật đánh giá. Vui lòng thử lại.');
     }
   };
   
@@ -153,9 +153,9 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
           </div>
         )}
         
-        <div className="rating-modal-footer">
+        <div className="rating-modal-action-footer">
           <button 
-            className="cancel-button" 
+            className="rating-modal-cancel-btn" 
             onClick={handleCancel}
             disabled={rateMutation.isLoading}
           >
@@ -163,7 +163,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
           </button>
           
           <button 
-            className="submit-button" 
+            className="rating-modal-submit-btn" 
             onClick={handleSubmit}
             disabled={rateMutation.isLoading || selectedRating === 0}
           >

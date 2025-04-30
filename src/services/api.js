@@ -94,7 +94,7 @@ const api = {
   getBookmarkedChapter: async (novelId) => {
     try {
       const response = await axios.get(
-        `${config.backendUrl}/api/user-chapter-interactions/bookmark/${novelId}`,
+        `${config.backendUrl}/api/userchapterinteractions/bookmark/${novelId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -111,7 +111,7 @@ const api = {
   toggleChapterBookmark: async (chapterId) => {
     try {
       const response = await axios.post(
-        `${config.backendUrl}/api/user-chapter-interactions/bookmark`,
+        `${config.backendUrl}/api/userchapterinteractions/bookmark`,
         { chapterId },
         {
           headers: {

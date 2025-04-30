@@ -123,6 +123,34 @@ const Chapter = () => {
     enabled: !!chapterId
   });
 
+  // Add specific query for user's interaction with this chapter
+  const { data: userInteraction } = useQuery({
+    queryKey: ['user-chapter-interaction', chapterId, user?.id],
+    queryFn: async () => {
+      try {
+        const response = await axios.get(
+          `${config.backendUrl}/api/userchapterinteractions/user/${chapterId}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching user chapter interaction:', error);
+        return { liked: false, rating: 0, bookmarked: false };
+      }
+    },
+    enabled: !!chapterId && !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    onSuccess: (data) => {
+      if (data) {
+        if (typeof data.rating === 'number') {
+          setCurrentRating(data.rating);
+        }
+        setIsLiked(data.liked || false);
+        setIsBookmarked(data.bookmarked || false);
+      }
+    }
+  });
+
   // Check if we should count a view
   const viewKeyLocal = `chapter_${chapterId}_last_viewed`;
   const lastViewed = localStorage.getItem(viewKeyLocal);
@@ -149,7 +177,7 @@ const Chapter = () => {
         // Make the view count request
         try {
           const viewResponse = await axios.post(
-            `${config.backendUrl}/api/user-chapter-interactions/view/${chapterId}`, 
+            `${config.backendUrl}/api/userchapterinteractions/view/${chapterId}`, 
             {}, 
             {
               headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {},
@@ -306,24 +334,25 @@ const Chapter = () => {
     }
   });
 
-  // Effect to update interaction stats
+  // Effect to update interaction stats and ensure state consistency
+  useEffect(() => {
+    if (userInteraction) {
+      // Set interaction states directly from the user interaction data
+      if (typeof userInteraction.rating === 'number') {
+        setCurrentRating(userInteraction.rating);
+      }
+      setIsLiked(userInteraction.liked || false);
+      setIsBookmarked(userInteraction.bookmarked || false);
+    }
+  }, [userInteraction]);
+
+  // Effect to update interaction stats from chapter data
   useEffect(() => {
     if (interactions) {
       setLikeCount(interactions.totalLikes || 0);
       setRatingCount(interactions.totalRatings || 0);
       setAverageRating(interactions.averageRating || 0);
       setViewCount(chapter?.views || 0);
-      
-      // Update user-specific interaction state if available
-      if (user && interactions.userInteraction) {
-        setIsLiked(interactions.userInteraction.liked || false);
-        setIsBookmarked(interactions.userInteraction.bookmarked || false);
-        setCurrentRating(interactions.userInteraction.rating || 0);
-      } else if (!user) {
-        // Check localStorage for non-logged in users
-        const isBookmarkedLocally = localStorage.getItem(`bookmark_${novelId}_${chapterId}`) === 'true';
-        setIsBookmarked(isBookmarkedLocally);
-      }
     } else {
       // Default to 0 if no interaction data is available
       setLikeCount(0);
@@ -331,7 +360,7 @@ const Chapter = () => {
       setAverageRating(0);
       setViewCount(chapter?.views || 0);
     }
-  }, [interactions, chapter, user, novelId, chapterId]);
+  }, [interactions, chapter]);
 
   // Effect to calculate word count
   useEffect(() => {
@@ -639,6 +668,12 @@ const Chapter = () => {
         }
       );
 
+      // Update the user interaction cache as well
+      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
+        ...(old || {}),
+        liked: response.data.liked
+      }));
+
       // Update the local cache with the new like status
       queryClient.setQueryData(['chapter', chapterId], oldData => {
         if (!oldData) return oldData;
@@ -661,6 +696,7 @@ const Chapter = () => {
       setLikeCount(likeCount);
       // Refetch to ensure consistency
       queryClient.invalidateQueries(['chapter', chapterId]);
+      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
     }
   };
 
@@ -704,16 +740,26 @@ const Chapter = () => {
         };
       });
       
+      // Update user interaction cache as well
+      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
+        ...(old || {}),
+        bookmarked: response.data.bookmarked
+      }));
+      
       // Also invalidate the bookmarked chapter query
       queryClient.invalidateQueries({
         queryKey: ['bookmarked-chapter', novelId, user?.id]
       });
+      
+      // Invalidate user interaction query
+      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
     } catch (err) {
       console.error('Không thể đánh dấu/bỏ đánh dấu chương:', err);
       // Revert optimistic update on error
       setIsBookmarked(previousBookmarked);
       // Refetch to ensure consistency
       queryClient.invalidateQueries(['chapter', chapterId]);
+      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
     }
   };
 
@@ -737,12 +783,14 @@ const Chapter = () => {
     onMutate: async (newRating) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries(['chapter', chapterId]);
+      await queryClient.cancelQueries(['user-chapter-interaction', chapterId, user?.id]);
 
-      // Snapshot the previous value
+      // Snapshot the previous values
       const previousData = queryClient.getQueryData(['chapter', chapterId]);
+      const previousInteraction = queryClient.getQueryData(['user-chapter-interaction', chapterId, user?.id]);
 
       // Calculate new average rating
-      const oldRating = previousData?.interactions?.userInteraction?.rating || 0;
+      const oldRating = previousInteraction?.rating || 0;
       const totalRatings = previousData?.interactions?.totalRatings || 0;
       const currentAvgRating = parseFloat(previousData?.interactions?.averageRating || '0');
 
@@ -758,7 +806,7 @@ const Chapter = () => {
         newAvgRating = ((currentAvgRating * totalRatings) - oldRating + newRating) / totalRatings;
       }
 
-      // Optimistically update
+      // Optimistically update chapter data cache
       queryClient.setQueryData(['chapter', chapterId], old => ({
         ...old,
         interactions: {
@@ -772,30 +820,56 @@ const Chapter = () => {
         }
       }));
 
-      return { previousData };
+      // Optimistically update user interaction cache
+      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
+        ...(old || {}),
+        rating: newRating
+      }));
+
+      return { previousData, previousInteraction };
     },
     onError: (err, variables, context) => {
       // Reset to previous values on error
       if (context?.previousData) {
         queryClient.setQueryData(['chapter', chapterId], context.previousData);
       }
+      if (context?.previousInteraction) {
+        queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], context.previousInteraction);
+      }
       console.error('Failed to update rating:', err);
     },
     onSuccess: (response) => {
       // Update with actual server data
-      queryClient.setQueryData(['chapter', chapterId], old => ({
-        ...old,
-        interactions: {
-          ...old.interactions,
-          totalRatings: response.totalRatings || old?.interactions?.totalRatings || 0,
-          averageRating: response.averageRating,
-          userInteraction: {
-            ...old.interactions.userInteraction,
-            rating: response.rating
+      queryClient.setQueryData(['chapter', chapterId], old => {
+        if (!old) return old;
+        return {
+          ...old,
+          interactions: {
+            ...old.interactions,
+            totalRatings: response.totalRatings || old?.interactions?.totalRatings || 0,
+            averageRating: response.averageRating || old?.interactions?.averageRating || '0.0',
+            userInteraction: {
+              ...old.interactions.userInteraction,
+              rating: response.rating
+            }
           }
-        }
+        };
+      });
+
+      // Update user interaction cache with the new rating
+      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
+        ...(old || {}),
+        rating: response.rating
       }));
 
+      // Set local state
+      setCurrentRating(response.rating);
+      
+      // Invalidate related queries to ensure consistency
+      queryClient.invalidateQueries(['chapter', chapterId]);
+      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
+
+      // Make sure to close the modal
       setShowRatingModal(false);
     }
   });
@@ -803,20 +877,27 @@ const Chapter = () => {
   /**
    * Handles submitting a rating for the chapter
    */
-  const handleSubmitRating = async () => {
+  const handleSubmitRating = async (newRating) => {
     if (!user) {
       alert('Vui lòng đăng nhập để đánh giá chương này');
       setShowRatingModal(false);
       return;
     }
 
-    if (currentRating === 0) {
+    // Use the rating passed from the modal or fallback to currentRating
+    const ratingToSubmit = typeof newRating === 'number' ? newRating : currentRating;
+    
+    if (ratingToSubmit === 0) {
       alert('Vui lòng chọn đánh giá');
       return;
     }
 
     try {
-      await rateMutation.mutateAsync(currentRating);
+      // Submit the rating through the mutation
+      await rateMutation.mutateAsync(ratingToSubmit);
+      
+      // Explicitly close the modal
+      setShowRatingModal(false);
     } catch (error) {
       console.error('Không thể đánh giá chương:', error);
       alert('Không thể gửi đánh giá. Vui lòng thử lại.');

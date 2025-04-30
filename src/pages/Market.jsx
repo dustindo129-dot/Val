@@ -1069,8 +1069,8 @@ const Market = () => {
             </div>
 
             <div className="overview-section">
-              <p className="important-note"><strong><em>Không có giới hạn cho bất kì yêu cầu nào của bạn, dù là truyện Eng hay Jap, bất cứ gì cũng có thể được dịch ra tiếng Việt.</em></strong></p>
-              <p className="important-note"><strong><em>Giá niêm yết: 4đ/1 chữ với truyện Eng, 6đ/1 chữ với truyện Jap.</em></strong></p>
+              <p className="important-note"><strong><em>Không có giới hạn cho bất kì yêu cầu nào của bạn, dù là truyện tiếng Anh, Nhật hay Trung, bất cứ gì cũng có thể được dịch ra tiếng Việt.</em></strong></p>
+              <p className="important-note"><strong><em>Giá niêm yết: 4đ/1 chữ với truyện tiếng Anh/Trung, 6đ/1 chữ với truyện tiếng Nhật.</em></strong></p>
             </div>
 
             <div className="overview-section">
@@ -1529,6 +1529,7 @@ const Market = () => {
                             <span className="like-icon">
                               {likingRequests.has(request._id) ? '⏳' : isLikedByCurrentUser ? '❤️' : '🤍'}
                             </span>
+                            <span className="like-text">Thích</span>
                             <span className="like-count">{request.likes ? request.likes.length : 0}</span>
                           </button>
                           

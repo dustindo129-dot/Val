@@ -184,7 +184,7 @@ const ModuleForm = memo(({
             borderRadius: '4px',
             cursor: 'pointer'
           }}>
-            Hủy bỏ
+            Hủy
           </button>
         </div>
       </form>

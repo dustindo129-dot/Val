@@ -585,6 +585,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                   <span className="like-icon">
                     {likingComments.has(comment._id) ? '⏳' : isLikedByCurrentUser ? '❤️' : '🤍'}
                   </span>
+                  <span className="like-text">Thích</span>
                   <span className="like-count">{comment.likes ? comment.likes.length : 0}</span>
                 </button>
                 <button 

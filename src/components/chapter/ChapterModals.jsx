@@ -127,8 +127,29 @@ export const RatingModal = ({
   setCurrentRating,
   handleSubmitRating
 }) => {
+  // Store temporary rating
+  const [tempRating, setTempRating] = useState(currentRating);
+  
+  // Update tempRating when modal opens or currentRating changes
+  React.useEffect(() => {
+    if (showRatingModal || currentRating !== tempRating) {
+      setTempRating(currentRating);
+    }
+  }, [showRatingModal, currentRating]);
+  
   // Early return if modal is not shown
   if (!showRatingModal) return null;
+
+  const handleCancel = () => {
+    // Reset temporary rating to the current rating when canceling
+    setTempRating(currentRating);
+    setShowRatingModal(false);
+  };
+
+  const handleSubmit = () => {
+    // Call the submission handler with the temporary rating
+    handleSubmitRating(tempRating);
+  };
 
   return (
     <div className="rating-modal-container">
@@ -137,7 +158,7 @@ export const RatingModal = ({
           <h3>Đánh giá chương</h3>
           <button 
             className="close-modal-btn"
-            onClick={() => setShowRatingModal(false)}
+            onClick={handleCancel}
           >
             <FontAwesomeIcon icon={faTimes} />
           </button>
@@ -148,39 +169,39 @@ export const RatingModal = ({
             {[1, 2, 3, 4, 5].map(rating => (
               <span 
                 key={rating}
-                onClick={() => setCurrentRating(rating)}
-                className={`star-icon ${currentRating >= rating ? 'active' : ''}`}
+                onClick={() => setTempRating(rating)}
+                className={`star-icon ${tempRating >= rating ? 'active' : ''}`}
               >
                 <FontAwesomeIcon 
-                  icon={currentRating >= rating ? fasStar : farStar} 
+                  icon={tempRating >= rating ? fasStar : farStar} 
                   size="2x"
                 />
               </span>
             ))}
           </div>
           <p className="rating-text">
-            {currentRating === 1 && "Poor"}
-            {currentRating === 2 && "Fair"}
-            {currentRating === 3 && "Good"}
-            {currentRating === 4 && "Very Good"}
-            {currentRating === 5 && "Excellent"}
-            {currentRating === 0 && "Select Rating"}
+            {tempRating === 1 && "Kém"}
+            {tempRating === 2 && "Trung bình"}
+            {tempRating === 3 && "Tốt"}
+            {tempRating === 4 && "Rất tốt"}
+            {tempRating === 5 && "Xuất sắc"}
+            {tempRating === 0 && "Chọn đánh giá"}
           </p>
         </div>
         
         <div className="rating-modal-footer">
           <button 
             className="cancel-rating-btn"
-            onClick={() => setShowRatingModal(false)}
+            onClick={handleCancel}
           >
-            Cancel
+            Hủy
           </button>
           <button 
             className="submit-rating-btn"
-            onClick={handleSubmitRating}
-            disabled={currentRating === 0}
+            onClick={handleSubmit}
+            disabled={tempRating === 0}
           >
-            Submit Rating
+            Gửi đánh giá
           </button>
         </div>
       </div>
