@@ -260,13 +260,13 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       return 'vừa xong';
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} phút${minutes > 1 ? 's' : ''} trước`;
+      return `${minutes} phút trước`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} giờ${hours > 1 ? 's' : ''} trước`;
+      return `${hours} giờ trước`;
     } else if (diffInSeconds < 2592000) {
       const days = Math.floor(diffInSeconds / 86400);
-      return `${days} ngày${days > 1 ? 's' : ''} trước`;
+      return `${days} ngày trước`;
     } else {
       return date.toLocaleDateString();
     }

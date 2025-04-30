@@ -102,7 +102,7 @@ const ModuleList = memo(({
                   </div>
                   {module.mode === 'paid' && (
                     <div className="module-mode-tag">
-                      <span className="mode-tag mode-paid">PAID</span>
+                      <span className="mode-tag mode-paid">TRẢ PHÍ</span>
                       {module.moduleBalance > 0 && (
                         <div className="module-balance-row">
                           <span className="module-balance">{module.moduleBalance}</span>
@@ -117,7 +117,7 @@ const ModuleList = memo(({
               <div className="module-header">
                 <div className="module-title-area">
                   <h3 className="module-title">
-                    {module.title || 'Untitled Module'}
+                    {module.title || 'Tập không có tên'}
                   </h3>
                 </div>
                 
@@ -126,25 +126,25 @@ const ModuleList = memo(({
                     <button
                       className="edit-module-btn"
                       onClick={() => handleEditModule(module)}
-                      title="Edit module"
+                      title="Sửa tập"
                     >
-                      Edit
+                      Sửa
                     </button>
                     {canDelete && (
                       <button
                         className="delete-module-btn"
                         onClick={() => handleModuleDelete(module._id)}
-                        title="Delete module"
+                        title="Xóa tập"
                       >
-                        Delete
+                        Xóa
                       </button>
                     )}
                     <Link
                       to={`/novel/${novelId}/module/${module._id}/add-chapter`}
                       className="add-chapter-btn"
-                      title="Add chapter to this module"
+                      title="Thêm chương vào tập"
                     >
-                      Add Chapter
+                      Thêm chương
                     </Link>
                   </div>
                 )}
@@ -156,9 +156,9 @@ const ModuleList = memo(({
                   <div className="locked-layer">
                     <div className="locked-content-message">
                       <FontAwesomeIcon icon={faLock} className="lock-icon" />
-                      <p>Need {module.moduleBalance} 🌾 to unlock. Please visit market!</p>
-                      <p>{pendingRequestsCount} request{pendingRequestsCount !== 1 ? 's' : ''} pending</p>
-                      <Link to="/market" className="go-to-market-btn">Go to market</Link>
+                      <p>Cần {module.moduleBalance} 🌾 để mở khóa. Vui lòng đến bảng yêu cầu!</p>
+                      <p>{pendingRequestsCount} yêu cầu{pendingRequestsCount !== 1 ? 's' : ''} đang chờ</p>
+                      <Link to="/market" className="go-to-market-btn">Đến bảng yêu cầu</Link>
                     </div>
                   </div>
                 )}

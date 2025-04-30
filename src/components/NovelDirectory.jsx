@@ -17,25 +17,25 @@ import cdnConfig from '../config/bunny';
 
 // Genre categories for filtering
 const genreCategories = {
-  'Format & Origin': [
+  'Định Dạng và Nguồn Gốc': [
     'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
     'Web Novel', 'One shot'
   ],
-  'Target Audience': [
+  'Đối Tượng': [
     'Seinen', 'Shounen', 'Josei', 'Shoujo'
   ],
-  'Main Genres': [
+  'Thể Loại Chính': [
     'Action', 'Adventure', 'Comedy', 'Drama', 'Ecchi', 'Fantasy',
     'Historical', 'Horror', 'Mystery', 'Romance', 'Science Fiction',
     'Slice of Life', 'Supernatural', 'Suspense', 'Tragedy',
     'Magic', 'Psychological'
   ],
-  'Character & Relationship Features': [
+  'Đặc Trưng Quan Hệ và Nhân Vật': [
     'Age Gap', 'Boys Love', 'Character Growth', 'Different Social Status',
     'Female Protagonist', 'Gender Bender', 'Harem', 'Incest',
     'Mature', 'Netorare', 'Reverse Harem', 'Yuri'
   ],
-  'Settings & Worlds': [
+  'Thiết Lập và Thế Giới': [
     'Cooking', 'Game', 'Isekai', 'Martial Arts', 'Mecha', 'Military',
     'Otome Game', 'Parody', 'School Life', 'Slow Life', 'Sports',
     'Super Power', 'Wars', 'Workplace'
@@ -489,7 +489,7 @@ const NovelDirectory = () => {
             <div className="section-headers directory">
               <h2>DANH SÁCH TRUYỆN</h2>
               <div className="results-count directory">
-                Hiển thị {novels.length} truyện trong tổng số {totalItems} truyện
+                Hiển thị {novels.length} trong tổng số {totalItems} truyện
               </div>
             </div>
             <div className="novel-grid directory">

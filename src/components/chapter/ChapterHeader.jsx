@@ -26,7 +26,7 @@ const ChapterHeader = ({
   return (
     <header className="chapter-header">
       <div className="chapter-breadcrumb">
-        <a href="/" className="breadcrumb-item">Home</a>
+        <a href="/" className="breadcrumb-item">Trang chủ</a>
         <span className="breadcrumb-separator">&gt;</span>
         <a href={`/novel/${novelId}`} className="breadcrumb-item">{novel?.title}</a>
         <span className="breadcrumb-separator">&gt;</span>

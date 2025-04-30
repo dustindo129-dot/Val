@@ -84,7 +84,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   const bookmarkMutation = useMutation({
     mutationFn: () => {
       if (!novelId) {
-        throw new Error("Cannot bookmark: Novel ID is missing");
+        throw new Error("Không thể đánh dấu: ID truyện không tồn tại");
       }
       return api.toggleBookmark(novelId);
     },
@@ -130,8 +130,8 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
       }
     },
     onError: (error) => {
-      console.error("Bookmark error:", error);
-      alert("Failed to toggle bookmark. Please try again.");
+      console.error("Lỗi đánh dấu:", error);
+      alert("Không thể đánh dấu: Vui lòng thử lại.");
     }
   });
   
@@ -200,22 +200,22 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   const toggleLike = () => {
     // Use username presence instead of isAuthenticated flag
     if (!user?.username) {
-      alert('Please log in to like novels');
+      alert('Vui lòng đăng nhập để thích truyện');
       return;
     }
     
     // Validate token presence
     const token = localStorage.getItem('token');
     if (!token) {
-      console.error("Token missing when trying to like novel");
-      alert("Authentication error. Please log out and log in again.");
+      console.error("Token không tồn tại khi thích truyện");
+      alert("Lỗi xác thực. Vui lòng đăng xuất và đăng nhập lại.");
       return;
     }
     
     // Check if we have a novel ID
     if (!novelId) {
-      console.error("Cannot like: Novel ID is missing");
-      alert("Error: Cannot identify the novel. Please try refreshing the page.");
+      console.error("Không thể thích: ID truyện không tồn tại");
+      alert("Lỗi: Không thể xác định truyện. Vui lòng thử tải lại trang.");
       return;
     }
 
@@ -233,22 +233,22 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   const toggleBookmark = () => {
     // Use username presence instead of isAuthenticated flag
     if (!user?.username) {
-      alert('Please log in to bookmark novels');
+      alert('Vui lòng đăng nhập để đánh dấu truyện');
       return;
     }
     
     // Validate token presence
     const token = localStorage.getItem('token');
     if (!token) {
-      console.error("Token missing when trying to bookmark novel");
-      alert("Authentication error. Please log out and log in again.");
+      console.error("Token không tồn tại khi đánh dấu truyện");
+      alert("Lỗi xác thực. Vui lòng đăng xuất và đăng nhập lại.");
       return;
     }
     
     // Check if we have a novel ID
     if (!novelId) {
-      console.error("Cannot bookmark: Novel ID is missing");
-      alert("Error: Cannot identify the novel. Please try refreshing the page.");
+      console.error("Không thể đánh dấu: ID truyện không tồn tại");
+      alert("Lỗi: Không thể xác định truyện. Vui lòng thử tải lại trang.");
       return;
     }
     
@@ -259,7 +259,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   const handleRatingClick = () => {
     // Use username presence instead of isAuthenticated flag
     if (!user?.username) {
-      alert('Please log in to rate novels');
+      alert('Vui lòng đăng nhập để đánh giá truyện');
       return;
     }
     setIsRatingModalOpen(true);
@@ -303,7 +303,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
         return `${diffInDays} days ago`;
       }
     } catch (e) {
-      console.error("Error formatting date:", e);
+      console.error("Lỗi định dạng ngày:", e);
       return '';
     }
   };
@@ -379,11 +379,11 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   };
 
   if (isLoading) {
-    return <div className="novel-info-section loading">Loading novel information...</div>;
+    return <div className="novel-info-section loading">Đang tải thông tin truyện...</div>;
   }
 
   if (!novel) {
-    return <div className="novel-info-section error">Novel not found</div>;
+    return <div className="novel-info-section error">Truyện không tồn tại</div>;
   }
 
   // Determine if the novel is bookmarked
@@ -400,10 +400,10 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
         <div className="rd-novel-header">
           <div className="rd-novel-title-wrapper">
             <h1 className="rd-novel-title">
-              {novelTitle || 'Loading...'}
+              {novelTitle || 'Đang tải...'}
             </h1>
             <span className={`rd-status-badge rd-status-${novelData.status?.toLowerCase() || 'ongoing'}`}>
-              {novelData.status || 'Ongoing'}
+              {novelData.status || 'Đang tiến hành'}
             </span>
           </div>
 
@@ -447,7 +447,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="rd-novel-info">
                   <div className="rd-chapter-count">
                     <div className="rd-chapter-count-label">
-                      CHAPTERS
+                      SỐ CHƯƠNG
                     </div>
                     <div className="rd-chapter-count-value">
                       {totalChapters}
@@ -456,30 +456,30 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
 
                   {novelData.alternativeTitles && novelData.alternativeTitles.length > 0 && (
                     <h2 className="rd-alt-title">
-                      Alt name(s): {novelData.alternativeTitles.join('; ')}
+                      Tên khác: {novelData.alternativeTitles.join('; ')}
                     </h2>
                   )}
 
                   <div className="rd-info-rows">
                     <div className="rd-info-row">
-                      <div className="rd-info-label">Author:</div>
+                      <div className="rd-info-label">Tác giả:</div>
                       <div className="rd-info-value">
-                        <span className="rd-author-name">{novelData.author || 'Unknown'}</span>
+                        <span className="rd-author-name">{novelData.author || 'Không xác định'}</span>
                       </div>
                     </div>
 
                     {novelData.illustrator && (
                       <div className="rd-info-row">
-                        <div className="rd-info-label">Illustrator:</div>
+                        <div className="rd-info-label">Họa sĩ:</div>
                         <div className="rd-info-value">
-                          <span className="rd-author-name">{novelData.illustrator || (novelData.artist || 'None')}</span>
+                          <span className="rd-author-name">{novelData.illustrator || (novelData.artist || 'Không xác định')}</span>
                         </div>
                       </div>
                     )}
 
                     {novelData.genres && novelData.genres.length > 0 && (
                       <div className="rd-genres-row">
-                        <div className="rd-genres-label">Genres:</div>
+                        <div className="rd-genres-label">Thể loại:</div>
                         <div className="rd-info-value">
                           <div className="rd-genres-list">
                             {(() => {
@@ -551,14 +551,14 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                     <div className="rd-stat-icon">
                       <FontAwesomeIcon icon={faEye} />
                     </div>
-                    <div className="rd-stat-value">{novelData.views?.total?.toLocaleString() || '0'} Views</div>
+                    <div className="rd-stat-value">{novelData.views?.total?.toLocaleString() || '0'} Lượt xem</div>
                   </div>
 
                   <div className="rd-stat-item" onClick={toggleLike} style={{ cursor: 'pointer' }}>
                     <div className="rd-stat-icon">
                       <FontAwesomeIcon icon={isLiked ? faHeartSolid : faHeart} style={{ color: isLiked ? '#e74c3c' : undefined }} />
                     </div>
-                    <div className="rd-stat-value">{novelStats.totalLikes?.toLocaleString() || '0'} Likes</div>
+                    <div className="rd-stat-value">{novelStats.totalLikes?.toLocaleString() || '0'} Lượt thích</div>
                   </div>
 
                   <div className="rd-stat-item" onClick={handleRatingClick} style={{ cursor: 'pointer' }}>
@@ -566,7 +566,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       <FontAwesomeIcon icon={currentRating > 0 ? faStarSolid : faStar} style={{ color: currentRating > 0 ? '#f1c40f' : undefined }} />
                     </div>
                     <div className="rd-stat-value">
-                      {novelStats.averageRating || '0'}/5, {novelStats.totalRatings?.toLocaleString() || '0'} Rates
+                      {novelStats.averageRating || '0'}/5, {novelStats.totalRatings?.toLocaleString() || '0'} Lượt đánh giá
                     </div>
                   </div>
                 </div>
@@ -579,12 +579,12 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       className="rd-btn rd-btn-primary"
                     >
                       <FontAwesomeIcon icon={faChevronRight} />
-                      First Chapter
+                      Chương đầu tiên
                     </Link>
                   ) : (
                     <button className="rd-btn rd-btn-primary" disabled>
                       <FontAwesomeIcon icon={faChevronRight} />
-                      No Chapters
+                      Không có chương
                     </button>
                   )}
 
@@ -596,7 +596,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                         title={`Continue from: ${bookmarkData.bookmarkedChapter.title}`}
                       >
                         <FontAwesomeIcon icon={faForward} />
-                        Continue Reading
+                        Tiếp tục đọc
                       </Link>
                     ) : (
                       <Link 
@@ -604,13 +604,13 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                         className="rd-btn rd-btn-primary"
                       >
                         <FontAwesomeIcon icon={faForward} />
-                        Latest Chapter
+                        Chương mới nhất
                       </Link>
                     )
                   ) : (
                     <button className="rd-btn rd-btn-primary" disabled>
                       <FontAwesomeIcon icon={faForward} />
-                      No Chapters
+                      Không có chương
                     </button>
                   )}
 
@@ -619,7 +619,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                     onClick={toggleBookmark}
                   >
                     <FontAwesomeIcon icon={isBookmarked ? faBookmarkSolid : faBookmark} />
-                    {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                    {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu'}
                   </button>
                 </div>
               </div>
@@ -627,7 +627,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
 
             {/* Description Section */}
             <div className="rd-description-section">
-              <h2 className="rd-description-title">DESCRIPTION</h2>
+              <h2 className="rd-description-title">MÔ TẢ</h2>
               <div className={`rd-description-content ${isDescriptionExpanded ? 'expanded' : ''}`}>
                 <div dangerouslySetInnerHTML={{ 
                   __html: isDescriptionExpanded 
@@ -636,7 +636,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 }} />
               </div>
               <a href="#" className="rd-show-toggle" onClick={toggleDescription}>
-                {isDescriptionExpanded ? 'Show less' : 'Read more'}
+                {isDescriptionExpanded ? 'Hiển thị ít hơn' : 'Hiển thị thêm'}
               </a>
             </div>
           </div>
@@ -644,15 +644,15 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
           <div className="rd-novel-sidebar">
             {/* Staff Section */}
             <div className="rd-section">
-              <h3 className="rd-section-title">STAFF</h3>
+              <h3 className="rd-section-title">NHÂN SỰ</h3>
               <div className="rd-section-content">
                 {/* Active Staff */}
-                <div className="rd-staff-category rd-active-category">Active</div>
+                <div className="rd-staff-category rd-active-category">Đang hoạt động</div>
 
                 {/* Translators */}
                 <div className="rd-staff-role rd-role-translator">
                   <span className="rd-role-badge rd-translator-badge">
-                    <FontAwesomeIcon icon={faLanguage} /> Translator:
+                    <FontAwesomeIcon icon={faLanguage} /> Dịch giả:
                   </span>
                 </div>
                 <div className="rd-staff-members">
@@ -670,7 +670,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 {/* Editors */}
                 <div className="rd-staff-role rd-role-editor">
                   <span className="rd-role-badge rd-editor-badge">
-                    <FontAwesomeIcon icon={faEdit} /> Editor:
+                    <FontAwesomeIcon icon={faEdit} /> Biên tập viên:
                   </span>
                 </div>
                 <div className="rd-staff-members">
@@ -681,14 +681,14 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       </a>
                     ))
                   ) : (
-                    <span className="rd-staff-empty">None</span>
+                    <span className="rd-staff-empty">Không có</span>
                   )}
                 </div>
 
                 {/* Proofreaders */}
                 <div className="rd-staff-role rd-role-qc">
                   <span className="rd-role-badge rd-qc-badge">
-                    <FontAwesomeIcon icon={faCheckDouble} /> Proofreader:
+                    <FontAwesomeIcon icon={faCheckDouble} /> Kiểm tra chất lượng:
                   </span>
                 </div>
                 <div className="rd-staff-members">
@@ -699,7 +699,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       </a>
                     ))
                   ) : (
-                    <span className="rd-staff-empty">None</span>
+                    <span className="rd-staff-empty">Không có</span>
                   )}
                 </div>
 
@@ -708,14 +708,14 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                   novelData.inactive?.editor?.length > 0 ||
                   novelData.inactive?.proofreader?.length > 0) && (
                   <>
-                    <div className="rd-staff-category rd-inactive-category">Inactive</div>
+                    <div className="rd-staff-category rd-inactive-category">Không hoạt động</div>
                     
                     {/* Inactive Translators */}
                     {novelData.inactive?.translator && novelData.inactive.translator.length > 0 && (
                       <>
                         <div className="rd-staff-role rd-role-translator">
                           <span className="rd-role-badge rd-translator-badge">
-                            <FontAwesomeIcon icon={faLanguage} /> Translator:
+                            <FontAwesomeIcon icon={faLanguage} /> Dịch giả:
                           </span>
                         </div>
                         <div className="rd-staff-members">
@@ -733,7 +733,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       <>
                         <div className="rd-staff-role rd-role-editor">
                           <span className="rd-role-badge rd-editor-badge">
-                            <FontAwesomeIcon icon={faEdit} /> Editor:
+                            <FontAwesomeIcon icon={faEdit} /> Biên tập viên:
                           </span>
                         </div>
                         <div className="rd-staff-members">
@@ -751,7 +751,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       <>
                         <div className="rd-staff-role rd-role-qc">
                           <span className="rd-role-badge rd-qc-badge">
-                            <FontAwesomeIcon icon={faCheckDouble} /> Proofreader:
+                            <FontAwesomeIcon icon={faCheckDouble} /> Kiểm tra chất lượng:
                           </span>
                         </div>
                         <div className="rd-staff-members">
@@ -774,7 +774,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
             {/* Announcement Section */}
             {novelData.note && (
               <div className="rd-section">
-                <h3 className="rd-section-title">ANNOUNCEMENT</h3>
+                <h3 className="rd-section-title">THÔNG BÁO</h3>
                 <div className="rd-section-content rd-announcement">
                   <div dangerouslySetInnerHTML={{ 
                     __html: isNoteExpanded 
@@ -791,7 +791,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                           e.preventDefault();
                           setIsNoteExpanded(!isNoteExpanded);
                         }}>
-                          {isNoteExpanded ? 'Show less' : 'Read more'}
+                          {isNoteExpanded ? 'Hiển thị ít hơn' : 'Hiển thị thêm'}
                         </a>
                       ) : null;
                     })()

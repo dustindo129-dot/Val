@@ -126,7 +126,7 @@ const NovelContributions = ({ novelId }) => {
   return (
     <div className="rd-contribution-section">
       <div className="rd-contribution-section-title">
-        CONTRIBUTIONS ({totalCount})
+        ĐÓNG GÓP ({totalCount})
       </div>
       <div className="rd-contribution-list">
         {isLoadingContributions ? (
@@ -729,7 +729,7 @@ const NovelDetail = () => {
           
           <div className="chapter-list-container">
             <div className="chapters-header">
-              <h2>Chapters</h2>
+              <h2>Danh Sách Chương</h2>
               {(user?.role === 'admin' || user?.role === 'moderator') && (
                 <button 
                   className="add-module-btn"
@@ -739,7 +739,7 @@ const NovelDetail = () => {
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  Add Module
+                  Thêm tập
                 </button>
               )}
             </div>

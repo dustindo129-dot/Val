@@ -14,7 +14,7 @@ const Feedback = () => {
     <div className="feedback-container">
       <div className="feedback-panel">
         <div className="feedback-title">
-          <h1>Feedback</h1>
+          <h1>Phản hồi</h1>
         </div>
         <div className="feedback-content">
           <div className="content-display">

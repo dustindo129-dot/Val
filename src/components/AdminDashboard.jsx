@@ -46,26 +46,26 @@ const AdminDashboard = () => {
 
   // Genre categories and options
   const genreCategories = {
-    'Main Genres': [
+    'Thể Loại Chính': [
       'Action', 'Adventure', 'Comedy', 'Drama', 'Ecchi', 'Fantasy',
       'Historical', 'Horror', 'Mystery', 'Romance', 'Science Fiction',
       'Slice of Life', 'Supernatural', 'Suspense', 'Tragedy',
       'Magic', 'Psychological'
     ],
-    'Target Audience': [
+    'Đối Tượng': [
       'Seinen', 'Shounen', 'Josei', 'Shoujo'
     ],
-    'Character & Relationship Features': [
+    'Đặc Trưng Quan Hệ và Nhân Vật': [
       'Age Gap', 'Boys Love', 'Character Growth', 'Different Social Status',
       'Female Protagonist', 'Gender Bender', 'Harem', 'Incest',
       'Mature', 'Netorare', 'Reverse Harem', 'Yuri'
     ],
-    'Settings & Worlds': [
+    'Thiết lập và Thế Giới': [
       'Cooking', 'Game', 'Isekai', 'Martial Arts', 'Mecha', 'Military',
       'Otome Game', 'Parody', 'School Life', 'Slow Life', 'Sports',
       'Super Power', 'Wars', 'Workplace'
     ],
-    'Format & Origin': [
+    'Định Dạng và Nguồn gốc': [
       'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
       'Web Novel', 'One shot'
     ]
@@ -1147,7 +1147,7 @@ const AdminDashboard = () => {
                     value={novel.status || 'Ongoing'}
                     onChange={(e) => handleStatusChange(novel._id, e.target.value)}
                   >
-                    <option value="Ongoing">Đang tiếp tục</option>
+                    <option value="Ongoing">Đang tiến hành</option>
                     <option value="Completed">Đã hoàn thành</option>
                     <option value="Hiatus">Tạm dừng</option>
                   </select>

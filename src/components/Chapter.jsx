@@ -1005,7 +1005,7 @@ const Chapter = () => {
 
       {/* Issue Alert */}
       <div className="issue-alert">
-        Vui lòng báo cáo bất kỳ vấn đề nào (thiếu hình ảnh, chương sai, ...) với nút báo cáo.
+        Vui lòng báo cáo bất kỳ vấn đề nào (thiếu hình ảnh, chương sai, ...) bằng nút báo cáo.
       </div>
 
       {/* Comments section */}

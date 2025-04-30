@@ -148,9 +148,9 @@ const ModuleChapters = memo(({
                   <div className="chapter-locked-layer">
                     <div className="locked-content-info">
                       <FontAwesomeIcon icon={faLock} className="lock-icon-small" />
-                      <span>Need {chapter.chapterBalance || 0} 🌾 to unlock.</span>
-                      <span>{pendingRequestsCount} request{pendingRequestsCount !== 1 ? 's' : ''} pending</span>
-                      <Link to="/market" className="go-to-market-btn-small">Go to market</Link>
+                      <span>Cần {chapter.chapterBalance || 0} 🌾 để mở khóa.</span>
+                      <span>{pendingRequestsCount} yêu cầu{pendingRequestsCount !== 1 ? 's' : ''} đang chờ</span>
+                      <Link to="/market" className="go-to-market-btn-small">Đến bảng yêu cầu</Link>
                     </div>
                   </div>
                 )}
@@ -168,7 +168,7 @@ const ModuleChapters = memo(({
                     >
                       {chapter.title}
                       {isChapterNew(chapter.createdAt) && (
-                        <span className="new-tag" key={`new-tag-${chapterId}`}>NEW</span>
+                        <span className="new-tag" key={`new-tag-${chapterId}`}>MỚI</span>
                       )}
                     </Link>
                   ) : (
@@ -227,9 +227,9 @@ const ModuleChapters = memo(({
                       <button
                         className="delete-chapter-btn"
                         onClick={() => handleChapterDelete(moduleId, chapterId)}
-                        title="Delete chapter"
+                        title="Xóa chương"
                       >
-                        Delete
+                        Xóa
                       </button>
                     )}
                     <span className="chapter-mode-indicator">
@@ -247,7 +247,7 @@ const ModuleChapters = memo(({
           })}
         </div>
       ) : (
-        <div className="no-chapters">No chapters in this module yet.</div>
+        <div className="no-chapters">Không có chương trong tập này.</div>
       )}
     </div>
   );

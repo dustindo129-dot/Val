@@ -65,17 +65,17 @@ const ModuleForm = memo(({
       maxWidth: '100%'
     }}>
       <h4 style={{ color: 'black', fontSize: '18px', fontWeight: 'bold' }}>
-        {editingModule ? '✏️ EDIT MODULE' : 'ADD NEW MODULE'}
+        {editingModule ? '✏️ SỬA TẬP' : 'THÊM TẬP MỚI'}
       </h4>
       {moduleForm.error && <div className="form-error" style={{color: 'red'}}>{moduleForm.error}</div>}
       <form onSubmit={handleSubmit}>
         <div className="form-group" style={{margin: '10px 0'}}>
-          <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Title:</label>
+          <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Tên tập:</label>
           <input
             type="text"
             value={moduleForm.title}
             onChange={(e) => setModuleForm(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="Enter module title"
+            placeholder="Nhập tên tập"
             required
             style={{
               width: '100%',
@@ -89,7 +89,7 @@ const ModuleForm = memo(({
         {/* Module Mode Selection */}
         {isAdmin && (
           <div className="form-group" style={{margin: '10px 0'}}>
-            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Module Mode:</label>
+            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Chế độ tập:</label>
             <select
               value={mode}
               onChange={handleModeChange}
@@ -100,8 +100,8 @@ const ModuleForm = memo(({
                 borderRadius: '4px'
               }}
             >
-              <option value="published">PUBLISHED (Visible to everyone)</option>
-              <option value="paid">PAID</option>
+              <option value="published">CÔNG KHAI (Hiển thị cho mọi người)</option>
+              <option value="paid">TRẢ PHÍ (Cần mở khóa)</option>
             </select>
           </div>
         )}
@@ -109,13 +109,13 @@ const ModuleForm = memo(({
         {/* Module Balance Input - Only shows when mode is paid */}
         {isAdmin && mode === 'paid' && (
           <div className="form-group" style={{margin: '10px 0'}}>
-            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Module Balance:</label>
+            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Số lượng 🌾 cần:</label>
             <input
               type="number"
               min="0"
               value={moduleBalance}
               onChange={handleModuleBalanceChange}
-              placeholder="Enter module balance"
+              placeholder="Nhập giá 🌾 "
               style={{
                 width: '100%',
                 padding: '8px',
@@ -127,7 +127,7 @@ const ModuleForm = memo(({
         )}
         
         <div className="form-group" style={{margin: '10px 0'}}>
-          <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Cover Image:</label>
+          <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Ảnh bìa:</label>
           <div className="cover-upload">
             {moduleForm.illustration && (
               <img
@@ -157,7 +157,7 @@ const ModuleForm = memo(({
               borderRadius: '4px',
               cursor: 'pointer'
             }}>
-              {moduleForm.loading ? 'Uploading...' : 'Upload Cover'}
+              {moduleForm.loading ? 'Đang tải lên...' : 'Tải lên ảnh bìa'}
             </label>
           </div>
         </div>
@@ -174,7 +174,7 @@ const ModuleForm = memo(({
             borderRadius: '4px',
             cursor: 'pointer'
           }}>
-            {editingModule ? 'Update Module' : 'Create Module'}
+            {editingModule ? 'Cập nhật tập' : 'Tạo tập mới'}
           </button>
           <button type="button" onClick={handleModuleFormToggle} style={{
             padding: '10px 20px',
@@ -184,7 +184,7 @@ const ModuleForm = memo(({
             borderRadius: '4px',
             cursor: 'pointer'
           }}>
-            Cancel
+            Hủy bỏ
           </button>
         </div>
       </form>
