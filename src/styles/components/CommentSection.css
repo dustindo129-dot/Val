@@ -196,11 +196,22 @@
 }
 
 .like-button.liked {
-  color: #e74c3c;
+  color: #007bff;
 }
 
-.like-button.liked .like-icon {
-  transform: scale(1.1);
+.like-button.liked .fa-thumbs-up {
+  color: #007bff;
+}
+
+.like-button .fa-thumbs-up {
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.like-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .like-count {
@@ -621,4 +632,39 @@
 :root.dark-mode .sort-btn.active {
   background-color: #343a40;
   color: #f8f9fa;
+}
+
+/* Common like icon styles */
+.like-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Market like icon specific styles */
+.market-like-icon {
+  font-size: 1.1rem;
+}
+
+.market-like-icon .fa-thumbs-up {
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.market-like-icon .fa-thumbs-up.liked {
+  color: #007bff;
+}
+
+/* Comment section like icon specific styles */
+.comment-like-icon {
+  font-size: 0.9rem;
+}
+
+.comment-like-icon .fa-thumbs-up {
+  color: #6c757d;
+  transition: color 0.2s ease;
+}
+
+.comment-like-icon .fa-thumbs-up.liked {
+  color: #007bff;
 }

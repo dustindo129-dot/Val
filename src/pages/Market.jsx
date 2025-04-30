@@ -1085,7 +1085,7 @@ const Market = () => {
         
         <section className="market-section">
           <div className="market-header">
-            <h2>Yêu cầu ({requests.length})</h2>
+            <h2>Danh sách yêu cầu ({requests.length})</h2>
             
             {/* Sort controls */}
             <div className="sort-controls">
@@ -1109,6 +1109,265 @@ const Market = () => {
                 Nhiều lượt thích nhất
               </button>
             </div>
+          </div>
+          
+          {!showHistory && (
+            <div className="requests-list">
+              {isLoading ? (
+                <p>Đang tải yêu cầu...</p>
+              ) : error ? (
+                <p className="error">{error}</p>
+              ) : requests.length === 0 ? (
+                <p>Không có yêu cầu nào</p>
+              ) : (
+                requests.map(request => {
+                  // Get the current user ID
+                  const userId = user?.id || user?._id;
+                  
+                  // Check if the current user has liked this request
+                  const isLikedByCurrentUser = isAuthenticated && userId && 
+                    request.likes && Array.isArray(request.likes) && 
+                    request.likes.some(likeId => likeId === userId);
+                  
+                  return (
+                    <div key={request._id} className="request-item">
+                      <div className="request-avatar">
+                        {request.user.avatar ? (
+                          <img src={request.user.avatar} alt={request.user.username} />
+                        ) : (
+                          <div className="default-avatar">
+                            {request.user.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="request-content">
+                        <div className="request-header">
+                          <div className="request-user-info">
+                            <span className="request-username">{request.user.username}</span>
+                            <span className="request-type">
+                              {request.type === 'new' ? 'Yêu cầu truyện mới' : 'Yêu cầu mở chương/tập có sẵn'}
+                            </span>
+                            {request.openNow && (
+                              <span className="request-open-now-badge">
+                                Mở ngay
+                              </span>
+                            )}
+                            {request.type === 'open' && request.novel && (
+                              <div className="request-novel-info">
+                                <Link to={`/novel/${request.novel._id}`} className="novel-link">
+                                  {request.novel.title}
+                                </Link>
+                                {request.module && (
+                                  <span className="module-info">- {request.module.title}</span>
+                                )}
+                                {request.chapter && (
+                                  <span className="chapter-info">- {request.chapter.title}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
+                        </div>
+                        <div className="request-text">
+                          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.text) }} />
+                          {request.note && (
+                            <div className="request-note">
+                              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
+                            </div>
+                          )}
+                          <div className="request-deposit">🌾 Cọc: {request.deposit}</div>
+                        </div>
+                        <div className="request-actions">
+                          <button 
+                            className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
+                            onClick={() => handleLikeRequest(request._id)}
+                            disabled={!isAuthenticated || likingRequests.has(request._id)}
+                          >
+                            <span className="like-icon market-like-icon">
+                              {likingRequests.has(request._id) ? '⏳' : <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
+                            </span>
+                            <span className="like-text">Thích</span>
+                            <span className="like-count">{request.likes ? request.likes.length : 0}</span>
+                          </button>
+                          
+                          {/* Contribute button - visible to everyone for pending requests */}
+                          {request.status === 'pending' && (
+                            <button 
+                              className="contribute-button"
+                              onClick={() => handleShowContributionForm(request._id)}
+                            >
+                              {showContributionForm === request._id ? 'Hủy bỏ' : 'Góp 🌾'}
+                            </button>
+                          )}
+                          
+                          {/* Withdraw button - visible only for the user's own requests after 24 hours */}
+                          {isAuthenticated && 
+                           user && 
+                           request.user._id === (user._id || user.id) && 
+                           withdrawableRequests.has(request._id) && (
+                            <button 
+                              className="withdraw-button"
+                              onClick={() => handleWithdrawRequest(request._id)}
+                              disabled={withdrawingRequests.has(request._id)}
+                            >
+                              {withdrawingRequests.has(request._id) ? 'Đang rút...' : 'Rút lại yêu cầu'}
+                            </button>
+                          )}
+                          
+                          {/* Admin actions */}
+                          {user && user.role === 'admin' && (
+                            <div className="admin-actions">
+                              <button 
+                                className="approve-btn"
+                                onClick={() => handleApproveRequest(request._id)}
+                              >
+                                Duyệt
+                              </button>
+                              <button 
+                                className="decline-btn"
+                                onClick={() => handleDeclineRequest(request._id)}
+                              >
+                                Từ chối
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Contributions Section - Only shown when contribute form is active or contributions exist */}
+                        {(showContributionForm === request._id || 
+                          (contributions[request._id] && contributions[request._id].length > 0)) && (
+                          <div className="contributions-container">
+                            {/* Contribution Form - Only shown when contribute button is clicked */}
+                            {showContributionForm === request._id && isAuthenticated && (
+                              <div className="contribution-form">
+                                <div className="contribution-input-container">
+                                  <label htmlFor={`contribution-amount-${request._id}`}>Góp số🌾:</label>
+                                  <input
+                                    type="number"
+                                    id={`contribution-amount-${request._id}`}
+                                    min="1"
+                                    step="1"
+                                    value={contributionAmount}
+                                    onChange={(e) => setContributionAmount(e.target.value)}
+                                    disabled={submittingContribution}
+                                    required
+                                    className="contribution-input"
+                                  />
+                                  <span className="balance-display">🌾 hiện tại: {userBalance}</span>
+                                </div>
+                                
+                                <textarea
+                                  className="contribution-note-input"
+                                  placeholder="Nhắn nhủ thêm... (nếu có)"
+                                  value={contributionNote}
+                                  onChange={(e) => setContributionNote(e.target.value)}
+                                  disabled={submittingContribution}
+                                />
+                                
+                                <div className="contribution-form-actions">
+                                  <button 
+                                    className="submit-contribution-btn"
+                                    onClick={() => handleSubmitContribution(request._id)}
+                                    disabled={submittingContribution || !contributionAmount || 
+                                            (contributionAmount && Number(contributionAmount) > userBalance)}
+                                  >
+                                    {submittingContribution ? 'Đang góp...' : 'Xác nhận'}
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    className="cancel-contribution-btn"
+                                    onClick={() => {
+                                      setShowContributionForm(null);
+                                      setContributionAmount('');
+                                      setContributionNote('');
+                                    }}
+                                  >
+                                    Hủy bỏ
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Show login prompt in the form area if not authenticated */}
+                            {showContributionForm === request._id && !isAuthenticated && (
+                              <div className="login-to-contribute">
+                                Vui lòng <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">đăng nhập</button> để góp🌾.
+                              </div>
+                            )}
+                            
+                            {/* Contributions List - Only shown when contributions exist */}
+                            {contributions[request._id] && contributions[request._id].length > 0 && (
+                              <div className="contributions-list">
+                                <h4 className="contributions-title">
+                                  {loadingContributions.has(request._id) 
+                                    ? 'Đang tải đóng góp...' 
+                                    : `Đóng góp (${contributions[request._id].length})`}
+                                </h4>
+                                
+                                {contributions[request._id].map(contribution => (
+                                  <div key={contribution._id} className={`contribution-item status-${contribution.status}`}>
+                                    <div className="contribution-avatar">
+                                      {contribution.user.avatar ? (
+                                        <img src={contribution.user.avatar} alt={contribution.user.username} />
+                                      ) : (
+                                        <div className="default-avatar">
+                                          {contribution.user.username.charAt(0).toUpperCase()}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="contribution-content">
+                                      <div className="contribution-header">
+                                        <div className="contribution-user-info">
+                                          <span className="contribution-username">{contribution.user.username}</span>
+                                          <span className={`contribution-status status-${contribution.status}`}>
+                                            {contribution.status.charAt(0).toUpperCase() + contribution.status.slice(1)}
+                                          </span>
+                                        </div>
+                                        <span className="contribution-time">{formatRelativeTime(contribution.createdAt)}</span>
+                                      </div>
+                                      {contribution.note && (
+                                        <div className="contribution-text">
+                                          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contribution.note) }} />
+                                        </div>
+                                      )}
+                                      <div className="contribution-amount">Góp🌾: {contribution.amount}</div>
+                                      
+                                      {/* Admin actions for contributions */}
+                                      {user && user.role === 'admin' && contribution.status === 'pending' && (
+                                        <div className="admin-actions contribution-admin-actions">
+                                          <button 
+                                            className="approve-btn"
+                                            onClick={() => handleApproveContribution(contribution._id, request._id)}
+                                          >
+                                            Duyệt
+                                          </button>
+                                          <button 
+                                            className="decline-btn"
+                                            onClick={() => handleDeclineContribution(contribution._id, request._id)}
+                                          >
+                                            Từ chối
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </section>
+        
+        <section className="market-section">
+          <div className="market-header">
+            <h2>Tạo yêu cầu mới</h2>
           </div>
           
           {isAuthenticated ? (
@@ -1229,11 +1488,15 @@ const Market = () => {
                           type="text"
                           placeholder="Tìm kiếm truyện..."
                           value={novelSearchQuery}
-                          onChange={(e) => setNovelSearchQuery(e.target.value)}
-                          onClick={() => setShowNovelResults(true)}
+                          onChange={(e) => {
+                            setNovelSearchQuery(e.target.value);
+                            setShowNovelResults(true);
+                          }}
+                          onFocus={() => setShowNovelResults(true)}
+                          disabled={submitting}
                           className="novel-search-input"
                         />
-                        {isSearching && <div className="searching-indicator">Đang tìm kiếm...</div>}
+                        {isSearching && <div className="searching-indicator">Đang tìm...</div>}
                         
                         {showNovelResults && novelSearchResults.length > 0 && (
                           <div className="novel-search-results">
@@ -1451,259 +1714,6 @@ const Market = () => {
           ) : (
             <div className="login-to-request">
               Vui lòng <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">đăng nhập</button> để tạo yêu cầu.
-            </div>
-          )}
-          
-          {!showHistory && (
-            <div className="requests-list">
-              {isLoading ? (
-                <p>Đang tải yêu cầu...</p>
-              ) : error ? (
-                <p className="error">{error}</p>
-              ) : requests.length === 0 ? (
-                <p>Không có yêu cầu nào</p>
-              ) : (
-                requests.map(request => {
-                  // Get the current user ID
-                  const userId = user?.id || user?._id;
-                  
-                  // Check if the current user has liked this request
-                  const isLikedByCurrentUser = isAuthenticated && userId && 
-                    request.likes && Array.isArray(request.likes) && 
-                    request.likes.some(likeId => likeId === userId);
-                  
-                  return (
-                    <div key={request._id} className="request-item">
-                      <div className="request-avatar">
-                        {request.user.avatar ? (
-                          <img src={request.user.avatar} alt={request.user.username} />
-                        ) : (
-                          <div className="default-avatar">
-                            {request.user.username.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="request-content">
-                        <div className="request-header">
-                          <div className="request-user-info">
-                            <span className="request-username">{request.user.username}</span>
-                            <span className="request-type">
-                              {request.type === 'new' ? 'Yêu cầu truyện mới' : 'Yêu cầu mở chương/tập có sẵn'}
-                            </span>
-                            {request.openNow && (
-                              <span className="request-open-now-badge">
-                                Mở ngay
-                              </span>
-                            )}
-                            {request.type === 'open' && request.novel && (
-                              <div className="request-novel-info">
-                                <Link to={`/novel/${request.novel._id}`} className="novel-link">
-                                  {request.novel.title}
-                                </Link>
-                                {request.module && (
-                                  <span className="module-info">- {request.module.title}</span>
-                                )}
-                                {request.chapter && (
-                                  <span className="chapter-info">- {request.chapter.title}</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
-                        </div>
-                        <div className="request-text">
-                          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.text) }} />
-                          {request.note && (
-                            <div className="request-note">
-                              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
-                            </div>
-                          )}
-                          <div className="request-deposit">🌾 Cọc: {request.deposit}</div>
-                        </div>
-                        <div className="request-actions">
-                          <button 
-                            className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
-                            onClick={() => handleLikeRequest(request._id)}
-                            disabled={!isAuthenticated || likingRequests.has(request._id)}
-                          >
-                            <span className="like-icon">
-                              {likingRequests.has(request._id) ? '⏳' : isLikedByCurrentUser ? '❤️' : '🤍'}
-                            </span>
-                            <span className="like-text">Thích</span>
-                            <span className="like-count">{request.likes ? request.likes.length : 0}</span>
-                          </button>
-                          
-                          {/* Contribute button - visible to everyone for pending requests */}
-                          {request.status === 'pending' && (
-                            <button 
-                              className="contribute-button"
-                              onClick={() => handleShowContributionForm(request._id)}
-                            >
-                              {showContributionForm === request._id ? 'Hủy bỏ' : 'Góp 🌾'}
-                            </button>
-                          )}
-                          
-                          {/* Withdraw button - visible only for the user's own requests after 24 hours */}
-                          {isAuthenticated && 
-                           user && 
-                           request.user._id === (user._id || user.id) && 
-                           withdrawableRequests.has(request._id) && (
-                            <button 
-                              className="withdraw-button"
-                              onClick={() => handleWithdrawRequest(request._id)}
-                              disabled={withdrawingRequests.has(request._id)}
-                            >
-                              {withdrawingRequests.has(request._id) ? 'Đang rút...' : 'Rút lại yêu cầu'}
-                            </button>
-                          )}
-                          
-                          {/* Admin actions */}
-                          {user && user.role === 'admin' && (
-                            <div className="admin-actions">
-                              <button 
-                                className="approve-btn"
-                                onClick={() => handleApproveRequest(request._id)}
-                              >
-                                Duyệt
-                              </button>
-                              <button 
-                                className="decline-btn"
-                                onClick={() => handleDeclineRequest(request._id)}
-                              >
-                                Từ chối
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Contributions Section - Only shown when contribute form is active or contributions exist */}
-                        {(showContributionForm === request._id || 
-                          (contributions[request._id] && contributions[request._id].length > 0)) && (
-                          <div className="contributions-container">
-                            {/* Contribution Form - Only shown when contribute button is clicked */}
-                            {showContributionForm === request._id && isAuthenticated && (
-                              <div className="contribution-form">
-                                <div className="contribution-input-container">
-                                  <label htmlFor={`contribution-amount-${request._id}`}>Góp số🌾:</label>
-                                  <input
-                                    type="number"
-                                    id={`contribution-amount-${request._id}`}
-                                    min="1"
-                                    step="1"
-                                    value={contributionAmount}
-                                    onChange={(e) => setContributionAmount(e.target.value)}
-                                    disabled={submittingContribution}
-                                    required
-                                    className="contribution-input"
-                                  />
-                                  <span className="balance-display">🌾 hiện tại: {userBalance}</span>
-                                </div>
-                                
-                                <textarea
-                                  className="contribution-note-input"
-                                  placeholder="Nhắn nhủ thêm... (nếu có)"
-                                  value={contributionNote}
-                                  onChange={(e) => setContributionNote(e.target.value)}
-                                  disabled={submittingContribution}
-                                />
-                                
-                                <div className="contribution-form-actions">
-                                  <button 
-                                    className="submit-contribution-btn"
-                                    onClick={() => handleSubmitContribution(request._id)}
-                                    disabled={submittingContribution || !contributionAmount || 
-                                            (contributionAmount && Number(contributionAmount) > userBalance)}
-                                  >
-                                    {submittingContribution ? 'Đang góp...' : 'Xác nhận'}
-                                  </button>
-                                  <button 
-                                    type="button" 
-                                    className="cancel-contribution-btn"
-                                    onClick={() => {
-                                      setShowContributionForm(null);
-                                      setContributionAmount('');
-                                      setContributionNote('');
-                                    }}
-                                  >
-                                    Hủy bỏ
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Show login prompt in the form area if not authenticated */}
-                            {showContributionForm === request._id && !isAuthenticated && (
-                              <div className="login-to-contribute">
-                                Vui lòng <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">đăng nhập</button> để góp🌾.
-                              </div>
-                            )}
-                            
-                            {/* Contributions List - Only shown when contributions exist */}
-                            {contributions[request._id] && contributions[request._id].length > 0 && (
-                              <div className="contributions-list">
-                                <h4 className="contributions-title">
-                                  {loadingContributions.has(request._id) 
-                                    ? 'Đang tải đóng góp...' 
-                                    : `Đóng góp (${contributions[request._id].length})`}
-                                </h4>
-                                
-                                {contributions[request._id].map(contribution => (
-                                  <div key={contribution._id} className={`contribution-item status-${contribution.status}`}>
-                                    <div className="contribution-avatar">
-                                      {contribution.user.avatar ? (
-                                        <img src={contribution.user.avatar} alt={contribution.user.username} />
-                                      ) : (
-                                        <div className="default-avatar">
-                                          {contribution.user.username.charAt(0).toUpperCase()}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="contribution-content">
-                                      <div className="contribution-header">
-                                        <div className="contribution-user-info">
-                                          <span className="contribution-username">{contribution.user.username}</span>
-                                          <span className={`contribution-status status-${contribution.status}`}>
-                                            {contribution.status.charAt(0).toUpperCase() + contribution.status.slice(1)}
-                                          </span>
-                                        </div>
-                                        <span className="contribution-time">{formatRelativeTime(contribution.createdAt)}</span>
-                                      </div>
-                                      {contribution.note && (
-                                        <div className="contribution-text">
-                                          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contribution.note) }} />
-                                        </div>
-                                      )}
-                                      <div className="contribution-amount">Góp🌾: {contribution.amount}</div>
-                                      
-                                      {/* Admin actions for contributions */}
-                                      {user && user.role === 'admin' && contribution.status === 'pending' && (
-                                        <div className="admin-actions contribution-admin-actions">
-                                          <button 
-                                            className="approve-btn"
-                                            onClick={() => handleApproveContribution(contribution._id, request._id)}
-                                          >
-                                            Duyệt
-                                          </button>
-                                          <button 
-                                            className="decline-btn"
-                                            onClick={() => handleDeclineContribution(contribution._id, request._id)}
-                                          >
-                                            Từ chối
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
             </div>
           )}
         </section>
