@@ -141,7 +141,7 @@ const Chapter = () => {
         // Give the server more time to process the request - 5 seconds
         setTimeout(() => {
           controller.abort();
-        }, 5000); // Abort after 5 seconds instead of 3
+        }, 5000); // Abort after 5 seconds instead 
         
         // Update localStorage immediately to prevent repeated attempts
         localStorage.setItem(viewKeyLocal, now.toString());

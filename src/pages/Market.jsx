@@ -1172,7 +1172,7 @@ const Market = () => {
                           onClick={() => setShowNovelResults(true)}
                           className="novel-search-input"
                         />
-                        {isSearching && <div className="searching-indicator">Searching...</div>}
+                        {isSearching && <div className="searching-indicator">Đang tìm kiếm...</div>}
                         
                         {showNovelResults && novelSearchResults.length > 0 && (
                           <div className="novel-search-results">
@@ -1270,7 +1270,7 @@ const Market = () => {
                   {/* Request options for "open" type requests */}
                   {requestType === 'open' && selectedNovel && (
                     <div className="request-options">
-                      <div className="options-title">Request type:</div>
+                      <div className="options-title">Loại yêu cầu:</div>
                       <div className="radio-options">
                         <label className={`option-label ${openNowOption === 'post' ? 'selected' : ''}`}>
                           <input
@@ -1280,8 +1280,8 @@ const Market = () => {
                             checked={openNowOption === 'post'}
                             onChange={() => handleOptionChange('post')}
                           />
-                          <span className="option-text">Post Request</span>
-                          <span className="option-description">Submit for admin approval (24h wait to withdraw)</span>
+                          <span className="option-text">Đăng bài gọi vốn</span>
+                          <span className="option-description">Gửi yêu cầu đợi duyệt (Có thể rút lại sau 24h)</span>
                         </label>
                         
                         <label 
@@ -1295,28 +1295,28 @@ const Market = () => {
                             onChange={() => handleOptionChange('openNow')}
                             disabled={!canOpenNow}
                           />
-                          <span className="option-text">Open Now!</span>
+                          <span className="option-text">Mở ngay</span>
                           <span className="option-description">
                             {canOpenNow 
-                              ? `Immediately open the ${selectedModuleData ? 'module' : 'chapter'} using your deposit`
-                              : 'Select a paid module or chapter to enable this option'}
+                              ? `Mở ${selectedModuleData ? 'module' : 'chapter'} ngay lập tức với số cọc của bạn`
+                              : 'Chọn một tập/chương đang bị khóa để bật tùy chọn này'}
                           </span>
                         </label>
                       </div>
                       
                       {openNowOption === 'openNow' && selectedModuleData && (
                         <div className="option-info">
-                          <p>Module balance: {selectedModuleData.moduleBalance}</p>
+                          <p>Số 🌾 còn lại để mở tập: {selectedModuleData.moduleBalance}</p>
                           {Number(depositAmount) > 0 && (
                             <>
                               <p>
                                 {Number(depositAmount) >= selectedModuleData.moduleBalance 
-                                  ? 'This will fully unlock the module and change its mode to "Published"' 
-                                  : `This will reduce the module balance to ${Math.max(0, selectedModuleData.moduleBalance - Number(depositAmount))}`}
+                                  ? 'Thao tác này sẽ mở khóa tập và chuyển chế độ thành "Công khai"' 
+                                  : `Thao tác này sẽ giảm số cọc còn lại thành ${Math.max(0, selectedModuleData.moduleBalance - Number(depositAmount))}`}
                               </p>
                               {Number(depositAmount) > selectedModuleData.moduleBalance && (
                                 <p className="refund-info">
-                                  You will be refunded {Number(depositAmount) - selectedModuleData.moduleBalance}
+                                  Bạn sẽ được hoàn lại {Number(depositAmount) - selectedModuleData.moduleBalance}
                                 </p>
                               )}
                             </>
@@ -1326,17 +1326,17 @@ const Market = () => {
                       
                       {openNowOption === 'openNow' && selectedChapterData && (
                         <div className="option-info">
-                          <p>Chapter balance: {selectedChapterData.chapterBalance}</p>
+                          <p>Số 🌾 còn lại để mở chương: {selectedChapterData.chapterBalance}</p>
                           {Number(depositAmount) > 0 && (
                             <>
                               <p>
                                 {Number(depositAmount) >= selectedChapterData.chapterBalance 
-                                  ? 'This will fully unlock the chapter and change its mode to "Published"' 
-                                  : `This will reduce the chapter balance to ${Math.max(0, selectedChapterData.chapterBalance - Number(depositAmount))}`}
+                                  ? 'Thao tác này sẽ mở khóa chương và chuyển chế độ thành "Công khai"' 
+                                  : `Thao tác này sẽ giảm số cọc còn lại thành ${Math.max(0, selectedChapterData.chapterBalance - Number(depositAmount))}`}
                               </p>
                               {Number(depositAmount) > selectedChapterData.chapterBalance && (
                                 <p className="refund-info">
-                                  You will be refunded {Number(depositAmount) - selectedChapterData.chapterBalance}
+                                  Bạn sẽ được hoàn lại {Number(depositAmount) - selectedChapterData.chapterBalance}
                                 </p>
                               )}
                             </>
