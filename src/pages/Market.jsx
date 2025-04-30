@@ -72,8 +72,22 @@ const Market = () => {
   // Fetch user balance and active requests
   const fetchData = async () => {
     if (!isAuthenticated) {
-      setRequests([]);
-      setIsLoading(false);
+      // Still fetch requests even if not authenticated
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch requests with sort option
+        const requestsResponse = await axios.get(
+          `${config.backendUrl}/api/requests?sort=${sortOrder}`
+        );
+        setRequests(requestsResponse.data);
+      } catch (err) {
+        console.error('Không thể tải dữ liệu:', err);
+        setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
     
