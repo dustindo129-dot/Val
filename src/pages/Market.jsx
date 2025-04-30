@@ -18,8 +18,20 @@ const Market = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
+  // Load Font Awesome for the new UI
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css';
+    document.head.appendChild(link);
+    
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+  
   const [userBalance, setUserBalance] = useState(0);
-  const [requestType, setRequestType] = useState('new'); // 'new' or 'open'
+  const [requestType, setRequestType] = useState('new'); // 'new' or 'open' or 'web'
   const [requestText, setRequestText] = useState('');
   const [requestNote, setRequestNote] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
@@ -51,9 +63,6 @@ const Market = () => {
   const [submittingContribution, setSubmittingContribution] = useState(false);
   const [contributions, setContributions] = useState({});
   const [loadingContributions, setLoadingContributions] = useState(new Set());
-  // New state for the open now option
-  const [openNowOption, setOpenNowOption] = useState('post'); // 'post' or 'openNow'
-  // State to store the selected module/chapter details
   const [selectedModuleData, setSelectedModuleData] = useState(null);
   const [selectedChapterData, setSelectedChapterData] = useState(null);
 
@@ -277,22 +286,6 @@ const Market = () => {
     }
   }, [selectedChapter, chapters]);
 
-  // Reset open now option when selections change
-  useEffect(() => {
-    // If no paid module or chapter is selected, reset to "Post"
-    if (!selectedModuleData && !selectedChapterData) {
-      setOpenNowOption('post');
-    }
-  }, [selectedModuleData, selectedChapterData]);
-
-  // Clear chapter selection when module selection changes
-  useEffect(() => {
-    if (selectedModule !== null) {
-      setSelectedChapter(null);
-      setSelectedChapterData(null);
-    }
-  }, [selectedModule]);
-
   // Handle request submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -302,9 +295,14 @@ const Market = () => {
       return;
     }
     
-    // Only validate requestText if it's a new novel request
+    // Validate input based on request type
     if (requestType === 'new' && !requestText.trim()) {
       alert('Vui lòng điền tên truyện bạn muốn yêu cầu');
+      return;
+    }
+
+    if (requestType === 'web' && !selectedNovel) {
+      alert('Vui lòng chọn truyện cho đề xuất');
       return;
     }
     
@@ -329,18 +327,20 @@ const Market = () => {
       return;
     }
     
-    // For "Open now!" option, only allow if a paid module or chapter is selected
-    if (openNowOption === 'openNow' && !selectedModuleData && !selectedChapterData) {
-      alert('Vui lòng chọn một tập/chương đang khóa để sử dụng tùy chọn "Mở ngay"');
+    // For "open" type, only allow if a paid module or chapter is selected
+    if (requestType === 'open' && !selectedModuleData && !selectedChapterData) {
+      alert('Vui lòng chọn một tập/chương đang khóa để mở');
       return;
     }
     
-    // Different confirmation message based on selected option
+    // Different confirmation message based on request type
     let confirmMessage = '';
-    if (openNowOption === 'post') {
-      confirmMessage = 'QUAN TRỌNG: Bạn chỉ có thể rút yêu cầu sau 24 giờ đã gửi. Bạn có muốn tiếp tục không?';
-    } else { // openNow option
+    if (requestType === 'web') {
+      confirmMessage = 'Bạn có chắc muốn tạo đề xuất từ nhóm dịch cho truyện này?';
+    } else if (requestType === 'open') {
       confirmMessage = 'QUAN TRỌNG: Điều này sẽ mở tập/chương đã chọn ngay lập tức bằng cọc của bạn. Hành động này không thể hoàn tác. Bạn có muốn tiếp tục không?';
+    } else {
+      confirmMessage = 'QUAN TRỌNG: Bạn chỉ có thể rút yêu cầu sau 24 giờ đã gửi. Bạn có muốn tiếp tục không?';
     }
     
     if (!confirm(confirmMessage)) {
@@ -350,8 +350,8 @@ const Market = () => {
     setSubmitting(true);
     
     try {
-      if (openNowOption === 'openNow') {
-        // Handle "Open now!" option
+      if (requestType === 'open') {
+        // Handle "Open now" option
         const deposit = Number(depositAmount);
         let refundAmount = 0;
         
@@ -455,31 +455,26 @@ const Market = () => {
         await fetchData();
         
       } else {
-        // Normal "Post" option - existing code
+        // Normal request creation for new and web types
         const requestData = {
-          type: requestType,
-          text: DOMPurify.sanitize(requestText || ""), // Use empty string if no text
+          type: requestType === 'web' ? 'open' : requestType,
+          text: requestType === 'web' ? selectedNovel.title : DOMPurify.sanitize(requestText || ""),
           deposit: Number(depositAmount)
         };
         
-        // Add note if provided for new novel requests
-        if (requestType === 'new' && requestNote.trim()) {
+        // Add note if provided
+        if (requestNote.trim()) {
           requestData.note = DOMPurify.sanitize(requestNote);
         }
         
-        // Add novel ID if request type is 'open'
-        if (requestType === 'open' && selectedNovel) {
+        // Add novel ID for web recommendations
+        if (requestType === 'web') {
           requestData.novelId = selectedNovel._id;
-          
-          // Add module ID if selected
-          if (selectedModule) {
-            requestData.moduleId = selectedModule;
-          }
-          
-          // Add chapter ID if selected
-          if (selectedChapter) {
-            requestData.chapterId = selectedChapter;
-          }
+        }
+
+        // For web recommendations, set status to auto-approved if admin
+        if (requestType === 'web' && user.role === 'admin') {
+          requestData.autoApproveWebRecommendation = true;
         }
         
         const response = await axios.post(
@@ -496,10 +491,12 @@ const Market = () => {
         // Update user balance
         setUserBalance(prevBalance => prevBalance - Number(depositAmount));
         
-        // Add request to withdrawableRequests after 24 hours
-        setTimeout(() => {
-          setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
-        }, 86400000); // 24 hours in milliseconds
+        // Add request to withdrawableRequests after 24 hours (for user requests only)
+        if (requestType !== 'web') {
+          setTimeout(() => {
+            setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
+          }, 86400000); // 24 hours in milliseconds
+        }
       }
       
       // Reset form in all cases
@@ -512,7 +509,6 @@ const Market = () => {
       setSelectedModuleData(null);
       setSelectedChapterData(null);
       setNovelSearchQuery('');
-      setOpenNowOption('post');
       
     } catch (err) {
       console.error('Failed to submit request:', err);
@@ -536,7 +532,6 @@ const Market = () => {
     setSelectedModuleData(null);
     setSelectedChapterData(null);
     setNovelSearchQuery('');
-    setOpenNowOption('post');
   };
 
   // Handle novel selection
@@ -548,7 +543,6 @@ const Market = () => {
     setSelectedChapter(null);
     setSelectedModuleData(null);
     setSelectedChapterData(null);
-    setOpenNowOption('post');
   };
 
   // Handle module selection
@@ -562,14 +556,6 @@ const Market = () => {
   const handleChapterSelect = (e) => {
     setSelectedChapter(e.target.value);
   };
-
-  // Handle option change (Post or Open now)
-  const handleOptionChange = (option) => {
-    setOpenNowOption(option);
-  };
-
-  // Check if "Open now!" option can be enabled
-  const canOpenNow = selectedModuleData || selectedChapterData;
 
   // Handle request sorting
   const handleSortChange = (newSortOrder) => {
@@ -587,7 +573,6 @@ const Market = () => {
     setSelectedModuleData(null);
     setSelectedChapterData(null);
     setNovelSearchQuery('');
-    setOpenNowOption('post');
   };
 
   // Fetch request history
@@ -1041,30 +1026,28 @@ const Market = () => {
                 <li>Số 🌾 cọc tối thiểu là 100.</li>
                 <li>Yêu cầu có thể rút lại sau 24h (sau 24h nút rút lại sẽ hiện ra), trừ trường hợp chọn Mở ngay!</li>
                 <li>Có thể góp lúa vào yêu cầu có sẵn, bằng nút "góp" ở mỗi yêu cầu.</li>
-                <li>Nếu yêu cầu bị từ chối, số 🌾 cọc sẽ được trả lại cho người dùng.</li>
-                <li>Nếu số 🌾 cọc vượt quá số 🌾 cần để mở chương/tập mới, số dư sẽ được trả lại cho người dùng.</li>
+                <li>Nếu yêu cầu bị từ chối, số 🌾 cọc/đóng góp sẽ được trả lại cho người dùng.</li>
               </ul>
             </div>
 
             <div className="overview-section">
-              <h3>Đối với yêu cầu truyện mới:</h3>
+              <h3>Yêu cầu truyện mới:</h3>
               <ul>
                 <li>Điền tên bộ truyện bạn muốn yêu cầu + nhắn nhủ thêm nếu có</li>
                 <li>Cọc một số 🌾 bất kì (tối thiểu 100). Nếu dịch giả quyết định chạy bộ truyện yêu cầu, sẽ dựa vào con số này để quyết định làm bao nhiêu khi mới bắt đầu chạy, ví dụ 100 🌾 thì chắc vừa đủ mở project hoặc cùng lắm làm cái mở đầu hoặc đăng minh họa, nên cách tốt nhất hãy kêu gọi mọi người góp 🌾 cùng.</li>
                 <li>Đăng yêu cầu và chờ đợi. Bên team dịch sẽ chỉ chấp nhận yêu cầu khi có thể đảm bảo tiến độ và chất lượng, nên sẽ mất chút thời gian để tìm được người dịch phù hợp nhất tùy theo yêu cầu.</li>
+                <li>Dịch giả chỉ có thể chấp nhận yêu cầu sau khi project đã được tạo trên trang web (cơ chế bắt buộc), nếu chấp nhận sẽ nhận về toàn bộ số 🌾 từ yêu cầu bao gồm cả cọc lẫn đóng góp, tức là làm thì ăn cả hoặc không làm, không được nửa vời.</li>
               </ul>
             </div>
 
             <div className="overview-section">
-              <h3>Đối với mở chương/tập có sẵn:</h3>
+              <h3>Mở ngay chương/tập có sẵn:</h3>
               <ul>
                 <li>Chọn bộ truyện trong thanh tìm kiếm.</li>
-                <li>Chọn chương/tập bạn muốn mở + nhắn nhủ thêm nếu có.</li>
+                <li>Chọn chương/tập bạn muốn mở.</li>
                 <li>Điền số 🌾 cọc.</li>
-                <li>Chọn 1 trong 2 option: Mở ngay hoặc Đăng bài gọi vốn.
-                   <p>Nếu chọn mở ngay, số cọc sẽ lập tức được trừ vào số 🌾 cần để mở chương/tập, tự động mở nếu con số giảm xuống 0.</p>
-                   <p>Nếu chọn Đăng bài gọi vốn, thì giống như gửi yêu cầu ở trên, có thể rút lại sau 24h, admin sẽ chấp nhận yêu cầu khi thấy số lượng 🌾 do mọi người góp đủ để mở chương/tập, hoặc sau quãng thời gian đủ lâu.</p></li>
-                <li>Nếu chương/tập không có sẵn, và bạn muốn yêu cầu dịch giả dịch phần tiếp, hãy chọn tên bộ truyện, bỏ trống phần chương/tập, và chọn đăng bài gọi vốn.</li>
+                <li>Sau khi xác nhận, số cọc sẽ lập tức được trừ vào số 🌾 cần để mở chương/tập, tự động mở nếu con số giảm xuống 0.</li>
+                <li>Nếu số 🌾 cọc vượt quá số 🌾 cần để mở chương/tập, số dư sẽ được trả lại cho người dùng.</li>
               </ul>
             </div>
 
@@ -1074,11 +1057,11 @@ const Market = () => {
             </div>
 
             <div className="overview-section">
-              <p className="note">Lưu ý: Đối với những yêu cầu liên quan đến truyện bản quyền hoặc 18+, vui lòng liên hệ <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer">fanpage</a> để được tư vấn thêm.</p>
+              <p className="note">Lưu ý: Đối với những yêu cầu liên quan đến truyện bản quyền hoặc 18+, vui lòng liên hệ <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>fanpage</a> để được tư vấn thêm.</p>
             </div>
 
             <div className="update-date">
-              <em>Cập nhật ngày 29/04/2025</em>
+              <em>Cập nhật ngày 30/04/2025</em>
             </div>
           </div>
         </section>
@@ -1112,107 +1095,278 @@ const Market = () => {
           </div>
           
           {!showHistory && (
-            <div className="requests-list">
-              {isLoading ? (
-                <p>Đang tải yêu cầu...</p>
-              ) : error ? (
-                <p className="error">{error}</p>
-              ) : requests.length === 0 ? (
-                <p>Không có yêu cầu nào</p>
-              ) : (
-                requests.map(request => {
-                  // Get the current user ID
-                  const userId = user?.id || user?._id;
-                  
-                  // Check if the current user has liked this request
-                  const isLikedByCurrentUser = isAuthenticated && userId && 
-                    request.likes && Array.isArray(request.likes) && 
-                    request.likes.some(likeId => likeId === userId);
-                  
-                  return (
-                    <div key={request._id} className="request-item">
-                      <div className="request-avatar">
-                        {request.user.avatar ? (
-                          <img src={request.user.avatar} alt={request.user.username} />
-                        ) : (
-                          <div className="default-avatar">
-                            {request.user.username.charAt(0).toUpperCase()}
+            <>
+              {/* Web Requests Section */}
+              <div className="subsection-header">
+                <h3>
+                  <i className="fas fa-crown"></i> Đề xuất từ nhóm dịch
+                </h3>
+              </div>
+              <div className="request-grid">
+                {isLoading ? (
+                  <p>Đang tải yêu cầu...</p>
+                ) : error ? (
+                  <p className="error">{error}</p>
+                ) : requests.filter(req => req.type === 'web').length === 0 ? (
+                  <p>Không có đề xuất nào từ nhóm dịch</p>
+                ) : (
+                  requests.filter(req => req.type === 'web').map(request => {
+                    // Get the current user ID
+                    const userId = user?.id || user?._id;
+                    
+                    // Check if the current user has liked this request
+                    const isLikedByCurrentUser = isAuthenticated && userId && 
+                      request.likes && Array.isArray(request.likes) && 
+                      request.likes.some(likeId => likeId === userId);
+                    
+                    // Calculate progress percentage (goal is always 10000 for now)
+                    const goalAmount = 10000;
+                    const progressPercent = Math.min(100, Math.round((request.deposit / goalAmount) * 100));
+                    
+                    return (
+                      <div key={request._id} className="request-card admin-request">
+                        <div className="request-header">
+                          <div className="request-title">
+                            {request.novel && (
+                              <Link to={`/novel/${request.novel._id}`} className="novel-link">
+                                {request.novel.title}
+                              </Link>
+                            )}
+                            {!request.novel && (
+                              <span>{request.text}</span>
+                            )}
+                          </div>
+                          <div className="request-info">
+                            <span className="request-username">{request.user.username}</span>
+                            <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
+                          </div>
+                        </div>
+                        
+                        {request.note && (
+                          <div className="request-note">
+                            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
                           </div>
                         )}
-                      </div>
-                      <div className="request-content">
-                        <div className="request-header">
-                          <div className="request-user-info">
-                            <span className="request-username">{request.user.username}</span>
-                            <span className="request-type">
-                              {request.type === 'new' ? 'Yêu cầu truyện mới' : 'Yêu cầu mở chương/tập có sẵn'}
-                            </span>
-                            {request.openNow && (
-                              <span className="request-open-now-badge">
-                                Mở ngay
-                              </span>
-                            )}
-                            {request.type === 'open' && request.novel && (
-                              <div className="request-novel-info">
-                                <Link to={`/novel/${request.novel._id}`} className="novel-link">
-                                  {request.novel.title}
-                                </Link>
-                                {request.module && (
-                                  <span className="module-info">- {request.module.title}</span>
-                                )}
-                                {request.chapter && (
-                                  <span className="chapter-info">- {request.chapter.title}</span>
+                        
+                        <div className="request-stats">
+                          <div className="stat-item">
+                            <i className="fas fa-thumbs-up"></i>
+                            <span>{request.likes ? request.likes.length : 0}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="progress-container">
+                          <div className="progress-bar" style={{ width: `${progressPercent}%` }}></div>
+                        </div>
+                        <div className="progress-text">
+                          <span>{request.deposit} 🌾</span>
+                          <span>{progressPercent}%</span>
+                          <span>{goalAmount} 🌾</span>
+                        </div>
+                        
+                        {/* Contributions Section */}
+                        {contributions[request._id] && contributions[request._id].length > 0 && (
+                          <div className="show-donors-btn" onClick={() => handleShowContributionForm(request._id)}>
+                            <i className="fas fa-users"></i>
+                            {showContributionForm === request._id 
+                              ? 'Ẩn danh sách người góp 🌾' 
+                              : `Xem danh sách người góp 🌾 (${contributions[request._id].length})`}
+                          </div>
+                        )}
+                        
+                        {showContributionForm === request._id && contributions[request._id] && (
+                          <div className="donors-list active">
+                            {contributions[request._id].map(contribution => (
+                              <div key={contribution._id} className={`donor-item status-${contribution.status}`}>
+                                <div>
+                                  <span className="donor-name">{contribution.user.username}</span> - 
+                                  <span className="donor-amount">{contribution.amount} 🌾</span>
+                                </div>
+                                {contribution.note && (
+                                  <div className="donor-message">"{contribution.note}"</div>
                                 )}
                               </div>
-                            )}
+                            ))}
                           </div>
-                          <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
-                        </div>
-                        <div className="request-text">
-                          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.text) }} />
-                          {request.note && (
-                            <div className="request-note">
-                              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
-                            </div>
-                          )}
-                          <div className="request-deposit">🌾 Cọc: {request.deposit}</div>
-                        </div>
+                        )}
+                        
                         <div className="request-actions">
                           <button 
-                            className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
+                            className={`action-btn upvote-btn ${isLikedByCurrentUser ? 'active' : ''}`}
                             onClick={() => handleLikeRequest(request._id)}
                             disabled={!isAuthenticated || likingRequests.has(request._id)}
                           >
-                            <span className="like-icon market-like-icon">
-                              {likingRequests.has(request._id) ? '⏳' : <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
-                            </span>
-                            <span className="like-text">Thích</span>
-                            <span className="like-count">{request.likes ? request.likes.length : 0}</span>
+                            <i className={`fas fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>
+                            <span>Upvote</span>
                           </button>
                           
-                          {/* Contribute button - visible to everyone for pending requests */}
-                          {request.status === 'pending' && (
-                            <button 
-                              className="contribute-button"
-                              onClick={() => handleShowContributionForm(request._id)}
-                            >
-                              {showContributionForm === request._id ? 'Hủy bỏ' : 'Góp 🌾'}
-                            </button>
-                          )}
+                          <button 
+                            className="action-btn donate-btn"
+                            onClick={() => handleShowContributionForm(request._id)}
+                          >
+                            <i className="fas fa-hand-holding-heart"></i>
+                            <span>Góp 🌾</span>
+                          </button>
+                        </div>
+                        
+                        {/* Contribution Form */}
+                        {showContributionForm === request._id && isAuthenticated && (
+                          <div className="contribution-form">
+                            <div className="contribution-input-container">
+                              <label htmlFor={`contribution-amount-${request._id}`}>Góp số 🌾:</label>
+                              <input
+                                type="number"
+                                id={`contribution-amount-${request._id}`}
+                                min="1"
+                                step="1"
+                                value={contributionAmount}
+                                onChange={(e) => setContributionAmount(e.target.value)}
+                                disabled={submittingContribution}
+                                required
+                                className="contribution-input"
+                              />
+                              <span className="balance-display">🌾 hiện tại: {userBalance}</span>
+                            </div>
+                            
+                            <textarea
+                              className="contribution-note-input"
+                              placeholder="Nhắn nhủ thêm... (nếu có)"
+                              value={contributionNote}
+                              onChange={(e) => setContributionNote(e.target.value)}
+                              disabled={submittingContribution}
+                            />
+                            
+                            <div className="contribution-form-actions">
+                              <button 
+                                className="submit-contribution-btn"
+                                onClick={() => handleSubmitContribution(request._id)}
+                                disabled={submittingContribution || !contributionAmount || 
+                                        (contributionAmount && Number(contributionAmount) > userBalance)}
+                              >
+                                {submittingContribution ? 'Đang góp...' : 'Xác nhận'}
+                              </button>
+                              <button 
+                                type="button" 
+                                className="cancel-contribution-btn"
+                                onClick={() => {
+                                  setShowContributionForm(null);
+                                  setContributionAmount('');
+                                  setContributionNote('');
+                                }}
+                              >
+                                Hủy bỏ
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              
+              {/* User Requests Section */}
+              <div className="subsection-header">
+                <h3>
+                  <i className="fas fa-users"></i> Đề xuất từ người dùng
+                </h3>
+              </div>
+              <div className="request-grid">
+                {isLoading ? (
+                  <p>Đang tải yêu cầu...</p>
+                ) : error ? (
+                  <p className="error">{error}</p>
+                ) : requests.filter(req => req.type === 'new' || req.type === 'open').length === 0 ? (
+                  <p>Không có đề xuất nào từ người dùng</p>
+                ) : (
+                  requests.filter(req => req.type === 'new' || req.type === 'open').map(request => {
+                    // Get the current user ID
+                    const userId = user?.id || user?._id;
+                    
+                    // Check if the current user has liked this request
+                    const isLikedByCurrentUser = isAuthenticated && userId && 
+                      request.likes && Array.isArray(request.likes) && 
+                      request.likes.some(likeId => likeId === userId);
+                    
+                    // Calculate progress percentage (goal is always 10000 for now)
+                    const goalAmount = 10000;
+                    const progressPercent = Math.min(100, Math.round((request.deposit / goalAmount) * 100));
+                    
+                    return (
+                      <div key={request._id} className="request-card">
+                        <div className="request-header">
+                          <div className="request-title">{request.text}</div>
+                          <div className="request-info">
+                            <span className="request-username">{request.user.username}</span>
+                            <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
+                          </div>
+                        </div>
+                        
+                        {request.note && (
+                          <div className="request-note">
+                            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
+                          </div>
+                        )}
+                        
+                        <div className="request-stats">
+                          <div className="stat-item">
+                            <i className="fas fa-thumbs-up"></i>
+                            <span>{request.likes ? request.likes.length : 0}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="progress-container">
+                          <div className="progress-bar" style={{ width: `${progressPercent}%` }}></div>
+                        </div>
+                        <div className="progress-text">
+                          <span>{request.deposit} 🌾</span>
+                          <span>{progressPercent}%</span>
+                          <span>{goalAmount} 🌾</span>
+                        </div>
+                        
+                        {/* Contributions Section */}
+                        {contributions[request._id] && contributions[request._id].length > 0 && (
+                          <div className="show-donors-btn" onClick={() => handleShowContributionForm(request._id)}>
+                            <i className="fas fa-users"></i>
+                            {showContributionForm === request._id 
+                              ? 'Ẩn danh sách người góp 🌾' 
+                              : `Xem danh sách người góp 🌾 (${contributions[request._id].length})`}
+                          </div>
+                        )}
+                        
+                        {showContributionForm === request._id && contributions[request._id] && (
+                          <div className="donors-list active">
+                            {contributions[request._id].map(contribution => (
+                              <div key={contribution._id} className={`donor-item status-${contribution.status}`}>
+                                <div>
+                                  <span className="donor-name">{contribution.user.username}</span> - 
+                                  <span className="donor-amount">{contribution.amount} 🌾</span>
+                                </div>
+                                {contribution.note && (
+                                  <div className="donor-message">"{contribution.note}"</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="request-actions">
+                          <button 
+                            className={`action-btn upvote-btn ${isLikedByCurrentUser ? 'active' : ''}`}
+                            onClick={() => handleLikeRequest(request._id)}
+                            disabled={!isAuthenticated || likingRequests.has(request._id)}
+                          >
+                            <i className={`fas fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>
+                            <span>Upvote</span>
+                          </button>
                           
-                          {/* Withdraw button - visible only for the user's own requests after 24 hours */}
-                          {isAuthenticated && 
-                           user && 
-                           request.user._id === (user._id || user.id) && 
-                           withdrawableRequests.has(request._id) && (
-                            <button 
-                              className="withdraw-button"
-                              onClick={() => handleWithdrawRequest(request._id)}
-                              disabled={withdrawingRequests.has(request._id)}
-                            >
-                              {withdrawingRequests.has(request._id) ? 'Đang rút...' : 'Rút lại yêu cầu'}
-                            </button>
-                          )}
+                          <button 
+                            className="action-btn donate-btn"
+                            onClick={() => handleShowContributionForm(request._id)}
+                          >
+                            <i className="fas fa-hand-holding-heart"></i>
+                            <span>Góp 🌾</span>
+                          </button>
                           
                           {/* Admin actions */}
                           {user && user.role === 'admin' && (
@@ -1231,137 +1385,78 @@ const Market = () => {
                               </button>
                             </div>
                           )}
+                          
+                          {/* Withdraw button - visible only for the user's own requests after 24 hours */}
+                          {isAuthenticated && 
+                           user && 
+                           request.user._id === (user._id || user.id) && 
+                           withdrawableRequests.has(request._id) && (
+                            <button 
+                              className="withdraw-button"
+                              onClick={() => handleWithdrawRequest(request._id)}
+                              disabled={withdrawingRequests.has(request._id)}
+                            >
+                              {withdrawingRequests.has(request._id) ? 'Đang rút...' : 'Rút lại yêu cầu'}
+                            </button>
+                          )}
                         </div>
-
-                        {/* Contributions Section - Only shown when contribute form is active or contributions exist */}
-                        {(showContributionForm === request._id || 
-                          (contributions[request._id] && contributions[request._id].length > 0)) && (
-                          <div className="contributions-container">
-                            {/* Contribution Form - Only shown when contribute button is clicked */}
-                            {showContributionForm === request._id && isAuthenticated && (
-                              <div className="contribution-form">
-                                <div className="contribution-input-container">
-                                  <label htmlFor={`contribution-amount-${request._id}`}>Góp số🌾:</label>
-                                  <input
-                                    type="number"
-                                    id={`contribution-amount-${request._id}`}
-                                    min="1"
-                                    step="1"
-                                    value={contributionAmount}
-                                    onChange={(e) => setContributionAmount(e.target.value)}
-                                    disabled={submittingContribution}
-                                    required
-                                    className="contribution-input"
-                                  />
-                                  <span className="balance-display">🌾 hiện tại: {userBalance}</span>
-                                </div>
-                                
-                                <textarea
-                                  className="contribution-note-input"
-                                  placeholder="Nhắn nhủ thêm... (nếu có)"
-                                  value={contributionNote}
-                                  onChange={(e) => setContributionNote(e.target.value)}
-                                  disabled={submittingContribution}
-                                />
-                                
-                                <div className="contribution-form-actions">
-                                  <button 
-                                    className="submit-contribution-btn"
-                                    onClick={() => handleSubmitContribution(request._id)}
-                                    disabled={submittingContribution || !contributionAmount || 
-                                            (contributionAmount && Number(contributionAmount) > userBalance)}
-                                  >
-                                    {submittingContribution ? 'Đang góp...' : 'Xác nhận'}
-                                  </button>
-                                  <button 
-                                    type="button" 
-                                    className="cancel-contribution-btn"
-                                    onClick={() => {
-                                      setShowContributionForm(null);
-                                      setContributionAmount('');
-                                      setContributionNote('');
-                                    }}
-                                  >
-                                    Hủy bỏ
-                                  </button>
-                                </div>
-                              </div>
-                            )}
+                        
+                        {/* Contribution Form */}
+                        {showContributionForm === request._id && isAuthenticated && (
+                          <div className="contribution-form">
+                            <div className="contribution-input-container">
+                              <label htmlFor={`contribution-amount-${request._id}`}>Góp số 🌾:</label>
+                              <input
+                                type="number"
+                                id={`contribution-amount-${request._id}`}
+                                min="1"
+                                step="1"
+                                value={contributionAmount}
+                                onChange={(e) => setContributionAmount(e.target.value)}
+                                disabled={submittingContribution}
+                                required
+                                className="contribution-input"
+                              />
+                              <span className="balance-display">🌾 hiện tại: {userBalance}</span>
+                            </div>
                             
-                            {/* Show login prompt in the form area if not authenticated */}
-                            {showContributionForm === request._id && !isAuthenticated && (
-                              <div className="login-to-contribute">
-                                Vui lòng <button onClick={() => window.dispatchEvent(new CustomEvent('openLoginModal'))} className="login-link">đăng nhập</button> để góp🌾.
-                              </div>
-                            )}
+                            <textarea
+                              className="contribution-note-input"
+                              placeholder="Nhắn nhủ thêm... (nếu có)"
+                              value={contributionNote}
+                              onChange={(e) => setContributionNote(e.target.value)}
+                              disabled={submittingContribution}
+                            />
                             
-                            {/* Contributions List - Only shown when contributions exist */}
-                            {contributions[request._id] && contributions[request._id].length > 0 && (
-                              <div className="contributions-list">
-                                <h4 className="contributions-title">
-                                  {loadingContributions.has(request._id) 
-                                    ? 'Đang tải đóng góp...' 
-                                    : `Đóng góp (${contributions[request._id].length})`}
-                                </h4>
-                                
-                                {contributions[request._id].map(contribution => (
-                                  <div key={contribution._id} className={`contribution-item status-${contribution.status}`}>
-                                    <div className="contribution-avatar">
-                                      {contribution.user.avatar ? (
-                                        <img src={contribution.user.avatar} alt={contribution.user.username} />
-                                      ) : (
-                                        <div className="default-avatar">
-                                          {contribution.user.username.charAt(0).toUpperCase()}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="contribution-content">
-                                      <div className="contribution-header">
-                                        <div className="contribution-user-info">
-                                          <span className="contribution-username">{contribution.user.username}</span>
-                                          <span className={`contribution-status status-${contribution.status}`}>
-                                            {contribution.status.charAt(0).toUpperCase() + contribution.status.slice(1)}
-                                          </span>
-                                        </div>
-                                        <span className="contribution-time">{formatRelativeTime(contribution.createdAt)}</span>
-                                      </div>
-                                      {contribution.note && (
-                                        <div className="contribution-text">
-                                          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contribution.note) }} />
-                                        </div>
-                                      )}
-                                      <div className="contribution-amount">Góp🌾: {contribution.amount}</div>
-                                      
-                                      {/* Admin actions for contributions */}
-                                      {user && user.role === 'admin' && contribution.status === 'pending' && (
-                                        <div className="admin-actions contribution-admin-actions">
-                                          <button 
-                                            className="approve-btn"
-                                            onClick={() => handleApproveContribution(contribution._id, request._id)}
-                                          >
-                                            Duyệt
-                                          </button>
-                                          <button 
-                                            className="decline-btn"
-                                            onClick={() => handleDeclineContribution(contribution._id, request._id)}
-                                          >
-                                            Từ chối
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                            <div className="contribution-form-actions">
+                              <button 
+                                className="submit-contribution-btn"
+                                onClick={() => handleSubmitContribution(request._id)}
+                                disabled={submittingContribution || !contributionAmount || 
+                                        (contributionAmount && Number(contributionAmount) > userBalance)}
+                              >
+                                {submittingContribution ? 'Đang góp...' : 'Xác nhận'}
+                              </button>
+                              <button 
+                                type="button" 
+                                className="cancel-contribution-btn"
+                                onClick={() => {
+                                  setShowContributionForm(null);
+                                  setContributionAmount('');
+                                  setContributionNote('');
+                                }}
+                              >
+                                Hủy bỏ
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
           )}
         </section>
         
@@ -1383,8 +1478,18 @@ const Market = () => {
                   className={`type-tab ${requestType === 'open' ? 'active' : ''}`} 
                   onClick={() => handleTypeChange('open')}
                 >
-                  Yêu cầu mở chương/tập có sẵn
+                  Mở ngay chương/tập có sẵn
                 </button>
+                
+                {/* Admin only tab for web recommendations */}
+                {user && user.role === 'admin' && (
+                  <button 
+                    className={`type-tab ${requestType === 'web' ? 'active' : ''}`} 
+                    onClick={() => handleTypeChange('web')}
+                  >
+                    Đề xuất từ nhóm dịch
+                  </button>
+                )}
                 
                 {/* Request History Button - Visible to all logged-in users */}
                 {isAuthenticated && (
@@ -1481,7 +1586,80 @@ const Market = () => {
                 </div>
               ) : (
                 <form className="request-form" onSubmit={handleSubmit}>
-                  {requestType === 'open' && (
+                  {/* Admin Web Recommendation Form */}
+                  {requestType === 'web' && user && user.role === 'admin' && (
+                    <div className="novel-search-container">
+                      <div className="novel-search short">
+                        <input
+                          type="text"
+                          placeholder="Tìm kiếm truyện đã có..."
+                          value={novelSearchQuery}
+                          onChange={(e) => {
+                            setNovelSearchQuery(e.target.value);
+                            setShowNovelResults(true);
+                          }}
+                          onFocus={() => setShowNovelResults(true)}
+                          disabled={submitting}
+                          className="novel-search-input"
+                        />
+                        {isSearching && <div className="searching-indicator">Đang tìm...</div>}
+                        
+                        {showNovelResults && novelSearchResults.length > 0 && (
+                          <div className="novel-search-results">
+                            {novelSearchResults.map(novel => (
+                              <div 
+                                key={novel._id} 
+                                className="novel-result"
+                                onClick={() => handleNovelSelect(novel)}
+                              >
+                                <img 
+                                  src={novel.illustration || 'https://placeholder.com/book'} 
+                                  alt={novel.title} 
+                                  className="novel-result-cover"
+                                />
+                                <div className="novel-result-info">
+                                  <div className="novel-result-title">{novel.title}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {showNovelResults && novelSearchQuery.length >= 3 && novelSearchResults.length === 0 && !isSearching && (
+                          <div className="no-results">Không tìm thấy truyện</div>
+                        )}
+                      </div>
+                      
+                      <textarea
+                        className="request-input"
+                        placeholder="Nhắn nhủ thêm... (nếu có)"
+                        value={requestNote}
+                        onChange={(e) => setRequestNote(e.target.value)}
+                        disabled={submitting}
+                      />
+                    </div>
+                  )}
+                  
+                  {requestType === 'new' ? (
+                    <>
+                      <input
+                        type="text"
+                        className="request-title-input"
+                        placeholder="Tên truyện bạn muốn yêu cầu..."
+                        value={requestText}
+                        onChange={(e) => setRequestText(e.target.value)}
+                        disabled={submitting}
+                        required
+                      />
+                      <textarea
+                        className="request-input"
+                        placeholder="Nhắn nhủ thêm... (nếu có)"
+                        value={requestNote}
+                        onChange={(e) => setRequestNote(e.target.value)}
+                        disabled={submitting}
+                      />
+                    </>
+                  ) : requestType === 'open' ? (
                     <div className="novel-search-container">
                       <div className="novel-search short">
                         <input
@@ -1560,115 +1738,7 @@ const Market = () => {
                         </div>
                       )}
                     </div>
-                  )}
-                  
-                  {requestType === 'new' ? (
-                    <>
-                      <input
-                        type="text"
-                        className="request-title-input"
-                        placeholder="Tên truyện bạn muốn yêu cầu..."
-                        value={requestText}
-                        onChange={(e) => setRequestText(e.target.value)}
-                        disabled={submitting}
-                        required
-                      />
-                      <textarea
-                        className="request-input"
-                        placeholder="Nhắn nhủ thêm... (nếu có)"
-                        value={requestNote}
-                        onChange={(e) => setRequestNote(e.target.value)}
-                        disabled={submitting}
-                      />
-                    </>
-                  ) : (
-                    <textarea
-                      className="request-input"
-                      placeholder="Nhắn nhủ thêm... (nếu có)"
-                      value={requestText}
-                      onChange={(e) => setRequestText(e.target.value)}
-                      disabled={submitting}
-                    />
-                  )}
-                  
-                  {/* Request options for "open" type requests */}
-                  {requestType === 'open' && selectedNovel && (
-                    <div className="request-options">
-                      <div className="options-title">Loại yêu cầu:</div>
-                      <div className="radio-options">
-                        <label className={`option-label ${openNowOption === 'post' ? 'selected' : ''}`}>
-                          <input
-                            type="radio"
-                            name="requestOption"
-                            value="post"
-                            checked={openNowOption === 'post'}
-                            onChange={() => handleOptionChange('post')}
-                          />
-                          <span className="option-text">Đăng bài gọi vốn</span>
-                          <span className="option-description">Gửi yêu cầu đợi duyệt (Có thể rút lại sau 24h)</span>
-                        </label>
-                        
-                        <label 
-                          className={`option-label ${openNowOption === 'openNow' ? 'selected' : ''} ${!canOpenNow ? 'disabled' : ''}`}
-                        >
-                          <input
-                            type="radio"
-                            name="requestOption"
-                            value="openNow"
-                            checked={openNowOption === 'openNow'}
-                            onChange={() => handleOptionChange('openNow')}
-                            disabled={!canOpenNow}
-                          />
-                          <span className="option-text">Mở ngay</span>
-                          <span className="option-description">
-                            {canOpenNow 
-                              ? `Mở ${selectedModuleData ? 'module' : 'chapter'} ngay lập tức với số cọc của bạn`
-                              : 'Chọn một tập/chương đang bị khóa để bật tùy chọn này'}
-                          </span>
-                        </label>
-                      </div>
-                      
-                      {openNowOption === 'openNow' && selectedModuleData && (
-                        <div className="option-info">
-                          <p>Số 🌾 còn lại để mở tập: {selectedModuleData.moduleBalance}</p>
-                          {Number(depositAmount) > 0 && (
-                            <>
-                              <p>
-                                {Number(depositAmount) >= selectedModuleData.moduleBalance 
-                                  ? 'Thao tác này sẽ mở khóa tập và chuyển chế độ thành "Công khai"' 
-                                  : `Thao tác này sẽ giảm số cọc còn lại thành ${Math.max(0, selectedModuleData.moduleBalance - Number(depositAmount))}`}
-                              </p>
-                              {Number(depositAmount) > selectedModuleData.moduleBalance && (
-                                <p className="refund-info">
-                                  Bạn sẽ được hoàn lại {Number(depositAmount) - selectedModuleData.moduleBalance}
-                                </p>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )}
-                      
-                      {openNowOption === 'openNow' && selectedChapterData && (
-                        <div className="option-info">
-                          <p>Số 🌾 còn lại để mở chương: {selectedChapterData.chapterBalance}</p>
-                          {Number(depositAmount) > 0 && (
-                            <>
-                              <p>
-                                {Number(depositAmount) >= selectedChapterData.chapterBalance 
-                                  ? 'Thao tác này sẽ mở khóa chương và chuyển chế độ thành "Công khai"' 
-                                  : `Thao tác này sẽ giảm số cọc còn lại thành ${Math.max(0, selectedChapterData.chapterBalance - Number(depositAmount))}`}
-                              </p>
-                              {Number(depositAmount) > selectedChapterData.chapterBalance && (
-                                <p className="refund-info">
-                                  Bạn sẽ được hoàn lại {Number(depositAmount) - selectedChapterData.chapterBalance}
-                                </p>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  ) : null}
                   
                   <div className="deposit-input-container">
                     <label htmlFor="deposit">Cọc:</label>
@@ -1696,6 +1766,7 @@ const Market = () => {
                                !depositAmount || 
                                Number(depositAmount) < 100 ||
                                (requestType === 'open' && !selectedNovel) ||
+                               (requestType === 'web' && !selectedNovel) ||  // Disable submit if no novel selected for web recommendation
                                (depositAmount && Number(depositAmount) > userBalance)}
                     >
                       {submitting ? 'Đang gửi...' : 'Gửi Yêu Cầu'}

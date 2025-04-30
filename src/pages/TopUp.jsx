@@ -331,7 +331,12 @@ const TopUp = () => {
             <span className="rule-icon">🦋</span>
             <p>Bạn có thể mua 🌾 bằng các phương thức thanh toán dưới đây</p>
           </div>
+          <div className="rule-item">
+            <span className="rule-icon">🦋</span>
+            <p>Nếu bạn sử dụng các phương thức thanh toán khác như Visa/Mastercard/Paypal/Vcoin..., vui lòng liên hệ <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>fanpage</a> để được hỗ trợ</p>
+          </div>
         </div>
+        
       </section>
 
       <div className="top-up-content">
