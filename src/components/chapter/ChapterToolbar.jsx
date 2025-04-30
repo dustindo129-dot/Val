@@ -26,7 +26,7 @@ const ChapterToolbar = ({
           <FontAwesomeIcon icon={faEdit}/> {chapter.editor || 'Không có biên tập'}
         </span>
         <span className="staff-member proofreader">
-          <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader || 'Không có người kiểm tra chất lượng'}
+          <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader || 'Không có kiểm tra chất lượng'}
         </span>
       </div>
 
