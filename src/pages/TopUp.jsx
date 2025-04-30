@@ -542,7 +542,7 @@ const TopUp = () => {
                     <div className="transfer-notes">
                       <div className="note-title">Chú ý</div>
                       <ol className="note-list">
-                        <li><strong>QUAN TRỌNG:</strong> Bấm "Gửi yêu cầu thanh toán" sau khi đã quét mã QR hoặc chuyển khoản để hoàn thành giao dịch.</li>
+                        <li><strong>QUAN TRỌNG:</strong> Bấm "Gửi yêu cầu thanh toán" SAU KHI đã quét mã QR hoặc chuyển khoản để hoàn thành giao dịch.</li>
                         <li>Hiện tại phương thức chuyển khoản ngân hàng chỉ hỗ trợ Vietinbank.</li>
                         <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản ở trên.</li>
                         <li>Số dư sẽ được cập nhật trong vòng tối đa 1h sau khi chuyển khoản thành công.</li>

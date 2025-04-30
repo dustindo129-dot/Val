@@ -87,7 +87,22 @@ const TopUpManagement = () => {
         `${config.backendUrl}/api/topup-admin/pending-requests`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-      setPendingRequests(response.data);
+      
+      // Ensure all bank requests have an actualAmount property
+      const processedRequests = response.data.map(request => {
+        if (request.paymentMethod === 'bank' && !request.details.actualAmount) {
+          return {
+            ...request,
+            details: {
+              ...request.details,
+              actualAmount: 0
+            }
+          };
+        }
+        return request;
+      });
+      
+      setPendingRequests(processedRequests);
       setPendingLoading(false);
     } catch (err) {
       console.error('Failed to fetch pending requests:', err);
@@ -332,7 +347,16 @@ const TopUpManagement = () => {
 
         {/* New section: Pending Requests */}
         <section className="top-up-section pending-section">
-          <h2>Yêu cầu chờ xử lý</h2>
+          <div className="transaction-header-container">
+            <h2>Yêu cầu chờ xử lý</h2>
+            <button 
+              className="refresh-button"
+              onClick={fetchPendingRequests}
+              disabled={pendingLoading}
+            >
+              {pendingLoading ? 'Đang tải lại...' : 'Tải lại yêu cầu'}
+            </button>
+          </div>
           {pendingLoading ? (
             <p>Đang tải yêu cầu chờ xử lý...</p>
           ) : pendingRequests.length === 0 ? (
@@ -364,7 +388,10 @@ const TopUpManagement = () => {
                       Số tiền: {formatPrice(request.amount)}
                       {request.paymentMethod === 'bank' && (
                         <span className="actual-amount">
-                          {' | '}Số tiền thực nhận: {formatPrice(request.details?.actualAmount || 0)}
+                          {' | '}Số tiền thực nhận: {formatPrice(request.receivedAmount || 0)}
+                          {request.receivedAmount > 0 && request.receivedAmount !== request.amount && (
+                            <span className="amount-mismatch"> ⚠️</span>
+                          )}
                         </span>
                       )}
                     </div>
@@ -372,6 +399,24 @@ const TopUpManagement = () => {
                       Số 🌾: {request.balance}
                     </div>
                   </div>
+                  {request.paymentMethod === 'bank' && request.bankTransactions && request.bankTransactions.length > 0 && (
+                    <div className="bank-transactions">
+                      <div className="transactions-title">Giao dịch đã nhận:</div>
+                      {request.bankTransactions.map((transaction, idx) => (
+                        <div key={idx} className="bank-transaction-item">
+                          <span className="transaction-date">
+                            {formatDate(transaction.date)}
+                          </span>
+                          <span className="transaction-amount">
+                            {formatPrice(transaction.amount)}
+                          </span>
+                          <span className="transaction-id">
+                            ID: {transaction.transactionId}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="request-actions">
                     <div className="balance-adjustment">
                       <label>Điều chỉnh số 🌾:</label>

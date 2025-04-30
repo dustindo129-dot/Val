@@ -1112,6 +1112,11 @@
   font-weight: 500;
 }
 
+.amount-mismatch {
+  color: #ff9800;
+  font-weight: bold;
+}
+
 .actual-amount:empty {
   display: none;
 }
@@ -1119,4 +1124,67 @@
 /* Dark mode style for actual amount */
 :root.dark-mode .actual-amount {
   color: #e9ecef;
+}
+
+.bank-transactions {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.transactions-title {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.bank-transaction-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.85rem;
+}
+
+.bank-transaction-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-date {
+  color: #666;
+}
+
+.transaction-amount {
+  font-weight: 500;
+  color: #28a745;
+}
+
+.transaction-id {
+  color: #777;
+  font-size: 0.8rem;
+}
+
+/* Dark mode styles for bank transactions */
+:root.dark-mode .bank-transactions {
+  background-color: #343a40;
+}
+
+:root.dark-mode .transactions-title {
+  color: #adb5bd;
+}
+
+:root.dark-mode .bank-transaction-item {
+  border-bottom-color: #495057;
+}
+
+:root.dark-mode .transaction-date,
+:root.dark-mode .transaction-id {
+  color: #adb5bd;
+}
+
+:root.dark-mode .transaction-amount {
+  color: #28a745;
 } 
