@@ -44,7 +44,7 @@ const Market = () => {
   const [requestText, setRequestText] = useState('');
   const [requestNote, setRequestNote] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
-  const [goalAmount, setGoalAmount] = useState('10000'); // Default goal amount for web requests
+  const [goalAmount, setGoalAmount] = useState('1000'); // Default goal amount for web requests
   const [novelSearchQuery, setNovelSearchQuery] = useState('');
   const [novelSearchResults, setNovelSearchResults] = useState([]);
   const [selectedNovel, setSelectedNovel] = useState(null);
@@ -466,7 +466,7 @@ const Market = () => {
       setRequestText('');
       setRequestNote('');
       setDepositAmount('');
-      setGoalAmount('10000');
+      setGoalAmount('1000');
       setSelectedNovel(null);
       setSelectedModule(null);
       setSelectedChapter(null);
@@ -490,7 +490,7 @@ const Market = () => {
     setRequestText('');
     setRequestNote('');
     setDepositAmount('');
-    setGoalAmount('10000');
+    setGoalAmount('1000');
     setSelectedNovel(null);
     setSelectedModule(null);
     setSelectedChapter(null);
@@ -532,7 +532,7 @@ const Market = () => {
     setRequestText('');
     setRequestNote('');
     setDepositAmount('');
-    setGoalAmount('10000');
+    setGoalAmount('1000');
     setSelectedNovel(null);
     setSelectedModule(null);
     setSelectedChapter(null);
@@ -756,6 +756,32 @@ const Market = () => {
     }
   };
 
+  // Handle deleting a request (admin only)
+  const handleDeleteRequest = async (requestId) => {
+    if (!user || user.role !== 'admin') {
+      return;
+    }
+
+    if (!confirm('Bạn có chắc chắn muốn gỡ yêu cầu này?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `${config.backendUrl}/api/requests/${requestId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Remove the request from the list
+      setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
+      
+      alert('Yêu cầu đã được gỡ thành công');
+    } catch (err) {
+      console.error('Không thể gỡ yêu cầu:', err);
+      alert('Không thể gỡ yêu cầu');
+    }
+  };
+
   // Handle withdrawing a request
   const handleWithdrawRequest = async (requestId) => {
     if (!isAuthenticated) {
@@ -940,6 +966,7 @@ const Market = () => {
             handleShowContributionForm={handleShowContributionForm}
             handleApproveRequest={handleApproveRequest}
             handleDeclineRequest={handleDeclineRequest}
+            handleDeleteRequest={handleDeleteRequest}
             withdrawableRequests={withdrawableRequests}
             withdrawingRequests={withdrawingRequests}
             handleWithdrawRequest={handleWithdrawRequest}

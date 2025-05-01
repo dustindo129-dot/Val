@@ -19,6 +19,7 @@ import { formatRelativeTime } from './utils';
  * @param {Function} props.handleShowContributionForm - Function to show contribution form
  * @param {Function} props.handleApproveRequest - Function to handle approving a request (admin only)
  * @param {Function} props.handleDeclineRequest - Function to handle declining a request (admin only)
+ * @param {Function} props.handleDeleteRequest - Function to handle deleting a request (admin only)
  * @param {Set} props.withdrawableRequests - Set of withdrawable request IDs
  * @param {Set} props.withdrawingRequests - Set of request IDs currently being withdrawn
  * @param {Function} props.handleWithdrawRequest - Function to handle withdrawing a request
@@ -39,6 +40,7 @@ const RequestCard = ({
   handleShowContributionForm,
   handleApproveRequest,
   handleDeclineRequest,
+  handleDeleteRequest,
   withdrawableRequests,
   withdrawingRequests,
   handleWithdrawRequest,
@@ -48,7 +50,7 @@ const RequestCard = ({
   isAdminRequest
 }) => {
   // Calculate progress percentage without capping at 100%
-  const goalAmount = request.type === 'web' ? (request.goalBalance || 10000) : 10000;
+  const goalAmount = request.type === 'web' ? (request.goalBalance || 1000) : 1000;
   const progressPercent = Math.round((request.deposit / goalAmount) * 100);
 
   return (
@@ -86,7 +88,7 @@ const RequestCard = ({
       </div>
       
       <div className="progress-container">
-        <div className="progress-bar" style={{ width: `${Math.min(100, progressPercent)}%` }}></div>
+        <div className={`progress-bar ${progressPercent > 100 ? 'exceeded' : ''}`} style={{ width: `${Math.min(100, progressPercent)}%` }}></div>
       </div>
       <div className="progress-text">
         <span>{request.deposit} 🌾</span>
@@ -167,6 +169,18 @@ const RequestCard = ({
               <span>Từ chối</span>
             </button>
           </div>
+        )}
+        
+        {/* Delete button for admin users and web requests */}
+        {isAdmin && request.type === 'web' && (
+          <button 
+            className="action-btn decline-btn"
+            onClick={() => handleDeleteRequest(request._id)}
+            title="Gỡ yêu cầu"
+          >
+            <i className="fas fa-trash"></i>
+            <span>Gỡ</span>
+          </button>
         )}
         
         {/* Withdraw button - visible only for the user's own requests after 24 hours */}

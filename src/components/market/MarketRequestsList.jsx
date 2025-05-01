@@ -19,6 +19,7 @@ import RequestCard from './RequestCard';
  * @param {Function} props.handleShowContributionForm - Function to show contribution form
  * @param {Function} props.handleApproveRequest - Function to handle approving a request
  * @param {Function} props.handleDeclineRequest - Function to handle declining a request
+ * @param {Function} props.handleDeleteRequest - Function to handle deleting a request
  * @param {Set} props.withdrawableRequests - Set of withdrawable request IDs
  * @param {Set} props.withdrawingRequests - Set of request IDs currently being withdrawn
  * @param {Function} props.handleWithdrawRequest - Function to handle withdrawing a request
@@ -41,6 +42,7 @@ const MarketRequestsList = ({
   handleShowContributionForm,
   handleApproveRequest,
   handleDeclineRequest,
+  handleDeleteRequest,
   withdrawableRequests,
   withdrawingRequests,
   handleWithdrawRequest,
@@ -120,6 +122,7 @@ const MarketRequestsList = ({
                 handleShowContributionForm={handleShowContributionForm}
                 handleApproveRequest={handleApproveRequest}
                 handleDeclineRequest={handleDeclineRequest}
+                handleDeleteRequest={handleDeleteRequest}
                 withdrawableRequests={withdrawableRequests}
                 withdrawingRequests={withdrawingRequests}
                 handleWithdrawRequest={handleWithdrawRequest}
@@ -174,6 +177,7 @@ const MarketRequestsList = ({
                 handleShowContributionForm={handleShowContributionForm}
                 handleApproveRequest={handleApproveRequest}
                 handleDeclineRequest={handleDeclineRequest}
+                handleDeleteRequest={handleDeleteRequest}
                 withdrawableRequests={withdrawableRequests}
                 withdrawingRequests={withdrawingRequests}
                 handleWithdrawRequest={handleWithdrawRequest}
