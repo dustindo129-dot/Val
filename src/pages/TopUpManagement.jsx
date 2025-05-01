@@ -680,7 +680,7 @@ const TopUpManagement = () => {
               </div>
               <button 
                 type="submit" 
-                className="submit-button"
+                className="management-submit-button"
                 disabled={submitting || !username.trim() || !amount || Number(amount) <= 0}
               >
                 {submitting ? 'Đang phát...' : 'Phát 🌾'}

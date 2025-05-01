@@ -136,7 +136,7 @@ const Login = ({ onClose, onSignUp }) => {
       {/* Submit button */}
       <button 
         type="submit" 
-        className="submit-button" 
+        className="auth-submit-button" 
         disabled={loading}
       >
         {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}

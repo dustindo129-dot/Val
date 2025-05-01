@@ -19,7 +19,6 @@ import { formatRelativeTime } from './utils';
  * @param {Function} props.handleShowContributionForm - Function to show contribution form
  * @param {Function} props.handleApproveRequest - Function to handle approving a request (admin only)
  * @param {Function} props.handleDeclineRequest - Function to handle declining a request (admin only)
- * @param {Function} props.handleDeleteRequest - Function to handle deleting a request (admin only)
  * @param {Set} props.withdrawableRequests - Set of withdrawable request IDs
  * @param {Set} props.withdrawingRequests - Set of request IDs currently being withdrawn
  * @param {Function} props.handleWithdrawRequest - Function to handle withdrawing a request
@@ -40,7 +39,6 @@ const RequestCard = ({
   handleShowContributionForm,
   handleApproveRequest,
   handleDeclineRequest,
-  handleDeleteRequest,
   withdrawableRequests,
   withdrawingRequests,
   handleWithdrawRequest,
@@ -157,7 +155,7 @@ const RequestCard = ({
         </div>
         
         {/* Admin actions */}
-        {isAdmin && request.type === 'new' && (
+        {isAdmin && (request.type === 'new' || request.type === 'web') && (
           <div className="action-row">
             <button 
               className="action-btn approve-btn"
@@ -176,18 +174,6 @@ const RequestCard = ({
               <span>Từ chối</span>
             </button>
           </div>
-        )}
-        
-        {/* Delete button for admin users and web requests */}
-        {isAdmin && request.type === 'web' && (
-          <button 
-            className="action-btn decline-btn"
-            onClick={() => handleDeleteRequest(request._id)}
-            title="Gỡ yêu cầu"
-          >
-            <i className="fas fa-trash"></i>
-            <span>Gỡ</span>
-          </button>
         )}
         
         {/* Withdraw button - visible only for the user's own requests after 24 hours */}

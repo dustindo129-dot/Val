@@ -121,16 +121,15 @@ const MarketRequestForm = ({
       <form className="request-form" onSubmit={handleSubmit}>
         {/* Admin Web Recommendation Form */}
         {requestType === 'web' && user && user.role === 'admin' && (
-          <div className="novel-search-container">
-            <NovelSearch
-              novelSearchQuery={novelSearchQuery}
-              setNovelSearchQuery={setNovelSearchQuery}
-              isSearching={isSearching}
-              novelSearchResults={novelSearchResults}
-              showNovelResults={showNovelResults}
-              setShowNovelResults={setShowNovelResults}
-              handleNovelSelect={handleNovelSelect}
+          <>
+            <input
+              type="text"
+              className="request-title-input"
+              placeholder="Tên truyện bạn muốn đề xuất..."
+              value={requestText}
+              onChange={(e) => setRequestText(e.target.value)}
               disabled={submitting}
+              required
             />
             
             <textarea
@@ -140,7 +139,7 @@ const MarketRequestForm = ({
               onChange={(e) => setRequestNote(e.target.value)}
               disabled={submitting}
             />
-          </div>
+          </>
         )}
         
         {requestType === 'new' ? (
@@ -256,7 +255,6 @@ const MarketRequestForm = ({
                      (requestType !== 'web' && (!depositAmount || Number(depositAmount) < 100)) ||
                      (requestType === 'web' && (!goalAmount || Number(goalAmount) <= 0)) ||
                      (requestType === 'open' && !selectedNovel) ||
-                     (requestType === 'web' && !selectedNovel) ||
                      (requestType !== 'web' && depositAmount && Number(depositAmount) > userBalance)}
           >
             {submitting ? 'Đang gửi...' : 'Gửi Yêu Cầu'}

@@ -51,8 +51,10 @@ const MarketHeader = () => {
         <div className="overview-section">
           <h3>Đề xuất từ nhóm dịch:</h3>
           <ul>
-            <li>Đây là những bộ do nhóm đề xuất từ những bộ truyện có sẵn trên web, mang tính chất kiếm phí duy trì web hoặc kiếm thêm thu nhập cho dịch giả.</li>
-            <li>Xin nhắc lại là chỉ đề xuất được những bộ đã có sẵn trên web, việc này khuyến khích dịch giả chạy các bộ truyện mới và mở công khai những chương đầu để thu hút người đọc.</li>
+            <li>Đây là những bộ do nhóm đề xuất, thường là những bộ đã có đủ nhân sự muốn trưng cầu đóng góp từ độc giả.</li>
+            <li>Tương tự như yêu cầu truyện mới, nhóm chỉ có thể nhận đóng góp khi đã tạo project trên trang web.</li>
+            <li>Người dùng có thể đóng góp 🌾 cho các đề xuất, và chỉ khi đề xuất được chấp nhận, các đóng góp này mới được thêm vào truyện.</li>
+            <li>Nếu đề xuất bị từ chối, tất cả các đóng góp sẽ được hoàn lại.</li>
           </ul>
         </div>
 
@@ -66,7 +68,7 @@ const MarketHeader = () => {
         </div>
 
         <div className="update-date">
-          <em>Cập nhật ngày 30/04/2025</em>
+          <em>Cập nhật ngày 01/05/2025</em>
         </div>
       </div>
     </section>

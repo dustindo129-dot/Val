@@ -74,8 +74,8 @@ const TopUp = () => {
           { price: 12000, balance: 100, note: "Chỉ với 12.000đ mỗi tháng bạn sẽ không bao giờ thấy bất kì quảng cáo nào trên page trong cuộc đời này" },
           { price: 20000, balance: 200, note: "Gói bình dân hạt dẻ" },
           { price: 50000, balance: 550, note: "Thêm tí bonus gọi là" },
-          { price: 250000, balance: 2800, note: "Với gói này phú hào có thể unlock ngay một tập truyện dịch từ Eng" },
-          { price: 350000, balance: 4000, note: "Với gói này đại gia đủ sức bao trọn một tập truyện bất kì dịch từ Jap" }
+          { price: 250000, balance: 2800, note: "Với gói này phú hào có thể unlock ngay một tập truyện dịch từ ngôn ngữ Anh/Trung" },
+          { price: 350000, balance: 4000, note: "Với gói này đại gia đủ sức bao trọn một tập truyện bất kì dịch từ ngôn ngữ Nhật" }
         ]);
       } finally {
         setFetchingPricing(false);
@@ -619,7 +619,7 @@ const TopUp = () => {
                       
                       {/* Submit button moved inside bank-transfer-info */}
                       <button 
-                        className="submit-button" 
+                        className="topup-submit-button" 
                         onClick={handleSubmit}
                         disabled={loading || !selectedAmount || !paymentMethod}
                         style={{ marginTop: '1.5rem' }}
@@ -693,7 +693,7 @@ const TopUp = () => {
             {/* Submit button - remove from here since it's moved above */}
             {paymentMethod !== 'bank' && (
               <button 
-                className="submit-button" 
+                className="topup-submit-button" 
                 onClick={handleSubmit}
                 disabled={loading || !selectedAmount || !paymentMethod}
               >

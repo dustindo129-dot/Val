@@ -14,6 +14,7 @@ import React from 'react';
  * @param {Function} props.setShowNovelResults - Function to toggle search results visibility
  * @param {Function} props.handleNovelSelect - Function to handle novel selection
  * @param {boolean} props.disabled - Whether the search input is disabled
+ * @param {boolean} props.optional - Whether selecting a novel is optional
  * @returns {JSX.Element} Novel search component
  */
 const NovelSearch = ({ 
@@ -24,13 +25,14 @@ const NovelSearch = ({
   showNovelResults,
   setShowNovelResults,
   handleNovelSelect,
-  disabled 
+  disabled,
+  optional
 }) => {
   return (
     <div className="novel-search short">
       <input
         type="text"
-        placeholder="Tìm kiếm truyện..."
+        placeholder={optional ? "Tìm kiếm truyện (tùy chọn)..." : "Tìm kiếm truyện..."}
         value={novelSearchQuery}
         onChange={(e) => {
           setNovelSearchQuery(e.target.value);

@@ -313,32 +313,34 @@ const Market = () => {
       return;
     }
 
-    if (requestType === 'web' && !selectedNovel) {
-      alert('Vui lòng chọn truyện cho đề xuất');
-      return;
+    if (requestType === 'web') {
+      // For web requests, just validate the title
+      if (!requestText.trim()) {
+        alert('Vui lòng nhập tên truyện cho đề xuất');
+        return;
+      }
+      
+      if (!goalAmount || isNaN(goalAmount) || Number(goalAmount) <= 0) {
+        alert('Vui lòng điền số 🌾 mục tiêu hợp lệ');
+        return;
+      }
     }
     
     // Different validation for web requests vs other request types
     if (requestType !== 'web') {
-    if (!depositAmount || isNaN(depositAmount) || Number(depositAmount) <= 0) {
-      alert('Vui lòng điền số cọc hợp lệ');
-      return;
-    }
+      if (!depositAmount || isNaN(depositAmount) || Number(depositAmount) <= 0) {
+        alert('Vui lòng điền số cọc hợp lệ');
+        return;
+      }
     
       // Validate minimum deposit amount for non-web requests
-    if (Number(depositAmount) < 100) {
-      alert('Số 🌾 cọc tối thiểu là 100');
-      return;
-    }
-    
-    if (Number(depositAmount) > userBalance) {
-      alert('Số cọc không được vượt quá số 🌾 hiện tại');
-      return;
+      if (Number(depositAmount) < 100) {
+        alert('Số 🌾 cọc tối thiểu là 100');
+        return;
       }
-    } else {
-      // Web request validation
-      if (!goalAmount || isNaN(goalAmount) || Number(goalAmount) <= 0) {
-        alert('Vui lòng điền số 🌾 mục tiêu hợp lệ');
+    
+      if (Number(depositAmount) > userBalance) {
+        alert('Số cọc không được vượt quá số 🌾 hiện tại');
         return;
       }
     }
@@ -417,10 +419,10 @@ const Market = () => {
         // Normal request creation for new and web types
         const requestData = {
           type: requestType,
-          title: requestType === 'web' 
-                 ? selectedNovel.title 
-                 : DOMPurify.sanitize(requestText.trim() || "Yêu cầu truyện mới chưa có tên"),
-          deposit: requestType === 'web' ? 0 : Number(depositAmount)
+          title: DOMPurify.sanitize(requestText.trim() || "Yêu cầu truyện mới chưa có tên"),
+          deposit: requestType === 'web' ? 0 : Number(depositAmount),
+          // Web requests are now pending like new requests
+          status: 'pending'
         };
         
         // Add goal balance for web requests
@@ -431,11 +433,6 @@ const Market = () => {
         // Add note if provided
         if (requestNote.trim()) {
           requestData.note = DOMPurify.sanitize(requestNote);
-        }
-        
-        // Add novel ID for web recommendations
-        if (requestType === 'web') {
-          requestData.novelId = selectedNovel._id;
         }
 
         const response = await axios.post(
@@ -451,7 +448,7 @@ const Market = () => {
         
         // Update user balance (only for non-web requests)
         if (requestType !== 'web') {
-        setUserBalance(prevBalance => prevBalance - Number(depositAmount));
+          setUserBalance(prevBalance => prevBalance - Number(depositAmount));
         }
         
         // Add request to withdrawableRequests after 24 hours (for user requests only)
@@ -643,8 +640,8 @@ const Market = () => {
       return;
     }
     
-    // Only allow approving 'new' type requests, since 'open' requests are auto-processed
-    if (requestToApprove.type !== 'new') {
+    // Only allow approving 'new' and 'web' type requests, since 'open' requests are auto-processed
+    if (requestToApprove.type !== 'new' && requestToApprove.type !== 'web') {
       alert('This type of request is automatically processed and cannot be manually approved.');
       return;
     }
@@ -654,7 +651,22 @@ const Market = () => {
     }
 
     try {
-      // First approve the request
+      // For web requests, we need to check if a novel exists with the same title
+      if (requestToApprove.type === 'web') {
+        // First check if there's a novel with a matching title
+        const novelCheckResponse = await axios.get(
+          `${config.backendUrl}/api/novels/search?title=${encodeURIComponent(requestToApprove.title)}&exact=true`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        // If no matching novel found
+        if (!novelCheckResponse.data || novelCheckResponse.data.length === 0) {
+          alert('Không thể phê duyệt: Bạn cần tạo truyện với tên chính xác khớp với yêu cầu trước.');
+          return;
+        }
+      }
+      
+      // Now approve the request
       const approveResponse = await axios.post(
         `${config.backendUrl}/api/requests/${requestId}/approve`,
         {},
@@ -711,7 +723,18 @@ const Market = () => {
       return;
     }
 
-    if (!confirm('Bạn có chắc chắn muốn từ chối yêu cầu này? Điều này sẽ từ chối tất cả các đóng góp đang chờ và trả lại 🌾 cho người dùng.')) {
+    // Find the request to check its type
+    const requestToDecline = requests.find(req => req._id === requestId);
+    
+    if (!requestToDecline) {
+      return;
+    }
+
+    const confirmMessage = requestToDecline.type === 'web' 
+      ? 'Bạn có chắc chắn muốn từ chối đề xuất này? Điều này sẽ từ chối tất cả các đóng góp đang chờ và trả lại 🌾 cho người dùng.'
+      : 'Bạn có chắc chắn muốn từ chối yêu cầu này? Điều này sẽ từ chối tất cả các đóng góp đang chờ và trả lại 🌾 cho người dùng.';
+
+    if (!confirm(confirmMessage)) {
       return;
     }
 
@@ -753,32 +776,6 @@ const Market = () => {
     } catch (err) {
       console.error('Không thể từ chối yêu cầu:', err);
       alert('Không thể từ chối yêu cầu');
-    }
-  };
-
-  // Handle deleting a request (admin only)
-  const handleDeleteRequest = async (requestId) => {
-    if (!user || user.role !== 'admin') {
-      return;
-    }
-
-    if (!confirm('Bạn có chắc chắn muốn gỡ yêu cầu này?')) {
-      return;
-    }
-
-    try {
-      await axios.delete(
-        `${config.backendUrl}/api/requests/${requestId}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      // Remove the request from the list
-      setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
-      
-      alert('Yêu cầu đã được gỡ thành công');
-    } catch (err) {
-      console.error('Không thể gỡ yêu cầu:', err);
-      alert('Không thể gỡ yêu cầu');
     }
   };
 
@@ -966,7 +963,6 @@ const Market = () => {
             handleShowContributionForm={handleShowContributionForm}
             handleApproveRequest={handleApproveRequest}
             handleDeclineRequest={handleDeclineRequest}
-            handleDeleteRequest={handleDeleteRequest}
             withdrawableRequests={withdrawableRequests}
             withdrawingRequests={withdrawingRequests}
             handleWithdrawRequest={handleWithdrawRequest}

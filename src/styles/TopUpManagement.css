@@ -44,7 +44,7 @@
   flex: 1;
 }
 
-.submit-button {
+.management-submit-button {
   padding: 10px 20px;
   background-color: #4CAF50;
   color: white;
@@ -55,11 +55,11 @@
   transition: background-color 0.3s;
 }
 
-.submit-button:hover {
+.management-submit-button:hover {
   background-color: #45a049;
 }
 
-.submit-button:disabled {
+.management-submit-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
