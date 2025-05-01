@@ -182,7 +182,7 @@ const MarketRequestForm = ({
                   onChange={handleModuleSelect}
                   className="module-select"
                 >
-                  <option value="">Select a module (optional)</option>
+                  <option value="">Chọn một tập</option>
                   {modules.map(module => (
                     <option key={module._id} value={module._id}>
                       {module.title}
@@ -200,7 +200,7 @@ const MarketRequestForm = ({
                   onChange={handleChapterSelect}
                   className="chapter-select"
                 >
-                  <option value="">Select a chapter (optional)</option>
+                  <option value="">Chọn một chương</option>
                   {chapters.map(chapter => (
                     <option key={chapter._id} value={chapter._id}>
                       {chapter.title}
