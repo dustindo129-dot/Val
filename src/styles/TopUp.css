@@ -112,7 +112,7 @@
   font-size: 0.95rem;
 }
 
-.request-actions {
+.pending-request-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -1183,6 +1183,18 @@
 }
 
 /* Dark mode styles for bank transfer elements */
+:root.dark-mode .transaction-method {
+  color: #000;
+}
+
+:root.dark-mode .transaction-credits {
+  color: #fff;
+}
+
+:root.dark-mode .bank-instructions {
+  color: #1a1a1a;
+}
+
 :root.dark-mode .bank-qr-container,
 :root.dark-mode .bank-transfer-info {
   background-color: #343a40;

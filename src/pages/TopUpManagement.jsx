@@ -935,7 +935,7 @@ const TopUpManagement = () => {
                       ))}
                     </div>
                   )}
-                  <div className="request-actions">
+                  <div className="pending-request-actions">
                     <div className="balance-adjustment">
                       <label>Điều chỉnh số 🌾:</label>
                       <input 

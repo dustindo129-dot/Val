@@ -55,7 +55,7 @@ const Market = () => {
   const [loadingModules, setLoadingModules] = useState(false);
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [requests, setRequests] = useState([]);
-  const [sortOrder, setSortOrder] = useState('newest');
+  const [sortOrder, setSortOrder] = useState('likes');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);

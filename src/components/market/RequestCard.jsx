@@ -51,7 +51,14 @@ const RequestCard = ({
 }) => {
   // Calculate progress percentage without capping at 100%
   const goalAmount = request.type === 'web' ? (request.goalBalance || 1000) : 1000;
-  const progressPercent = Math.round((request.deposit / goalAmount) * 100);
+  
+  // Calculate total contributions for this request
+  const totalContributions = contributions && contributions[request._id] 
+    ? contributions[request._id].reduce((sum, contribution) => sum + contribution.amount, 0)
+    : 0;
+    
+  // Calculate progress including both deposit and contributions
+  const progressPercent = Math.round(((request.deposit + totalContributions) / goalAmount) * 100);
 
   return (
     <div className={`request-card ${isAdminRequest ? 'admin-request' : ''}`}>
@@ -91,7 +98,7 @@ const RequestCard = ({
         <div className={`progress-bar ${progressPercent > 100 ? 'exceeded' : ''}`} style={{ width: `${Math.min(100, progressPercent)}%` }}></div>
       </div>
       <div className="progress-text">
-        <span>{request.deposit} 🌾</span>
+        <span>{request.deposit + totalContributions} 🌾</span>
         <span>{progressPercent}%</span>
         <span>{goalAmount} 🌾</span>
       </div>

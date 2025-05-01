@@ -6,6 +6,51 @@ import { faLock } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
 import api from '../../services/api';
 
+/**
+ * DeleteModuleConfirmationModal Component
+ * 
+ * Modal component that requires typing the module title to confirm deletion.
+ */
+const DeleteModuleConfirmationModal = ({ module, onConfirm, onCancel }) => {
+  const [confirmText, setConfirmText] = useState('');
+  const [isMatch, setIsMatch] = useState(false);
+  
+  useEffect(() => {
+    const moduleTitle = module.title || 'Tập không có tên';
+    setIsMatch(confirmText === moduleTitle);
+  }, [confirmText, module.title]);
+  
+  return (
+    <div className="delete-confirmation-modal-overlay">
+      <div className="delete-confirmation-modal">
+        <h3>Xác nhận xóa tập</h3>
+        <p>Hành động này không thể hoàn tác. Để xác nhận, hãy nhập chính xác tiêu đề tập: <strong className="non-selectable-text">{module.title || 'Tập không có tên'}</strong></p>
+        
+        <input
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="Nhập tiêu đề tập"
+          className="confirmation-input"
+        />
+        
+        <div className="confirmation-actions">
+          <button 
+            onClick={() => onConfirm(module._id)} 
+            disabled={!isMatch}
+            className={`confirm-delete-btn ${isMatch ? 'enabled' : 'disabled'}`}
+          >
+            Xóa tập
+          </button>
+          <button onClick={onCancel} className="cancel-delete-btn">
+            Hủy bỏ
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ModuleList = memo(({
   modules,
   novelId,
@@ -18,6 +63,11 @@ const ModuleList = memo(({
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  // Add state for delete confirmation modal
+  const [deleteConfirmationModal, setDeleteConfirmationModal] = useState({
+    isOpen: false,
+    moduleToDelete: null
+  });
 
   // Check if user can edit
   const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
@@ -52,8 +102,55 @@ const ModuleList = memo(({
     }
   }, [handleModuleReorder, isReordering]);
 
+  /**
+   * Opens the delete confirmation modal
+   * @param {Object} module - Module to be deleted
+   */
+  const openDeleteConfirmation = (module) => {
+    setDeleteConfirmationModal({
+      isOpen: true,
+      moduleToDelete: module
+    });
+  };
+
+  /**
+   * Closes the delete confirmation modal
+   */
+  const closeDeleteConfirmation = () => {
+    setDeleteConfirmationModal({
+      isOpen: false,
+      moduleToDelete: null
+    });
+  };
+
+  /**
+   * Initiates the module deletion process
+   * @param {Object} module - Module to delete
+   */
+  const initiateModuleDelete = (module) => {
+    openDeleteConfirmation(module);
+  };
+
+  /**
+   * Performs the actual module deletion after confirmation
+   * @param {string} moduleId - ID of the module to delete
+   */
+  const confirmModuleDelete = (moduleId) => {
+    handleModuleDelete(moduleId);
+    closeDeleteConfirmation();
+  };
+
   return (
     <div className="modules-list">
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmationModal.isOpen && (
+        <DeleteModuleConfirmationModal 
+          module={deleteConfirmationModal.moduleToDelete}
+          onConfirm={confirmModuleDelete}
+          onCancel={closeDeleteConfirmation}
+        />
+      )}
+
       {modules.map((module, moduleIndex) => (
         <div 
           key={module._id} 
@@ -133,7 +230,7 @@ const ModuleList = memo(({
                     {canDelete && (
                       <button
                         className="delete-module-btn"
-                        onClick={() => handleModuleDelete(module._id)}
+                        onClick={() => initiateModuleDelete(module)}
                         title="Xóa tập"
                       >
                         Xóa

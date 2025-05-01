@@ -608,6 +608,10 @@
 }
 
 /* Dark mode support */
+:root.dark-mode .admin-dashboard {
+  background-color: #1a1a1a;
+}
+
 :root.dark-mode .novel-balance {
   color: var(--text-secondary-dark, #adb5bd);
 }
@@ -628,4 +632,90 @@
   .balance-edit-actions {
     margin-top: 0.25rem;
   }
+}
+
+/* Delete Confirmation Modal */
+.delete-confirmation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirmation-modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.delete-confirmation-modal h3 {
+  color: #e53935;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.delete-confirmation-modal p {
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.confirmation-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.confirm-delete-btn {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.confirm-delete-btn.disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.confirm-delete-btn.enabled {
+  background-color: #e53935;
+}
+
+.cancel-delete-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Non-selectable text in confirmation modals */
+.non-selectable-text {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
 } 

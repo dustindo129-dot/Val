@@ -280,26 +280,32 @@ const TopUp = () => {
 
   // Handle viewing transaction history
   const handleViewHistory = async () => {
-    setViewHistory(true);
-    setFetchingHistory(true);
+    // Toggle the viewHistory state
+    const newViewState = !viewHistory;
+    setViewHistory(newViewState);
     
-    try {
-      // Get all transactions including pending ones from the history endpoint
-      const historyResponse = await axios.get(
-        `${config.backendUrl}/api/topup/history`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+    // Only fetch data if we're showing the history
+    if (newViewState) {
+      setFetchingHistory(true);
       
-      // Set history data
-      setHistory(historyResponse.data);
-      
-      // Extract pending requests for cancel functionality
-      const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
-      setPendingRequests(pendingRequests);
-    } catch (err) {
-      console.error('Failed to fetch history:', err);
-    } finally {
-      setFetchingHistory(false);
+      try {
+        // Get all transactions including pending ones from the history endpoint
+        const historyResponse = await axios.get(
+          `${config.backendUrl}/api/topup/history`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        // Set history data
+        setHistory(historyResponse.data);
+        
+        // Extract pending requests for cancel functionality
+        const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
+        setPendingRequests(pendingRequests);
+      } catch (err) {
+        console.error('Failed to fetch history:', err);
+      } finally {
+        setFetchingHistory(false);
+      }
     }
   };
 
@@ -322,6 +328,30 @@ const TopUp = () => {
     } catch (err) {
       console.error('Không thể hủy yêu cầu:', err);
       alert(err.response?.data?.message || 'Không thể hủy yêu cầu');
+    }
+  };
+
+  // Refresh transaction history without toggling visibility
+  const refreshHistory = async () => {
+    setFetchingHistory(true);
+    
+    try {
+      // Get all transactions including pending ones from the history endpoint
+      const historyResponse = await axios.get(
+        `${config.backendUrl}/api/topup/history`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Set history data
+      setHistory(historyResponse.data);
+      
+      // Extract pending requests for cancel functionality
+      const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
+      setPendingRequests(pendingRequests);
+    } catch (err) {
+      console.error('Failed to fetch history:', err);
+    } finally {
+      setFetchingHistory(false);
     }
   };
 
@@ -653,7 +683,7 @@ const TopUp = () => {
               <h2>Lịch sử giao dịch</h2>
               <button 
                 className="refresh-button"
-                onClick={handleViewHistory}
+                onClick={refreshHistory}
                 disabled={fetchingHistory}
               >
                 {fetchingHistory ? 'Đang tải lại...' : 'Tải lại lịch sử'}

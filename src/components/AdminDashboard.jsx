@@ -31,6 +31,50 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import bunnyUploadService from '../services/bunnyUploadService';
 
 /**
+ * DeleteConfirmationModal Component
+ * 
+ * Modal component that requires typing the novel title to confirm deletion.
+ */
+const DeleteConfirmationModal = ({ novel, onConfirm, onCancel }) => {
+  const [confirmText, setConfirmText] = useState('');
+  const [isMatch, setIsMatch] = useState(false);
+  
+  useEffect(() => {
+    setIsMatch(confirmText === novel.title);
+  }, [confirmText, novel.title]);
+  
+  return (
+    <div className="delete-confirmation-modal-overlay">
+      <div className="delete-confirmation-modal">
+        <h3>Xác nhận xóa truyện</h3>
+        <p>Hành động này không thể hoàn tác. Để xác nhận, hãy nhập chính xác tiêu đề truyện: <strong className="non-selectable-text">{novel.title}</strong></p>
+        
+        <input
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="Nhập tiêu đề truyện"
+          className="confirmation-input"
+        />
+        
+        <div className="confirmation-actions">
+          <button 
+            onClick={onConfirm} 
+            disabled={!isMatch}
+            className={`confirm-delete-btn ${isMatch ? 'enabled' : 'disabled'}`}
+          >
+            Xóa truyện
+          </button>
+          <button onClick={onCancel} className="cancel-delete-btn">
+            Hủy bỏ
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
  * AdminDashboard Component
  * 
  * Main component that provides administrative interface for managing
@@ -107,6 +151,12 @@ const AdminDashboard = () => {
   // State for editing novel balance
   const [editingBalanceId, setEditingBalanceId] = useState(null);
   const [balanceValue, setBalanceValue] = useState(0);
+
+  // Add state for delete confirmation modal
+  const [deleteConfirmationModal, setDeleteConfirmationModal] = useState({
+    isOpen: false,
+    novelToDelete: null
+  });
 
   // Fetch novels using React Query
   const { data: novels = [] } = useQuery({
@@ -482,15 +532,43 @@ const AdminDashboard = () => {
   };
 
   /**
-   * Deletes a novel
+   * Opens the delete confirmation modal
+   * @param {Object} novel - Novel to be deleted
+   */
+  const openDeleteConfirmation = (novel) => {
+    setDeleteConfirmationModal({
+      isOpen: true,
+      novelToDelete: novel
+    });
+  };
+
+  /**
+   * Closes the delete confirmation modal
+   */
+  const closeDeleteConfirmation = () => {
+    setDeleteConfirmationModal({
+      isOpen: false,
+      novelToDelete: null
+    });
+  };
+
+  /**
+   * Initiates the novel deletion process
    * @param {string} id - ID of the novel to delete
    */
-  const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa truyện này không?')) return;
+  const handleDelete = (novel) => {
+    openDeleteConfirmation(novel);
+  };
 
+  /**
+   * Performs the actual novel deletion after confirmation
+   */
+  const confirmDelete = async () => {
+    const id = deleteConfirmationModal.novelToDelete._id;
+    
     // Reset form first to discard any unsaved work
     resetForm();
-
+    
     try {
       // Get current cache data
       const previousData = queryClient.getQueryData(['novels']) || [];
@@ -524,9 +602,13 @@ const AdminDashboard = () => {
       queryClient.setQueryData(['novels'], updatedNovels);
       
       setError('');
+      // Close the modal
+      closeDeleteConfirmation();
     } catch (err) {
       console.error('Error deleting novel:', err);
       setError(err.message);
+      // Close the modal
+      closeDeleteConfirmation();
     }
   };
 
@@ -719,6 +801,15 @@ const AdminDashboard = () => {
     <div className="admin-dashboard">
       <h2 className="section-title">Quản lý truyện</h2>
       {error && <div className="error">{error}</div>}
+      
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmationModal.isOpen && (
+        <DeleteConfirmationModal 
+          novel={deleteConfirmationModal.novelToDelete}
+          onConfirm={confirmDelete}
+          onCancel={closeDeleteConfirmation}
+        />
+      )}
       
       <div className="dashboard-grid">
         {/* Novel Form Section */}
@@ -1166,7 +1257,7 @@ const AdminDashboard = () => {
                   {user?.role === 'admin' && (
                     <button 
                       className="delete"
-                      onClick={() => handleDelete(novel._id)}
+                      onClick={() => handleDelete(novel)}
                     >Xóa</button>
                   )}
                 </div>
