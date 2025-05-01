@@ -638,10 +638,25 @@ const TopUp = () => {
               
               <div className="transfer-info">
                 <div className="transfer-info-item">
+                  <span>Ngân hàng:</span>
+                  <span className="transfer-value">Vietinbank</span>
+                </div>
+                <div className="transfer-info-item">
+                  <span>Tài khoản nhận:</span>
+                  <span className="transfer-value">100868151423</span>
+                  <button className="copy-button" onClick={() => navigator.clipboard.writeText("100868151423")}>
+                    Sao chép
+                  </button>
+                </div>
+                <div className="transfer-info-item">
+                  <span>Tên người nhận:</span>
+                  <span className="transfer-value">TRUONG TAN TAI</span>
+                </div>
+                <div className="transfer-info-item">
                   <span>Nội dung chuyển khoản:</span>
                   <span className="transfer-content">{transferContent}</span>
                   <button className="copy-button" onClick={() => navigator.clipboard.writeText(transferContent)}>
-                    Copy
+                    Sao chép
                   </button>
                 </div>
                 <div className="transfer-info-item">
@@ -652,7 +667,9 @@ const TopUp = () => {
               
               <div className="qr-countdown-container">
                 <p className="qr-expiry-note">
-                  Vui lòng quét mã QR, yêu cầu sẽ hết hạn sau <span className={`countdown-timer ${isCountdownLow(countdown) ? 'low' : ''}`}>{formatCountdown(countdown)}</span>
+                  Vui lòng quét mã QR, yêu cầu sẽ hết hạn sau <span className={`countdown-timer ${isCountdownLow(countdown) ? 'low' : ''}`}>{formatCountdown(countdown)}
+                  </span>
+                  Nếu chuyển khoản trực tiếp vui lòng điền chính xác nội dung và số tiền.
                 </p>
               </div>
               

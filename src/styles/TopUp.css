@@ -1608,6 +1608,8 @@
   padding: 1rem;
   margin-bottom: 1.5rem;
   text-align: left;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .transfer-info-item {
@@ -1625,6 +1627,12 @@
   font-weight: 500;
   margin-right: 0.5rem;
   color: #555;
+  min-width: 150px;
+}
+
+.transfer-value {
+  font-weight: 500;
+  margin-right: 0.5rem;
 }
 
 .transfer-content {
