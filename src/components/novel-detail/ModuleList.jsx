@@ -157,7 +157,7 @@ const ModuleList = memo(({
                     <div className="locked-content-message">
                       <FontAwesomeIcon icon={faLock} className="lock-icon" />
                       <p>Cần {module.moduleBalance} 🌾 để mở khóa. Vui lòng đến bảng yêu cầu!</p>
-                      <p>{pendingRequestsCount} yêu cầu{pendingRequestsCount !== 1 ? 's' : ''} đang chờ</p>
+                      <p>{pendingRequestsCount} yêu cầu đang chờ</p>
                       <Link to="/market" className="go-to-market-btn">Đến bảng yêu cầu</Link>
                     </div>
                   </div>

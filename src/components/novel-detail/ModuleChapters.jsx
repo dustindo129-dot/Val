@@ -149,7 +149,7 @@ const ModuleChapters = memo(({
                     <div className="locked-content-info">
                       <FontAwesomeIcon icon={faLock} className="lock-icon-small" />
                       <span>Cần {chapter.chapterBalance || 0} 🌾 để mở khóa.</span>
-                      <span>{pendingRequestsCount} yêu cầu{pendingRequestsCount !== 1 ? 's' : ''} đang chờ</span>
+                      <span>{pendingRequestsCount} yêu cầu đang chờ</span>
                       <Link to="/market" className="go-to-market-btn-small">Đến bảng yêu cầu</Link>
                     </div>
                   </div>
