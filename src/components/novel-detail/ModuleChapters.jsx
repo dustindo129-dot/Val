@@ -236,6 +236,9 @@ const ModuleChapters = memo(({
                       <span className={`mode-tag mode-${chapter.mode || 'published'}`}>
                         {(chapter.mode || 'published').toUpperCase()}
                       </span>
+                      {chapter.mode === 'paid' && chapter.chapterBalance > 0 && (
+                        <span className="chapter-balance">{chapter.chapterBalance}</span>
+                      )}
                     </span>
                   </div>
                 )}

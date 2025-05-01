@@ -123,6 +123,53 @@ const NovelContributions = ({ novelId }) => {
   // Calculate total number of items
   const totalCount = allItems.length;
 
+  // Generate contribution message based on item type
+  const getContributionMessage = (item) => {
+    if (item.type === 'request' && item.module) {
+      return (
+        <>
+          Cảm ơn <span className="rd-contributor-name">
+            {item.user?.username || "Người dùng ẩn danh"}
+          </span> đã đóng góp <span className="rd-contribution-amount">
+            {item.deposit} 🌾
+          </span> để mở <span className="rd-module-title">
+            {item.chapter ? item.chapter.title : item.module.title}
+          </span>
+        </>
+      );
+    } else if (item.isDeposit && item.request?.type === 'new') {
+      return (
+        <>
+          Cảm ơn <span className="rd-contributor-name">
+            {item.user?.username || "Người dùng ẩn danh"}
+          </span> đã đóng góp <span className="rd-contribution-amount">
+            {item.amount} 🌾
+          </span> để yêu cầu truyện mới
+        </>
+      );
+    } else if (item.request?.type === 'web') {
+      return (
+        <>
+          Cảm ơn <span className="rd-contributor-name">
+            {item.user?.username || "Người dùng ẩn danh"}
+          </span> đã đóng góp <span className="rd-contribution-amount">
+            {item.amount} 🌾
+          </span> cho đề xuất từ nhóm dịch
+        </>
+      );
+    } else {
+      return (
+        <>
+          Cảm ơn <span className="rd-contributor-name">
+            {item.user?.username || "Người dùng ẩn danh"}
+          </span> đã đóng góp <span className="rd-contribution-amount">
+            {item.type === 'contribution' ? item.amount : item.deposit} 🌾
+          </span>
+        </>
+      );
+    }
+  };
+
   return (
     <div className="rd-contribution-section">
       <div className="rd-contribution-section-title">
@@ -135,11 +182,7 @@ const NovelContributions = ({ novelId }) => {
           allItems.map((item, index) => (
             <div key={`${item.type}-${item._id}`} className="rd-contribution-item">
               <div className="rd-contribution-content">
-                Thank you <span className="rd-contributor-name">
-                  {item.user?.username || "Anonymous"}
-                </span> for contributing <span className="rd-contribution-amount">
-                  {item.type === 'contribution' ? item.amount : item.deposit} 🌾
-                </span>
+                {getContributionMessage(item)}
               </div>
               {(item.note || item.text) && (
                 <div className="rd-contribution-message">
