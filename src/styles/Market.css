@@ -427,9 +427,31 @@
 /* Request actions styles */
 .request-actions {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 15px 15px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+/* Row container for buttons */
+.action-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
 }
 
 .withdraw-button {
@@ -1744,9 +1766,9 @@
 /* Action buttons */
 .request-actions {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   padding: 0 15px 15px;
-  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -1762,6 +1784,13 @@
   font-weight: 500;
   gap: 8px;
   transition: all 0.2s;
+}
+
+/* Row container for buttons */
+.action-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
 }
 
 .upvote-btn {

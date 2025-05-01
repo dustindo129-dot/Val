@@ -128,26 +128,28 @@ const RequestCard = ({
       )}
       
       <div className="request-actions">
-        <button 
-          className={`action-btn upvote-btn ${isLikedByCurrentUser ? 'active' : ''}`}
-          onClick={() => handleLikeRequest(request._id)}
-          disabled={!isAuthenticated || likingRequests.has(request._id)}
-        >
-          <i className={`fas fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>
-          <span>Thích</span>
-        </button>
-        
-        <button 
-          className="action-btn donate-btn"
-          onClick={() => handleShowContributionForm(request._id)}
-        >
-          <i className="fas fa-hand-holding-heart"></i>
-          <span>Góp 🌾</span>
-        </button>
+        <div className="action-row">
+          <button 
+            className={`action-btn upvote-btn ${isLikedByCurrentUser ? 'active' : ''}`}
+            onClick={() => handleLikeRequest(request._id)}
+            disabled={!isAuthenticated || likingRequests.has(request._id)}
+          >
+            <i className={`fas fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>
+            <span>Thích</span>
+          </button>
+          
+          <button 
+            className="action-btn donate-btn"
+            onClick={() => handleShowContributionForm(request._id)}
+          >
+            <i className="fas fa-hand-holding-heart"></i>
+            <span>Góp 🌾</span>
+          </button>
+        </div>
         
         {/* Admin actions */}
         {isAdmin && request.type === 'new' && (
-          <>
+          <div className="action-row">
             <button 
               className="action-btn approve-btn"
               onClick={() => handleApproveRequest(request._id)}
@@ -164,7 +166,7 @@ const RequestCard = ({
               <i className="fas fa-times"></i>
               <span>Từ chối</span>
             </button>
-          </>
+          </div>
         )}
         
         {/* Withdraw button - visible only for the user's own requests after 24 hours */}
