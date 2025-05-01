@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -27,10 +27,16 @@ const TopUp = () => {
   const [history, setHistory] = useState([]);
   const [fetchingHistory, setFetchingHistory] = useState(false);
   const [transferContent, setTransferContent] = useState('');
-  const [showQRCode, setShowQRCode] = useState(false);
+  
+  // Replace showQRCode boolean with modal state
+  const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
-  // Track if QR was generated but payment request not submitted yet
-  const [qrGeneratedNotSubmitted, setQrGeneratedNotSubmitted] = useState(false);
+  
+  // Track current request ID
+  const [currentRequestId, setCurrentRequestId] = useState(null);
+  // Add countdown timer state
+  const [countdown, setCountdown] = useState(5 * 60); // 5 minutes in seconds
+  const timerRef = useRef(null);
 
   // Form data for different payment methods
   const [formData, setFormData] = useState({
@@ -43,9 +49,9 @@ const TopUp = () => {
   // Setup beforeunload event listener to warn users before leaving with unsubmitted transaction
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      if (qrGeneratedNotSubmitted) {
+      if (currentRequestId) {
         // Standard way to show confirmation dialog
-        const message = "Bạn chưa hoàn thành giao dịch! Vui lòng bấm 'Gửi yêu cầu thanh toán' trước khi rời đi.";
+        const message = "Bạn chưa hoàn thành giao dịch! Vui lòng bấm 'Xác nhận' trước khi rời đi.";
         e.returnValue = message; // Standard for Chrome, Firefox, IE
         return message; // For Safari
       }
@@ -56,7 +62,7 @@ const TopUp = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [qrGeneratedNotSubmitted]);
+  }, [currentRequestId]);
 
   // Fetch pricing options
   useEffect(() => {
@@ -109,10 +115,9 @@ const TopUp = () => {
     setPaymentMethod(method);
     setSubMethod(method === 'ewallet' ? 'momo' : null);
     // Reset QR code when changing payment method
-    setShowQRCode(false);
     setQrCodeUrl('');
     setTransferContent('');
-    setQrGeneratedNotSubmitted(false);
+    setCurrentRequestId(null);
   };
 
   // Handle sub-method selection (for e-wallets)
@@ -151,39 +156,121 @@ const TopUp = () => {
     return result.split('').sort(() => 0.5 - Math.random()).join('');
   };
 
-  // Generate QR code using VietQR API
-  const generateQRCode = () => {
+  // Handle QR modal open and start countdown
+  const startCountdownTimer = () => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // Set initial countdown time (5 minutes)
+    setCountdown(5 * 60);
+    
+    // Start the timer
+    timerRef.current = setInterval(() => {
+      setCountdown(prevTime => {
+        if (prevTime <= 1) {
+          // Time's up, clear the interval and close the modal
+          clearInterval(timerRef.current);
+          setQrModalOpen(false);
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+  };
+  
+  // Clean up timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  // Format countdown time as MM:SS
+  const formatCountdown = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+  
+  // Check if countdown is low (less than 1 minute)
+  const isCountdownLow = (seconds) => {
+    return seconds < 60;
+  };
+
+  // Generate QR code and create payment request
+  const generateQRCode = async () => {
     if (!selectedAmount) {
       alert('Vui lòng chọn số tiền nạp');
       return;
     }
 
-    // Generate random transfer content
-    const newTransferContent = generateRandomContent(8);
-    setTransferContent(newTransferContent);
+    setLoading(true);
 
-    // Create VietQR URL
-    const bankId = "ICB"; // Vietinbank code
-    const accountNo = "100868151423";
-    const vietQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${selectedAmount.price}&addInfo=${newTransferContent}`;
-    
-    // Update QR code URL
-    setQrCodeUrl(vietQrUrl);
-    
-    // Show QR code section
-    setShowQRCode(true);
-    
-    // Set the flag that QR is generated but not submitted
-    setQrGeneratedNotSubmitted(true);
+    try {
+      // Generate random transfer content
+      const newTransferContent = generateRandomContent(8);
+      setTransferContent(newTransferContent);
 
-    // Update bank form data with the new transfer content
-    setFormData(prev => ({
-      ...prev,
-      bank: {
-        ...prev.bank,
-        transferContent: newTransferContent
-      }
-    }));
+      // Create VietQR URL
+      const bankId = "ICB"; // Vietinbank code
+      const accountNo = "100868151423";
+      const vietQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${selectedAmount.price}&addInfo=${newTransferContent}`;
+      
+      // Update QR code URL
+      setQrCodeUrl(vietQrUrl);
+      
+      // Update bank form data with the new transfer content
+      setFormData(prev => ({
+        ...prev,
+        bank: {
+          ...prev.bank,
+          transferContent: newTransferContent
+        }
+      }));
+
+      // Create payment request immediately
+      const requestData = {
+        amount: selectedAmount.price,
+        balance: selectedAmount.balance,
+        paymentMethod: 'bank',
+        details: {
+          bankName: "VIETINBANK",
+          accountName: "TRUONG TAN TAI",
+          accountNumber: "100868151423",
+          transferContent: newTransferContent
+        }
+      };
+      
+      const response = await axios.post(
+        `${config.backendUrl}/api/topup/request`,
+        requestData,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Store the request ID
+      setCurrentRequestId(response.data.requestId);
+      
+      // Open the QR modal and start countdown
+      setQrModalOpen(true);
+      startCountdownTimer();
+      
+      // Refresh pending requests
+      const pendingResponse = await axios.get(
+        `${config.backendUrl}/api/topup/pending`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setPendingRequests(pendingResponse.data);
+      
+    } catch (err) {
+      console.error('Failed to create QR code and payment request:', err);
+      setError(err.response?.data?.message || 'Failed to create payment request');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle amount selection
@@ -191,9 +278,9 @@ const TopUp = () => {
     setSelectedAmount(option);
     
     // Reset QR code when changing amount
-    setShowQRCode(false);
     setQrCodeUrl('');
-    setQrGeneratedNotSubmitted(false);
+    setTransferContent('');
+    setCurrentRequestId(null);
   };
 
   // Handle form input changes
@@ -205,6 +292,64 @@ const TopUp = () => {
         [field]: value
       }
     }));
+  };
+
+  // Handle QR modal confirm
+  const handleQrConfirm = () => {
+    // Clear the countdown timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    setQrModalOpen(false);
+    
+    // Reset form after confirmation
+    setSelectedAmount(null);
+    setPaymentMethod(null);
+    
+    // Refresh pending requests
+    refreshPendingRequests();
+  };
+
+  // Handle QR modal cancel
+  const handleQrCancel = async () => {
+    // Clear the countdown timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    if (currentRequestId) {
+      try {
+        await axios.delete(
+          `${config.backendUrl}/api/topup/request/${currentRequestId}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        // Refresh pending requests
+        refreshPendingRequests();
+      } catch (err) {
+        console.error('Failed to cancel request:', err);
+      }
+    }
+    
+    // Reset state
+    setQrModalOpen(false);
+    setQrCodeUrl('');
+    setTransferContent('');
+    setCurrentRequestId(null);
+  };
+  
+  // Refresh pending requests
+  const refreshPendingRequests = async () => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/topup/pending`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setPendingRequests(response.data);
+    } catch (err) {
+      console.error('Failed to fetch pending requests:', err);
+    }
   };
 
   // Format price for display
@@ -222,88 +367,6 @@ const TopUp = () => {
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedAmount) {
-      setError('Vui lòng chọn số tiền');
-      return;
-    }
-
-    if (!paymentMethod) {
-      setError('Vui lòng chọn phương thức thanh toán');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Prepare request data based on payment method
-      let requestData = {
-        amount: selectedAmount.price,
-        balance: selectedAmount.balance,
-        paymentMethod,
-        subMethod
-      };
-
-      // Add method-specific details
-      if (paymentMethod === 'ewallet') {
-        requestData.details = subMethod ? formData[subMethod] : {};
-      } else if (paymentMethod === 'bank') {
-        // For bank transfers, use the random transfer content if available
-        const bankTransferContent = transferContent || generateRandomContent(8);
-        
-        requestData.details = {
-          bankName: "VIETINBANK",
-          accountName: "TRUONG TAN TAI",
-          accountNumber: "100868151423",
-          transferContent: bankTransferContent
-        };
-      } else if (paymentMethod === 'prepaidCard') {
-        requestData.details = formData[paymentMethod];
-      }
-      
-      const response = await axios.post(
-        `${config.backendUrl}/api/topup/request`,
-        requestData,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      // Show success message
-      alert(response.data.message);
-      
-      // Clear the QR generated flag since payment request was submitted
-      setQrGeneratedNotSubmitted(false);
-      
-      // Reset form
-      setPaymentMethod(null);
-      setSubMethod(null);
-      setSelectedAmount(null);
-      setShowQRCode(false);
-      setQrCodeUrl('');
-      setTransferContent('');
-      setFormData({
-        momo: { phoneNumber: '' },
-        zalopay: { phoneNumber: '' },
-        bank: { accountNumber: '', accountName: '', bankName: '', transferContent: '' },
-        prepaidCard: { cardNumber: '', cardPin: '', provider: '' }
-      });
-      
-      // Refresh pending requests
-      const pendingResponse = await axios.get(
-        `${config.backendUrl}/api/topup/pending`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setPendingRequests(pendingResponse.data);
-      
-    } catch (err) {
-      console.error('Top-up request failed:', err);
-      setError(err.response?.data?.message || 'Failed to process top-up request');
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Handle viewing transaction history
@@ -501,86 +564,21 @@ const TopUp = () => {
               </div>
             </div>
             
-            {/* E-wallet payment details */}
-            {paymentMethod === 'ewallet' && (
-              <div className="payment-details">
-                <div className="sub-methods">
-                  <label className="sub-method">
-                    <input 
-                      type="radio" 
-                      name="ewallet" 
-                      value="momo" 
-                      checked={subMethod === 'momo'}
-                      onChange={() => handleSubMethodSelect('momo')}
-                    />
-                    <span className="radio-label">Momo</span>
-                  </label>
-                  <label className="sub-method">
-                    <input 
-                      type="radio" 
-                      name="ewallet" 
-                      value="zalopay" 
-                      checked={subMethod === 'zalopay'}
-                      onChange={() => handleSubMethodSelect('zalopay')}
-                    />
-                    <span className="radio-label">ZaloPay</span>
-                  </label>
-                </div>
-
-                {subMethod === 'momo' && (
-                  <div className="method-form">
-                    <div className="form-group">
-                      <label htmlFor="momo-phone">Số điện thoại Momo</label>
-                      <input 
-                        type="text" 
-                        id="momo-phone" 
-                        value={formData.momo.phoneNumber}
-                        onChange={(e) => handleInputChange('momo', 'phoneNumber', e.target.value)}
-                        placeholder="Nhập số điện thoại Momo của bạn"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {subMethod === 'zalopay' && (
-                  <div className="method-form">
-                    <div className="form-group">
-                      <label htmlFor="zalopay-phone">Số điện thoại ZaloPay</label>
-                      <input 
-                        type="text" 
-                        id="zalopay-phone" 
-                        value={formData.zalopay.phoneNumber}
-                        onChange={(e) => handleInputChange('zalopay', 'phoneNumber', e.target.value)}
-                        placeholder="Nhập số điện thoại ZaloPay của bạn"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Bank transfer details */}
             {paymentMethod === 'bank' && (
               <div className="payment-details">
                 <div className="method-form">
                   <div className="bank-instructions">
-                    <p>Quét mã QR hoặc chuyển khoản theo thông tin dưới đây:</p>
+                    <p>Tạo mã QR để chuyển khoản:</p>
                     
-                    {/* QR code generate button - always visible */}
-                    <button className="qr-button" onClick={generateQRCode} disabled={!selectedAmount}>
-                      Tạo mã QR
+                    {/* QR code generate button */}
+                    <button 
+                      className="qr-button" 
+                      onClick={generateQRCode} 
+                      disabled={!selectedAmount || loading}
+                    >
+                      {loading ? 'Đang tạo mã...' : 'Tạo mã QR'}
                     </button>
-                    
-                    {/* QR code section - only shown after QR is generated */}
-                    {showQRCode && qrCodeUrl && (
-                      <div className="bank-qr-container">
-                        <img 
-                          src={qrCodeUrl}
-                          alt="QR Code" 
-                          className="bank-qr-code"
-                        />
-                      </div>
-                    )}
                     
                     <div className="bank-transfer-info">
                       <div className="info-row">
@@ -590,25 +588,11 @@ const TopUp = () => {
                       <div className="info-row">
                         <span className="info-label">Tài khoản nhận:</span>
                         <span className="info-value">100868151423</span>
-                        <button className="copy-button" onClick={() => {navigator.clipboard.writeText("100868151423")}}>[ Copy ]</button>
+                        <button className="copy-button" onClick={() => {navigator.clipboard.writeText("100868151423")}}>[ Sao chép ]</button>
                       </div>
                       <div className="info-row">
                         <span className="info-label">Tên người nhận:</span>
                         <span className="info-value">TRUONG TAN TAI</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Nội dung:</span>
-                        <span className="info-value">
-                          {transferContent || (selectedAmount ? 'Vui lòng nhấn "Tạo mã QR"' : 'Vui lòng chọn số tiền nạp')}
-                        </span>
-                        {transferContent && (
-                          <button 
-                            className="copy-button"
-                            onClick={() => navigator.clipboard.writeText(transferContent)}
-                          >
-                            [ Copy ]
-                          </button>
-                        )}
                       </div>
                       <div className="info-row">
                         <span className="info-label">Số tiền:</span>
@@ -616,24 +600,12 @@ const TopUp = () => {
                           {selectedAmount ? formatPrice(selectedAmount.price) : 'Vui lòng chọn số tiền nạp'}
                         </span>
                       </div>
-                      
-                      {/* Submit button moved inside bank-transfer-info */}
-                      <button 
-                        className="topup-submit-button" 
-                        onClick={handleSubmit}
-                        disabled={loading || !selectedAmount || !paymentMethod}
-                        style={{ marginTop: '1.5rem' }}
-                      >
-                        {loading ? 'Đang xử lý...' : 'Gửi yêu cầu thanh toán'}
-                      </button>
                     </div>
                     
                     <div className="transfer-notes">
                       <div className="note-title">Chú ý</div>
                       <ol className="note-list">
-                        <li><strong>QUAN TRỌNG: Bấm "Gửi yêu cầu thanh toán" SAU KHI đã quét mã QR hoặc chuyển khoản để hoàn thành giao dịch.</strong></li>
-                        <li>Hiện tại phương thức chuyển khoản ngân hàng chỉ hỗ trợ Vietinbank.</li>
-                        <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản ở trên.</li>
+                        <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản (trong trường hợp không thể quét mã QR).</li>
                         <li>Số dư sẽ được cập nhật trong vòng tối đa 1h sau khi chuyển khoản thành công.</li>
                         <li>
                           Nếu có thắc mắc về vấn đề chuyển khoản hoặc chưa nhận được 🌾 1h sau khi thanh toán, vui lòng inbox fanpage{' '}  
@@ -649,61 +621,47 @@ const TopUp = () => {
               </div>
             )}
 
-            {/* Prepaid card details */}
-            {paymentMethod === 'prepaidCard' && (
-              <div className="payment-details">
-                <div className="method-form">
-                  <div className="form-group">
-                    <label htmlFor="card-provider">Nhà mạng</label>
-                    <select 
-                      id="card-provider"
-                      value={formData.prepaidCard.provider}
-                      onChange={(e) => handleInputChange('prepaidCard', 'provider', e.target.value)}
-                    >
-                      <option value="">Chọn nhà mạng</option>
-                      <option value="viettel">Viettel</option>
-                      <option value="vinaphone">Vinaphone</option>
-                      <option value="mobiphone">Mobiphone</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="card-number">Số thẻ</label>
-                    <input 
-                      type="text" 
-                      id="card-number" 
-                      value={formData.prepaidCard.cardNumber}
-                      onChange={(e) => handleInputChange('prepaidCard', 'cardNumber', e.target.value)}
-                      placeholder="Nhập số thẻ/seri"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="card-pin">Mã PIN</label>
-                    <input 
-                      type="text" 
-                      id="card-pin" 
-                      value={formData.prepaidCard.cardPin}
-                      onChange={(e) => handleInputChange('prepaidCard', 'cardPin', e.target.value)}
-                      placeholder="Nhập mã PIN"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Submit button - remove from here since it's moved above */}
-            {paymentMethod !== 'bank' && (
-              <button 
-                className="topup-submit-button" 
-                onClick={handleSubmit}
-                disabled={loading || !selectedAmount || !paymentMethod}
-              >
-                {loading ? 'Đang xử lý...' : 'Gửi yêu cầu thanh toán'}
-              </button>
-            )}
-
             {/* Error message */}
             {error && <div className="error-message">{error}</div>}
           </section>
+        )}
+
+        {/* QR Code Modal */}
+        {qrModalOpen && (
+          <div className="qr-modal-overlay">
+            <div className="qr-modal-content">
+              <h3>Quét mã QR để thanh toán</h3>
+              
+              <div className="qr-code-container">
+                <img src={qrCodeUrl} alt="QR Code" />
+              </div>
+              
+              <div className="transfer-info">
+                <div className="transfer-info-item">
+                  <span>Nội dung chuyển khoản:</span>
+                  <span className="transfer-content">{transferContent}</span>
+                  <button className="copy-button" onClick={() => navigator.clipboard.writeText(transferContent)}>
+                    Copy
+                  </button>
+                </div>
+                <div className="transfer-info-item">
+                  <span>Số tiền:</span>
+                  <span className="transfer-amount">{selectedAmount ? formatPrice(selectedAmount.price) : ''}</span>
+                </div>
+              </div>
+              
+              <div className="qr-countdown-container">
+                <p className="qr-expiry-note">
+                  Vui lòng quét mã QR, yêu cầu sẽ hết hạn sau <span className={`countdown-timer ${isCountdownLow(countdown) ? 'low' : ''}`}>{formatCountdown(countdown)}</span>
+                </p>
+              </div>
+              
+              <div className="qr-modal-actions">
+                <button className="qr-modal-cancel" onClick={handleQrCancel}>Hủy bỏ</button>
+                <button className="qr-modal-confirm" onClick={handleQrConfirm}>Xác nhận</button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Transaction history toggle */}

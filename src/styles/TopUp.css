@@ -1557,4 +1557,193 @@
 
 :root.dark-mode .no-user-selected p {
   color: #adb5bd;
+}
+
+/* QR Code Modal Styles */
+.qr-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.qr-modal-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.qr-modal-content h3 {
+  margin-top: 0;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.qr-code-container img {
+  max-width: 250px;
+  border: 1px solid #eee;
+  padding: 0.5rem;
+  background-color: white;
+}
+
+.transfer-info {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.transfer-info-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.transfer-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.transfer-info-item span:first-child {
+  font-weight: 500;
+  margin-right: 0.5rem;
+  color: #555;
+}
+
+.transfer-content {
+  font-family: monospace;
+  font-weight: bold;
+  background-color: #e9ecef;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+.transfer-amount {
+  font-weight: bold;
+  color: #0d6efd;
+}
+
+.qr-expiry-note {
+  color: #dc3545;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.qr-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.qr-modal-cancel,
+.qr-modal-confirm {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.qr-modal-cancel {
+  background-color: #6c757d;
+  color: white;
+}
+
+.qr-modal-confirm {
+  background-color: #28a745;
+  color: white;
+}
+
+.qr-modal-cancel:hover {
+  background-color: #5a6268;
+}
+
+.qr-modal-confirm:hover {
+  background-color: #218838;
+}
+
+/* Dark mode styles for QR modal */
+:root.dark-mode .qr-modal-content {
+  background-color: #343a40;
+}
+
+:root.dark-mode .qr-modal-content h3 {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .transfer-info {
+  background-color: #212529;
+}
+
+:root.dark-mode .transfer-content {
+  background-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .transfer-info-item span:first-child {
+  color: #adb5bd;
+}
+
+:root.dark-mode .transfer-amount {
+  color: #8bb9fe;
+}
+
+/* QR Countdown Timer Styles */
+.qr-countdown-container {
+  margin-bottom: 1.5rem;
+}
+
+.countdown-timer {
+  font-family: monospace;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: #dc3545;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  margin: 0 0.3rem;
+  display: inline-block;
+  min-width: 4rem;
+  text-align: center;
+}
+
+/* Pulse animation for the countdown timer */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Apply animation when timer is low (< 60 seconds) */
+.countdown-timer.low {
+  animation: pulse 1s infinite;
+}
+
+/* Dark mode styles for countdown timer */
+:root.dark-mode .countdown-timer {
+  background-color: #dc3545;
 } 
