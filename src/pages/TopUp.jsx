@@ -338,7 +338,7 @@ const TopUp = () => {
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>🌾 chỉ có thể được dùng để mở chương/tập, mở khóa chức năng, và hỗ trợ dịch giả/tác giả</p>
+            <p>🌾 chỉ có thể được dùng để mở chương/tập, đề xuất truyện, mở khóa chức năng, và hỗ trợ dịch giả/tác giả</p>
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
@@ -358,7 +358,7 @@ const TopUp = () => {
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>Hiện tại phương thức thanh toán bằng Momo, ZaloPay và thẻ cào chưa khả dụng vì admin lười lập tài khoản .</p>
+            <p>Hiện tại phương thức thanh toán bằng Momo, ZaloPay và thẻ cào chưa khả dụng vì admin lười lập tài khoản 🙂</p>
           </div>
         </div>
         

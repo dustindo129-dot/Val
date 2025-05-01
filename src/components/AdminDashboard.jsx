@@ -112,7 +112,7 @@ const AdminDashboard = () => {
   const { data: novels = [] } = useQuery({
     queryKey: ['novels'],
     queryFn: async () => {
-      const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&t=${Date.now()}`, {
+      const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -690,12 +690,21 @@ const AdminDashboard = () => {
         throw new Error(errorData.message || 'Không thể cập nhật số dư truyện');
       }
 
-      // Update the novel in cache
-      queryClient.setQueryData(['novels'], old => 
-        Array.isArray(old) 
-          ? old.map(novel => novel._id === id ? { ...novel, novelBalance: parseFloat(balanceValue) } : novel)
-          : []
-      );
+      // Immediately fetch fresh data
+      const freshDataResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&t=${Date.now()}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (freshDataResponse.ok) {
+        const freshData = await freshDataResponse.json();
+        const freshNovels = Array.isArray(freshData.novels) ? freshData.novels : (Array.isArray(freshData) ? freshData : []);
+        queryClient.setQueryData(['novels'], freshNovels);
+      }
+      
+      // Force invalidation of the queries to ensure fresh data on next render
+      queryClient.invalidateQueries(['novels']);
 
       // Exit edit mode
       setEditingBalanceId(null);

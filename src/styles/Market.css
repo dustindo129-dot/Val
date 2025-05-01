@@ -384,6 +384,8 @@
 .request-username {
   font-weight: 600;
   color: #343a40;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
 }
 
 .request-type {
@@ -395,9 +397,9 @@
 }
 
 .novel-link {
-  color: #0d6efd;
+  color: #1e3a8a;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .novel-link:hover {
@@ -749,6 +751,14 @@
 .history-date {
   font-size: 0.85rem;
   color: #6c757d;
+}
+
+.history-title {
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #343a40;
 }
 
 .history-text {
@@ -1158,7 +1168,7 @@
   color: #adb5bd;
 }
 
-:root.dark-mode .cancel-contribution-btn:hover {
+:root.dark-mode .cancel-contribution-btn:hover:not(:disabled) {
   background-color: #212529;
   color: #e9ecef;
 }
@@ -1600,20 +1610,31 @@
   padding: 15px;
   background-color: #f8fafc;
   border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .request-card .request-title {
-  font-weight: 600;
+  font-weight: bold;
   font-size: 1.1rem;
-  color: #1e3a8a;
-  margin-bottom: 8px;
+  word-break: break-word;
+  margin-bottom: 4px;
+}
+
+.request-card .request-username {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 4px;
 }
 
 .request-card .request-info {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   font-size: 0.85rem;
   color: #64748b;
+  margin-left: 15px;
+  flex-shrink: 0;
 }
 
 .request-note {
@@ -1782,6 +1803,10 @@
   color: #90cdf4;
 }
 
+:root.dark-mode .request-card .request-username {
+  color: #adb5bd;
+}
+
 :root.dark-mode .request-card .request-info,
 :root.dark-mode .request-stats,
 :root.dark-mode .progress-text {
@@ -1856,4 +1881,155 @@
   .request-actions {
     flex-direction: column;
   }
+}
+
+/* Contribution modal styles */
+.contribution-modal-content {
+  padding: 1rem 0;
+}
+
+.contribution-modal-content .contribution-input-container {
+  margin-bottom: 1.5rem;
+}
+
+.contribution-modal-content label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.contribution-modal-content .contribution-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.contribution-modal-content .balance-display {
+  display: block;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.contribution-note-container {
+  margin-bottom: 1.5rem;
+}
+
+.contribution-modal-content .contribution-note-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-actions .cancel-contribution-btn {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #ced4da;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-actions .cancel-contribution-btn:hover:not(:disabled) {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.modal-actions .submit-contribution-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.modal-actions .submit-contribution-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.modal-actions .submit-contribution-btn:disabled,
+.modal-actions .cancel-contribution-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Dark mode styles for contribution modal */
+:root.dark-mode .contribution-modal-content label {
+  color: #e9ecef;
+}
+
+:root.dark-mode .contribution-modal-content .contribution-input,
+:root.dark-mode .contribution-modal-content .contribution-note-input {
+  background-color: #2c3237;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+:root.dark-mode .contribution-modal-content .balance-display {
+  color: #adb5bd;
+}
+
+:root.dark-mode .modal-actions .cancel-contribution-btn {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #adb5bd;
+}
+
+:root.dark-mode .modal-actions .cancel-contribution-btn:hover:not(:disabled) {
+  background-color: #212529;
+  color: #e9ecef;
+}
+
+:root.dark-mode .modal-actions .submit-contribution-btn {
+  background-color: #218838;
+}
+
+:root.dark-mode .modal-actions .submit-contribution-btn:hover:not(:disabled) {
+  background-color: #1e7e34;
+}
+
+/* End contribution modal styles */
+
+:root.dark-mode .history-title {
+  color: #e9ecef;
+}
+
+.admin-note {
+  background-color: #f8f9fa;
+  border-left: 3px solid #0d6efd;
+  padding: 8px 16px;
+  margin: 8px 0 16px;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.admin-note .fa-info-circle {
+  color: #0d6efd;
+  margin-right: 8px;
+}
+
+:root.dark-mode .admin-note {
+  background-color: #343a40;
+  border-left-color: #0d6efd;
+  color: #ced4da;
 } 

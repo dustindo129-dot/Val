@@ -41,6 +41,16 @@ const TopUpManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [transactionsPerPage] = useState(20);
+  
+  // New state variables for novel transactions
+  const [novelTransactions, setNovelTransactions] = useState([]);
+  const [novelTransactionLoading, setNovelTransactionLoading] = useState(true);
+  const [novelSearchQuery, setNovelSearchQuery] = useState('');
+  const [novelSearchResults, setNovelSearchResults] = useState([]);
+  const [showNovelSearch, setShowNovelSearch] = useState(false);
+  const [selectedNovel, setSelectedNovel] = useState(null);
+  const [novelCurrentPage, setNovelCurrentPage] = useState(1);
+  const [novelTotalPages, setNovelTotalPages] = useState(1);
 
   // Protect the route - redirect non-admin users
   useEffect(() => {
@@ -161,6 +171,38 @@ const TopUpManagement = () => {
     }
   };
 
+  // Fetch novel transactions
+  const fetchNovelTransactions = async (page = 1, novelId = null) => {
+    try {
+      setNovelTransactionLoading(true);
+      
+      // If no novel ID provided, clear transactions and return
+      if (!novelId) {
+        setNovelTransactions([]);
+        setNovelTransactionLoading(false);
+        return;
+      }
+      
+      const offset = (page - 1) * transactionsPerPage;
+      const limit = transactionsPerPage;
+      
+      const response = await axios.get(
+        `${config.backendUrl}/api/novel-transactions?novelId=${novelId}&limit=${limit}&offset=${offset}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      setNovelTransactions(response.data.transactions || []);
+      setNovelTotalPages(Math.ceil((response.data.pagination?.total || 0) / transactionsPerPage));
+      setNovelCurrentPage(page);
+      setNovelTransactionLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch novel transactions:', err);
+      setNovelTransactions([]);
+      setNovelTransactionLoading(false);
+      alert('Không thể tải nhật ký giao dịch tiểu thuyết. Vui lòng thử lại sau.');
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -217,6 +259,29 @@ const TopUpManagement = () => {
     return () => clearTimeout(timer);
   }, [transactionUsername]);
 
+  // Search for novels
+  useEffect(() => {
+    const searchNovels = async () => {
+      if (!novelSearchQuery || novelSearchQuery.length < 2) {
+        setNovelSearchResults([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${config.backendUrl}/api/novel-transactions/search-novels?query=${encodeURIComponent(novelSearchQuery)}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setNovelSearchResults(response.data.slice(0, 5)); // Limit to 5 results
+      } catch (err) {
+        console.error('Novel search failed:', err);
+      }
+    };
+
+    const timer = setTimeout(searchNovels, 500);
+    return () => clearTimeout(timer);
+  }, [novelSearchQuery]);
+
   // Handle user selection from search results
   const handleUserSelect = (user) => {
     setSelectedUser(user);
@@ -233,6 +298,16 @@ const TopUpManagement = () => {
     
     // Fetch transactions for selected user
     fetchUserTransactions(1, user.username);
+  };
+
+  // Handle novel selection for transaction filtering
+  const handleNovelSelect = (novel) => {
+    setSelectedNovel(novel);
+    setNovelSearchQuery(novel.title);
+    setShowNovelSearch(false);
+    
+    // Fetch transactions for selected novel
+    fetchNovelTransactions(1, novel._id);
   };
 
   // Handle balance adjustment
@@ -315,6 +390,20 @@ const TopUpManagement = () => {
     setTotalPages(1);
   };
 
+  // Handle novel pagination
+  const handleNovelPageChange = (page) => {
+    fetchNovelTransactions(page, selectedNovel?._id);
+  };
+
+  // Handle reset novel filter
+  const handleResetNovelFilter = () => {
+    setSelectedNovel(null);
+    setNovelSearchQuery('');
+    setNovelTransactions([]);
+    setNovelCurrentPage(1);
+    setNovelTotalPages(1);
+  };
+
   // Handle top-up form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -374,7 +463,10 @@ const TopUpManagement = () => {
     const typeMap = {
       'topup': 'Nạp tiền (tự động)',
       'admin_topup': 'Nạp tiền (admin)',
-      'request': 'Yêu cầu',
+      'request': 'Yêu cầu truyện mới',
+      'open': 'Mở chương/tập',
+      'admin': 'Điều chỉnh thủ công',
+      'contribution': 'Đóng góp',
       'refund': 'Hoàn tiền',
       'withdrawal': 'Rút tiền',
       'other': 'Khác'
@@ -467,6 +559,154 @@ const TopUpManagement = () => {
               </button>
             </div>
           </form>
+        </section>
+
+        {/* New section: Novel Transaction History */}
+        <section className="top-up-section transaction-section">
+          <div className="transaction-header-container">
+            <h2>Nhật ký giao dịch tiểu thuyết</h2>
+            <div className="transaction-filter">
+              <div className="user-search-container">
+                <input 
+                  type="text" 
+                  placeholder="Tìm kiếm tiểu thuyết để xem giao dịch..."
+                  value={novelSearchQuery}
+                  onChange={(e) => {
+                    setNovelSearchQuery(e.target.value);
+                    setShowNovelSearch(true);
+                  }}
+                  onClick={() => setShowNovelSearch(true)}
+                />
+                {showNovelSearch && novelSearchResults.length > 0 && (
+                  <div className="user-search-results">
+                    {novelSearchResults.map(novel => (
+                      <div 
+                        key={novel._id} 
+                        className="user-result"
+                        onClick={() => handleNovelSelect(novel)}
+                      >
+                        <div className="user-avatar">
+                          {novel.illustration ? (
+                            <img src={novel.illustration} alt={novel.title} />
+                          ) : (
+                            <div className="default-avatar">
+                              {novel.title.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="topup-user-info">
+                          <div className="user-username">{novel.title}</div>
+                          <div className="topup-user-balance">Số dư hiện tại: {novel.novelBalance || 0}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {selectedNovel && (
+                <>
+                  <button 
+                    className="reset-filter-button"
+                    onClick={handleResetNovelFilter}
+                  >
+                    Xóa bộ lọc
+                  </button>
+                  <button 
+                    className="refresh-button"
+                    onClick={() => fetchNovelTransactions(novelCurrentPage, selectedNovel?._id)}
+                    disabled={novelTransactionLoading}
+                  >
+                    {novelTransactionLoading ? 'Đang tải...' : 'Tải lại'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {!selectedNovel ? (
+            <div className="no-user-selected">
+              <p>Hãy tìm kiếm và chọn tiểu thuyết để xem lịch sử giao dịch</p>
+            </div>
+          ) : novelTransactionLoading ? (
+            <p>Đang tải nhật ký giao dịch...</p>
+          ) : novelTransactions.length === 0 ? (
+            <p>Không tìm thấy giao dịch nào cho tiểu thuyết này</p>
+          ) : (
+            <>
+              <div className="user-transactions-list">
+                {novelTransactions.map((transaction) => (
+                  <div key={transaction._id} className="user-transaction-item">
+                    <div className="transaction-header">
+                      <div className="transaction-user">
+                        <span className="username">{transaction.novel.title}</span>
+                        <span className="transaction-id">ID: {transaction._id}</span>
+                      </div>
+                      <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
+                    </div>
+                    <div className="transaction-details">
+                      <div className="transaction-type">
+                        {getTransactionTypeText(transaction.type)}
+                      </div>
+                      <div className={`transaction-amount ${getAmountClass(transaction.amount)}`}>
+                        {transaction.amount >= 0 ? '+' : ''}{transaction.amount} 🌾
+                      </div>
+                      <div className="transaction-balance-after">
+                        Số dư sau giao dịch: {transaction.balanceAfter} 🌾
+                      </div>
+                    </div>
+                    <div className="transaction-description">
+                      {transaction.description}
+                    </div>
+                    {transaction.performedBy && (
+                      <div className="transaction-admin">
+                        Thực hiện bởi: {transaction.performedBy.username}
+                      </div>
+                    )}
+                    {transaction.sourceModel && (
+                      <div className="transaction-source">
+                        Nguồn: {transaction.sourceModel} (ID: {transaction.sourceId})
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Pagination */}
+              {novelTotalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => handleNovelPageChange(1)}
+                    disabled={novelCurrentPage === 1}
+                  >
+                    &laquo;
+                  </button>
+                  <button 
+                    onClick={() => handleNovelPageChange(novelCurrentPage - 1)}
+                    disabled={novelCurrentPage === 1}
+                  >
+                    &lt;
+                  </button>
+                  
+                  <span className="page-info">
+                    Trang {novelCurrentPage} / {novelTotalPages}
+                  </span>
+                  
+                  <button 
+                    onClick={() => handleNovelPageChange(novelCurrentPage + 1)}
+                    disabled={novelCurrentPage === novelTotalPages}
+                  >
+                    &gt;
+                  </button>
+                  <button 
+                    onClick={() => handleNovelPageChange(novelTotalPages)}
+                    disabled={novelCurrentPage === novelTotalPages}
+                  >
+                    &raquo;
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </section>
 
         {/* User Transactions Section - Modified to show instructions when no user selected */}
