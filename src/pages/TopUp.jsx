@@ -29,6 +29,8 @@ const TopUp = () => {
   const [transferContent, setTransferContent] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  // Track if QR was generated but payment request not submitted yet
+  const [qrGeneratedNotSubmitted, setQrGeneratedNotSubmitted] = useState(false);
 
   // Form data for different payment methods
   const [formData, setFormData] = useState({
@@ -37,6 +39,24 @@ const TopUp = () => {
     bank: { accountNumber: '', accountName: '', bankName: '', transferContent: '' },
     prepaidCard: { cardNumber: '', cardPin: '', provider: '' }
   });
+
+  // Setup beforeunload event listener to warn users before leaving with unsubmitted transaction
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (qrGeneratedNotSubmitted) {
+        // Standard way to show confirmation dialog
+        const message = "Bạn chưa hoàn thành giao dịch! Vui lòng bấm 'Gửi yêu cầu thanh toán' trước khi rời đi.";
+        e.returnValue = message; // Standard for Chrome, Firefox, IE
+        return message; // For Safari
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [qrGeneratedNotSubmitted]);
 
   // Fetch pricing options
   useEffect(() => {
@@ -92,6 +112,7 @@ const TopUp = () => {
     setShowQRCode(false);
     setQrCodeUrl('');
     setTransferContent('');
+    setQrGeneratedNotSubmitted(false);
   };
 
   // Handle sub-method selection (for e-wallets)
@@ -151,6 +172,9 @@ const TopUp = () => {
     
     // Show QR code section
     setShowQRCode(true);
+    
+    // Set the flag that QR is generated but not submitted
+    setQrGeneratedNotSubmitted(true);
 
     // Update bank form data with the new transfer content
     setFormData(prev => ({
@@ -169,6 +193,7 @@ const TopUp = () => {
     // Reset QR code when changing amount
     setShowQRCode(false);
     setQrCodeUrl('');
+    setQrGeneratedNotSubmitted(false);
   };
 
   // Handle form input changes
@@ -248,6 +273,9 @@ const TopUp = () => {
       
       // Show success message
       alert(response.data.message);
+      
+      // Clear the QR generated flag since payment request was submitted
+      setQrGeneratedNotSubmitted(false);
       
       // Reset form
       setPaymentMethod(null);
@@ -588,12 +616,22 @@ const TopUp = () => {
                           {selectedAmount ? formatPrice(selectedAmount.price) : 'Vui lòng chọn số tiền nạp'}
                         </span>
                       </div>
+                      
+                      {/* Submit button moved inside bank-transfer-info */}
+                      <button 
+                        className="submit-button" 
+                        onClick={handleSubmit}
+                        disabled={loading || !selectedAmount || !paymentMethod}
+                        style={{ marginTop: '1.5rem' }}
+                      >
+                        {loading ? 'Đang xử lý...' : 'Gửi yêu cầu thanh toán'}
+                      </button>
                     </div>
                     
                     <div className="transfer-notes">
                       <div className="note-title">Chú ý</div>
                       <ol className="note-list">
-                        <li><strong>QUAN TRỌNG:</strong> Bấm "Gửi yêu cầu thanh toán" SAU KHI đã quét mã QR hoặc chuyển khoản để hoàn thành giao dịch.</li>
+                        <li><strong>QUAN TRỌNG: Bấm "Gửi yêu cầu thanh toán" SAU KHI đã quét mã QR hoặc chuyển khoản để hoàn thành giao dịch.</strong></li>
                         <li>Hiện tại phương thức chuyển khoản ngân hàng chỉ hỗ trợ Vietinbank.</li>
                         <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản ở trên.</li>
                         <li>Số dư sẽ được cập nhật trong vòng tối đa 1h sau khi chuyển khoản thành công.</li>
@@ -652,14 +690,16 @@ const TopUp = () => {
               </div>
             )}
 
-            {/* Submit button */}
-            <button 
-              className="submit-button" 
-              onClick={handleSubmit}
-              disabled={loading || !selectedAmount || !paymentMethod}
-            >
-              {loading ? 'Đang xử lý...' : 'Gửi yêu cầu thanh toán'}
-            </button>
+            {/* Submit button - remove from here since it's moved above */}
+            {paymentMethod !== 'bank' && (
+              <button 
+                className="submit-button" 
+                onClick={handleSubmit}
+                disabled={loading || !selectedAmount || !paymentMethod}
+              >
+                {loading ? 'Đang xử lý...' : 'Gửi yêu cầu thanh toán'}
+              </button>
+            )}
 
             {/* Error message */}
             {error && <div className="error-message">{error}</div>}

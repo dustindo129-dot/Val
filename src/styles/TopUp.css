@@ -1298,12 +1298,6 @@
   }
 }
 
-.transfer-content {
-  color: #2196F3;
-  font-family: monospace;
-  font-weight: 500;
-}
-
 .actual-amount {
   display: inline-block;
   margin-left: 0.5rem;

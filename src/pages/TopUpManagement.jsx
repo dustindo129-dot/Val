@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import config from '../config/config';
+import '../styles/TopUpManagement.css';
 import '../styles/TopUp.css';
-
 /**
  * TopUpManagement Page Component
  * 
@@ -25,6 +25,17 @@ const TopUpManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  
+  // New state variables for unmatched transactions
+  const [unmatchedTransactions, setUnmatchedTransactions] = useState([]);
+  const [unmatchedLoading, setUnmatchedLoading] = useState(true);
+  const [matchUserSearch, setMatchUserSearch] = useState('');
+  const [matchSearchResults, setMatchSearchResults] = useState([]);
+  const [showMatchSearch, setShowMatchSearch] = useState(false);
+  const [selectedMatchUser, setSelectedMatchUser] = useState(null);
+  const [matchingTransactionId, setMatchingTransactionId] = useState(null);
+  const [matchBalance, setMatchBalance] = useState('');
+  const [processingMatch, setProcessingMatch] = useState(false);
   
   // New state variables for pending requests
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -203,11 +214,31 @@ const TopUpManagement = () => {
     }
   };
 
+  // Fetch unmatched transactions
+  const fetchUnmatchedTransactions = async () => {
+    try {
+      setUnmatchedLoading(true);
+      const response = await axios.get(
+        `${config.backendUrl}/api/topup/unmatched-transactions`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      setUnmatchedTransactions(response.data);
+      setUnmatchedLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch unmatched transactions:', err);
+      setUnmatchedTransactions([]);
+      setUnmatchedLoading(false);
+      alert('Không thể tải giao dịch chưa khớp. Vui lòng thử lại sau.');
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
     if (user?.role === 'admin') {
       fetchTransactions();
       fetchPendingRequests();
+      fetchUnmatchedTransactions();
       // Remove default fetch of all transactions
       // fetchUserTransactions();
     }
@@ -282,6 +313,29 @@ const TopUpManagement = () => {
     return () => clearTimeout(timer);
   }, [novelSearchQuery]);
 
+  // Search for users for matching unmatched transactions
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!matchUserSearch || matchUserSearch.length < 2) {
+        setMatchSearchResults([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${config.backendUrl}/api/topup-admin/search-users?query=${encodeURIComponent(matchUserSearch)}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setMatchSearchResults(response.data.slice(0, 5)); // Limit to 5 results
+      } catch (err) {
+        console.error('User search failed:', err);
+      }
+    };
+
+    const timer = setTimeout(searchUsers, 500);
+    return () => clearTimeout(timer);
+  }, [matchUserSearch]);
+
   // Handle user selection from search results
   const handleUserSelect = (user) => {
     setSelectedUser(user);
@@ -298,6 +352,13 @@ const TopUpManagement = () => {
     
     // Fetch transactions for selected user
     fetchUserTransactions(1, user.username);
+  };
+
+  // Handle user selection for matching transactions
+  const handleMatchUserSelect = (user) => {
+    setSelectedMatchUser(user);
+    setMatchUserSearch(user.username);
+    setShowMatchSearch(false);
   };
 
   // Handle novel selection for transaction filtering
@@ -346,6 +407,73 @@ const TopUpManagement = () => {
     } catch (err) {
       console.error('Không thể xác nhận yêu cầu:', err);
       alert(err.response?.data?.message || 'Không thể xác nhận yêu cầu');
+    }
+  };
+
+  // Start matching an unmatched transaction
+  const startMatchingTransaction = (transactionId) => {
+    setMatchingTransactionId(transactionId);
+    setSelectedMatchUser(null);
+    setMatchUserSearch('');
+    setMatchBalance('');
+  };
+
+  // Cancel matching
+  const cancelMatching = () => {
+    setMatchingTransactionId(null);
+    setSelectedMatchUser(null);
+    setMatchUserSearch('');
+    setMatchBalance('');
+  };
+
+  // Process matched transaction
+  const processMatchedTransaction = async (transactionId) => {
+    if (!selectedMatchUser) {
+      alert('Vui lòng chọn người dùng để khớp giao dịch');
+      return;
+    }
+
+    if (!matchBalance || Number(matchBalance) <= 0) {
+      alert('Vui lòng nhập số lượng lúa hợp lệ');
+      return;
+    }
+
+    if (!confirm(`Xác nhận khớp giao dịch cho người dùng "${selectedMatchUser.username}" với ${matchBalance} lúa?`)) {
+      return;
+    }
+
+    setProcessingMatch(true);
+
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/topup/process-unmatched/${transactionId}`,
+        {
+          userId: selectedMatchUser._id,
+          amount: Number(matchBalance),
+          balance: Number(matchBalance)
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      // Remove processed transaction from unmatched list
+      setUnmatchedTransactions(unmatchedTransactions.filter(tx => tx.transactionId !== transactionId));
+      
+      // Reset form
+      setMatchingTransactionId(null);
+      setSelectedMatchUser(null);
+      setMatchUserSearch('');
+      setMatchBalance('');
+      
+      // Refresh other data
+      fetchTransactions();
+      fetchUserTransactions(currentPage, selectedTransactionUser?.username);
+      
+      alert('Giao dịch đã được khớp thành công');
+    } catch (err) {
+      console.error('Không thể khớp giao dịch:', err);
+      alert(err.response?.data?.message || 'Không thể khớp giao dịch');
+    } finally {
+      setProcessingMatch(false);
     }
   };
 
@@ -854,6 +982,139 @@ const TopUpManagement = () => {
                 </div>
               )}
             </>
+          )}
+        </section>
+
+        {/* New section: Unmatched Transactions */}
+        <section className="top-up-section unmatched-section">
+          <div className="transaction-header-container">
+            <h2>Giao dịch chưa khớp</h2>
+            <button 
+              className="refresh-button"
+              onClick={fetchUnmatchedTransactions}
+              disabled={unmatchedLoading}
+            >
+              {unmatchedLoading ? 'Đang tải lại...' : 'Tải lại giao dịch'}
+            </button>
+          </div>
+          {unmatchedLoading ? (
+            <p>Đang tải giao dịch chưa khớp...</p>
+          ) : unmatchedTransactions.length === 0 ? (
+            <p>Không có giao dịch chưa khớp</p>
+          ) : (
+            <div className="unmatched-transactions-list">
+              {unmatchedTransactions.map((transaction) => (
+                <div key={transaction.transactionId} className="unmatched-transaction-item">
+                  <div className="transaction-header">
+                    <div className="transaction-user">
+                      <span className="username">Giao dịch chưa khớp</span>
+                      <span className="transaction-id">ID: {transaction.transactionId}</span>
+                    </div>
+                    <span className="transaction-date">{formatDate(transaction.date || transaction.createdAt)}</span>
+                  </div>
+                  <div className="transaction-details">
+                    <div className="transaction-method">
+                      Ngân hàng: {transaction.bankName || 'Không xác định'}
+                    </div>
+                    <div className="transaction-amount">
+                      Số tiền: {formatPrice(transaction.amount)}
+                    </div>
+                    <div className="transaction-reference">
+                      Mã tham chiếu: <span className="transfer-content">{transaction.extractedContent}</span>
+                    </div>
+                  </div>
+                  {transaction.description && (
+                    <div className="transaction-description">
+                      <span className="description-label">Nội dung chuyển khoản:</span>
+                      <div className="description-text">{transaction.description}</div>
+                    </div>
+                  )}
+                  
+                  {/* Matching form */}
+                  {matchingTransactionId === transaction.transactionId ? (
+                    <div className="match-transaction-form">
+                      <div className="match-form-header">Khớp giao dịch này với người dùng:</div>
+                      <div className="match-form-controls">
+                        <div className="match-user-control user-search-container">
+                          <input 
+                            type="text" 
+                            placeholder="Tìm kiếm người dùng..."
+                            value={matchUserSearch}
+                            onChange={(e) => {
+                              setMatchUserSearch(e.target.value);
+                              setShowMatchSearch(true);
+                            }}
+                            onClick={() => setShowMatchSearch(true)}
+                          />
+                          {showMatchSearch && matchSearchResults.length > 0 && (
+                            <div className="user-search-results">
+                              {matchSearchResults.map(user => (
+                                <div 
+                                  key={user._id} 
+                                  className="user-result"
+                                  onClick={() => handleMatchUserSelect(user)}
+                                >
+                                  <div className="user-avatar">
+                                    {user.avatar ? (
+                                      <img src={user.avatar} alt={user.username} />
+                                    ) : (
+                                      <div className="default-avatar">
+                                        {user.username.charAt(0).toUpperCase()}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="topup-user-info">
+                                    <div className="user-username">{user.username}</div>
+                                    <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {showMatchSearch && matchUserSearch.length >= 2 && matchSearchResults.length === 0 && (
+                            <div className="no-results">Không tìm thấy người dùng</div>
+                          )}
+                        </div>
+                        <div className="match-balance-control">
+                          <input 
+                            type="number" 
+                            placeholder="Số lúa"
+                            value={matchBalance}
+                            onChange={(e) => setMatchBalance(e.target.value)}
+                            min="1"
+                          />
+                        </div>
+                      </div>
+                      <div className="match-actions">
+                        <button 
+                          className="match-button"
+                          onClick={() => processMatchedTransaction(transaction.transactionId)}
+                          disabled={processingMatch || !selectedMatchUser || !matchBalance}
+                        >
+                          {processingMatch ? 'Đang xử lý...' : 'Khớp giao dịch'}
+                        </button>
+                        <button 
+                          className="cancel-match-button"
+                          onClick={cancelMatching}
+                          disabled={processingMatch}
+                        >
+                          Hủy
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="transaction-actions">
+                      <button 
+                        className="match-button"
+                        onClick={() => startMatchingTransaction(transaction.transactionId)}
+                      >
+                        Khớp với người dùng
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </section>
 
