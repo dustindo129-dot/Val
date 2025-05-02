@@ -38,17 +38,6 @@ const MarketHeader = () => {
         </div>
 
         <div className="overview-section">
-          <h3>Mở ngay chương/tập có sẵn:</h3>
-          <ul>
-            <li>Chọn bộ truyện trong thanh tìm kiếm.</li>
-            <li>Chọn chương/tập bạn muốn mở.</li>
-            <li>Điền số 🌾 cọc.</li>
-            <li>Sau khi xác nhận, số cọc sẽ lập tức được trừ vào số 🌾 cần để mở chương/tập, tự động mở nếu con số giảm xuống 0.</li>
-            <li>Nếu số 🌾 cọc vượt quá số 🌾 cần để mở chương/tập, số dư sẽ được trả lại cho người dùng.</li>
-          </ul>
-        </div>
-
-        <div className="overview-section">
           <h3>Đề xuất từ nhóm dịch:</h3>
           <ul>
             <li>Đây là những bộ do nhóm đề xuất, thường là những bộ đã có đủ nhân sự muốn trưng cầu đóng góp từ độc giả.</li>
@@ -68,7 +57,7 @@ const MarketHeader = () => {
         </div>
 
         <div className="update-date">
-          <em>Cập nhật ngày 01/05/2025</em>
+          <em>Cập nhật ngày 02/05/2025</em>
         </div>
       </div>
     </section>

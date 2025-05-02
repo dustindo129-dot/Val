@@ -113,8 +113,9 @@ const OpenRequestModal = ({
           <div className="open-request-note">
             <strong>Lưu ý quan trọng:</strong>
             <ul>
-              <li>Nội dung sẽ được mở khóa ngay lập tức sau khi thanh toán.</li>
-              <li>Nếu số tiền cọc lớn hơn số yêu cầu, phần thừa sẽ được hoàn trả.</li>
+              <li>Số 🌾 góp có thể ít hơn số 🌾 yêu cầu để mở.</li>
+              <li>Nội dung sẽ được mở khóa ngay sau khi góp nếu đủ số 🌾 yêu cầu.</li>
+              <li>Nếu số 🌾 góp lớn hơn số yêu cầu, phần thừa sẽ được hoàn trả.</li>
               <li>Hành động này không thể hoàn tác sau khi thực hiện.</li>
             </ul>
           </div>

@@ -11,23 +11,23 @@
   gap: 20px;
 }
 
-.top-up-form {
+.topup-form {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.form-group {
+.topup-form-group {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.form-group label {
+.topup-form-group label {
   font-weight: 500;
 }
 
-.form-group input, .form-group select {
+.topup-form-group input, .topup-form-group select {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -40,7 +40,7 @@
   align-items: flex-end;
 }
 
-.amount-input-row .form-group {
+.amount-input-row .topup-form-group {
   flex: 1;
 }
 

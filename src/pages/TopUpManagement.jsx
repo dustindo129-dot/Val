@@ -629,8 +629,8 @@ const TopUpManagement = () => {
       <div className="top-up-content">
         <section className="top-up-section">
           <h2>Phát 🌾 cho người dùng</h2>
-          <form className="top-up-form" onSubmit={handleSubmit}>
-            <div className="form-group user-search-container">
+          <form className="topup-form" onSubmit={handleSubmit}>
+            <div className="topup-form-group user-search-container">
               <label htmlFor="username">Tên người dùng</label>
               <input 
                 type="text" 
@@ -676,7 +676,7 @@ const TopUpManagement = () => {
             </div>
             
             <div className="amount-input-row">
-              <div className="form-group">
+              <div className="topup-form-group">
                 <label htmlFor="amount">Số 🌾 phát</label>
                 <input 
                   type="number" 

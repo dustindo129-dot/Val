@@ -333,7 +333,7 @@ const UserProfile = () => {
           {/* Email update form */}
           <form onSubmit={handleEmailUpdate} className="settings-form">
             <h2>Cài đặt email</h2>
-            <div className="form-group">
+            <div className="profile-form-group">
               <label>Email Address</label>
               <input
                 type="email"
@@ -344,7 +344,7 @@ const UserProfile = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="profile-form-group">
               <label>Mật khẩu hiện tại</label>
               <input
                 type="password"
@@ -363,7 +363,7 @@ const UserProfile = () => {
           {/* Password update form */}
           <form onSubmit={handlePasswordUpdate} className="settings-form">
             <h2>Cài đặt mật khẩu</h2>
-            <div className="form-group">
+            <div className="profile-form-group">
               <label>Mật khẩu hiện tại</label>
               <input
                 type="password"
@@ -374,7 +374,7 @@ const UserProfile = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="profile-form-group">
               <label>Mật khẩu mới</label>
               <input
                 type="password"
@@ -385,7 +385,7 @@ const UserProfile = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="profile-form-group">
               <label>Xác nhận mật khẩu mới</label>
               <input
                 type="password"
@@ -450,7 +450,7 @@ const UserProfile = () => {
             {((user?.role === 'admin' && bannedUsers.length === 0) || 
               (!user?.role === 'admin' && blockedUsers.length === 0)) && (
               <p className="no-blocked-users">
-                No {user?.role === 'admin' ? 'banned' : 'blocked'} users
+                Không có người dùng bị {user?.role === 'admin' ? 'banned' : 'blocked'}
               </p>
             )}
           </div>

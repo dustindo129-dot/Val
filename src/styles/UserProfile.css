@@ -158,24 +158,24 @@
 }
 
 /* Form group container */
-.form-group {
+.profile-form-group {
   margin-bottom: 16px;
 }
 
 /* Form label styling */
-.form-group label {
+.profile-form-group label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
   color: #333;
 }
 
-:root.dark-mode .form-group label {
+:root.dark-mode .profile-form-group label {
   color: #fff;
 }
 
 /* Form input styling */
-.form-control {
+.profile-form-group .form-control {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ced4da;
@@ -185,14 +185,14 @@
   color: #333;
 }
 
-:root.dark-mode .form-control {
+:root.dark-mode .profile-form-group .form-control {
   background-color: #1a1a1a;
   border-color: #444;
   color: #fff;
 }
 
 /* Form input focus state */
-.form-control:focus {
+.profile-form-group .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
