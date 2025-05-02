@@ -175,8 +175,8 @@ const SecondaryNavbar = () => {
             </div>
           )}
           
-          {/* Top-up button - only visible to admin */}
-          {user?.role === 'admin' && (
+          {/* Top-up button - visible to all authenticated users */}
+          {isAuthenticated && (
             <Link to="/top-up" className="top-up-button">
               Nạp thêm
             </Link>
