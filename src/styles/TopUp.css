@@ -1260,7 +1260,7 @@
   margin-bottom: 1.5rem;
 }
 
-.refresh-button {
+.topup-refresh-button {
   background-color: #6c757d;
   color: white;
   border: none;
@@ -1271,21 +1271,21 @@
   transition: background-color 0.2s;
 }
 
-.refresh-button:hover:not(:disabled) {
+.topup-refresh-button:hover:not(:disabled) {
   background-color: #5a6268;
 }
 
-.refresh-button:disabled {
+.topup-refresh-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* Dark mode for transaction header */
-:root.dark-mode .refresh-button {
+:root.dark-mode .topup-refresh-button {
   background-color: #495057;
 }
 
-:root.dark-mode .refresh-button:hover:not(:disabled) {
+:root.dark-mode .topup-refresh-button:hover:not(:disabled) {
   background-color: #343a40;
 }
 

@@ -40,28 +40,17 @@ const Market = () => {
   }, []);
   
   const [userBalance, setUserBalance] = useState(0);
-  const [requestType, setRequestType] = useState('new'); // 'new' or 'open' or 'web'
+  const [requestType, setRequestType] = useState('new'); // 'new' or 'web'
   const [requestText, setRequestText] = useState('');
   const [requestNote, setRequestNote] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [goalAmount, setGoalAmount] = useState('1000'); // Default goal amount for web requests
-  const [novelSearchQuery, setNovelSearchQuery] = useState('');
-  const [novelSearchResults, setNovelSearchResults] = useState([]);
-  const [selectedNovel, setSelectedNovel] = useState(null);
-  const [selectedModule, setSelectedModule] = useState(null);
-  const [selectedChapter, setSelectedChapter] = useState(null);
-  const [modules, setModules] = useState([]);
-  const [chapters, setChapters] = useState([]);
-  const [loadingModules, setLoadingModules] = useState(false);
-  const [loadingChapters, setLoadingChapters] = useState(false);
   const [requests, setRequests] = useState([]);
   const [sortOrder, setSortOrder] = useState('likes');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [likingRequests, setLikingRequests] = useState(new Set());
-  const [isSearching, setIsSearching] = useState(false);
-  const [showNovelResults, setShowNovelResults] = useState(false);
   const [withdrawableRequests, setWithdrawableRequests] = useState(new Set());
   const [withdrawingRequests, setWithdrawingRequests] = useState(new Set());
   const [showHistory, setShowHistory] = useState(false);
@@ -73,8 +62,6 @@ const Market = () => {
   const [submittingContribution, setSubmittingContribution] = useState(false);
   const [contributions, setContributions] = useState({});
   const [loadingContributions, setLoadingContributions] = useState(new Set());
-  const [selectedModuleData, setSelectedModuleData] = useState(null);
-  const [selectedChapterData, setSelectedChapterData] = useState(null);
   const [contributionModalOpen, setContributionModalOpen] = useState(false);
   const [currentRequestForContribution, setCurrentRequestForContribution] = useState(null);
 
@@ -196,108 +183,6 @@ const Market = () => {
     }
   };
 
-  // Search for novels as user types
-  useEffect(() => {
-    const searchNovels = async () => {
-      if (!novelSearchQuery || novelSearchQuery.length < 3) {
-        setNovelSearchResults([]);
-        return;
-      }
-      
-      // Skip search if a novel was just selected (when selectedNovel exists and its title matches the query)
-      if (selectedNovel && selectedNovel.title === novelSearchQuery) {
-        return;
-      }
-      
-      setIsSearching(true);
-      try {
-        const response = await axios.get(
-          `${config.backendUrl}/api/novels/search?title=${encodeURIComponent(novelSearchQuery)}`
-        );
-        setNovelSearchResults(response.data.slice(0, 5)); // Limit to 5 results
-        setShowNovelResults(true);
-      } catch (err) {
-        console.error('Novel search failed:', err);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    const timer = setTimeout(searchNovels, 500);
-    return () => clearTimeout(timer);
-  }, [novelSearchQuery, selectedNovel]);
-
-  // Fetch modules when a novel is selected
-  useEffect(() => {
-    const fetchModules = async () => {
-      if (!selectedNovel) {
-        setModules([]);
-        setChapters([]);
-        setSelectedModule(null);
-        setSelectedChapter(null);
-        setSelectedModuleData(null);
-        setSelectedChapterData(null);
-        return;
-      }
-      
-      setLoadingModules(true);
-      setLoadingChapters(true);
-      try {
-        const response = await axios.get(
-          `${config.backendUrl}/api/modules/${selectedNovel._id}/modules-with-chapters`
-        );
-        
-        // Filter modules that are in 'paid' mode
-        const paidModules = response.data.filter(module => module.mode === 'paid');
-        setModules(paidModules);
-        
-        // Collect all paid chapters from all modules
-        let allPaidChapters = [];
-        response.data.forEach(module => {
-          if (module.chapters) {
-            const paidChaptersInModule = module.chapters.filter(chapter => chapter.mode === 'paid');
-            allPaidChapters = [...allPaidChapters, ...paidChaptersInModule];
-          }
-        });
-        setChapters(allPaidChapters);
-        
-        // Clear selected module and chapter since the novel changed
-        setSelectedModule(null);
-        setSelectedChapter(null);
-        setSelectedModuleData(null);
-        setSelectedChapterData(null);
-      } catch (err) {
-        console.error('Failed to fetch modules:', err);
-      } finally {
-        setLoadingModules(false);
-        setLoadingChapters(false);
-      }
-    };
-    
-    fetchModules();
-  }, [selectedNovel]);
-
-  // Update selected module data when module selection changes
-  useEffect(() => {
-    if (selectedModule) {
-      const moduleData = modules.find(m => m._id === selectedModule);
-      setSelectedModuleData(moduleData);
-      setSelectedChapterData(null);
-    } else {
-      setSelectedModuleData(null);
-    }
-  }, [selectedModule, modules]);
-
-  // Update selected chapter data when chapter selection changes
-  useEffect(() => {
-    if (selectedChapter) {
-      const chapterData = chapters.find(c => c._id === selectedChapter);
-      setSelectedChapterData(chapterData);
-    } else {
-      setSelectedChapterData(null);
-    }
-  }, [selectedChapter, chapters]);
-
   // Handle request submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -345,23 +230,10 @@ const Market = () => {
       }
     }
     
-    if (requestType === 'open' && !selectedNovel) {
-      alert('Vui lòng chọn truyện bạn muốn mở chương');
-      return;
-    }
-    
-    // For "open" type, only allow if a paid module or chapter is selected
-    if (requestType === 'open' && !selectedModuleData && !selectedChapterData) {
-      alert('Vui lòng chọn một tập/chương đang khóa để mở');
-      return;
-    }
-    
     // Different confirmation message based on request type
     let confirmMessage = '';
     if (requestType === 'web') {
       confirmMessage = 'Bạn có chắc muốn tạo đề xuất từ nhóm dịch cho truyện này?';
-    } else if (requestType === 'open') {
-      confirmMessage = 'QUAN TRỌNG: Điều này sẽ mở tập/chương đã chọn ngay lập tức bằng cọc của bạn. Hành động này không thể hoàn tác. Bạn có muốn tiếp tục không?';
     } else {
       confirmMessage = 'QUAN TRỌNG: Bạn chỉ có thể rút yêu cầu sau 24 giờ đã gửi. Bạn có muốn tiếp tục không?';
     }
@@ -373,90 +245,46 @@ const Market = () => {
     setSubmitting(true);
     
     try {
-      if (requestType === 'open') {
-        // Handle open request - all processed immediately now
-        const deposit = Number(depositAmount);
-        
-        // Create the request data
-        const openRequestData = {
-          type: 'open',
-          title: DOMPurify.sanitize(requestText.trim() || "Yêu cầu được thông qua tự động"),
-          novelId: selectedNovel._id,
-          deposit: Number(depositAmount)
-        };
-        
-        // Add module or chapter ID if selected
-        if (selectedModuleData) {
-          openRequestData.moduleId = selectedModuleData._id;
-        } else if (selectedChapterData) {
-          openRequestData.chapterId = selectedChapterData._id;
-        }
-        
-        // Submit the request to the API
-        const response = await axios.post(
-          `${config.backendUrl}/api/requests`,
-          openRequestData,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        
-        // Check if there was a refund
-        if (response.data.refundAmount) {
-          // Update local user balance to reflect refund
-          setUserBalance(prevBalance => prevBalance - deposit + response.data.refundAmount);
-          
-          alert(`Yêu cầu đã được xử lí thành công. Mục đã được mở! Một số dư hoàn lại ${response.data.refundAmount} đã được thêm vào số 🌾 hiện tại của bạn.`);
-        } else {
-          // Update local user balance
-          setUserBalance(prevBalance => prevBalance - deposit);
-          
-          alert('Yêu cầu của bạn đã được xử lý thành công. Mục đã được mở!');
-        }
-        
-        // Refresh the page or fetch updated data
-        await fetchData();
-        
-      } else {
-        // Normal request creation for new and web types
-        const requestData = {
-          type: requestType,
-          title: DOMPurify.sanitize(requestText.trim() || "Yêu cầu truyện mới chưa có tên"),
-          deposit: requestType === 'web' ? 0 : Number(depositAmount),
-          // Web requests are now pending like new requests
-          status: 'pending'
-        };
-        
-        // Add goal balance for web requests
-        if (requestType === 'web') {
-          requestData.goalBalance = Number(goalAmount);
-        }
-        
-        // Add note if provided
-        if (requestNote.trim()) {
-          requestData.note = DOMPurify.sanitize(requestNote);
-        }
+      // Normal request creation for new and web types
+      const requestData = {
+        type: requestType,
+        title: DOMPurify.sanitize(requestText.trim() || "Yêu cầu truyện mới chưa có tên"),
+        deposit: requestType === 'web' ? 0 : Number(depositAmount),
+        // Web requests are now pending like new requests
+        status: 'pending'
+      };
+      
+      // Add goal balance for web requests
+      if (requestType === 'web') {
+        requestData.goalBalance = Number(goalAmount);
+      }
+      
+      // Add note if provided
+      if (requestNote.trim()) {
+        requestData.note = DOMPurify.sanitize(requestNote);
+      }
 
-        const response = await axios.post(
-          `${config.backendUrl}/api/requests`,
-          requestData,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        
-        const newRequest = response.data;
-        
-        // Update requests list with new request
-        setRequests(prevRequests => [newRequest, ...prevRequests]);
-        
-        // Update user balance (only for non-web requests)
-        if (requestType !== 'web') {
-          setUserBalance(prevBalance => prevBalance - Number(depositAmount));
-        }
-        
-        // Add request to withdrawableRequests after 24 hours (for user requests only)
-        if (requestType === 'new') {
-          setTimeout(() => {
-            setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
-          }, 86400000); // 24 hours in milliseconds
-        }
+      const response = await axios.post(
+        `${config.backendUrl}/api/requests`,
+        requestData,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      const newRequest = response.data;
+      
+      // Update requests list with new request
+      setRequests(prevRequests => [newRequest, ...prevRequests]);
+      
+      // Update user balance (only for non-web requests)
+      if (requestType !== 'web') {
+        setUserBalance(prevBalance => prevBalance - Number(depositAmount));
+      }
+      
+      // Add request to withdrawableRequests after 24 hours (for user requests only)
+      if (requestType === 'new') {
+        setTimeout(() => {
+          setWithdrawableRequests(prev => new Set([...prev, newRequest._id]));
+        }, 86400000); // 24 hours in milliseconds
       }
       
       // Reset form in all cases
@@ -464,7 +292,6 @@ const Market = () => {
       setRequestNote('');
       setDepositAmount('');
       setGoalAmount('1000');
-      setSelectedNovel(null);
       setSelectedModule(null);
       setSelectedChapter(null);
       setSelectedModuleData(null);
@@ -488,35 +315,6 @@ const Market = () => {
     setRequestNote('');
     setDepositAmount('');
     setGoalAmount('1000');
-    setSelectedNovel(null);
-    setSelectedModule(null);
-    setSelectedChapter(null);
-    setSelectedModuleData(null);
-    setSelectedChapterData(null);
-    setNovelSearchQuery('');
-  };
-
-  // Handle novel selection
-  const handleNovelSelect = (novel) => {
-    setSelectedNovel(novel);
-    setNovelSearchQuery(novel.title);
-    setShowNovelResults(false);
-    setSelectedModule(null);
-    setSelectedChapter(null);
-    setSelectedModuleData(null);
-    setSelectedChapterData(null);
-  };
-
-  // Handle module selection
-  const handleModuleSelect = (e) => {
-    setSelectedModule(e.target.value);
-    setSelectedChapter(null);
-    setSelectedChapterData(null);
-  };
-
-  // Handle chapter selection
-  const handleChapterSelect = (e) => {
-    setSelectedChapter(e.target.value);
   };
 
   // Handle request sorting
@@ -530,7 +328,6 @@ const Market = () => {
     setRequestNote('');
     setDepositAmount('');
     setGoalAmount('1000');
-    setSelectedNovel(null);
     setSelectedModule(null);
     setSelectedChapter(null);
     setSelectedModuleData(null);
@@ -651,19 +448,17 @@ const Market = () => {
     }
 
     try {
-      // For web requests, we need to check if a novel exists with the same title
-      if (requestToApprove.type === 'web') {
-        // First check if there's a novel with a matching title
-        const novelCheckResponse = await axios.get(
-          `${config.backendUrl}/api/novels/search?title=${encodeURIComponent(requestToApprove.title)}&exact=true`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        
-        // If no matching novel found
-        if (!novelCheckResponse.data || novelCheckResponse.data.length === 0) {
-          alert('Không thể phê duyệt: Bạn cần tạo truyện với tên chính xác khớp với yêu cầu trước.');
-          return;
-        }
+      // For both 'new' and 'web' requests, we need to check if a novel exists with the same title
+      // First check if there's a novel with a matching title
+      const novelCheckResponse = await axios.get(
+        `${config.backendUrl}/api/novels/search?title=${encodeURIComponent(requestToApprove.title)}&exact=true`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // If no matching novel found
+      if (!novelCheckResponse.data || novelCheckResponse.data.length === 0) {
+        alert('Không thể phê duyệt: Bạn cần tạo truyện với tên chính xác khớp với yêu cầu trước.');
+        return;
       }
       
       // Now approve the request
@@ -1007,22 +802,6 @@ const Market = () => {
               submitting={submitting}
               handleSubmit={handleSubmit}
               handleClearForm={handleClearForm}
-              novelSearchQuery={novelSearchQuery}
-              setNovelSearchQuery={setNovelSearchQuery}
-              novelSearchResults={novelSearchResults}
-              showNovelResults={showNovelResults}
-              setShowNovelResults={setShowNovelResults}
-              isSearching={isSearching}
-              selectedNovel={selectedNovel}
-              handleNovelSelect={handleNovelSelect}
-              modules={modules}
-              selectedModule={selectedModule}
-              handleModuleSelect={handleModuleSelect}
-              loadingModules={loadingModules}
-              chapters={chapters}
-              selectedChapter={selectedChapter}
-              handleChapterSelect={handleChapterSelect}
-              loadingChapters={loadingChapters}
               showHistory={showHistory}
               toggleHistory={toggleHistory}
             />

@@ -697,7 +697,7 @@ const TopUp = () => {
             <div className="transaction-header-container">
               <h2>Lịch sử giao dịch</h2>
               <button 
-                className="refresh-button"
+                className="topup-refresh-button"
                 onClick={refreshHistory}
                 disabled={fetchingHistory}
               >

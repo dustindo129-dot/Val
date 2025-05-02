@@ -59,7 +59,8 @@ const ModuleList = memo(({
   handleModuleDelete,
   handleEditModule,
   handleChapterReorder,
-  handleChapterDelete
+  handleChapterDelete,
+  onOpenModuleRequest
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
@@ -159,7 +160,7 @@ const ModuleList = memo(({
           <div className="module-content">
             <div className="module-cover">
               <img 
-                src={module.illustration || "https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png"} 
+                src={module.illustration || "https://valvrareteam.b-cdn.net/defaults/missing-image.png"} 
                 alt={`${module.title} cover`}
                 className="module-cover-image"
               />
@@ -253,9 +254,13 @@ const ModuleList = memo(({
                   <div className="locked-layer">
                     <div className="locked-content-message">
                       <FontAwesomeIcon icon={faLock} className="lock-icon" />
-                      <p>Cần {module.moduleBalance} 🌾 để mở khóa. Vui lòng đến bảng yêu cầu!</p>
-                      <p>{pendingRequestsCount} yêu cầu đang chờ</p>
-                      <Link to="/market" className="go-to-market-btn">Đến bảng yêu cầu</Link>
+                      <p>Cần {module.moduleBalance} 🌾 để mở khóa.</p>
+                      <button 
+                        className="unlock-now-btn"
+                        onClick={() => onOpenModuleRequest(module)}
+                      >
+                        Mở ngay!
+                      </button>
                     </div>
                   </div>
                 )}
@@ -272,6 +277,7 @@ const ModuleList = memo(({
                   isPaidModule={module.mode === 'paid'}
                   canAccessPaidContent={canAccessPaidContent}
                   pendingRequestsCount={pendingRequestsCount}
+                  onOpenChapterRequest={(chapter) => onOpenModuleRequest(module, chapter)}
                 />
               </div>
             </div>

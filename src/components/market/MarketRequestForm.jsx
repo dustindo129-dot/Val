@@ -1,5 +1,4 @@
 import React from 'react';
-import NovelSearch from './NovelSearch';
 
 /**
  * Market Request Form Component
@@ -23,22 +22,6 @@ import NovelSearch from './NovelSearch';
  * @param {boolean} props.submitting - Whether form is submitting
  * @param {Function} props.handleSubmit - Function to handle form submission
  * @param {Function} props.handleClearForm - Function to clear form
- * @param {string} props.novelSearchQuery - Novel search query
- * @param {Function} props.setNovelSearchQuery - Function to update novel search query
- * @param {Array} props.novelSearchResults - Array of novel search results
- * @param {boolean} props.showNovelResults - Whether to show novel search results
- * @param {Function} props.setShowNovelResults - Function to toggle novel search results
- * @param {boolean} props.isSearching - Whether novel search is in progress
- * @param {Object} props.selectedNovel - Currently selected novel
- * @param {Function} props.handleNovelSelect - Function to handle novel selection
- * @param {Array} props.modules - Array of available modules
- * @param {string} props.selectedModule - ID of selected module
- * @param {Function} props.handleModuleSelect - Function to handle module selection
- * @param {boolean} props.loadingModules - Whether modules are loading
- * @param {Array} props.chapters - Array of available chapters
- * @param {string} props.selectedChapter - ID of selected chapter
- * @param {Function} props.handleChapterSelect - Function to handle chapter selection
- * @param {boolean} props.loadingChapters - Whether chapters are loading
  * @param {boolean} props.showHistory - Whether to show request history
  * @param {Function} props.toggleHistory - Function to toggle history view
  * @returns {JSX.Element} Market request form component
@@ -60,22 +43,6 @@ const MarketRequestForm = ({
   submitting,
   handleSubmit,
   handleClearForm,
-  novelSearchQuery,
-  setNovelSearchQuery,
-  novelSearchResults,
-  showNovelResults,
-  setShowNovelResults,
-  isSearching,
-  selectedNovel,
-  handleNovelSelect,
-  modules,
-  selectedModule,
-  handleModuleSelect,
-  loadingModules,
-  chapters,
-  selectedChapter,
-  handleChapterSelect,
-  loadingChapters,
   showHistory,
   toggleHistory
 }) => {
@@ -89,12 +56,6 @@ const MarketRequestForm = ({
           onClick={() => handleTypeChange('new')}
         >
           Yêu cầu truyện mới
-        </button>
-        <button 
-          className={`type-tab ${requestType === 'open' ? 'active' : ''}`} 
-          onClick={() => handleTypeChange('open')}
-        >
-          Mở ngay chương/tập có sẵn
         </button>
         
         {/* Admin only tab for web recommendations */}
@@ -142,7 +103,7 @@ const MarketRequestForm = ({
           </>
         )}
         
-        {requestType === 'new' ? (
+        {requestType === 'new' && (
           <>
             <input
               type="text"
@@ -161,56 +122,7 @@ const MarketRequestForm = ({
               disabled={submitting}
             />
           </>
-        ) : requestType === 'open' ? (
-          <div className="novel-search-container">
-            <NovelSearch
-              novelSearchQuery={novelSearchQuery}
-              setNovelSearchQuery={setNovelSearchQuery}
-              isSearching={isSearching}
-              novelSearchResults={novelSearchResults}
-              showNovelResults={showNovelResults}
-              setShowNovelResults={setShowNovelResults}
-              handleNovelSelect={handleNovelSelect}
-              disabled={submitting}
-            />
-            
-            {selectedNovel && modules.length > 0 && (
-              <div className="module-selector">
-                <select
-                  value={selectedModule || ""}
-                  onChange={handleModuleSelect}
-                  className="module-select"
-                >
-                  <option value="">Chọn một tập</option>
-                  {modules.map(module => (
-                    <option key={module._id} value={module._id}>
-                      {module.title}
-                    </option>
-                  ))}
-                </select>
-                {loadingModules && <span className="loading-indicator">Đang tải...</span>}
-              </div>
-            )}
-            
-            {selectedNovel && chapters.length > 0 && (
-              <div className="chapter-selector">
-                <select
-                  value={selectedChapter || ""}
-                  onChange={handleChapterSelect}
-                  className="chapter-select"
-                >
-                  <option value="">Chọn một chương</option>
-                  {chapters.map(chapter => (
-                    <option key={chapter._id} value={chapter._id}>
-                      {chapter.title}
-                    </option>
-                  ))}
-                </select>
-                {loadingChapters && <span className="loading-indicator">Đang tải...</span>}
-              </div>
-            )}
-          </div>
-        ) : null}
+        )}
         
         {requestType === 'web' && user && user.role === 'admin' ? (
           <div className="deposit-input-container">
@@ -227,7 +139,7 @@ const MarketRequestForm = ({
               className="deposit-input"
             />
           </div>
-        ) : (
+        ) : requestType === 'new' && (
           <div className="deposit-input-container">
             <label htmlFor="deposit">Cọc:</label>
             <input
@@ -254,7 +166,6 @@ const MarketRequestForm = ({
                      (requestType === 'new' && !requestText.trim()) || 
                      (requestType !== 'web' && (!depositAmount || Number(depositAmount) < 100)) ||
                      (requestType === 'web' && (!goalAmount || Number(goalAmount) <= 0)) ||
-                     (requestType === 'open' && !selectedNovel) ||
                      (requestType !== 'web' && depositAmount && Number(depositAmount) > userBalance)}
           >
             {submitting ? 'Đang gửi...' : 'Gửi Yêu Cầu'}

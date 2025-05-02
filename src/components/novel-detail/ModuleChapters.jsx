@@ -57,7 +57,7 @@ const ModuleChapters = memo(({
   handleChapterDelete,
   isPaidModule,
   canAccessPaidContent,
-  pendingRequestsCount
+  onOpenChapterRequest
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -149,8 +149,12 @@ const ModuleChapters = memo(({
                     <div className="locked-content-info">
                       <FontAwesomeIcon icon={faLock} className="lock-icon-small" />
                       <span>Cần {chapter.chapterBalance || 0} 🌾 để mở khóa.</span>
-                      <span>{pendingRequestsCount} yêu cầu đang chờ</span>
-                      <Link to="/market" className="go-to-market-btn-small">Đến bảng yêu cầu</Link>
+                      <button 
+                        className="chapter-unlock-now-btn"
+                        onClick={() => onOpenChapterRequest(chapter)}
+                      >
+                        Mở ngay!
+                      </button>
                     </div>
                   </div>
                 )}

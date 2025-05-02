@@ -92,7 +92,8 @@
   margin-bottom: 12px;
 }
 
-.go-to-market-btn {
+.go-to-market-btn,
+.unlock-now-btn {
   display: inline-block;
   background: #2ecc71;
   color: white;
@@ -102,9 +103,12 @@
   font-weight: bold;
   margin-top: 12px;
   transition: background 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
-.go-to-market-btn:hover {
+.go-to-market-btn:hover,
+.unlock-now-btn:hover {
   background: #27ae60;
   text-decoration: none;
 }
@@ -233,7 +237,8 @@
     backdrop-filter: blur(1px);
   }
   
-  .go-to-market-btn {
+  .go-to-market-btn,
+  .unlock-now-btn {
     padding: 3px 10px;
     font-size: 12px;
     min-width: 80px;
@@ -283,7 +288,8 @@
     backdrop-filter: blur(1px);
   }
   
-  .go-to-market-btn {
+  .go-to-market-btn,
+  .unlock-now-btn {
     padding: 2px 6px;
     font-size: 10px;
     display: inline-block;

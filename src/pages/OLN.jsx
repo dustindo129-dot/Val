@@ -517,7 +517,7 @@ const OLN = () => {
                                         <div className="novel-main">
                                             {/* Novel cover image with status and first chapter link */}
                                             <NovelImage
-                                                src={novel.illustration || 'https://res.cloudinary.com/dvoytcc6b/image/upload/v1743234203/%C6%A0_l%E1%BB%97i_h%C3%ACnh_m%E1%BA%A5t_r%E1%BB%93i_n8zdtv.png'}
+                                                src={novel.illustration || 'https://valvrareteam.b-cdn.net/defaults/missing-image.png'}
                                                 alt={novel.title}
                                                 status={novel.status}
                                                 novelId={novel._id}

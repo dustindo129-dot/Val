@@ -33,9 +33,13 @@ import ModuleChapters from './novel-detail/ModuleChapters';
 import ModuleForm from './novel-detail/ModuleForm';
 import NovelInfo from './novel-detail/NovelInfo';
 import ScrollToTop from './ScrollToTop';
+import OpenRequestModal from './novel-detail/OpenRequestModal';
 import api from '../services/api';
 import sseService from '../services/sseService';
 import ModuleList from './novel-detail/ModuleList';
+import axios from 'axios';
+import config from '../config/config';
+import DOMPurify from 'dompurify';
 
 // Lazy load components that exist as separate files
 const Login = lazy(() => import('./auth/Login'));
@@ -111,7 +115,10 @@ const NovelContributions = ({ novelId }) => {
     
     const combined = [
       ...contributions.map(item => ({ ...item, type: 'contribution' })),
-      ...requests.map(item => ({ ...item, type: 'request' }))
+      ...requests.map(item => ({ 
+        ...item, 
+        isRequest: true
+      }))
     ];
     
     // Sort by updatedAt date descending (newest first)
@@ -125,19 +132,26 @@ const NovelContributions = ({ novelId }) => {
 
   // Generate contribution message based on item type
   const getContributionMessage = (item) => {
-    if (item.type === 'request' && item.module) {
+    if (item.type === 'open' || item.request?.type === 'open') {
+      const isFullyOpened = item.opened;
       return (
         <>
           Cảm ơn <span className="rd-contributor-name">
             {item.user?.username || "Người dùng ẩn danh"}
           </span> đã đóng góp <span className="rd-contribution-amount">
             {item.deposit} 🌾
-          </span> để mở <span className="rd-module-title">
-            {item.chapter ? item.chapter.title : item.module.title}
-          </span>
+          </span> {isFullyOpened ? (
+            <>để mở <span className="rd-module-title">
+              {item.chapter ? item.chapter.title : item.module.title}
+            </span></>
+          ) : (
+            <>để mở <span className="rd-module-title">
+              {item.chapter ? item.chapter.title : item.module.title}
+            </span></>
+          )}
         </>
       );
-    } else if (item.isDeposit && item.request?.type === 'new') {
+    } else if (item.type === 'new' || item.request?.type === 'new') {
       return (
         <>
           Cảm ơn <span className="rd-contributor-name">
@@ -147,7 +161,7 @@ const NovelContributions = ({ novelId }) => {
           </span> để yêu cầu truyện mới
         </>
       );
-    } else if (item.request?.type === 'web') {
+    } else if (item.type === 'web' || item.request?.type === 'web') {
       return (
         <>
           Cảm ơn <span className="rd-contributor-name">
@@ -158,6 +172,7 @@ const NovelContributions = ({ novelId }) => {
         </>
       );
     } else {
+      // Replace the generic fallback with one that only handles contributions
       return (
         <>
           Cảm ơn <span className="rd-contributor-name">
@@ -212,7 +227,7 @@ const NovelDetail = () => {
   const { novelId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
@@ -227,6 +242,31 @@ const NovelDetail = () => {
   });
   const [editingModule, setEditingModule] = useState(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  
+  // New state for open request modal
+  const [openRequestModalOpen, setOpenRequestModalOpen] = useState(false);
+  const [openRequestTarget, setOpenRequestTarget] = useState(null);
+  const [submittingOpenRequest, setSubmittingOpenRequest] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
+
+  // Fetch user balance when authenticated
+  useEffect(() => {
+    const fetchUserBalance = async () => {
+      if (isAuthenticated && user?.username) {
+        try {
+          const userResponse = await axios.get(
+            `${config.backendUrl}/api/users/${user.username}/profile`,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          setUserBalance(userResponse.data.balance || 0);
+        } catch (error) {
+          console.error('Failed to fetch user balance:', error);
+        }
+      }
+    };
+    
+    fetchUserBalance();
+  }, [isAuthenticated, user]);
 
   // Handler for deleting modules
   const handleDeleteModule = useCallback(async (moduleId) => {
@@ -499,6 +539,88 @@ const NovelDetail = () => {
       queryClient.refetchQueries(['novel', novelId]);
     }
   }, [moduleForm, editingModule, novelId, queryClient]);
+  
+  // Handler for opening the request modal for modules or chapters
+  const handleOpenRequestModal = useCallback((module, chapter = null) => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để mở nội dung');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
+      return;
+    }
+    
+    // Set the target to either the module or the chapter
+    setOpenRequestTarget(chapter || module);
+    setOpenRequestModalOpen(true);
+  }, [isAuthenticated]);
+
+  // Handler for submitting an open request
+  const handleSubmitOpenRequest = useCallback(async (depositAmount) => {
+    if (!isAuthenticated || !openRequestTarget) {
+      return;
+    }
+    
+    setSubmittingOpenRequest(true);
+    
+    try {
+      // Determine if we're opening a module or chapter
+      const isModule = openRequestTarget.moduleBalance !== undefined;
+      
+      // Create the request data
+      const openRequestData = {
+        type: 'open',
+        title: DOMPurify.sanitize(`Yêu cầu được thông qua tự động`),
+        novelId,
+        deposit: Number(depositAmount)
+      };
+      
+      // Add module or chapter ID based on the target
+      if (isModule) {
+        openRequestData.moduleId = openRequestTarget._id;
+      } else {
+        openRequestData.chapterId = openRequestTarget._id;
+      }
+      
+      // Submit the request to the API
+      const response = await axios.post(
+        `${config.backendUrl}/api/requests`,
+        openRequestData,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Check if there was a refund
+      if (response.data.refundAmount) {
+        // Update local user balance to reflect refund
+        setUserBalance(prevBalance => prevBalance - depositAmount + response.data.refundAmount);
+        
+        alert(`Yêu cầu đã được xử lí thành công. ${isModule ? 'Tập' : 'Chương'} đã được mở! Một số dư hoàn lại ${response.data.refundAmount} đã được thêm vào số 🌾 hiện tại của bạn.`);
+      } else if (response.data.opened) {
+        // Content was successfully opened
+        // Update local user balance
+        setUserBalance(prevBalance => prevBalance - depositAmount);
+        
+        alert(`Yêu cầu của bạn đã được xử lý thành công. ${isModule ? 'Tập' : 'Chương'} đã được mở!`);
+      } else {
+        // Content was not opened (not enough balance)
+        // Update local user balance
+        setUserBalance(prevBalance => prevBalance - depositAmount);
+        
+        alert(`Yêu cầu của bạn đã được xử lý thành công. Cảm ơn đã góp 🌾 để mở ${isModule ? 'Tập' : 'Chương'}!`);
+      }
+      
+      // Close the modal
+      setOpenRequestModalOpen(false);
+      setOpenRequestTarget(null);
+      
+      // Refresh the novel data to show unlocked content
+      queryClient.invalidateQueries(['novel', novelId]);
+      
+    } catch (err) {
+      console.error('Failed to submit open request:', err);
+      alert(err.response?.data?.message || 'Failed to submit open request');
+    } finally {
+      setSubmittingOpenRequest(false);
+    }
+  }, [isAuthenticated, openRequestTarget, novelId, queryClient]);
   
   // Check if token exists
   useEffect(() => {
@@ -835,6 +957,7 @@ const NovelDetail = () => {
                 handleEditModule={handleEditModule}
                 handleChapterReorder={handleChapterReorder}
                 handleChapterDelete={handleChapterDelete}
+                onOpenModuleRequest={handleOpenRequestModal}
               />
             )}
           </div>
@@ -877,6 +1000,19 @@ const NovelDetail = () => {
               currentRating={userInteraction?.rating || 0}
             />
           )}
+          
+          {/* Open Request Modal */}
+          <OpenRequestModal
+            isOpen={openRequestModalOpen}
+            onClose={() => {
+              setOpenRequestModalOpen(false);
+              setOpenRequestTarget(null);
+            }}
+            onSubmit={handleSubmitOpenRequest}
+            target={openRequestTarget}
+            userBalance={userBalance}
+            submitting={submittingOpenRequest}
+          />
           
           {/* Add ScrollToTop component */}
           <ScrollToTop threshold={400} />

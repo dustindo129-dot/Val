@@ -63,6 +63,11 @@ const TopUpManagement = () => {
   const [novelCurrentPage, setNovelCurrentPage] = useState(1);
   const [novelTotalPages, setNovelTotalPages] = useState(1);
 
+  // Add pagination state for recent transactions
+  const [recentCurrentPage, setRecentCurrentPage] = useState(1);
+  const [recentTotalPages, setRecentTotalPages] = useState(1);
+  const [recentTransactionsPerPage] = useState(5);
+
   // Protect the route - redirect non-admin users
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -103,6 +108,7 @@ const TopUpManagement = () => {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       
       setTransactions(allTransactions);
+      setRecentTotalPages(Math.ceil(allTransactions.length / recentTransactionsPerPage));
       setLoading(false);
     } catch (err) {
       console.error('Lỗi khi tải giao dịch:', err);
@@ -605,6 +611,11 @@ const TopUpManagement = () => {
   // Get transaction amount class based on whether it's positive or negative
   const getAmountClass = (amount) => {
     return amount >= 0 ? 'amount-positive' : 'amount-negative';
+  };
+
+  // Add handler for recent transactions pagination
+  const handleRecentPageChange = (page) => {
+    setRecentCurrentPage(page);
   };
 
   // If not admin, don't render the component
@@ -1231,58 +1242,97 @@ const TopUpManagement = () => {
           ) : error ? (
             <p className="error">{error}</p>
           ) : (
-            <div className="transactions-list">
-              {transactions.length === 0 ? (
-                <p>Không tìm thấy giao dịch</p>
-              ) : (
-                transactions.map((transaction) => (
-                  <div key={transaction._id} className="transaction-item">
-                    <div className="transaction-header">
-                      <div className="transaction-user">
-                        <span className="username">{transaction.user.username}</span>
-                        <span className="transaction-id">ID: {transaction._id}</span>
+            <>
+              <div className="transactions-list">
+                {transactions.length === 0 ? (
+                  <p>Không tìm thấy giao dịch</p>
+                ) : (
+                  transactions
+                    .slice((recentCurrentPage - 1) * recentTransactionsPerPage, recentCurrentPage * recentTransactionsPerPage)
+                    .map((transaction) => (
+                    <div key={transaction._id} className="transaction-item">
+                      <div className="transaction-header">
+                        <div className="transaction-user">
+                          <span className="username">{transaction.user.username}</span>
+                          <span className="transaction-id">ID: {transaction._id}</span>
+                        </div>
+                        <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
                       </div>
-                      <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
-                    </div>
-                    <div className="transaction-details">
-                      {transaction.transactionType === 'admin' ? (
-                        // Admin transaction
-                        <div className="transaction-amount">Số 🌾 đã thêm: +{transaction.amount}</div>
-                      ) : (
-                        // User transaction
-                        <>
-                          <div className="transaction-method">
-                            Phương thức: {transaction.paymentMethod === 'ewallet' 
-                              ? `${transaction.subMethod.charAt(0).toUpperCase() + transaction.subMethod.slice(1)}` 
-                              : transaction.paymentMethod === 'bank' 
-                                ? 'Chuyển khoản ngân hàng' 
-                                : 'Thẻ cào'}
-                          </div>
-                          <div className="transaction-amount">
-                            Thanh toán: {formatPrice(transaction.amount)} | Số dư: +{transaction.balance}
-                          </div>
-                        </>
+                      <div className="transaction-details">
+                        {transaction.transactionType === 'admin' ? (
+                          // Admin transaction
+                          <div className="transaction-amount">Số 🌾 đã thêm: +{transaction.amount}</div>
+                        ) : (
+                          // User transaction
+                          <>
+                            <div className="transaction-method">
+                              Phương thức: {transaction.paymentMethod === 'ewallet' 
+                                ? `${transaction.subMethod.charAt(0).toUpperCase() + transaction.subMethod.slice(1)}` 
+                                : transaction.paymentMethod === 'bank' 
+                                  ? 'Chuyển khoản ngân hàng' 
+                                  : 'Thẻ cào'}
+                            </div>
+                            <div className="transaction-amount">
+                              Thanh toán: {formatPrice(transaction.amount)} | Số dư: +{transaction.balance}
+                            </div>
+                          </>
+                        )}
+                        <div className={`transaction-status ${transaction.status.toLowerCase()}`}>
+                          {transaction.status}
+                        </div>
+                      </div>
+                      <div className="transaction-admin">
+                        {transaction.adminId ? 
+                          `Đã xử lý bởi: ${transaction.adminId.username}` : 
+                          transaction.transactionType === 'admin' ? 
+                            `Đã xử lý bởi: ${transaction.admin.username}` : 
+                            'Tự động xử lý'}
+                      </div>
+                      {transaction.notes && (
+                        <div className="transaction-notes">
+                          Ghi chú: {transaction.notes}
+                        </div>
                       )}
-                      <div className={`transaction-status ${transaction.status.toLowerCase()}`}>
-                        {transaction.status}
-                      </div>
                     </div>
-                    <div className="transaction-admin">
-                      {transaction.adminId ? 
-                        `Đã xử lý bởi: ${transaction.adminId.username}` : 
-                        transaction.transactionType === 'admin' ? 
-                          `Đã xử lý bởi: ${transaction.admin.username}` : 
-                          'Tự động xử lý'}
-                    </div>
-                    {transaction.notes && (
-                      <div className="transaction-notes">
-                        Ghi chú: {transaction.notes}
-                      </div>
-                    )}
-                  </div>
-                ))
+                  ))
+                )}
+              </div>
+              
+              {/* Pagination for recent transactions */}
+              {recentTotalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => handleRecentPageChange(1)}
+                    disabled={recentCurrentPage === 1}
+                  >
+                    &laquo;
+                  </button>
+                  <button 
+                    onClick={() => handleRecentPageChange(recentCurrentPage - 1)}
+                    disabled={recentCurrentPage === 1}
+                  >
+                    &lt;
+                  </button>
+                  
+                  <span className="page-info">
+                    Trang {recentCurrentPage} / {recentTotalPages}
+                  </span>
+                  
+                  <button 
+                    onClick={() => handleRecentPageChange(recentCurrentPage + 1)}
+                    disabled={recentCurrentPage === recentTotalPages}
+                  >
+                    &gt;
+                  </button>
+                  <button 
+                    onClick={() => handleRecentPageChange(recentTotalPages)}
+                    disabled={recentCurrentPage === recentTotalPages}
+                  >
+                    &raquo;
+                  </button>
+                </div>
               )}
-            </div>
+            </>
           )}
         </section>
       </div>

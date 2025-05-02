@@ -93,7 +93,8 @@
   font-size: 14px;
 }
 
-.go-to-market-btn-small {
+.go-to-market-btn-small,
+.chapter-unlock-now-btn {
   background: #2ecc71;
   color: white;
   padding: 4px 8px;
@@ -102,9 +103,12 @@
   font-size: 12px;
   font-weight: bold;
   white-space: nowrap;
+  border: none;
+  cursor: pointer;
 }
 
-.go-to-market-btn-small:hover {
+.go-to-market-btn-small:hover,
+.chapter-unlock-now-btn:hover {
   background: #27ae60;
   text-decoration: none;
 }
