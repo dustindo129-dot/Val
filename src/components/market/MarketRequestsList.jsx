@@ -89,6 +89,11 @@ const MarketRequestsList = ({
         <h3>
           <i className="fas fa-crown"></i> Đề xuất từ nhóm dịch
         </h3>
+        {user && user.role === 'admin' && (
+          <div className="admin-note">
+            <i className="fas fa-info-circle"></i> Admin: Để phê duyệt yêu cầu "Đề xuất từ nhóm dịch", bạn phải tạo truyện với tên khớp chính xác với tiêu đề yêu cầu.
+          </div>
+        )}
       </div>
       <div className="request-grid">
         {isLoading ? (

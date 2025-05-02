@@ -678,10 +678,35 @@
   margin-bottom: 2rem;
 }
 
-.request-history-container h3 {
+.request-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1rem;
+}
+
+.request-history-container h3 {
+  margin-bottom: 0;
   font-size: 1.2rem;
   color: #343a40;
+}
+
+.close-history-btn {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.close-history-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
 }
 
 .request-history-list {
@@ -809,21 +834,6 @@
 .history-deposit {
   font-weight: 500;
   color: #198754;
-}
-
-.close-history-btn {
-  padding: 0.5rem 1rem;
-  background-color: #f8f9fa;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  color: #6c757d;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.close-history-btn:hover {
-  background-color: #e9ecef;
-  color: #495057;
 }
 
 /* Dark mode styles for history */
@@ -2014,4 +2024,58 @@
   background-color: #343a40;
   border-left-color: #0d6efd;
   color: #ced4da;
+}
+
+/* Pagination controls */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1.5rem;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  margin: 0 0.5rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+/* Dark mode styles for pagination */
+:root.dark-mode .pagination-btn {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #adb5bd;
+}
+
+:root.dark-mode .pagination-btn:hover:not(:disabled) {
+  background-color: #212529;
+  color: #e9ecef;
+}
+
+:root.dark-mode .pagination-info {
+  color: #adb5bd;
 } 

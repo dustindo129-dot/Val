@@ -292,11 +292,6 @@ const Market = () => {
       setRequestNote('');
       setDepositAmount('');
       setGoalAmount('1000');
-      setSelectedModule(null);
-      setSelectedChapter(null);
-      setSelectedModuleData(null);
-      setSelectedChapterData(null);
-      setNovelSearchQuery('');
       
     } catch (err) {
       console.error('Failed to submit request:', err);
@@ -350,6 +345,35 @@ const Market = () => {
       
       setRequestHistory(response.data);
       setShowHistory(true);
+      
+      // Fetch contributions for each request in history
+      const historyRequestIds = response.data.map(req => req._id);
+      for (const requestId of historyRequestIds) {
+        if (!contributions[requestId] && !loadingContributions.has(requestId)) {
+          setLoadingContributions(prev => new Set([...prev, requestId]));
+          
+          try {
+            const contributionsResponse = await axios.get(
+              `${config.backendUrl}/api/contributions/request/${requestId}`
+            );
+            
+            if (contributionsResponse.data.length > 0) {
+              setContributions(prev => ({
+                ...prev,
+                [requestId]: contributionsResponse.data
+              }));
+            }
+          } catch (err) {
+            console.error('Không thể tải đóng góp cho yêu cầu:', err);
+          } finally {
+            setLoadingContributions(prev => {
+              const next = new Set(prev);
+              next.delete(requestId);
+              return next;
+            });
+          }
+        }
+      }
     } catch (err) {
       console.error('Không thể tải lịch sử yêu cầu:', err);
       alert('Không thể tải lịch sử yêu cầu');
@@ -558,6 +582,18 @@ const Market = () => {
             {},
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
+          
+          // Update local contributions state to reflect declined status
+          if (contributions[requestId]) {
+            setContributions(prev => ({
+              ...prev,
+              [requestId]: prev[requestId].map(contribution => 
+                contribution.status === 'pending' 
+                  ? { ...contribution, status: 'declined' } 
+                  : contribution
+              )
+            }));
+          }
         } catch (contributionErr) {
           console.error('Không thể từ chối đóng góp:', contributionErr);
           // Don't throw here, as the request was already declined
@@ -585,7 +621,15 @@ const Market = () => {
       return;
     }
     
-    if (!confirm('Bạn có chắc chắn muốn rút lại yêu cầu này? Số 🌾 cọc sẽ được trả lại.')) {
+    // Check if this request has any contributions before showing the confirmation
+    const hasContributions = contributions[requestId] && contributions[requestId].some(contrib => contrib.status === 'pending');
+    
+    let confirmMessage = 'Bạn có chắc chắn muốn rút lại yêu cầu này? Số 🌾 cọc sẽ được trả lại.';
+    if (hasContributions) {
+      confirmMessage = 'Bạn có chắc chắn muốn rút lại yêu cầu này? Số 🌾 cọc và tất cả các đóng góp đang chờ xử lý sẽ được trả lại.';
+    }
+    
+    if (!confirm(confirmMessage)) {
       return;
     }
     
@@ -605,9 +649,15 @@ const Market = () => {
         
         // Update user balance with refund amount from server response
         const refundAmount = response.data.refundAmount;
+        const contributionsRefunded = response.data.contributionsRefunded || 0;
         setUserBalance(prev => prev + refundAmount);
         
-        alert('Yêu cầu đã được rút lại thành công. Số 🌾 cọc đã được trả lại.');
+        // Show different message based on whether there were contributions
+        if (contributionsRefunded > 0) {
+          alert(`Yêu cầu đã được rút lại thành công. Số 🌾 cọc và ${contributionsRefunded} đóng góp đang chờ xử lý đã được trả lại.`);
+        } else {
+          alert('Yêu cầu đã được rút lại thành công. Số 🌾 cọc đã được trả lại.');
+        }
       }
     } catch (err) {
       console.error('Không thể rút lại yêu cầu:', err);
