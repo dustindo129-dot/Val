@@ -58,7 +58,7 @@ const ReportPanel = ({ user }) => {
   return (
     <div className="report-panel">
       <div className="report-panel-header" onClick={() => setIsExpanded(!isExpanded)}>
-        <h3>Reports {reports.length > 0 && `(${reports.length})`}</h3>
+        <h3>Báo cáo {reports.length > 0 && `(${reports.length})`}</h3>
         <span className={`expand-icon ${isExpanded ? 'expanded' : ''}`}>
           {isExpanded ? '▼' : '▶'}
         </span>
@@ -111,8 +111,8 @@ const ReportPanel = ({ user }) => {
                       disabled={resolveMutation.isPending}
                     >
                       {resolveMutation.isPending && resolveMutation.variables === report._id
-                        ? 'Đang xử lý...'
-                        : 'Xử lý'
+                        ? 'Đang tải...'
+                        : 'Đã xử lý'
                       }
                     </button>
                   </div>
