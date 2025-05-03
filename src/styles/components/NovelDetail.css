@@ -462,22 +462,30 @@
 
 .module-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.dark-mode .module-header {
-  border-bottom-color: #4a5568;
+.module-title-area {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-right: 12px;
 }
 
 .module-title {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0;
   margin-top: 8px;
+}
+
+/* Dark mode support */
+.dark-mode .module-header {
+  border-bottom-color: #4a5568;
 }
 
 /* Chapter list styles */
