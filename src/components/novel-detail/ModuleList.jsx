@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
 import api from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * DeleteModuleConfirmationModal Component
@@ -63,7 +64,6 @@ const ModuleList = memo(({
   onOpenModuleRequest
 }) => {
   const [isReordering, setIsReordering] = useState(false);
-  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   // Add state for delete confirmation modal
   const [deleteConfirmationModal, setDeleteConfirmationModal] = useState({
     isOpen: false,
@@ -77,17 +77,14 @@ const ModuleList = memo(({
   // Check if user can access paid content
   const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
   
-  // Fetch pending requests count for this novel
-  useEffect(() => {
-    const fetchPendingRequests = async () => {
-      if (novelId) {
-        const count = await api.getPendingNovelRequests(novelId);
-        setPendingRequestsCount(count);
-      }
-    };
-    
-    fetchPendingRequests();
-  }, [novelId]);
+  // Fetch pending requests count for this novel with React Query
+  const { data: pendingRequestsCount = 0 } = useQuery({
+    queryKey: ['pending-requests', novelId],
+    queryFn: () => novelId ? api.getPendingNovelRequests(novelId) : 0,
+    enabled: !!novelId,
+    staleTime: 30000, // Cache for 30 seconds
+    retry: false
+  });
 
   const handleReorderClick = useCallback(async (moduleId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
