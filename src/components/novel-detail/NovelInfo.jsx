@@ -136,7 +136,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   });
   
   const likeMutation = useMutation({
-    mutationFn: () => api.toggleLike(novelId),
+    mutationFn: () => api.likeNovel(novelId),
     onMutate: async () => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries(['novel-stats', novelId]);

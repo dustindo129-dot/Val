@@ -324,10 +324,10 @@ const api = {
     }
   },
 
-  toggleLike: async (novelId) => {
+  likeNovel: async (novelId) => {
     try {
       const response = await axios.post(
-        `${config.backendUrl}/api/user-novel-interactions/like`,
+        `${config.backendUrl}/api/usernovelinteractions/like`,
         { novelId },
         {
           headers: {
@@ -344,7 +344,7 @@ const api = {
   rateNovel: async (novelId, rating) => {
     try {
       const response = await axios.post(
-        `${config.backendUrl}/api/user-novel-interactions/rate`,
+        `${config.backendUrl}/api/usernovelinteractions/rate`,
         { novelId, rating },
         {
           headers: {
@@ -361,7 +361,7 @@ const api = {
   removeRating: async (novelId) => {
     try {
       const response = await axios.delete(
-        `${config.backendUrl}/api/user-novel-interactions/rate/${novelId}`,
+        `${config.backendUrl}/api/usernovelinteractions/rate/${novelId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -384,7 +384,7 @@ const api = {
       
       // Get all interactions from usernovelinteractions endpoint
       const interactionResponse = await axios.get(
-        `${config.backendUrl}/api/user-novel-interactions/user/${novelId}`,
+        `${config.backendUrl}/api/usernovelinteractions/user/${novelId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -404,7 +404,7 @@ const api = {
   getNovelStats: async (novelId) => {
     try {
       const response = await axios.get(
-        `${config.backendUrl}/api/user-novel-interactions/stats/${novelId}`
+        `${config.backendUrl}/api/usernovelinteractions/stats/${novelId}`
       );
       return response.data;
     } catch (error) {
@@ -494,7 +494,7 @@ const api = {
       }
 
       const response = await axios.get(
-        `${config.backendUrl}/api/user-novel-interactions/bookmarks`,
+        `${config.backendUrl}/api/usernovelinteractions/bookmarks`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
