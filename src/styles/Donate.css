@@ -1,0 +1,109 @@
+.donate-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: var(--card-bg, #fff);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.donate-content {
+  font-family: var(--font-family, Arial, sans-serif);
+  line-height: 1.6;
+}
+
+.donate-content h1 {
+  font-size: 28px;
+  color: var(--primary-color, #333);
+  margin-bottom: 20px;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border-color, #eee);
+}
+
+.donate-content h2 {
+  font-size: 22px;
+  color: var(--secondary-color, #555);
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+
+.donate-list, .novel-status-list {
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.donate-list li, .novel-status-list li {
+  margin-bottom: 10px;
+}
+
+.donate-note {
+  background-color: var(--highlight-bg, #f8f9fa);
+  padding: 15px;
+  border-radius: 6px;
+  margin: 20px 0;
+  border-left: 4px solid var(--accent-color, #4a90e2);
+}
+
+.donate-link {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: var(--info-bg, #e9f7fe);
+  border-radius: 6px;
+  word-break: break-all;
+}
+
+.donate-link a {
+  color: var(--link-color, #0366d6);
+  text-decoration: none;
+}
+
+.donate-link a:hover {
+  text-decoration: underline;
+}
+
+.donate-image-container {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.donate-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode support */
+:root.dark-mode .donate-container {
+  background-color: var(--dark-card-bg, #2d2d2d);
+  color: var(--dark-text, #eee);
+}
+
+:root.dark-mode .donate-note {
+  background-color: var(--dark-highlight-bg, #383838);
+}
+
+:root.dark-mode .donate-link {
+  background-color: var(--dark-info-bg, #2c3e50);
+}
+
+:root.dark-mode .donate-link a {
+  color: var(--dark-link-color, #79b8ff);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .donate-container {
+    margin: 20px 10px;
+    padding: 15px;
+  }
+  
+  .donate-content h1 {
+    font-size: 24px;
+  }
+  
+  .donate-content h2 {
+    font-size: 20px;
+  }
+} 
