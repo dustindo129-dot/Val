@@ -7,7 +7,7 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background-color: var(--primary-color, #3498db);
+  background-color: #ff6b6b;
   color: white;
   display: flex;
   align-items: center;
