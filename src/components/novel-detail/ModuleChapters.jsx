@@ -179,6 +179,9 @@ const ModuleChapters = memo(({
                     <div className="chapter-title-link locked">
                       {chapter.title}
                       <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
+                      {chapter.mode === 'protected' && (
+                        <span className="login-required-text">(Yêu cầu đăng nhập)</span>
+                      )}
                     </div>
                   )}
                 </div>

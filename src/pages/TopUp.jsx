@@ -16,7 +16,6 @@ const TopUp = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState(null);
-  const [subMethod, setSubMethod] = useState(null);
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -40,8 +39,6 @@ const TopUp = () => {
 
   // Form data for different payment methods
   const [formData, setFormData] = useState({
-    momo: { phoneNumber: '' },
-    zalopay: { phoneNumber: '' },
     bank: { accountNumber: '', accountName: '', bankName: '', transferContent: '' },
     prepaidCard: { cardNumber: '', cardPin: '', provider: '' }
   });
@@ -113,16 +110,10 @@ const TopUp = () => {
   // Handle payment method selection
   const handleMethodSelect = (method) => {
     setPaymentMethod(method);
-    setSubMethod(method === 'ewallet' ? 'momo' : null);
     // Reset QR code when changing payment method
     setQrCodeUrl('');
     setTransferContent('');
     setCurrentRequestId(null);
-  };
-
-  // Handle sub-method selection (for e-wallets)
-  const handleSubMethodSelect = (method) => {
-    setSubMethod(method);
   };
 
   // Generate random transfer content
@@ -448,7 +439,7 @@ const TopUp = () => {
 
   return (
     <div className="top-up-container">
-      <h1>Nạp 🌾 vào tài khoản</h1>
+      <h1>Nạp 🌾 vào tài khoản (Hệ thống đang phát triển dự kiến hoàn thành giữa tháng 6)</h1>
       
       {/* Rules section */}
       <section className="top-up-section rules-section">
@@ -479,7 +470,7 @@ const TopUp = () => {
           </div>
           <div className="rule-item">
             <span className="rule-icon">🦋</span>
-            <p>Hiện tại phương thức thanh toán bằng Momo, ZaloPay và thẻ cào chưa khả dụng vì admin lười lập tài khoản 🙂</p>
+            <p><strong>Mã QR chuyển khoản ngân hàng có hỗ trợ Momo và ZaloPay (quét được)</strong></p>
           </div>
         </div>
         
@@ -490,21 +481,6 @@ const TopUp = () => {
         <section className="top-up-section">
           <h2>Chọn phương thức thanh toán</h2>
           <div className="payment-methods">
-            <div 
-              className={`payment-method-card ${paymentMethod === 'ewallet' ? 'selected' : ''} disabled`}
-              onClick={() => {}}
-            >
-              <div className="payment-logos">
-                <div className="payment-logo">
-                  <img src="https://Valvrareteam.b-cdn.net/mmo.png" alt="Momo" />
-                </div>
-                <div className="payment-logo">
-                  <img src="https://Valvrareteam.b-cdn.net/zalopay.webp" alt="ZaloPay" />
-                </div>
-              </div>
-              <p>Thanh toán bằng Momo và ZaloPay</p>
-            </div>
-
             <div 
               className={`payment-method-card ${paymentMethod === 'bank' ? 'selected' : ''}`}
               onClick={() => handleMethodSelect('bank')}
@@ -724,11 +700,9 @@ const TopUp = () => {
                         </div>
                       </div>
                       <div className="transaction-method">
-                        {transaction.paymentMethod === 'ewallet' 
-                          ? `${transaction.subMethod.charAt(0).toUpperCase() + transaction.subMethod.slice(1)}` 
-                          : transaction.paymentMethod === 'bank' 
-                            ? 'Chuyển khoản ngân hàng' 
-                            : 'Thẻ trả trước'}
+                        {transaction.paymentMethod === 'bank' 
+                          ? 'Chuyển khoản ngân hàng' 
+                          : 'Thẻ trả trước'}
                       </div>
                     </div>
                     {transaction.status === 'Pending' && (

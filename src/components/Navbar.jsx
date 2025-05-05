@@ -20,6 +20,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useBookmarks } from '../context/BookmarkContext';
 import Login from './auth/Login';
 import SignUp from './auth/SignUp';
 import axios from 'axios';
@@ -48,6 +49,7 @@ const Navbar = () => {
   
   // Authentication context and navigation
   const { user, signOut } = useAuth();
+  const { bookmarkedNovels } = useBookmarks();
   const navigate = useNavigate();
 
   // Add state for dropdown
@@ -277,11 +279,11 @@ const Navbar = () => {
             {user ? (
               // Logged in user menu
               <div className="auth-buttons">
-                <Link to={`/user/${user.username}/bookmarks`} className="auth-button bookmark-btn">
+                <Link to={`/user/${user.username}/bookmarks`} className="bookmark-icon-only">
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
-                    width="16" 
-                    height="16" 
+                    width="24" 
+                    height="24" 
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
@@ -292,12 +294,14 @@ const Navbar = () => {
                   >
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                   </svg>
-                  Bookmarks
+                  {bookmarkedNovels && bookmarkedNovels.length > 0 && (
+                    <span className="bookmark-count">{bookmarkedNovels.length}</span>
+                  )}
                 </Link>
                 <div className="user-info">
                   <span className="user-username">{user.username}</span>
                   <div className="user-dropdown-container">
-                    <div className="user-avatar" onClick={toggleDropdown}>
+                    <div className="navbar-user-avatar" onClick={toggleDropdown}>
                       <img 
                         src={user.avatar || '/default-avatar.png'} 
                         alt={`${user.username}'s avatar`} 

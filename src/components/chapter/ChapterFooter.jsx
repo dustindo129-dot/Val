@@ -8,6 +8,7 @@ const ChapterFooter = ({
   novelId,
   novel,
   chapter,
+  moduleData,
   isBookmarked,
   handleBookmark,
   setShowReportModal
@@ -16,9 +17,15 @@ const ChapterFooter = ({
     <div className="footer-nav-container">
       <div className="breadcrumb-nav">
         <Link to="/"><FontAwesomeIcon icon={faHome}/> Trang chủ</Link>
-        <span className="breadcrumb-separator">/</span>
+        <span className="breadcrumb-separator">&gt;</span>
         <Link to={`/novel/${novelId}`}>{novel.title}</Link>
-        <span className="breadcrumb-separator">/</span>
+        <span className="breadcrumb-separator">&gt;</span>
+        {moduleData && (
+          <>
+            <span className="breadcrumb-current">{moduleData.title}</span>
+            <span className="breadcrumb-separator">&gt;</span>
+          </>
+        )}
         <span className="breadcrumb-current">{chapter.title}</span>
       </div>
 

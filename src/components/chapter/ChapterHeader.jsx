@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faCog, faSave, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faCog, faSave, faSpinner, faHome } from '@fortawesome/free-solid-svg-icons';
 
 const ChapterHeader = ({
   novel,
@@ -26,7 +26,7 @@ const ChapterHeader = ({
   return (
     <header className="chapter-header">
       <div className="chapter-breadcrumb">
-        <a href="/" className="breadcrumb-item">Trang chủ</a>
+        <a href="/" className="breadcrumb-item"><FontAwesomeIcon icon={faHome}/> Trang chủ</a>
         <span className="breadcrumb-separator">&gt;</span>
         <a href={`/novel/${novelId}`} className="breadcrumb-item">{novel?.title}</a>
         <span className="breadcrumb-separator">&gt;</span>

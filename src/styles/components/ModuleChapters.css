@@ -127,6 +127,12 @@
   font-size: 12px;
 }
 
+.login-required-text {
+  margin-left: 6px;
+  color: #e74c3c;
+  font-size: 15px;
+}
+
 .paid-tag {
   font-size: 10px;
   margin-left: 6px;

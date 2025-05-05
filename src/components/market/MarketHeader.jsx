@@ -10,7 +10,7 @@ import React from 'react';
 const MarketHeader = () => {
   return (
     <section className="market-section">
-      <h2>Hướng dẫn chung</h2>
+      <h2>Hướng dẫn chung (Hệ thống đang phát triển dự kiến hoàn thành giữa tháng 6)</h2>
       <div className="market-overview">
         <p style={{ marginBottom: '1em' }}>Đây là nơi bạn có thể dùng 🌾 để yêu cầu truyện dịch mới hoặc yêu cầu mở chương/tập mới/sẵn có.</p>
         
@@ -57,7 +57,7 @@ const MarketHeader = () => {
         </div>
 
         <div className="update-date">
-          <em>Cập nhật ngày 02/05/2025</em>
+          <em>Cập nhật ngày 05/05/2025</em>
         </div>
       </div>
     </section>

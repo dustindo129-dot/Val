@@ -1102,6 +1102,7 @@ const Chapter = () => {
         novelId={novelId}
         novel={novel}
         chapter={chapter}
+        moduleData={moduleData}
         isBookmarked={isBookmarked}
         handleBookmark={handleBookmark}
         setShowReportModal={setShowReportModal}

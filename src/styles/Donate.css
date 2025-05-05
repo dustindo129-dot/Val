@@ -14,7 +14,7 @@
 
 .donate-content h1 {
   font-size: 28px;
-  color: var(--primary-color, #333);
+  color: #ff6b6b;
   margin-bottom: 20px;
   text-align: center;
   padding-bottom: 10px;
@@ -54,7 +54,7 @@
 }
 
 .donate-link a {
-  color: var(--link-color, #0366d6);
+  color: #ff6b6b;
   text-decoration: none;
 }
 
@@ -86,10 +86,6 @@
 
 :root.dark-mode .donate-link {
   background-color: var(--dark-info-bg, #2c3e50);
-}
-
-:root.dark-mode .donate-link a {
-  color: var(--dark-link-color, #79b8ff);
 }
 
 /* Responsive adjustments */

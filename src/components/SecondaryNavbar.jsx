@@ -179,12 +179,19 @@ const SecondaryNavbar = () => {
             </div>
           )}
           
-          {/* Top-up button - visible to all authenticated users */}
-          {isAuthenticated && (
-            <Link to="/top-up" className="top-up-button">
-              Nạp thêm
-            </Link>
-          )}
+          {/* Top-up button - visible to everyone */}
+          <Link 
+            to={isAuthenticated ? "/top-up" : "#"} 
+            className="top-up-button"
+            onClick={(e) => {
+              if (!isAuthenticated) {
+                e.preventDefault();
+                window.dispatchEvent(new Event('openLoginModal'));
+              }
+            }}
+          >
+            Nạp thêm
+          </Link>
           
           {/* Theme toggle button */}
           <button onClick={toggleTheme} className="theme-toggle">

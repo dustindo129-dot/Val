@@ -1162,9 +1162,7 @@ const TopUpManagement = () => {
                   </div>
                   <div className="request-details">
                     <div className="request-method">
-                      Phương thức: {request.paymentMethod === 'ewallet' 
-                        ? `${request.subMethod.charAt(0).toUpperCase() + request.subMethod.slice(1)}` 
-                        : request.paymentMethod === 'bank' 
+                      Phương thức: {request.paymentMethod === 'bank' 
                           ? 'Chuyển khoản ngân hàng' 
                           : 'Thẻ cào'}
                     </div>
@@ -1266,9 +1264,7 @@ const TopUpManagement = () => {
                           // User transaction
                           <>
                             <div className="transaction-method">
-                              Phương thức: {transaction.paymentMethod === 'ewallet' 
-                                ? `${transaction.subMethod.charAt(0).toUpperCase() + transaction.subMethod.slice(1)}` 
-                                : transaction.paymentMethod === 'bank' 
+                              Phương thức: {transaction.paymentMethod === 'bank' 
                                   ? 'Chuyển khoản ngân hàng' 
                                   : 'Thẻ cào'}
                             </div>
