@@ -459,11 +459,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 1rem;
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   margin: 20px 0;
+  text-wrap: nowrap;
 }
 
 .share-buttons {
@@ -764,7 +765,7 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background-color: var(--primary-color);
+  background-color: #ff6b6b;
   color: white;
   display: flex;
   align-items: center;
