@@ -6,11 +6,11 @@
 
 /* Add CSS variables for light/dark mode backgrounds at the top of the file */
 :root {
-  --novel-card-bg: url('https://valvrareteam.b-cdn.net/Untitled_design_9_khl2ei.png');
+  --novel-card-bg: url('https://Valvrareteam.b-cdn.net/Untitled%20design%20(4).png');
 }
 
 .dark-mode {
-  --novel-card-bg: url('https://valvrareteam.b-cdn.net/Untitled_design_10_rjthsb.png');
+  --novel-card-bg: url('https://Valvrareteam.b-cdn.net/Untitled%20design%20(5).png');
 }
 
 /* Common novel card styles */
@@ -417,6 +417,7 @@
     -webkit-box-orient: vertical;
     transition: all 0.3s ease;
     max-height: 18em;
+    font-weight: 400;
 }
 
 .description.expanded {
@@ -567,7 +568,6 @@
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     width: 100%;
-    margin-top: 1.5rem;
     padding: 0;
     position: relative;
     min-height: 400px;

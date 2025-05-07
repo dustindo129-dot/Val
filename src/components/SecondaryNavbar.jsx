@@ -195,7 +195,7 @@ const SecondaryNavbar = () => {
           
           {/* Theme toggle button */}
           <button onClick={toggleTheme} className="theme-toggle">
-            {isDarkMode ? 'Bật đèn' : 'Tắt đèn'}
+            {isDarkMode ? <><i className="fa-solid fa-sun"></i> Bật đèn</> : <><i className="fa-solid fa-moon"></i> Tắt đèn</>}
           </button>
         </div>
       </div>
