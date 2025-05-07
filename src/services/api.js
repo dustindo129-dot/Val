@@ -341,11 +341,11 @@ const api = {
     }
   },
   
-  rateNovel: async (novelId, rating) => {
+  rateNovel: async (novelId, rating, review) => {
     try {
       const response = await axios.post(
         `${config.backendUrl}/api/usernovelinteractions/rate`,
-        { novelId, rating },
+        { novelId, rating, review },
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -374,12 +374,12 @@ const api = {
     }
   },
   
-  getUserInteraction: async (novelId) => {
+  getUserNovelInteraction: async (novelId) => {
     try {
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user'));
       if (!token || !user) {
-        return { liked: false, rating: null, bookmarked: false };
+        return { liked: false, rating: null, review: null, bookmarked: false };
       }
       
       // Get all interactions from usernovelinteractions endpoint
@@ -397,7 +397,7 @@ const api = {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
       }
-      return { liked: false, rating: null, bookmarked: false };
+      return { liked: false, rating: null, review: null, bookmarked: false };
     }
   },
 
@@ -523,6 +523,18 @@ const api = {
   fetchNovelContributions: async (novelId) => {
     const response = await axios.get(`${config.backendUrl}/api/novels/${novelId}/contributions`);
     return response.data;
+  },
+
+  getNovelReviews: async (novelId, page = 1, limit = 10) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/usernovelinteractions/reviews/${novelId}?page=${page}&limit=${limit}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching novel reviews:", error);
+      return { reviews: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0 } };
+    }
   }
 };
 

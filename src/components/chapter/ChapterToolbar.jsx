@@ -31,9 +31,6 @@ const ChapterToolbar = ({
       </div>
 
       <div className="action-toolbar-right">
-        <span className="chapter-view-date">
-          {chapter?.updatedAt ? formatDate(chapter.updatedAt) : 'Ngày không xác định'}
-        </span>
         {/* Stats */}
         <div className="chapter-stats">
           <span className="chapter-stat-item">

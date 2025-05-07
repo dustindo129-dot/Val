@@ -1028,6 +1028,8 @@ const Chapter = () => {
         user={user}
         canEdit={canEdit}
         canDelete={canDelete}
+        isBookmarked={isBookmarked}
+        handleBookmark={handleBookmark}
       />
 
       {/* Navigation */}

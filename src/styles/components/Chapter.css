@@ -60,25 +60,9 @@
 .chapter-header {
   margin-bottom: 20px;
   background: white;
-  padding: 15px 10px;
+  padding: 10px 15px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.chapter-breadcrumb {
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 15px;
-  font-size: 14px;
-}
-
-.breadcrumb-item {
-  color: #3498db;
-  text-decoration: none;
-}
-
-.breadcrumb-item:hover {
-  text-decoration: underline;
 }
 
 .breadcrumb-separator {
@@ -352,13 +336,6 @@
 .staff-member.proofreader {
   color: white;
   background-color: var(--qc-color);
-}
-
-.chapter-meta-stats {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin: 15px;
 }
 
 .chapter-stats {
@@ -643,7 +620,34 @@
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
-/* Footer Navigation */
+/* Header Navigation Container - matching footer-nav-container */
+.header-nav-container {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  position: relative;
+  gap: 15px;
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Add dark mode support for the new border */
+:root.dark-mode .header-actions {
+  border-top-color: #444;
+}
+
+/* Existing footer nav container styles */
 .footer-nav-container {
   display: flex;
   justify-content: space-between;
@@ -661,6 +665,14 @@
   align-items: center;
   font-size: 0.9rem;
   color: #777;
+  justify-content: space-between;
+}
+
+.breadcrumb-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .breadcrumb-nav a {
@@ -670,7 +682,6 @@
 }
 
 .breadcrumb-nav a:hover {
-  color: var(--secondary-color);
   text-decoration: underline;
 }
 
@@ -732,7 +743,9 @@
 }
 
 .btn-bookmark.active {
-  background-color: var(--bookmark-active);
+  background-color: #b0c4c9;
+  border-color: #9fb8bd;
+  color: #2c3e50;
 }
 
 /* Issue Alert */
@@ -805,7 +818,7 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background-color: var(--primary-color);
+  background-color: #ff6b6b;
   color: white;
   display: flex;
   align-items: center;
@@ -933,332 +946,6 @@
 }
 
 /* Dark mode styles */
-:root.dark-mode .chapter-dropdown {
-  background-color: #2c2c2c;
-  border-color: #444;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-:root.dark-mode .chapter-dropdown-header {
-  border-bottom-color: #444;
-  background-color: #2c2c2c;
-}
-
-:root.dark-mode .chapter-dropdown-header h3 {
-  color: #66b0ff;
-}
-
-:root.dark-mode .close-dropdown {
-  color: #aaa;
-}
-
-:root.dark-mode .close-dropdown:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ff6b6b;
-}
-
-:root.dark-mode .chapter-dropdown-list li {
-  border-bottom-color: rgba(255, 255, 255, 0.05);
-}
-
-:root.dark-mode .chapter-dropdown-list li a {
-  color: #ddd;
-}
-
-:root.dark-mode .chapter-dropdown-list li a:hover {
-  background-color: rgba(102, 176, 255, 0.1);
-}
-
-:root.dark-mode .chapter-dropdown-list li.active {
-  background-color: rgba(102, 176, 255, 0.15);
-}
-
-:root.dark-mode .chapter-dropdown-list li.active a {
-  color: #66b0ff;
-}
-
-:root.dark-mode .dropdown-loading,
-:root.dark-mode .no-chapters {
-  color: #aaa;
-}
-
-/* Animation for dropdown */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Settings Modal */
-.settings-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10001;
-  padding: 1rem;
-}
-
-.settings-modal.active {
-  opacity: 1;
-  visibility: visible;
-  display: flex;
-  justify-content: center;  
-  align-items: center;
-}
-
-.settings-container {
-  background: #ffffff;
-  padding: 2.5rem;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 400px;
-  position: relative;
-  animation: modalFadeIn 0.3s ease-out;
-  z-index: 10002;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.settings-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0;
-  color: var(--secondary-color);
-}
-
-.settings-close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: #777;
-  transition: color 0.2s ease;
-}
-
-.settings-close:hover {
-  color: var(--accent-color);
-}
-
-.settings-group {
-  margin-bottom: 15px;
-}
-
-.settings-label {
-  font-weight: 500;
-  margin-bottom: 8px;
-  display: block;
-  color: var(--text-color);
-}
-
-.font-family-select, .line-height-select {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  font-size: 1rem;
-}
-
-.font-family-select:focus,
-.line-height-select:focus {
-  border-color: var(--primary-color);
-  outline: none;
-}
-
-.font-size-control {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.font-size-value {
-  font-weight: 600;
-  width: 40px;
-  text-align: center;
-}
-
-/* Rating Modal */
-.rating-stars {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin: 25px 0;
-}
-
-.star {
-  font-size: 28px;
-  color: #ddd;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.star:hover, .star.active {
-  color: #f1c40f;
-  transform: scale(1.2);
-}
-
-/* Report Modal */
-.report-options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 15px 0;
-}
-
-.report-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.report-option:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.report-option input {
-  margin: 0;
-}
-
-.report-details {
-  width: 100%;
-  padding: 10px;
-  min-height: 100px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  margin: 15px 0;
-  font-family: inherit;
-  font-size: 0.9rem;
-  resize: vertical;
-}
-
-.report-details:focus {
-  outline: none;
-  border-color: var(--primary-color);
-}
-
-/* Comments Section */
-.novel-comments-section {
-  margin: 30px 0;
-}
-
-.comments-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 10px;
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  color: var(--text-color);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.comments-toggle-btn:hover {
-  background-color: #f3f4f6;
-}
-
-/* Responsive styles */
-@media (max-width: 768px) {
-  .chapter-container {
-    padding: 0rem;
-  }
-
-  .chapter-header {
-    flex-direction: column;
-  }
-
-  .action-toolbar,
-  .chapter-bottom-actions {
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-  }
-
-  .staff-info,
-  .chapter-stats,
-  .share-buttons,
-  .user-actions {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .chapter-navigation {
-    gap: 10px;
-  }
-
-  .nav-button {
-    width: 100%;
-    max-width: none;
-  }
-
-  .footer-nav-container {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
-  }
-
-  .breadcrumb-nav,
-  .footer-actions {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .admin-actions {
-    flex-direction: column;
-    gap: 5px;
-    margin-left: 0;
-  }
-
-  .edit-actions {
-    flex-direction: column;
-  }
-
-  .edit-chapter-btn,
-  .delete-chapter-btn,
-  .save-changes-btn,
-  .cancel-edit-btn {
-    width: 100%;
-  }
-
-  .chapter-content {
-    padding: 15px;
-  }
-
-  .chapter-title-banner {
-    width: 100%;
-  }
-
-  .toggle-btn {
-    bottom: 15px;
-    right: 15px;
-    width: 40px;
-    height: 40px;
-  }
-
-  .nav-controls-container {
-    bottom: 15px;
-    right: 65px;
-  }
-}
-
-/* Dark mode support */
 :root.dark-mode {
   --light-bg: #1a1a1a;
   --card-bg: #2c2c2c;
@@ -1823,4 +1510,103 @@
 :root.dark-mode .action-btn.like.active .chapter-like-count {
   background-color: rgba(231, 76, 60, 0.2);
   color: #ff6b6b;
+}
+
+/* Add styles for the bookmark button in header */
+.header-bookmark {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.header-bookmark:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.header-bookmark.active {
+  background-color: var(--bookmark-active);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .chapter-container {
+    padding: 10px;
+  }
+
+  .header-nav-container {
+    padding: 10px;
+  }
+  
+  .breadcrumb-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .breadcrumb-info {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .header-bookmark {
+    align-self: flex-end;
+  }
+  
+  .header-actions {
+    gap: 10px;
+  }
+  
+  .reader-controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .admin-controls {
+    width: 100%;
+  }
+  
+  .edit-chapter-btn,
+  .delete-chapter-btn,
+  .save-changes-btn,
+  .cancel-edit-btn {
+    width: 100%;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  
+  /* Position toggle button below scroll-to-top button */
+  .toggle-btn {
+    bottom: 15px;  /* Toggle button at the bottom */
+    right: 15px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .nav-controls-container {
+    bottom: 15px;
+    right: 65px;
+  }
+  
+  .control-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  /* Chapter dropdown needs to be positioned above the toggle button */
+  .chapter-dropdown {
+    bottom: 65px;  /* 15px (toggle button) + 40px (button size) + 10px (gap) */
+    right: 15px;
+    width: 260px;
+  }
 }

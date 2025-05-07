@@ -1,24 +1,43 @@
-import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import config from '../config/config';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { StarIcon, StarFilledIcon } from './novel-detail/NovelIcons';
+import '../styles/components/RatingModal.css';
 
 const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSuccess }) => {
   const [selectedRating, setSelectedRating] = useState(currentRating);
+  const [reviewText, setReviewText] = useState('');
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Update selected rating when currentRating changes
+  // Get user's current interaction including review
+  const { data: userInteraction } = useQuery({
+    queryKey: ['userInteraction', user?.username, novelId],
+    queryFn: () => api.getUserNovelInteraction(novelId),
+    enabled: isOpen && !!user?.username && !!novelId,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
+
+  // Get reviews for this novel
+  const { data: reviewsData } = useQuery({
+    queryKey: ['novel-reviews', novelId],
+    queryFn: () => api.getNovelReviews(novelId),
+    enabled: isOpen && !!novelId,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
+
+  // Update selected rating and review when they change
   useEffect(() => {
     setSelectedRating(currentRating);
-  }, [currentRating]);
+    setReviewText(userInteraction?.review || '');
+  }, [currentRating, userInteraction?.review]);
   
   const rateMutation = useMutation({
-    mutationFn: (rating) => api.rateNovel(novelId, rating),
-    onMutate: async (newRating) => {
+    mutationFn: ({ rating, review }) => api.rateNovel(novelId, rating, review),
+    onMutate: async ({ rating, review }) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries(['novel-stats', novelId]);
       await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
@@ -38,10 +57,10 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
       if (oldRating === 0) {
         // Adding new rating
         newTotalRatings++;
-        newAvgRating = ((currentAvgRating * totalRatings) + newRating) / newTotalRatings;
+        newAvgRating = ((currentAvgRating * totalRatings) + rating) / newTotalRatings;
       } else {
         // Updating existing rating
-        newAvgRating = ((currentAvgRating * totalRatings) - oldRating + newRating) / totalRatings;
+        newAvgRating = ((currentAvgRating * totalRatings) - oldRating + rating) / totalRatings;
       }
 
       // Optimistically update stats
@@ -54,7 +73,8 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
       // Optimistically update user interaction
       queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
         ...old,
-        rating: newRating
+        rating,
+        review
       }));
 
       return { previousStats, previousInteraction };
@@ -79,12 +99,18 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
 
       queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
         ...old,
-        rating: response.rating
+        rating: response.rating,
+        review: response.review
       }));
 
       // Invalidate queries to ensure consistency
       queryClient.invalidateQueries({
         queryKey: ['novel-stats', novelId],
+        exact: true
+      });
+      
+      queryClient.invalidateQueries({
+        queryKey: ['novel-reviews', novelId],
         exact: true
       });
 
@@ -104,7 +130,10 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     }
 
     try {
-      await rateMutation.mutateAsync(selectedRating);
+      await rateMutation.mutateAsync({ 
+        rating: selectedRating, 
+        review: reviewText.trim() || null 
+      });
     } catch (error) {
       console.error('Error submitting rating:', error);
       setError('Không thể cập nhật đánh giá. Vui lòng thử lại.');
@@ -113,9 +142,22 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
   
   const handleCancel = () => {
     setSelectedRating(currentRating);
+    setReviewText(userInteraction?.review || '');
     setError(null);
     onClose();
   };
+
+  // Format the date to display
+  const formatDate = useCallback((dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }, []);
   
   if (!isOpen) return null;
   
@@ -147,6 +189,21 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
           {selectedRating > 0 ? `${selectedRating} / 5` : 'Chọn đánh giá'}
         </div>
 
+        {/* Review text input */}
+        <div className="review-input-container">
+          <textarea
+            className="review-input"
+            placeholder="Để lại lời nhận xét... (nếu muốn)"
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            maxLength={1000}
+            rows={4}
+          />
+          <div className="review-input-count">
+            {reviewText.length}/1000
+          </div>
+        </div>
+
         {error && (
           <div className="error-message" style={{ color: 'red', marginTop: '10px', textAlign: 'center' }}>
             {error}
@@ -175,6 +232,37 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
             }
           </button>
         </div>
+
+        {/* Reviews section */}
+        {reviewsData?.reviews?.length > 0 && (
+          <div className="reviews-section">
+            <h3>Đánh giá từ độc giả</h3>
+            <div className="reviews-list">
+              {reviewsData.reviews.map(review => (
+                <div key={review.id} className="review-item">
+                  <div className="review-header">
+                    <span className="review-user">{review.user.username}</span>
+                    <div className="review-rating">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>
+                          {i < review.rating ? '★' : '☆'}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="review-date">{formatDate(review.date)}</span>
+                  </div>
+                  <div className="review-content">{review.review}</div>
+                </div>
+              ))}
+            </div>
+            
+            {reviewsData.pagination.totalPages > 1 && (
+              <div className="reviews-pagination">
+                <span>Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

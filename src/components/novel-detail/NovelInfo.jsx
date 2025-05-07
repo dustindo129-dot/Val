@@ -483,46 +483,46 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                         <div className="rd-info-value">
                           <div className="rd-genres-list">
                             {(() => {
-                              // Sort genres using the same logic as NovelList
+                              // Sort genres using the new logic
                               const sortedGenres = (novelData.genres || []).map(genre => {
-                                if (genre.includes('Novel')) {
-                                  let className = '';
-                                  if (genre.includes('Japanese')) className = 'japanese-novel';
-                                  else if (genre.includes('Chinese')) className = 'chinese-novel';
-                                  else if (genre.includes('Korean')) className = 'korean-novel';
-                                  else if (genre.includes('English')) className = 'english-novel';
-                                  else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
-
-                                  return {
-                                    name: genre,
-                                    type: 'format-origin',
-                                    class: className
-                                  };
-                                } else if (genre === 'Mature') {
-                                  return {
-                                    name: genre,
-                                    type: 'mature',
-                                    class: 'mature'
-                                  };
+                                if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One Shot') {
+                                    return {
+                                        name: genre,
+                                        type: 'mature',
+                                        class: genre === 'Mature' ? 'mature' : genre.toLowerCase().replace(' ', '-')
+                                    };
                                 } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
-                                  return {
-                                    name: genre,
-                                    type: 'target-audience',
-                                    class: ''
-                                  };
+                                    return {
+                                        name: genre,
+                                        type: 'target-audience',
+                                        class: ''
+                                    };
+                                } else if (genre.includes('Novel')) {
+                                    let className = '';
+                                    if (genre.includes('Japanese')) className = 'japanese-novel';
+                                    else if (genre.includes('Chinese')) className = 'chinese-novel';
+                                    else if (genre.includes('Korean')) className = 'korean-novel';
+                                    else if (genre.includes('English')) className = 'english-novel';
+                                    else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
+
+                                    return {
+                                        name: genre,
+                                        type: 'format-origin',
+                                        class: className
+                                    };
                                 } else {
-                                  return {
-                                    name: genre,
-                                    type: 'other',
-                                    class: ''
-                                  };
+                                    return {
+                                        name: genre,
+                                        type: 'other',
+                                        class: ''
+                                    };
                                 }
                               }).sort((a, b) => {
                                 const typeOrder = {
-                                  'format-origin': 1,
-                                  'mature': 2,
-                                  'target-audience': 3,
-                                  'other': 4
+                                    'format-origin': 1,
+                                    'mature': 2,
+                                    'target-audience': 3,
+                                    'other': 4
                                 };
                                 return typeOrder[a.type] - typeOrder[b.type];
                               });
@@ -658,9 +658,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="rd-staff-members">
                   {novelData.active?.translator && novelData.active.translator.length > 0 ? (
                     novelData.active.translator.map((translator, index) => (
-                      <a href="#" className="rd-staff-name" key={index}>
+                      <span className="rd-staff-name" key={index}>
                         {translator}
-                      </a>
+                      </span>
                     ))
                   ) : (
                     <span className="rd-staff-empty">Không có</span>
@@ -676,9 +676,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="rd-staff-members">
                   {novelData.active?.editor && novelData.active.editor.length > 0 ? (
                     novelData.active.editor.map((editor, index) => (
-                      <a href="#" className="rd-staff-name" key={index}>
+                      <span className="rd-staff-name" key={index}>
                         {editor}
-                      </a>
+                      </span>
                     ))
                   ) : (
                     <span className="rd-staff-empty">Không có</span>
@@ -694,9 +694,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="rd-staff-members">
                   {novelData.active?.proofreader && novelData.active.proofreader.length > 0 ? (
                     novelData.active.proofreader.map((proofreader, index) => (
-                      <a href="#" className="rd-staff-name" key={index}>
+                      <span className="rd-staff-name" key={index}>
                         {proofreader}
-                      </a>
+                      </span>
                     ))
                   ) : (
                     <span className="rd-staff-empty">Không có</span>
@@ -720,9 +720,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                         </div>
                         <div className="rd-staff-members">
                           {novelData.inactive.translator.map((translator, index) => (
-                            <a href="#" className="rd-staff-name" key={index}>
+                            <span className="rd-staff-name" key={index}>
                               {translator}
-                            </a>
+                            </span>
                           ))}
                         </div>
                       </>
@@ -738,9 +738,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                         </div>
                         <div className="rd-staff-members">
                           {novelData.inactive.editor.map((editor, index) => (
-                            <a href="#" className="rd-staff-name" key={index}>
+                            <span className="rd-staff-name" key={index}>
                               {editor}
-                            </a>
+                            </span>
                           ))}
                         </div>
                       </>
@@ -756,9 +756,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                         </div>
                         <div className="rd-staff-members">
                           {novelData.inactive.proofreader.map((proofreader, index) => (
-                            <a href="#" className="rd-staff-name" key={index}>
+                            <span className="rd-staff-name" key={index}>
                               {proofreader}
-                            </a>
+                            </span>
                           ))}
                         </div>
                       </>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faCog, faSave, faSpinner, faHome } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faCog, faSave, faSpinner, faHome, faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
 
 const ChapterHeader = ({
   novel,
@@ -21,100 +22,109 @@ const ChapterHeader = ({
   setShowSettingsModal,
   user,
   canEdit,
-  canDelete
+  canDelete,
+  isBookmarked,
+  handleBookmark
 }) => {
   return (
-    <header className="chapter-header">
-      <div className="chapter-breadcrumb">
-        <a href="/" className="breadcrumb-item"><FontAwesomeIcon icon={faHome}/> Trang chủ</a>
-        <span className="breadcrumb-separator">&gt;</span>
-        <a href={`/novel/${novelId}`} className="breadcrumb-item">{novel?.title}</a>
-        <span className="breadcrumb-separator">&gt;</span>
-        {moduleData && (
-          <>
-            <span className="breadcrumb-current">{moduleData.title}</span>
-            <span className="breadcrumb-separator">&gt;</span>
-          </>
-        )}
-        <span className="breadcrumb-current">{chapter?.title}</span>
-      </div>
-      
-      <div className="header-meta">
-        <div className="chapter-meta">
-          {/* Removing chapter view date from here */}
+    <div className="header-nav-container">
+      <div className="breadcrumb-nav">
+        <div className="breadcrumb-info">
+          <Link to="/"><FontAwesomeIcon icon={faHome}/> Trang chủ</Link>
+          <span className="breadcrumb-separator">&gt;</span>
+          <Link to={`/novel/${novelId}`}>{novel?.title}</Link>
+          <span className="breadcrumb-separator">&gt;</span>
+          {moduleData && (
+            <>
+              <span className="breadcrumb-current">{moduleData.title}</span>
+              <span className="breadcrumb-separator">&gt;</span>
+            </>
+          )}
+          <span className="breadcrumb-current">{chapter?.title}</span>
         </div>
         
-        <div>
-          <div className="reader-controls">
-            <button
-              className="font-size-btn decrease"
-              onClick={decreaseFontSize}
-              title="Decrease font size"
-            >
-              A-
-            </button>
-            <button
-              className="font-size-btn increase"
-              onClick={increaseFontSize}
-              title="Increase font size"
-            >
-              A+
-            </button>
-            <button
-              className="settings-btn"
-              onClick={() => setShowSettingsModal(true)}
-              title="Reading settings"
-            >
-              ⚙️
-            </button>
-          </div>
-          
-          {canEdit && (
-            <div className="admin-controls">
-              {isEditing ? (
-                <>
-                  <button 
-                    className="save-changes-btn" 
-                    onClick={handleEditChapter}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? (
-                      <>
-                        <FontAwesomeIcon icon={faSpinner} spin /> Đang lưu...
-                      </>
-                    ) : (
-                      <>
-                        <FontAwesomeIcon icon={faSave} /> Lưu thay đổi
-                      </>
-                    )}
-                  </button>
-                  <button 
-                    className="cancel-edit-btn" 
-                    onClick={() => setIsEditing(false)}
-                    disabled={isSaving}
-                  >
-                    Hủy bỏ thay đổi
-                  </button>
-                </>
-              ) : (
-                <button 
-                  className="edit-chapter-btn" 
-                  onClick={() => setIsEditing(true)}
-                >
-                  <FontAwesomeIcon icon={faEdit} /> Chỉnh sửa chương
-                </button>
-              )}
-              
-              {canDelete && (
-                <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
-                  Xóa chương
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Bookmark button at rightmost position */}
+        {handleBookmark && (
+          <button
+            className={`btn-bookmark header-bookmark ${isBookmarked ? 'active' : ''}`}
+            onClick={handleBookmark}
+          >
+            <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
+            {isBookmarked ? 'Đã lưu' : 'Lưu chương'}
+          </button>
+        )}
       </div>
-    </header>
+      
+      <div className="header-actions">
+        <div className="reader-controls">
+          <button
+            className="font-size-btn decrease"
+            onClick={decreaseFontSize}
+            title="Decrease font size"
+          >
+            A-
+          </button>
+          <button
+            className="font-size-btn increase"
+            onClick={increaseFontSize}
+            title="Increase font size"
+          >
+            A+
+          </button>
+          <button
+            className="settings-btn"
+            onClick={() => setShowSettingsModal(true)}
+            title="Reading settings"
+          >
+            ⚙️
+          </button>
+        </div>
+        
+        {canEdit && (
+          <div className="admin-controls">
+            {isEditing ? (
+              <>
+                <button 
+                  className="save-changes-btn" 
+                  onClick={handleEditChapter}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} spin /> Đang lưu...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faSave} /> Lưu thay đổi
+                    </>
+                  )}
+                </button>
+                <button 
+                  className="cancel-edit-btn" 
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                >
+                  Hủy bỏ thay đổi
+                </button>
+              </>
+            ) : (
+              <button 
+                className="edit-chapter-btn" 
+                onClick={() => setIsEditing(true)}
+              >
+                <FontAwesomeIcon icon={faEdit} /> Chỉnh sửa chương
+              </button>
+            )}
+            
+            {canDelete && (
+              <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
+                Xóa chương
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

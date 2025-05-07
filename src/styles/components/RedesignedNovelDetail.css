@@ -259,39 +259,39 @@
 }
 
 .rd-genre-tag.japanese-novel {
-  background-color: rgba(39, 174, 96, 0.2);
-  border-color: rgba(39, 174, 96, 0.4);
-  color: #27ae60;
+  background-color: rgba(39, 174, 96, 0.35);   
+  border-color: rgba(39, 174, 96, 0.6);        
+  color: #e2fff1;     
 }
 
 .rd-genre-tag.chinese-novel {
-  background-color: rgba(230, 126, 34, 0.2);
-  border-color: rgba(230, 126, 34, 0.4);
-  color: #e67e22;
+  background-color: rgba(230, 126, 34, 0.35);   
+  border-color: rgba(230, 126, 34, 0.6);        
+  color: #fff2e0;   
 }
 
 .rd-genre-tag.korean-novel {
-  background-color: rgba(142, 68, 173, 0.2);
-  border-color: rgba(142, 68, 173, 0.4);
-  color: #8e44ad;
+  background-color: rgba(142, 68, 173, 0.35);  
+  border-color: rgba(142, 68, 173, 0.6);       
+  color: #f2e7ff;   
 }
 
 .rd-genre-tag.english-novel {
-  background-color: rgba(52, 101, 164, 0.2);
-  border-color: rgba(52, 101, 164, 0.4);
-  color: #3465a4;
+  background-color: rgba(52, 101, 164, 0.35); 
+  border-color: rgba(52, 101, 164, 0.6);      
+  color: #cce6ff;   
 }
 
 .rd-genre-tag.vietnamese-novel {
-  background-color: rgba(192, 57, 43, 0.2);
-  border-color: rgba(192, 57, 43, 0.4);
-  color: #c0392b;
+  background-color: rgba(192, 57, 43, 0.35);  
+  border-color: rgba(192, 57, 43, 0.6);       
+  color: #ffd6d1;   
 }
 
 .rd-genre-tag.mature {
-  background-color: rgba(231, 76, 60, 0.2);
-  border-color: rgba(231, 76, 60, 0.4);
-  color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.35);   
+  border-color: rgba(231, 76, 60, 0.6);        
+  color: #ffe5e2;  
 }
 
 /* Stats and action footer */
