@@ -41,7 +41,7 @@ const ChapterFooter = ({
           onClick={handleBookmark}
         >
           <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
-          {isBookmarked ? 'Đã lưu' : 'Lưu chương'}
+          {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu chương'}
         </button>
       </div>
     </div>

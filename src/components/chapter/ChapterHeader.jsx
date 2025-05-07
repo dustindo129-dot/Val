@@ -42,17 +42,6 @@ const ChapterHeader = ({
           )}
           <span className="breadcrumb-current">{chapter?.title}</span>
         </div>
-        
-        {/* Bookmark button at rightmost position */}
-        {handleBookmark && (
-          <button
-            className={`btn-bookmark header-bookmark ${isBookmarked ? 'active' : ''}`}
-            onClick={handleBookmark}
-          >
-            <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
-            {isBookmarked ? 'Đã lưu' : 'Lưu chương'}
-          </button>
-        )}
       </div>
       
       <div className="header-actions">
@@ -78,6 +67,15 @@ const ChapterHeader = ({
           >
             ⚙️
           </button>
+          {handleBookmark && (
+            <button
+              className={`btn-bookmark ${isBookmarked ? 'active' : ''}`}
+              onClick={handleBookmark}
+            >
+              <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
+              {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu chương'}
+            </button>
+          )}
         </div>
         
         {canEdit && (
