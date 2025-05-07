@@ -1005,9 +1005,6 @@ const Chapter = () => {
 
   return (
     <div className="chapter-container">
-      {/* Reading progress bar */}
-      <div className="reading-progress" style={{width: `${readingProgress}%`}}></div>
-
       {/* Chapter header */}
       <ChapterHeader
         novel={novel}

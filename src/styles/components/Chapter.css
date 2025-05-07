@@ -44,18 +44,6 @@
   position: relative;
 }
 
-/* Reading Progress Bar */
-.reading-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 4px;
-  background-color: var(--primary-color);
-  z-index: 1000;
-  transition: width 0.1s;
-}
-
 /* Chapter header styles */
 .chapter-header {
   margin-bottom: 20px;
@@ -305,6 +293,8 @@
   box-shadow: var(--box-shadow);
   margin-bottom: 20px;
   position: relative;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .staff-info {
