@@ -11,6 +11,18 @@ export { passToClient };
 // Variables to pass to client
 const passToClient = ['pageProps', 'isBot', 'urlOriginal', 'routeParams'];
 
+// Create a single QueryClient instance outside components
+const createSSRQueryClient = () => new QueryClient({
+  defaultOptions: {
+    queries: {
+      // For SSR, don't retry queries
+      retry: false,
+      // For bots, want immediate success/failure
+      staleTime: 0
+    }
+  }
+});
+
 async function render(pageContext) {
   const { urlOriginal, isBot, forceClient } = pageContext;
   
@@ -54,16 +66,7 @@ async function render(pageContext) {
   }
   
   // Create React Query client for SSR
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        // For SSR, don't retry queries
-        retry: false,
-        // For bots, want immediate success/failure
-        staleTime: 0
-      }
-    }
-  });
+  const queryClient = createSSRQueryClient();
   
   // Prefetch any necessary data here based on URL
   // For example, if url includes '/novel/' then prefetch novel data

@@ -92,21 +92,26 @@
   background-color: #2c3e50;
   color: white;
   position: relative;
-  display: flex;
-  align-items: center;
+  display: block;
   width: 100%;
   margin: 0;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 27px;
 }
 
 .bookmark-card .bookmark-title-header::before {
   content: '';
-  display: inline-block;
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 4px;
   height: 16px;
   background-color: #f39c12;
-  margin-right: 8px;
 }
 
 /* Bookmark card content container */

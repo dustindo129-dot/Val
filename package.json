@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:dev": "vite build --mode development",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -27,7 +28,8 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
-    "@tanstack/react-query": "^5.74.4",
+    "@tanstack/query-core": "^5.75.5",
+    "@tanstack/react-query": "^5.75.5",
     "@tinymce/tinymce-react": "^6.1.0",
     "axios": "1.8.4",
     "bcryptjs": "3.0.2",

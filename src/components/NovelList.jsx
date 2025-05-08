@@ -26,6 +26,7 @@ import RecentComments from './RecentComments';
 import '../styles/NovelList.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
+import api from '../utils/apiHelper';
 
 /**
  * NovelImage Component
@@ -240,7 +241,7 @@ const NovelList = () => {
     const {data, isLoading, error} = useQuery({
         queryKey: ['novels', currentPage],
         queryFn: async () => {
-            const response = await axios.get(`${config.backendUrl}/api/novels?page=${currentPage}&limit=15`);
+            const response = await api.get(`/api/novels?page=${currentPage}&limit=15`);
             return response.data;
         },
         staleTime: 1000 * 60 * 5,

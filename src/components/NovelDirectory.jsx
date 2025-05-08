@@ -172,7 +172,7 @@ const NovelDirectory = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['novels-directory', 'large-list'],
     queryFn: async () => {
-      const response = await axios.get(`${config.backendUrl}/api/novels?page=1&limit=100`);
+      const response = await axios.get(`${config.backendUrl}/api/novels?page=1&limit=1000`);
 
       // Sort novels by title (case-insensitive)
       const sortedNovels = (response.data.novels || []).sort((a, b) => {

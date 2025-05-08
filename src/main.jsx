@@ -16,7 +16,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles/shared/index.css';
 
-// Create React Query client
+// Create React Query client - IMPORTANT: Create outside component to avoid hook conflicts
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -28,16 +28,35 @@ const queryClient = new QueryClient({
   },
 });
 
-// Get the root element
-const root = document.getElementById('root');
+// Initialize the application unless we're being rendered by vite-plugin-ssr
+// This ensures the app renders in both DEV and PROD when not using SSR
+if (!window.__VITE_PLUGIN_SSR) {
+  // Get the root element
+  const root = document.getElementById('root');
 
-// Render the app
-createRoot(root).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
-  </React.StrictMode>
-); 
+  // Render the app only if the root element exists
+  if (root) {
+    createRoot(root).render(
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </React.StrictMode>
+    );
+  }
+}
+
+// Export the app component with providers for vite-plugin-ssr
+export default function MainApp() {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+} 

@@ -85,7 +85,14 @@ export default defineConfig(({ command, mode }) => {
       host: 'localhost',
       hmr: false,
       // Add history API fallback for client-side routing in preview mode
-      historyApiFallback: true
+      historyApiFallback: true,
+      // Add proxy for API requests in preview mode
+      proxy: {
+        "/api": {
+          target: "http://localhost:5000",
+          changeOrigin: true,
+        },
+      }
     },
     resolve: {
       // Enhanced deduplication - ensures all React packages use the same instance
@@ -94,7 +101,14 @@ export default defineConfig(({ command, mode }) => {
         'react-dom', 
         'react/jsx-runtime',
         'react/jsx-dev-runtime',
-        '@tanstack/react-query'
+        '@tanstack/react-query',
+        'use-sync-external-store',
+        'use-sync-external-store/shim',
+        'scheduler',
+        'react-router',
+        'react-router-dom',
+        'react-is',
+        'object-assign'
       ],
       alias: {
         '~': path.resolve(__dirname, './src'),
@@ -124,12 +138,18 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: [
+            'react-vendor': [
               'react', 
-              'react-dom', 
-              'react-router-dom',
-              '@tanstack/react-query'
+              'react-dom',
+              'react/jsx-runtime',
+              'react/jsx-dev-runtime'
             ],
+            'router': [
+              'react-router-dom'
+            ],
+            'query': [
+              '@tanstack/react-query'
+            ]
           }
         }
       },

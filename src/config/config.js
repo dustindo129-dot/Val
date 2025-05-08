@@ -1,5 +1,8 @@
 const config = {
-  backendUrl: import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000',
+  // Use environment variables with sensible defaults for all environments
+  backendUrl: import.meta.env.DEV || (import.meta.env.MODE === 'development')
+    ? (import.meta.env.VITE_DEV_BACKEND_URL || '') // Empty string makes it use relative URLs via proxy
+    : (import.meta.env.VITE_BACKEND_URL || ''),
   bunny: {
     folders: {
       avatar: 'avatars',
