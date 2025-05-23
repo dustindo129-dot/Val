@@ -642,7 +642,7 @@ const NovelList = () => {
                                                                     toggleDescription(novel._id);
                                                                 }}
                                                             >
-                                                                {expandedDescriptions[novel._id] ? 'Collapse' : 'Read more'}
+                                                                {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
                                                             </a>
                                                         </div>
                                                     );

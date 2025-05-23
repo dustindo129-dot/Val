@@ -688,7 +688,7 @@ const ChapterDashboard = () => {
                   `,
                       skin: 'oxide',
                       content_css: 'default',
-                      placeholder: 'Enter chapter content...',
+                      placeholder: 'Nhập nội dung chương...',
                       statusbar: true,
                       resize: true,
                       branding: false,
@@ -803,7 +803,7 @@ const ChapterDashboard = () => {
                     <textarea
                         value={footnote.content}
                         onChange={(e) => updateFootnote(footnote.id, e.target.value)}
-                        placeholder={`Enter footnote ${footnote.id} content...`}
+                        placeholder={`Nhập nội dung footnote ${footnote.id}...`}
                     />
                         </div>
                         <div className="footnote-controls">
