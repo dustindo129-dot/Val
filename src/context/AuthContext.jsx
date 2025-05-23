@@ -22,10 +22,13 @@ import config from '../config/config';
 // Create authentication context
 const AuthContext = createContext(null);
 
-// Session timeout duration (30 minutes)
-const SESSION_TIMEOUT = 30 * 60 * 1000;
-// Extended session timeout (3 hours) when "Remember me" is checked
-const EXTENDED_SESSION_TIMEOUT = 3 * 60 * 60 * 1000;
+// Session timeout duration (30 minutes for admin/mod, 3 hours for normal users)
+const ADMIN_SESSION_TIMEOUT = 30 * 60 * 1000;
+const USER_SESSION_TIMEOUT = 3 * 60 * 60 * 1000;
+// Extended session timeout (3 hours for admin/mod, permanent for normal users)
+const ADMIN_EXTENDED_SESSION_TIMEOUT = 3 * 60 * 60 * 1000;
+// For permanent sessions, we'll use a very large number (100 years from now)
+const PERMANENT_SESSION_TIMEOUT = 100 * 365 * 24 * 60 * 60 * 1000;
 
 // Add constants for storage keys and events
 const AUTH_LOGOUT_EVENT = 'authLogout';
@@ -60,6 +63,14 @@ export const AuthProvider = ({ children }) => {
     const expiryTime = parseInt(sessionExpiry, 10);
     if (isNaN(expiryTime)) return false;
     
+    // Check if this is a permanent session (very large expiry time)
+    const isPermanentSession = expiryTime > (Date.now() + (50 * 365 * 24 * 60 * 60 * 1000)); // More than 50 years from now
+    
+    if (isPermanentSession) {
+      // For permanent sessions, always return true (session never expires)
+      return true;
+    }
+    
     if (Date.now() > expiryTime) {
       // Session expired, sign out user
       signOut();
@@ -69,11 +80,35 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Updates the session expiry time
+   * Updates the session expiry time based on user role and rememberMe preference
    * @param {boolean} rememberMe - Whether to use extended session timeout
+   * @param {Object} userData - User data containing role information
    */
-  const updateSessionExpiry = (rememberMe = false) => {
-    const timeout = rememberMe ? EXTENDED_SESSION_TIMEOUT : SESSION_TIMEOUT;
+  const updateSessionExpiry = (rememberMe = false, userData = null) => {
+    // Get user data from parameter or localStorage
+    const currentUser = userData || JSON.parse(localStorage.getItem('user') || 'null');
+    
+    if (!currentUser) {
+      // If no user data, use admin defaults for security
+      const timeout = rememberMe ? ADMIN_EXTENDED_SESSION_TIMEOUT : ADMIN_SESSION_TIMEOUT;
+      const expiryTime = Date.now() + timeout;
+      localStorage.setItem('sessionExpiry', expiryTime.toString());
+      localStorage.setItem('rememberMe', rememberMe.toString());
+      return;
+    }
+
+    // Check if user is admin or moderator
+    const isAdminOrMod = currentUser.role === 'admin' || currentUser.role === 'moderator';
+    
+    let timeout;
+    if (isAdminOrMod) {
+      // Admin/Mod: 30 minutes regular, 3 hours extended
+      timeout = rememberMe ? ADMIN_EXTENDED_SESSION_TIMEOUT : ADMIN_SESSION_TIMEOUT;
+    } else {
+      // Normal user: 3 hours regular, permanent extended
+      timeout = rememberMe ? PERMANENT_SESSION_TIMEOUT : USER_SESSION_TIMEOUT;
+    }
+    
     const expiryTime = Date.now() + timeout;
     localStorage.setItem('sessionExpiry', expiryTime.toString());
     // Store the remember me preference for session restoration
@@ -88,7 +123,8 @@ export const AuthProvider = ({ children }) => {
     if (storedUser) {
       // Use the stored remember me preference when resetting the timer
       const rememberMe = localStorage.getItem('rememberMe') === 'true';
-      updateSessionExpiry(rememberMe);
+      const userData = JSON.parse(storedUser);
+      updateSessionExpiry(rememberMe, userData);
     }
   };
 
@@ -101,11 +137,12 @@ export const AuthProvider = ({ children }) => {
       try {
         const storedUser = localStorage.getItem('user');
         if (storedUser && checkSessionValidity()) {
-          setUser(JSON.parse(storedUser));
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
           setIsAuthenticated(true);
           // Use the stored remember me preference
           const rememberMe = localStorage.getItem('rememberMe') === 'true';
-          updateSessionExpiry(rememberMe);
+          updateSessionExpiry(rememberMe, userData);
         } else if (storedUser) {
           signOut();
         }
@@ -154,7 +191,8 @@ export const AuthProvider = ({ children }) => {
    */
   useEffect(() => {
     if (user) {
-      updateSessionExpiry();
+      const rememberMe = localStorage.getItem('rememberMe') === 'true';
+      updateSessionExpiry(rememberMe, user);
       setIsAuthenticated(true);
     } else {
       setIsAuthenticated(false);
@@ -175,7 +213,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
         // Get rememberMe preference from localStorage
         const rememberMe = localStorage.getItem('rememberMe') === 'true';
-        updateSessionExpiry(rememberMe);
+        updateSessionExpiry(rememberMe, userData);
       }
     };
 
@@ -189,7 +227,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
         // Get rememberMe preference from localStorage
         const rememberMe = localStorage.getItem('rememberMe') === 'true';
-        updateSessionExpiry(rememberMe);
+        updateSessionExpiry(rememberMe, userData);
       }
     };
 
@@ -233,7 +271,7 @@ export const AuthProvider = ({ children }) => {
       // Store user data and token
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
-      updateSessionExpiry(rememberMe);
+      updateSessionExpiry(rememberMe, userData);
 
       // Notify other tabs about the login
       localStorage.setItem(AUTH_LOGIN_STORAGE_KEY, JSON.stringify(userData));
@@ -275,7 +313,7 @@ export const AuthProvider = ({ children }) => {
       // Store user data and token
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
-      updateSessionExpiry();
+      updateSessionExpiry(false, userData);
       
       // Notify other tabs about the login
       localStorage.setItem(AUTH_LOGIN_STORAGE_KEY, JSON.stringify(userData));
@@ -323,6 +361,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       localStorage.removeItem('sessionExpiry');
+      localStorage.removeItem('rememberMe');
       
       // Update state
       setUser(null);
