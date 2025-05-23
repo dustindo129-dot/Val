@@ -247,7 +247,7 @@ const ChapterContent = ({
       const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
       
       // Replace footnote markers with proper bi-directional links
-      const processedContent = contentString.replace(
+      let processedContent = contentString.replace(
         /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
         (match, simpleNum, dataNum, supNum) => {
           const footnoteNum = simpleNum || dataNum || supNum;
@@ -255,9 +255,51 @@ const ChapterContent = ({
         }
       );
 
-      // Sanitize HTML but allow our footnote structure
-      return DOMPurify.sanitize(processedContent, {
-        ADD_TAGS: ['sup', 'a'],
+      // Clean up and normalize br tags
+      processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
+      
+      // Try to split by double <br> tags first
+      let paragraphBlocks = processedContent
+        .split(/(<br>\s*){2,}/gi)
+        .filter(block => block && block.trim() && !block.match(/^(<br>\s*)+$/i));
+
+      // If no double <br> splits found, try splitting by single <br> tags
+      if (paragraphBlocks.length <= 1) {
+        paragraphBlocks = processedContent
+          .split(/<br>/gi)
+          .filter(block => block && block.trim());
+      }
+
+      // Process each block
+      paragraphBlocks = paragraphBlocks
+        .map(block => {
+          let trimmedBlock = block.trim();
+          
+          // Remove any remaining <br> tags at the beginning or end
+          trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
+          
+          if (trimmedBlock) {
+            // Only wrap in <p> if not already wrapped in block elements
+            if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+              return `<p>${trimmedBlock}</p>`;
+            }
+            return trimmedBlock;
+          }
+          return '';
+        })
+        .filter(block => block);
+
+      let finalContent = paragraphBlocks.join('');
+
+      // If still no paragraphs were created, wrap the entire content
+      if (paragraphBlocks.length === 0 && processedContent.trim()) {
+        const cleanContent = processedContent.replace(/<br>/gi, ' ');
+        finalContent = `<p>${cleanContent}</p>`;
+      }
+
+      // Sanitize HTML but allow our footnote structure and paragraph tags
+      return DOMPurify.sanitize(finalContent, {
+        ADD_TAGS: ['sup', 'a', 'p', 'br'],
         ADD_ATTR: ['href', 'id', 'class', 'data-footnote']
       });
     } catch (error) {
