@@ -70,6 +70,14 @@ const sanitizeHTML = (content) => {
   });
 };
 
+// Function to decode HTML entities for legacy comments
+const decodeHTMLEntities = (text) => {
+  if (!text) return '';
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+};
+
 const CommentSection = ({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest' }) => {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -571,7 +579,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           </div>
           <div className="comment-text">
             {comment.isDeleted && !comment.adminDeleted ? 'Comment deleted by user' : (
-              <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(comment.text) }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(decodeHTMLEntities(comment.text)) }} />
             )}
           </div>
           <div className="comment-actions">

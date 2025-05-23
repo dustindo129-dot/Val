@@ -22,8 +22,18 @@ export const SettingsModal = ({
   // Early return if modal is not shown
   if (!showSettingsModal) return null;
 
+  const handleOverlayClick = (e) => {
+    // Close modal if clicking on the overlay (not the content)
+    if (e.target === e.currentTarget) {
+      setShowSettingsModal(false);
+    }
+  };
+
   return (
-    <div className={`settings-modal ${showSettingsModal ? 'active' : ''}`}>
+    <div 
+      className={`settings-modal ${showSettingsModal ? 'active' : ''}`}
+      onClick={handleOverlayClick}
+    >
       <div className="settings-container">
         <div className="settings-modal-header">
           <h3>Cài đặt</h3>
