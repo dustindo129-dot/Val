@@ -878,7 +878,7 @@ const NovelDetail = () => {
     queryKey: ['userInteraction', user?.username, novelId],
     queryFn: () => {
       if (!user?.username || !novelId) return { liked: false, rating: null };
-      return api.getUserInteraction(novelId);
+      return api.getUserNovelInteraction(novelId);
     },
     enabled: !!user?.username && !!novelId,
     staleTime: 1000 * 60 * 5 // 5 minutes
