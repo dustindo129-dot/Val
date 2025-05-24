@@ -6,31 +6,35 @@
   padding: 1.5rem;
 }
 
-.loading-spinner {
-  border-radius: 50%;
-  border: 3px solid rgba(0, 0, 0, 0.1);
-  border-top-color: #1e3a8a; /* Default color - matches the navy blue theme */
-  animation: spin 1s linear infinite;
+.loading-spinner-gif {
+  border-radius: 8px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+}
+
+.loading-spinner-gif:hover {
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.15));
+  transform: scale(1.02);
 }
 
 .loading-text {
   margin-top: 1rem;
   font-size: 0.875rem;
   color: #4b5563;
+  text-align: center;
+  font-weight: 500;
 }
 
 /* Dark mode support */
-:root.dark-mode .loading-spinner {
-  border-color: rgba(255, 255, 255, 0.1);
-  border-top-color: #3b82f6; /* Lighter blue for dark mode */
+:root.dark-mode .loading-spinner-gif {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+:root.dark-mode .loading-spinner-gif:hover {
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.4));
 }
 
 :root.dark-mode .loading-text {
   color: #d1d5db;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 } 

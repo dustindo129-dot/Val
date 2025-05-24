@@ -18,6 +18,7 @@ import './Novel.css';
 import config from '../config/config';
 import sseService from './services/sseService';
 import { StarIcon } from "./components/Icons";
+import LoadingSpinner from './components/LoadingSpinner';
 
 // Novel component with optional search query prop
 const Novel = ({ searchQuery = "" }) => {
@@ -115,7 +116,7 @@ const Novel = ({ searchQuery = "" }) => {
     keepPreviousData: true // Keep showing previous page data while loading next page
   });
 
-  if (isLoading) return <div className="loading">Đang tải truyện...</div>;
+  if (isLoading) return <div className="loading"><LoadingSpinner size="large" text="Đang tải truyện..." /></div>;
   if (error) return <div className="error">{error.message}</div>;
 
   return (

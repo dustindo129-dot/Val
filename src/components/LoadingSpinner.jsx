@@ -2,30 +2,30 @@ import React from 'react';
 import '../styles/components/LoadingSpinner.css';
 
 /**
- * A loading spinner component that can be displayed while content is loading
+ * A loading spinner component that displays a cherry blossom animation
  * @param {Object} props - Component props
  * @param {string} [props.size='medium'] - Size of the spinner (small, medium, large)
- * @param {string} [props.color] - Custom color for the spinner
  * @param {string} [props.text] - Optional text to display under the spinner
  * @returns {JSX.Element} LoadingSpinner component
  */
-const LoadingSpinner = ({ size = 'medium', color, text }) => {
-  // Determine spinner size classes
-  const sizeClasses = {
-    small: 'w-5 h-5 border-2',
-    medium: 'w-8 h-8 border-3',
-    large: 'w-12 h-12 border-4'
+const LoadingSpinner = ({ size = 'medium', text }) => {
+  // Determine spinner size for the gif
+  const sizeStyles = {
+    small: { width: '60px', height: '60px' },
+    medium: { width: '120px', height: '120px' },
+    large: { width: '180px', height: '180px' }
   };
   
-  const spinnerClass = sizeClasses[size] || sizeClasses.medium;
-  const spinnerStyle = color ? { borderTopColor: color } : {};
+  const spinnerStyle = sizeStyles[size] || sizeStyles.medium;
   
   return (
     <div className="loading-spinner-container">
-      <div 
-        className={`loading-spinner ${spinnerClass}`}
+      <img 
+        src="/Animation - 1748045662838.gif"
+        alt="Loading..."
+        className="loading-spinner-gif"
         style={spinnerStyle}
-      ></div>
+      />
       {text && <p className="loading-text">{text}</p>}
     </div>
   );

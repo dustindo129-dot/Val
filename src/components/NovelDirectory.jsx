@@ -14,6 +14,7 @@ import axios from 'axios';
 import '../styles/NovelDirectory.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
+import LoadingSpinner from './LoadingSpinner';
 
 // Genre categories for filtering
 const genreCategories = {
@@ -423,7 +424,7 @@ const NovelDirectory = () => {
     );
   };
 
-  if (isLoading) return <div className="directory-loading">Đang tải truyện...</div>;
+  if (isLoading) return <div className="directory-loading"><LoadingSpinner size="large" text="Đang tải truyện..." /></div>;
   if (error) return <div className="directory-error">{error.message}</div>;
 
   const { novels, totalItems } = filteredAndPaginatedNovels;

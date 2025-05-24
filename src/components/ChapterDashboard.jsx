@@ -32,6 +32,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import bunnyUploadService from '../services/bunnyUploadService';
 import hybridCdnService from '../services/bunnyUploadService';
+import LoadingSpinner from './LoadingSpinner';
 
 /**
  * ChapterDashboard Component
@@ -507,10 +508,7 @@ const ChapterDashboard = () => {
   // Show loading state
   if (loading) {
     return (
-        <div className="loading">
-          <div>Đang tải...</div>
-          <div className="loading-spinner"></div>
-        </div>
+                <div className="loading">          <LoadingSpinner size="large" text="Đang tải..." />        </div>
     );
   }
 

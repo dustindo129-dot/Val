@@ -27,6 +27,7 @@ import '../styles/NovelList.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import api from '../utils/apiHelper';
+import LoadingSpinner from './LoadingSpinner';
 
 /**
  * NovelImage Component
@@ -172,10 +173,7 @@ const FacebookPlugin = memo(() => {
     return (
         <div className="facebook-plugin">
             {!isLoaded && (
-                <div className="fb-loading">
-                    <div className="fb-loading-spinner"></div>
-                    <div className="fb-loading-text">Đang tải bảng tin Facebook...</div>
-                </div>
+                                <div className="fb-loading">                    <LoadingSpinner size="large" text="Đang tải bảng tin Facebook..." />                </div>
             )}
             
             <iframe 
@@ -529,9 +527,7 @@ const NovelList = () => {
         };
     };
 
-    if (isLoading) return <div className="loading">Đang tải truyện...</div>;
-    if (error) return <div className="error">{error.message}</div>;
-    if (!novels || novels.length === 0) return <div className="loading">Không có truyện nào.</div>;
+    if (isLoading) return <div className="loading"><LoadingSpinner size="large" text="Đang tải truyện..." /></div>;    if (error) return <div className="error">{error.message}</div>;    if (!novels || novels.length === 0) return <div className="loading">Không có truyện nào.</div>;
 
     return (
         <>

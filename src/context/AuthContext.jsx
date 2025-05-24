@@ -25,10 +25,10 @@ const AuthContext = createContext(null);
 // Session timeout duration (30 minutes for admin/mod, 3 hours for normal users)
 const ADMIN_SESSION_TIMEOUT = 30 * 60 * 1000;
 const USER_SESSION_TIMEOUT = 3 * 60 * 60 * 1000;
-// Extended session timeout (3 hours for admin/mod, permanent for normal users)
+// Extended session timeout (3 hours for admin/mod, 2 weeks for normal users)
 const ADMIN_EXTENDED_SESSION_TIMEOUT = 3 * 60 * 60 * 1000;
-// For permanent sessions, we'll use a very large number (100 years from now)
-const PERMANENT_SESSION_TIMEOUT = 100 * 365 * 24 * 60 * 60 * 1000;
+// Extended session for normal users (2 weeks)
+const USER_EXTENDED_SESSION_TIMEOUT = 14 * 24 * 60 * 60 * 1000;
 
 // Add constants for storage keys and events
 const AUTH_LOGOUT_EVENT = 'authLogout';
@@ -62,14 +62,6 @@ export const AuthProvider = ({ children }) => {
     
     const expiryTime = parseInt(sessionExpiry, 10);
     if (isNaN(expiryTime)) return false;
-    
-    // Check if this is a permanent session (very large expiry time)
-    const isPermanentSession = expiryTime > (Date.now() + (50 * 365 * 24 * 60 * 60 * 1000)); // More than 50 years from now
-    
-    if (isPermanentSession) {
-      // For permanent sessions, always return true (session never expires)
-      return true;
-    }
     
     if (Date.now() > expiryTime) {
       // Session expired, sign out user
@@ -105,8 +97,8 @@ export const AuthProvider = ({ children }) => {
       // Admin/Mod: 30 minutes regular, 3 hours extended
       timeout = rememberMe ? ADMIN_EXTENDED_SESSION_TIMEOUT : ADMIN_SESSION_TIMEOUT;
     } else {
-      // Normal user: 3 hours regular, permanent extended
-      timeout = rememberMe ? PERMANENT_SESSION_TIMEOUT : USER_SESSION_TIMEOUT;
+      // Normal user: 3 hours regular, 2 weeks extended
+      timeout = rememberMe ? USER_EXTENDED_SESSION_TIMEOUT : USER_SESSION_TIMEOUT;
     }
     
     const expiryTime = Date.now() + timeout;

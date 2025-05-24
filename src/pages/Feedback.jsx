@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Feedback.css';
 import { useAuth } from '../context/AuthContext';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import CommentSection from '../components/CommentSection';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Feedback = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +34,7 @@ const Feedback = () => {
       <div className="comments-section">
         {isLoading ? (
           <div className="loading-spinner">
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" />
-            <p>Đang tải bình luận...</p>
+            <LoadingSpinner size="large" text="Đang tải bình luận..." />
           </div>
         ) : error ? (
           <div className="error-message">

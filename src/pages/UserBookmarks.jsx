@@ -22,6 +22,7 @@ import '../styles/UserBookmarks.css';
 import { useBookmarks } from '../context/BookmarkContext';
 import api from '../services/api';
 import cdnConfig from '../config/bunny';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 /**
  * UserBookmarks Component
@@ -131,8 +132,7 @@ const UserBookmarks = () => {
     return (
       <div className="bookmarks-container">
         <div className="loading">
-          <div className="loading-spinner"></div>
-          <p>Đang tải...</p>
+          <LoadingSpinner size="large" text="Đang tải..." />
         </div>
       </div>
     );

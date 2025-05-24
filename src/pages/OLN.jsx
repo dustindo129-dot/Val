@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import '../styles/NovelList.css';
 import config from '../config/config';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 // NovelImage Component - Reused from NovelList
 const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
@@ -76,10 +77,7 @@ const FacebookPlugin = memo(() => {
     return (
         <div className="facebook-plugin">
             {!isLoaded && (
-                <div className="fb-loading">
-                    <div className="fb-loading-spinner"></div>
-                    <div className="fb-loading-text">Đang tải bảng tin Facebook...</div>
-                </div>
+                                <div className="fb-loading">                    <LoadingSpinner size="large" text="Đang tải bảng tin Facebook..." />                </div>
             )}
             
             <iframe 
@@ -452,9 +450,7 @@ const OLN = () => {
         setSortOrder(e.target.value);
     };
 
-    if (isLoading) return <div className="loading">Đang tải truyện...</div>;
-    if (error) return <div className="error">{error.message}</div>;
-    if (!novels || novels.length === 0) return <div className="loading">Không có truyện sáng tác có sẵn.</div>;
+    if (isLoading) return <div className="loading"><LoadingSpinner size="large" text="Đang tải truyện..." /></div>;    if (error) return <div className="error">{error.message}</div>;    if (!novels || novels.length === 0) return <div className="loading">Không có truyện sáng tác có sẵn.</div>;
 
     return (
         <>

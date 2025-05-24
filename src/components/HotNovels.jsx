@@ -23,6 +23,7 @@ import axios from 'axios';
 import '../styles/components/HotNovels.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
+import LoadingSpinner from './LoadingSpinner';
 
 // Memoized novel card component for better performance
 const NovelCard = memo(({ novel }) => {
@@ -111,10 +112,7 @@ const HotNovels = () => {
                         </span>
                     </div>
                 </div>
-                <div className="hot-novels-loading">
-                    <div className="loading-spinner"></div>
-                    <span>Đang tải truyện nổi bật...</span>
-                </div>
+                <div className="hot-novels-loading">                    <LoadingSpinner size="large" text="Đang tải truyện nổi bật..." />                </div>
             </div>
         );
     }

@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import '../styles/components/RecentComments.css';
 import config from '../config/config';
+import LoadingSpinner from './LoadingSpinner';
 
 // Format date to relative time (reusing from CommentSection)
 const formatRelativeTime = (dateString) => {
@@ -92,7 +93,7 @@ const CommentCard = memo(({ comment }) => {
       <Link to={linkPath} className="comment-content-link">
         {linkTitle}
       </Link>
-      <p className="comment-text">{truncatedText}</p>
+      <p className="comment-text" dangerouslySetInnerHTML={{ __html: truncatedText }} />
       <div className="comment-footer">
         <span className="comment-username">{comment.user.username}</span>
         <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
@@ -129,8 +130,7 @@ const RecentComments = () => {
           Bình luận gần đây
         </h2>
         <div className="recent-comments-loading">
-          <div className="loading-spinner"></div>
-          <span>Đang tải bình luận gần đây...</span>
+          <LoadingSpinner size="large" text="Đang tải bình luận gần đây..." />
         </div>
       </div>
     );
