@@ -234,7 +234,7 @@ const SEOHeader = ({ pageType = 'home' }) => {
       default:
         return {
           h1: 'Đọc Light Novel Vietsub Miễn Phí - Light Novel Tiếng Việt Hay Nhất',
-          subtitle: 'Thư viện Light Novel vietsub lớn nhất Việt Nam, cập nhật nhanh, dịch chất lượng'
+          subtitle: 'Thư viện Light Novel tiếng Việt tại Việt Nam, cập nhật nhanh, dịch chất lượng'
         };
     }
   };
