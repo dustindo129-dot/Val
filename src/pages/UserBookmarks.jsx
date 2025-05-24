@@ -212,7 +212,7 @@ const UserBookmarks = () => {
               <div className="bookmark-info">
                 <div className="bookmark-reading-status">
                   <span className="bookmark-status-label">
-                    Chương Đánh Dấu: <span className="bookmark-status-value">
+                    Chương đánh dấu: <span className="bookmark-status-value">
                       {novel.bookmarkedChapter?.title || 'Không có'}
                       {novel.bookmarkedChapter && (
                         <button 
