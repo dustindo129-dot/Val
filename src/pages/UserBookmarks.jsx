@@ -100,6 +100,43 @@ const UserBookmarks = () => {
     }
   };
 
+  // Handler for unbookmarking a chapter
+  const handleUnbookmarkChapter = async (novelId, event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm('Bạn có chắc chắn muốn bỏ đánh dấu chương này không?');
+    if (!confirmed) {
+      return;
+    }
+    
+    try {
+      // Find the bookmarked chapter for this novel
+      const novel = bookmarks.find(b => b._id === novelId);
+      if (!novel?.bookmarkedChapter) {
+        return;
+      }
+      
+      // Get the chapter ID (we need to find it via API)
+      const bookmarkData = await api.getBookmarkedChapter(novelId);
+      if (bookmarkData?.bookmarkedChapter?.id) {
+        // Call the chapter bookmark toggle API
+        await api.toggleChapterBookmark(bookmarkData.bookmarkedChapter.id);
+        
+        // Update local state to remove bookmarked chapter
+        setBookmarks(prev => prev.map(bookmark => 
+          bookmark._id === novelId 
+            ? { ...bookmark, bookmarkedChapter: null }
+            : bookmark
+        ));
+      }
+    } catch (err) {
+      console.error('Không thể bỏ đánh dấu chương:', err);
+      alert('Không thể bỏ đánh dấu chương. Vui lòng thử lại.');
+    }
+  };
+
   // Check if user has permission to view these bookmarks
   if (!user || user.username !== username) {
     return (
@@ -176,21 +213,25 @@ const UserBookmarks = () => {
                 <div className="bookmark-reading-status">
                   <span className="bookmark-status-label">
                     Chương Đánh Dấu: <span className="bookmark-status-value">
-                      {novel.bookmarkedChapter?.number ? `Chapter ${novel.bookmarkedChapter.number}` : 'Không có'}
+                      {novel.bookmarkedChapter?.title || 'Không có'}
+                      {novel.bookmarkedChapter && (
+                        <button 
+                          onClick={(e) => handleUnbookmarkChapter(novel._id, e)}
+                          className="unbookmark-chapter-btn"
+                          title="Bỏ đánh dấu chương"
+                        >
+                          ×
+                        </button>
+                      )}
                     </span>
                   </span>
                 </div>
                 <div className="bookmark-details">
-                  {novel.latestChapter && (
-                    <span className="bookmark-latest-chapter">
-                      {novel.latestChapter.title}
+                  <span className="bookmark-status-label">
+                    Chương mới nhất: <span className="bookmark-status-value">
+                      {novel.latestChapter?.title || 'Chưa có chương'}
                     </span>
-                  )}
-                  {!novel.latestChapter && (
-                    <span className="bookmark-latest-chapter">
-                      Chưa có chương
-                    </span>
-                  )}
+                  </span>
                 </div>
               </div>
             </div>
