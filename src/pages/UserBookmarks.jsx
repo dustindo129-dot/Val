@@ -15,7 +15,7 @@
  * - Responsive grid layout with 3 items per row
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/UserBookmarks.css';
@@ -38,6 +38,9 @@ const UserBookmarks = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [totalBookmarks, setTotalBookmarks] = useState(0);
+  
+  // Use ref to track if we've already synced context to prevent loops
+  const hasSyncedContext = useRef(false);
 
   // Memoize fetchBookmarks to prevent unnecessary recreations
   const fetchBookmarks = useCallback(async () => {
@@ -56,20 +59,30 @@ const UserBookmarks = () => {
       
       setBookmarks(sortedBookmarks);
       setTotalBookmarks(sortedBookmarks.length);
-      setBookmarkedNovels(sortedBookmarks.map(bookmark => bookmark._id));
+      
+      // Only sync with context on first load to prevent infinite loops
+      if (!hasSyncedContext.current) {
+        setBookmarkedNovels(sortedBookmarks.map(bookmark => bookmark._id));
+        hasSyncedContext.current = true;
+      }
+      
       setLoading(false);
     } catch (err) {
       setError('Không thể tải truyện đã đánh dấu');
       setLoading(false);
     }
-  }, [username, user, setBookmarkedNovels]);
+  }, [username, user]); // Removed setBookmarkedNovels to prevent infinite loop
 
   // Effect for initial load and username/user changes
   useEffect(() => {
     let isMounted = true;
     
+    // Reset sync flag when user changes
+    hasSyncedContext.current = false;
+    
     const initializeBookmarks = async () => {
       if (isMounted) {
+        setLoading(true);
         await fetchBookmarks();
       }
     };
@@ -92,11 +105,14 @@ const UserBookmarks = () => {
       // Update local state immediately for better UX
       setBookmarks(prev => prev.filter(bookmark => bookmark._id !== novelId));
       setTotalBookmarks(prev => prev - 1);
+      
+      // Update context without triggering re-fetch
       updateBookmarkStatus(novelId, false);
     } catch (err) {
       console.error('Không thể xóa truyện đã đánh dấu:', err);
       // Only refetch on error
-      fetchBookmarks();
+      setLoading(true);
+      await fetchBookmarks();
     }
   };
 
