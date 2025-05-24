@@ -799,6 +799,7 @@
     .sidebar {
         order: 2;
         max-width: 100%;
+        margin-top: 1.5rem;
     }
     
     .novel-list-container {
@@ -831,10 +832,6 @@
         display: none;
     }
 
-    .sidebar {
-        margin-top: 1.5rem;
-    }
-    
     .facebook-plugin {
         display: block;
         min-height: 300px;
@@ -847,18 +844,42 @@
 }
 
 @media (max-width: 576px) {
+    /* Fix content layout for very small screens */
+    .content-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+
+    .novel-list-container {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        overflow-x: hidden;
+    }
+
     .novel-card {
         border-radius: 0;
         margin-bottom: 0.5rem;
         box-shadow: none;
         border-bottom: 1px solid #eee;
-        padding: 1rem;
+        padding: 0.75rem;
         width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
 
     .novel-grid {
         gap: 0.75rem;
-        padding: 0 0.5rem;
+        padding: 0 0.25rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .novel-title {
@@ -943,6 +964,37 @@
         font-size: 10px;
         margin-top: 2px;
         padding: 2px 0;
+    }
+
+    /* Ensure sidebar doesn't cause horizontal overflow */
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
+        padding: 0.75rem 0.25rem;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    /* Additional safety measures for preventing horizontal scroll */
+    .main-content {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
+    /* Ensure all child elements respect container width */
+    .novel-main {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .novel-info {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
 }
 
