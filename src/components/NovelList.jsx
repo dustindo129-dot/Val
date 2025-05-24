@@ -461,17 +461,16 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
         }));
     };
     /**
-     * Formats date for display
+     * Formats date for display in Vietnamese format (DD/MM/YYYY)
      * @param {string} dateString - Date string to format
      * @returns {string} Formatted date string
      */
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
     };
 
     const getTimeAgo = (dateString) => {

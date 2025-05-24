@@ -99,14 +99,13 @@ const NovelContributions = ({ novelId }) => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Format date to readable format
+  // Format date to readable format in Vietnamese format (DD/MM/YYYY)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   // Combine and sort contributions and requests by date

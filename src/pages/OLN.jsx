@@ -138,9 +138,6 @@ const OLN = () => {
             const allNovels = response.data.novels || [];
             const vietnameseNovels = allNovels.filter(novel => {
                 const hasVietnameseTag = novel.genres && novel.genres.includes('Vietnamese Novel');
-                if (hasVietnameseTag) {
-                    console.log('Found Vietnamese novel:', novel.title);
-                }
                 return hasVietnameseTag;
             });
             
@@ -325,14 +322,13 @@ const OLN = () => {
         }));
     };
 
-    // Formats date for display
+    // Formats date for display in Vietnamese format (DD/MM/YYYY)
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
     };
 
     const getTimeAgo = (dateString) => {

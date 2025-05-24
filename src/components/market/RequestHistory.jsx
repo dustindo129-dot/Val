@@ -73,9 +73,7 @@ const RequestHistory = ({
                       </span>
                     )}
                   </div>
-                  <div className="history-date">
-                    {new Date(request.createdAt).toLocaleDateString()}
-                  </div>
+                                    <div className="history-date">                    {(() => {                      const date = new Date(request.createdAt);                      const day = date.getDate().toString().padStart(2, '0');                      const month = (date.getMonth() + 1).toString().padStart(2, '0');                      const year = date.getFullYear();                      return `${day}/${month}/${year}`;                    })()}                  </div>
                 </div>
                 <div className="history-title">{request.title || "Yêu cầu truyện mới chưa có tên"}</div>
                 {request.note && (
@@ -111,9 +109,7 @@ const RequestHistory = ({
                           <span className={`contribution-status status-${contribution.status}`}>
                             {contribution.status.charAt(0).toUpperCase() + contribution.status.slice(1)}
                           </span>
-                          <span className="contribution-date">
-                            {new Date(contribution.createdAt).toLocaleDateString()}
-                          </span>
+                                                    <span className="contribution-date">                            {(() => {                              const date = new Date(contribution.createdAt);                              const day = date.getDate().toString().padStart(2, '0');                              const month = (date.getMonth() + 1).toString().padStart(2, '0');                              const year = date.getFullYear();                              return `${day}/${month}/${year}`;                            })()}                          </span>
                         </div>
                         {contribution.note && (
                           <div className="contribution-note">{contribution.note}</div>

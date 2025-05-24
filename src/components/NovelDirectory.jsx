@@ -98,11 +98,10 @@ const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   return (
@@ -557,7 +556,7 @@ const NovelDirectory = () => {
                                   className="dir-read-more"
                                   onClick={() => toggleDescription(novel._id)}
                               >
-                                {expandedDescriptions[novel._id] ? 'Show less' : 'Read more'}
+                                {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
                               </button>
                           )}
                         </div>

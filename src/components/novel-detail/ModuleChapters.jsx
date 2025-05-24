@@ -5,7 +5,7 @@ import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/components/ModuleChapters.css';
 
-// Helper function for date formatting
+// Helper function for date formatting in Vietnamese format (DD/MM/YYYY)
 const formatDateUtil = (date) => {
   if (!date) return 'Invalid date';
   
@@ -16,14 +16,11 @@ const formatDateUtil = (date) => {
       return 'Invalid date';
     }
     
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    const month = monthNames[chapterDate.getMonth()];
     const day = chapterDate.getDate().toString().padStart(2, '0');
+    const month = (chapterDate.getMonth() + 1).toString().padStart(2, '0');
     const year = chapterDate.getFullYear();
     
-    return `${month}-${day}-${year}`;
+    return `${day}/${month}/${year}`;
   } catch (err) {
     console.error('Date formatting error:', err);
     return 'Invalid date';

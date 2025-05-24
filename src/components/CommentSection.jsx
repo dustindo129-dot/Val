@@ -276,7 +276,10 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       const days = Math.floor(diffInSeconds / 86400);
       return `${days} ngày trước`;
     } else {
-      return date.toLocaleDateString();
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     }
   };
   

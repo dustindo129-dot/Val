@@ -274,13 +274,15 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   // Calculate total chapter count
   const totalChapters = chaptersData?.chapters?.length || 0;
   
-  // Format last updated date
+  // Format last updated date in Vietnamese format (DD/MM/YYYY)
   const lastUpdated = novelData.updatedAt 
-    ? new Date(novelData.updatedAt).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      })
+    ? (() => {
+        const date = new Date(novelData.updatedAt);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      })()
     : 'Never';
 
   // Format time ago for display
