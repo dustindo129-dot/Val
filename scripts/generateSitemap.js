@@ -11,7 +11,7 @@ const backendUrl = process.env.VITE_BACKEND_URL || 'https://valvrareteam-backend
 
 async function generateSitemap() {
   const baseUrl = process.env.FRONTEND_URL || 'https://valvrareteam.net';
-  const outputPath = path.resolve(__dirname, '../dist/client/sitemap.xml');
+  const outputPath = path.resolve(__dirname, '../dist/sitemap.xml');
   
   try {
     // Start XML content
@@ -80,9 +80,9 @@ async function generateSitemap() {
     // Write sitemap to file
     fs.writeFileSync(outputPath, sitemap);
     
-    // Copy robots.txt to build output
+    // Copy robots.txt to build output (at dist root for Netlify)
     const robotsSourcePath = path.resolve(__dirname, '../public/robots.txt');
-    const robotsOutputPath = path.resolve(__dirname, '../dist/client/robots.txt');
+    const robotsOutputPath = path.resolve(__dirname, '../dist/robots.txt');
     
     if (fs.existsSync(robotsSourcePath)) {
       fs.copyFileSync(robotsSourcePath, robotsOutputPath);
@@ -95,7 +95,7 @@ async function generateSitemap() {
     console.log(`✓ Novel pages: ${novels.length}`);
     console.log(`✓ Pagination pages: ${totalPages}`);
   } catch (error) {
-    console.error('Error generating sitemap:', error.message);
+    console.error('❌ Error generating sitemap:', error.message);
   }
 }
 
