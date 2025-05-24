@@ -18,7 +18,7 @@
  */
 
 import {useState, useEffect, memo, useRef} from 'react';
-import {Link, useNavigate, useParams} from 'react-router-dom';
+import {Link, useNavigate, useParams, useLocation} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
 import axios from 'axios';
 import HotNovels from './HotNovels';
@@ -212,6 +212,43 @@ const FacebookPlugin = memo(() => {
     );
 });
 
+// Small SEO Header Component for top placement
+const SEOHeader = ({ pageType = 'home' }) => {
+  const getHeaderContent = () => {
+    switch (pageType) {
+      case 'trending':
+        return {
+          h1: 'Light Novel Vietsub Trending - Truyện Hot Nhất',
+          subtitle: 'Khám phá những bộ Light Novel vietsub đang được yêu thích nhất'
+        };
+      case 'popular':
+        return {
+          h1: 'Light Novel Tiếng Việt Phổ Biến - Top Truyện Hay',
+          subtitle: 'Tuyển tập Light Novel tiếng Việt được độc giả đánh giá cao nhất'
+        };
+      case 'recent':
+        return {
+          h1: 'Đọc Light Novel Vietsub Mới Nhất - Cập Nhật Hàng Ngày',
+          subtitle: 'Light Novel vietsub mới cập nhật, đọc ngay không bỏ lỡ'
+        };
+      default:
+        return {
+          h1: 'Đọc Light Novel Vietsub Miễn Phí - Light Novel Tiếng Việt Hay Nhất',
+          subtitle: 'Thư viện Light Novel vietsub lớn nhất Việt Nam, cập nhật nhanh, dịch chất lượng'
+        };
+    }
+  };
+
+  const { h1, subtitle } = getHeaderContent();
+
+  return (
+    <div className="seo-header">
+      <h1 className="seo-header-h1">{h1}</h1>
+      <p className="seo-header-subtitle">{subtitle}</p>
+    </div>
+  );
+};
+
 /**
  * NovelList Component
  *
@@ -226,9 +263,7 @@ const FacebookPlugin = memo(() => {
  * - Date formatting
  */
 
-const NovelList = () => {
-    const navigate = useNavigate();
-    const {page} = useParams();
+const NovelList = ({ filter }) => {    const navigate = useNavigate();    const {page} = useParams();    const location = useLocation();
     const [expandedDescriptions, setExpandedDescriptions] = useState({});
     const [expandedTags, setExpandedTags] = useState({});
     const [needsToggle, setNeedsToggle] = useState({});
@@ -236,6 +271,27 @@ const NovelList = () => {
     const currentPage = parseInt(page) || 1;
     const tagListRefs = useRef({});
     const descriptionRefs = useRef({});
+
+    // Determine SEO page type based on current route and filter
+    const getSEOPageType = () => {
+        const path = location.pathname;
+        
+        if (path.includes('light-novel-vietsub')) {
+            return 'trending';
+        } else if (path.includes('light-novel-tieng-viet')) {
+            return 'popular';
+        } else if (path.includes('doc-light-novel-vietsub')) {
+            return 'recent';
+        } else if (filter === 'latest') {
+            return 'recent';
+        } else if (filter === 'trending') {
+            return 'trending';
+        } else if (filter === 'popular') {
+            return 'popular';
+        }
+        
+        return 'home';
+    };
 
     const {data, isLoading, error} = useQuery({
         queryKey: ['novels', currentPage],
@@ -531,14 +587,7 @@ const NovelList = () => {
     if (isLoading) return <div className="loading"><LoadingSpinner size="large" text="Đang tải truyện..." /></div>;    if (error) return <div className="error">{error.message}</div>;    if (!novels || novels.length === 0) return <div className="loading">Không có truyện nào.</div>;
 
     return (
-        <>
-            <div className="novel-list-container">
-                <div className="content-layout">
-                    {/* Main content area */}
-                    <div className="main-content">
-                        <div className="section-headers">
-                            <h2>MỚI CẬP NHẬT</h2>
-                        </div>
+                <>            <div className="novel-list-container">                {/* SEO Header above main content - only on first page */}                {currentPage === 1 && <SEOHeader pageType={getSEOPageType()} />}                                <div className="content-layout">                    {/* Main content area */}                    <div className="main-content">                        <div className="section-headers">                            <h2>MỚI CẬP NHẬT</h2>                        </div>
                         {/* Novel grid */}
                         <div className="novel-grid">
                             {novels.map(novel => {

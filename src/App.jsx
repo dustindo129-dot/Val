@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './context/AuthContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 import { NovelStatusProvider } from './context/NovelStatusContext';
@@ -9,6 +10,7 @@ import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import StructuredData from './components/StructuredData';
 import AppRoutes from './routes/AppRoutes';
 import './styles/shared/App.css';
 
@@ -30,31 +32,34 @@ const App = () => {
   }, []);
 
   return (
-    <AuthProvider>
-      <NovelProvider>
-        <NovelStatusProvider>
-          <BookmarkProvider>
-            <div className="app">
-              <div 
-                className="background-container"
-                style={{
-                  backgroundImage: `var(--app-background)`
-                }}
-              />
-              <Navbar />
-              <SecondaryNavbar />
-              <main className="main-content">
-                <RouteTracker />
-                <AppRoutes />
-              </main>
-              <Footer />
-              {/* Global ScrollToTop button that appears on all pages */}
-              <ScrollToTop threshold={300} />
-            </div>
-          </BookmarkProvider>
-        </NovelStatusProvider>
-      </NovelProvider>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <NovelProvider>
+          <NovelStatusProvider>
+            <BookmarkProvider>
+              <div className="app">
+                <StructuredData type="website" />
+                <div 
+                  className="background-container"
+                  style={{
+                    backgroundImage: `var(--app-background)`
+                  }}
+                />
+                <Navbar />
+                <SecondaryNavbar />
+                <main className="main-content">
+                  <RouteTracker />
+                  <AppRoutes />
+                </main>
+                <Footer />
+                {/* Global ScrollToTop button that appears on all pages */}
+                <ScrollToTop threshold={300} />
+              </div>
+            </BookmarkProvider>
+          </NovelStatusProvider>
+        </NovelProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 };
 

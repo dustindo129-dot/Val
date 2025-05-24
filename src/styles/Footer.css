@@ -1,30 +1,67 @@
 /**
  * Footer.css
  * 
- * Styles for the footer component
+ * Styles for the footer component with SEO content
  */
 
 .footer {
   background-color: #fff;
-  padding: 1rem 0;
+  padding: 2rem 0 1rem 0;
   text-align: center;
   position: relative;
   bottom: 0;
   width: 100%;
   border-top: 1px solid #dee2e6;
   font-weight: bold;
+  margin-top: 3rem;
 }
 
 .footer-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+  border-top: 2px solid #e9ecef;
+  padding-top: 2rem;
+  margin-top: 2rem;
 }
 
 .footer p {
-  margin: 0;
   color: #6c757d;
   font-size: 0.9rem;
+}
+
+/* SEO Content in Footer Adjustments */
+.footer .seo-content {
+  margin-bottom: 2rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.footer .seo-h1 {
+  font-size: 2rem;
+  color: #343a40;
+  text-shadow: none;
+}
+
+.footer .seo-description {
+  color: #495057;
+}
+
+.footer .feature-item h3 {
+  color: #343a40;
+}
+
+.footer .feature-item p {
+  color: #6c757d;
+}
+
+.footer .seo-popular h2 {
+  color: #343a40;
+}
+
+.footer .seo-popular p {
+  color: #495057;
 }
 
 /* Dark mode support */
@@ -35,4 +72,54 @@
 
 :root.dark-mode .footer p {
   color: #a1a1a1;
+}
+
+:root.dark-mode .footer .footer-content {
+  border-top-color: #2d2d2d;
+}
+
+:root.dark-mode .footer .seo-content {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #2d2d2d;
+}
+
+:root.dark-mode .footer .seo-h1 {
+  color: #ffffff;
+}
+
+:root.dark-mode .footer .seo-description {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .footer .feature-item h3 {
+  color: #ffffff;
+}
+
+:root.dark-mode .footer .feature-item p {
+  color: #cccccc;
+}
+
+:root.dark-mode .footer .seo-popular h2 {
+  color: #ffffff;
+}
+
+:root.dark-mode .footer .seo-popular p {
+  color: #e0e0e0;
+}
+
+/* Mobile responsive adjustments for footer */
+@media (max-width: 768px) {
+  .footer {
+    padding: 1.5rem 0 1rem 0;
+    margin-top: 2rem;
+  }
+
+  .footer .seo-h1 {
+    font-size: 1.5rem;
+  }
+
+  .footer-content {
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+  }
 } 

@@ -2,5 +2,22 @@
 User-agent: *
 Allow: /
 
+# Allow all important SEO pages
+Allow: /light-novel-vietsub
+Allow: /light-novel-tieng-viet
+Allow: /doc-light-novel-vietsub
+Allow: /homepage/*
+Allow: /novel/*
+
+# Disallow admin and user-specific pages
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /api/
+
 # Sitemap location
-Sitemap: https://valvrareteam.net/sitemap.xml 
+Sitemap: https://valvrareteam.net/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1 

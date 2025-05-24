@@ -18,6 +18,6 @@ export async function onBeforeRender(pageContext) {
 
 // Metadata for SEO
 export const documentProps = {
-  title: 'Valvrareteam',
-  description: 'Valvrare Team tạo ra nhằm mục đích mang đến cho độc giả những bản dịch tiếng việt chất lượng. Rất mong được các bạn độc giả ủng hộ.'
+  title: 'Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất',
+  description: 'Thư viện Light Novel vietsub lớn nhất Việt Nam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh, dịch chất lượng cao. Hàng nghìn bộ Light Novel hay như Sword Art Online, Re:Zero, Overlord đang chờ bạn khám phá!'
 }; 

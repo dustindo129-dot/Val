@@ -23,6 +23,7 @@ import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import '../styles/components/NovelDetail.css';
 import '../styles/components/RedesignedNovelDetail.css';
 import { CommentIcon, LockIcon } from './novel-detail/NovelIcons';
@@ -214,6 +215,174 @@ const NovelContributions = ({ novelId }) => {
         )}
       </div>
     </div>
+  );
+};
+
+/**
+ * NovelSEO Component
+ * 
+ * Provides comprehensive SEO optimization for individual novel pages including:
+ * - Vietnamese keyword optimization
+ * - Alternative titles support
+ * - Book structured data (JSON-LD)
+ * - Open Graph meta tags
+ * - Twitter Cards
+ */
+const NovelSEO = ({ novel }) => {
+  // Generate SEO-optimized title with Vietnamese keywords
+  const generateSEOTitle = () => {
+    const baseTitle = novel.title;
+    const altTitles = novel.alternativeTitles || [];
+    
+    // Always include "vietsub" for Vietnamese audience
+    let seoTitle = `${baseTitle} Vietsub - Đọc Light Novel Miễn Phí | Valvrareteam`;
+    
+    return seoTitle;
+  };
+
+  // Generate SEO description with Vietnamese keywords and alternative titles
+  const generateSEODescription = () => {
+    let description = `Đọc ${novel.title} vietsub miễn phí tại Valvrareteam. `;
+    
+    // Add alternative titles if available
+    if (novel.alternativeTitles && novel.alternativeTitles.length > 0) {
+      description += `Còn được biết đến với tên: ${novel.alternativeTitles.join(', ')}. `;
+    }
+    
+    // Add description excerpt
+    if (novel.description) {
+      const cleanDesc = DOMPurify.sanitize(novel.description, { ALLOWED_TAGS: [] });
+      const excerpt = cleanDesc.substring(0, 100).trim();
+      description += `${excerpt}... `;
+    }
+    
+    // Add status and genres
+    if (novel.status) {
+      description += `Trạng thái: ${novel.status}. `;
+    }
+    
+    if (novel.genres && novel.genres.length > 0) {
+      description += `Thể loại: ${novel.genres.slice(0, 3).join(', ')}. `;
+    }
+    
+    description += `Light Novel tiếng Việt chất lượng cao, cập nhật mới nhất.`;
+    
+    return description.substring(0, 160); // SEO optimal length
+  };
+
+  // Generate keywords including Vietnamese terms and alternative titles
+  const generateKeywords = () => {
+    const keywords = [
+      novel.title,
+      `${novel.title} vietsub`,
+      `${novel.title} tiếng việt`,
+      `đọc ${novel.title}`,
+      `${novel.title} online`,
+      'Light Novel vietsub',
+      'Light Novel tiếng Việt',
+      'Đọc Light Novel miễn phí',
+      'Truyện Light Novel',
+      'LN vietsub',
+      'Valvrareteam'
+    ];
+    
+    // Add alternative titles
+    if (novel.alternativeTitles) {
+      novel.alternativeTitles.forEach(altTitle => {
+        keywords.push(altTitle, `${altTitle} vietsub`, `đọc ${altTitle}`);
+      });
+    }
+    
+    // Add genres
+    if (novel.genres) {
+      keywords.push(...novel.genres);
+    }
+    
+    return keywords.join(', ');
+  };
+
+  // Generate structured data for search engines
+  const generateStructuredData = () => {
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Book",
+      "name": novel.title,
+      "author": {
+        "@type": "Person",
+        "name": novel.author || "Unknown"
+      },
+      "description": generateSEODescription(),
+      "inLanguage": "vi-VN",
+      "genre": novel.genres || [],
+      "publisher": {
+        "@type": "Organization",
+        "name": "Valvrareteam",
+        "url": "https://valvrareteam.com"
+      },
+      "url": `https://valvrareteam.com/novel/${novel._id}`,
+      "image": novel.illustration,
+      "datePublished": novel.createdAt,
+      "dateModified": novel.updatedAt
+    };
+
+    // Add alternative names if available
+    if (novel.alternativeTitles && novel.alternativeTitles.length > 0) {
+      structuredData.alternateName = novel.alternativeTitles;
+    }
+
+    // Add aggregateRating if available
+    if (novel.averageRating) {
+      structuredData.aggregateRating = {
+        "@type": "AggregateRating",
+        "ratingValue": novel.averageRating,
+        "bestRating": 5,
+        "worstRating": 1,
+        "ratingCount": novel.ratingCount || 1
+      };
+    }
+
+    return structuredData;
+  };
+
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>{generateSEOTitle()}</title>
+      <meta name="description" content={generateSEODescription()} />
+      <meta name="keywords" content={generateKeywords()} />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content={generateSEOTitle()} />
+      <meta property="og:description" content={generateSEODescription()} />
+      <meta property="og:image" content={novel.illustration} />
+      <meta property="og:url" content={`https://valvrareteam.com/novel/${novel._id}`} />
+      <meta property="og:type" content="book" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={generateSEOTitle()} />
+      <meta name="twitter:description" content={generateSEODescription()} />
+      <meta name="twitter:image" content={novel.illustration} />
+      
+      {/* Book-specific meta tags */}
+      <meta property="book:author" content={novel.author || "Unknown"} />
+      <meta property="book:genre" content={novel.genres?.join(', ') || ''} />
+      <meta property="book:release_date" content={novel.createdAt} />
+      
+      {/* Canonical URL */}
+      <link rel="canonical" href={`https://valvrareteam.com/novel/${novel._id}`} />
+      
+      {/* Structured Data */}
+      <script type="application/ld+json">
+        {JSON.stringify(generateStructuredData())}
+      </script>
+    </Helmet>
   );
 };
 
@@ -880,6 +1049,7 @@ const NovelDetail = () => {
         <div className="error-message">Lỗi tải truyện: {error.message}</div>
       ) : data ? (
         <>
+          <NovelSEO novel={data} />
           <NovelInfo 
             novel={data}
             user={user}

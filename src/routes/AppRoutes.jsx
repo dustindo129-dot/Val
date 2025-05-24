@@ -24,6 +24,9 @@ function AppRoutes() {
       <Route path="/" element={<NovelList />} />
       <Route path="/homepage/page/:page" element={<NovelList />} />
       <Route path="/latest-update" element={<NovelList filter="latest" />} />
+      <Route path="/light-novel-vietsub" element={<NovelList filter="trending" />} />
+      <Route path="/light-novel-tieng-viet" element={<NovelList filter="popular" />} />
+      <Route path="/doc-light-novel-vietsub" element={<NovelList filter="recent" />} />
       <Route path="/novel-directory" element={<NovelDirectory />} />
       <Route path="/novel-directory/page/:page" element={<NovelDirectory />} />
       <Route path="/oln" element={<OLN />} />

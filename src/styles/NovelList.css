@@ -4,6 +4,74 @@
  * Styles specific to the novel listing page component.
  */
 
+/* SEO Header Styles */
+.seo-header {
+  text-align: center;
+  margin-bottom: 1.2rem;
+  padding: 0.8rem 0.8rem;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 166, 158, 0.1));
+  border-radius: 6px;
+  border-left: 3px solid #FF6B6B;
+}
+
+.seo-header-h1 {
+  font-size: 1.6rem;
+  color: #2c3e50;
+  margin: 0 0 0.3rem 0;
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.seo-header-subtitle {
+  font-size: 0.95rem;
+  color: #5a6c7d;
+  margin: 0;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+/* Dark mode SEO header */
+:root.dark-mode .seo-header {
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(255, 166, 158, 0.15));
+  border-left-color: #FF6B6B;
+}
+
+:root.dark-mode .seo-header-h1 {
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .seo-header-subtitle {
+  color: #e0e0e0;
+}
+
+/* Mobile responsive SEO header */
+@media (max-width: 768px) {
+  .seo-header {
+    padding: 0.6rem 0.6rem;
+    margin-bottom: 1rem;
+  }
+  
+  .seo-header-h1 {
+    font-size: 1.3rem;
+  }
+  
+  .seo-header-subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .seo-header-h1 {
+    font-size: 1.1rem;
+  }
+  
+  .seo-header-subtitle {
+    font-size: 0.85rem;
+  }
+}
+
 /* Add CSS variables for light/dark mode backgrounds at the top of the file */
 :root {
   --novel-card-bg: url('https://Valvrareteam.b-cdn.net/Untitled%20design%20(4).png');
@@ -147,7 +215,7 @@
 
 /* Novel list container */
 .novel-list-container {
-    padding: 2rem 0;
+    padding: 0.5rem 0;
 }
 
 .novel-grid {
