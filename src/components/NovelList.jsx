@@ -22,6 +22,7 @@ import {Link, useNavigate, useParams} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
 import axios from 'axios';
 import HotNovels from './HotNovels';
+import RecentlyRead from './RecentlyRead';
 import RecentComments from './RecentComments';
 import '../styles/NovelList.css';
 import config from '../config/config';
@@ -671,11 +672,7 @@ const NovelList = () => {
                         {renderPagination()}
                     </div>
                     {/* Sidebar with hot novels and Facebook plugin */}
-                    <aside className="sidebar">
-                        <HotNovels/>
-                        <FacebookPlugin/>
-                        <RecentComments/>
-                    </aside>
+                                        <aside className="sidebar">                        <HotNovels/>                        <FacebookPlugin/>                        <RecentlyRead/>                        <RecentComments/>                    </aside>
                 </div>
             </div>
         </>

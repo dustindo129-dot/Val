@@ -158,6 +158,12 @@ const Chapter = () => {
   const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
   const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > fourHours;
 
+  // Check if we should record recently read (less restrictive than view counting)
+  const recentReadKeyLocal = `recent_read_${chapterId}_last_recorded`;
+  const lastRecorded = localStorage.getItem(recentReadKeyLocal);
+  const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+  const shouldRecordRecentRead = !lastRecorded || (now - parseInt(lastRecorded, 10)) > fiveMinutes;
+
   // Separate query for view count with fire-and-forget approach
   useQuery({
     queryKey: ['chapter-view', chapterId],
@@ -226,6 +232,51 @@ const Chapter = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     // Avoid caching errors to allow retry on next visit
+    cacheTime: 0 
+  });
+
+  // Track recently read chapters for logged-in users
+  useQuery({
+    queryKey: ['recently-read-track', chapterId, user?.id],
+    queryFn: async () => {
+      try {
+        if (!user) return { success: false };
+        
+        // Update localStorage immediately to prevent repeated attempts
+        localStorage.setItem(recentReadKeyLocal, now.toString());
+        
+        // Make the recently read tracking request
+        try {
+          await axios.post(
+            `${config.backendUrl}/api/userchapterinteractions/recently-read`,
+            { 
+              chapterId,
+              novelId,
+              moduleId: chapter?.moduleId
+            },
+            {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            }
+          );
+          
+          // Invalidate recently read cache to show updated data
+          queryClient.invalidateQueries(['recentlyRead', user?.id]);
+          
+        } catch (recentReadErr) {
+          console.error('Lỗi ghi nhận lịch sử đọc:', recentReadErr);
+        }
+        
+        return { success: true };
+      } catch (err) {
+        console.error('Lỗi thiết lập ghi nhận lịch sử đọc:', err);
+        return { success: false };
+      }
+    },
+    enabled: !!chapterId && !!chapterData && !!user && shouldRecordRecentRead,
+    retry: false,
+    staleTime: fiveMinutes,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     cacheTime: 0 
   });
 
