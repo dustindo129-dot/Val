@@ -80,13 +80,22 @@ async function generateSitemap() {
     // Write sitemap to file
     fs.writeFileSync(outputPath, sitemap);
     
+    // Copy robots.txt to build output
+    const robotsSourcePath = path.resolve(__dirname, '../public/robots.txt');
+    const robotsOutputPath = path.resolve(__dirname, '../dist/client/robots.txt');
+    
+    if (fs.existsSync(robotsSourcePath)) {
+      fs.copyFileSync(robotsSourcePath, robotsOutputPath);
+      console.log(`✓ Robots.txt copied to ${robotsOutputPath}`);
+    }
+    
     console.log(`✓ Sitemap generated at ${outputPath}`);
     console.log(`✓ Frontend URL: ${baseUrl}`);
     console.log(`✓ Static pages: 8 SEO-optimized pages`);
     console.log(`✓ Novel pages: ${novels.length}`);
     console.log(`✓ Pagination pages: ${totalPages}`);
   } catch (error) {
-    console.error('❌ Error generating sitemap:', error.message);
+    console.error('Error generating sitemap:', error.message);
   }
 }
 
