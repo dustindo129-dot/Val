@@ -6,18 +6,37 @@ const BOOKMARK_STORAGE_KEY = 'bookmarkedNovels';
 const BOOKMARK_UPDATE_EVENT = 'bookmarkUpdate';
 
 export const BookmarkProvider = ({ children }) => {
-  const [bookmarkedNovels, setBookmarkedNovels] = useState(() => {
+  const [bookmarkedNovels, setBookmarkedNovelsInternal] = useState(() => {
     // Initialize from localStorage if available
     const stored = localStorage.getItem(BOOKMARK_STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   });
+
+  // Wrapper function to ensure localStorage is always updated
+  const setBookmarkedNovels = (newBookmarks) => {
+    // Handle both direct arrays and function updates
+    const resolvedBookmarks = typeof newBookmarks === 'function' 
+      ? newBookmarks(bookmarkedNovels) 
+      : newBookmarks;
+    
+    // Update localStorage
+    localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(resolvedBookmarks));
+    
+    // Update state
+    setBookmarkedNovelsInternal(resolvedBookmarks);
+    
+    // Dispatch custom event for other instances in the same tab
+    window.dispatchEvent(
+      new CustomEvent(BOOKMARK_UPDATE_EVENT, { detail: resolvedBookmarks })
+    );
+  };
 
   // Listen for changes from other tabs
   useEffect(() => {
     const handleStorageChange = (event) => {
       if (event.key === BOOKMARK_STORAGE_KEY) {
         const newBookmarks = JSON.parse(event.newValue || '[]');
-        setBookmarkedNovels(newBookmarks);
+        setBookmarkedNovelsInternal(newBookmarks);
       }
     };
 
@@ -27,7 +46,7 @@ export const BookmarkProvider = ({ children }) => {
     // Custom event listener for same-tab updates
     const handleCustomEvent = (event) => {
       if (event.detail) {
-        setBookmarkedNovels(event.detail);
+        setBookmarkedNovelsInternal(event.detail);
       }
     };
     window.addEventListener(BOOKMARK_UPDATE_EVENT, handleCustomEvent);
@@ -43,16 +62,8 @@ export const BookmarkProvider = ({ children }) => {
       ? [...new Set([...bookmarkedNovels, novelId])]
       : bookmarkedNovels.filter(id => id !== novelId);
 
-    // Update localStorage
-    localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(newBookmarks));
-    
-    // Update state in current tab
+    // Use the wrapper function to ensure consistency
     setBookmarkedNovels(newBookmarks);
-    
-    // Dispatch custom event for other instances in the same tab
-    window.dispatchEvent(
-      new CustomEvent(BOOKMARK_UPDATE_EVENT, { detail: newBookmarks })
-    );
   };
 
   const value = {
