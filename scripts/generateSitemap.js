@@ -31,14 +31,14 @@ async function generateSitemap() {
     sitemap += `  <url>\n    <loc>${baseUrl}/oln</loc>\n    <priority>0.7</priority>\n  </url>\n`;
     
     let novels = [];
-    let totalPages = 10; // Default fallback
+    let totalPages = 20; // Default fallback
     
     try {
       // Try to fetch novels from backend with more detailed information
       const response = await axios.get(`${backendUrl}/api/novels?limit=500`);
       const data = response.data;
       novels = data.novels || [];
-      totalPages = Math.min(data.pagination?.totalPages || 10, 10);
+      totalPages = Math.min(data.pagination?.totalPages || 20, 20);
       console.log(`✓ Successfully fetched ${novels.length} novels from backend`);
       
       // Try to fetch additional novel details for SEO
@@ -50,7 +50,7 @@ async function generateSitemap() {
       console.warn(`Backend URL attempted: ${backendUrl}`);
     }
     
-    // Add homepage pagination (first 10 pages)
+    // Add homepage pagination (first 20 pages)
     for (let i = 1; i <= totalPages; i++) {
       sitemap += `  <url>\n    <loc>${baseUrl}/homepage/page/${i}</loc>\n    <priority>0.8</priority>\n  </url>\n`;
     }
