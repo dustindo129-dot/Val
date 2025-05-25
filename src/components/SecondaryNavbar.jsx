@@ -18,6 +18,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useState, useEffect, useRef } from 'react';
 import '../styles/SecondaryNavbar.css';
 import axios from 'axios';
@@ -36,8 +37,8 @@ const SecondaryNavbar = () => {
   const location = useLocation();
   // Get user authentication state for admin features
   const { user, isAuthenticated } = useAuth();
-  // State for dark mode toggle
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Get theme state and functions from unified theme context
+  const { isDarkMode, toggleTheme } = useTheme();
   // State for mobile dropdown menu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // State for user balance
@@ -45,17 +46,7 @@ const SecondaryNavbar = () => {
   // Reference to the menu container for detecting outside clicks
   const menuRef = useRef(null);
 
-  /**
-   * Initialize theme from localStorage on component mount
-   */
-  useEffect(() => {
-    // Check if user has a theme preference in localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark-mode');
-    }
-  }, []);
+
 
   /**
    * Fetch user balance when authenticated
@@ -99,20 +90,7 @@ const SecondaryNavbar = () => {
     };
   }, [isMenuOpen]);
 
-  /**
-   * Toggles between light and dark theme
-   * Updates localStorage and DOM classes
-   */
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark-mode');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
-      localStorage.setItem('theme', 'light');
-    }
-  };
+
 
   /**
    * Toggles the mobile menu dropdown

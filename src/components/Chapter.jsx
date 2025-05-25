@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/components/Chapter.css';
@@ -207,10 +208,13 @@ const Chapter = () => {
 
   // Get reading settings from custom hook
   const {
-    fontSize, fontFamily, lineHeight, theme,
+    fontSize, fontFamily, lineHeight,
     setFontFamily, setLineHeight, 
-    increaseFontSize, decreaseFontSize, applyTheme
+    increaseFontSize, decreaseFontSize
   } = useReadingSettings();
+
+  // Get theme from unified theme context
+  const { theme, applyTheme } = useTheme();
 
   // UI state
   const [isEditing, setIsEditing] = useState(false);

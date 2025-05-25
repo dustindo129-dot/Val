@@ -2,28 +2,23 @@ import { useState, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 
 /**
- * Custom hook for managing chapter reading settings
+ * Custom hook for managing chapter reading settings (font, line height)
+ * Theme is now handled by the unified ThemeContext
  */
 export const useReadingSettings = () => {
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState("'Roboto', sans-serif");
   const [lineHeight, setLineHeight] = useState('1.8');
-  const [theme, setTheme] = useState('light');
 
   // Load settings from localStorage on init
   useEffect(() => {
     const savedFontSize = localStorage.getItem('readerFontSize');
     const savedFontFamily = localStorage.getItem('readerFontFamily');
     const savedLineHeight = localStorage.getItem('readerLineHeight');
-    const savedTheme = localStorage.getItem('readerTheme');
 
     if (savedFontSize) setFontSize(parseInt(savedFontSize));
     if (savedFontFamily) setFontFamily(savedFontFamily);
     if (savedLineHeight) setLineHeight(savedLineHeight);
-    if (savedTheme) {
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-    }
   }, []);
 
   const increaseFontSize = () => {
@@ -38,29 +33,14 @@ export const useReadingSettings = () => {
     localStorage.setItem('readerFontSize', newSize.toString());
   };
 
-  const applyTheme = (selectedTheme) => {
-    document.documentElement.classList.remove('dark-mode', 'sepia-mode');
-
-    if (selectedTheme === 'dark') {
-      document.documentElement.classList.add('dark-mode');
-    } else if (selectedTheme === 'sepia') {
-      document.documentElement.classList.add('sepia-mode');
-    }
-
-    setTheme(selectedTheme);
-    localStorage.setItem('readerTheme', selectedTheme);
-  };
-
   return {
     fontSize,
     fontFamily,
     lineHeight,
-    theme,
     setFontFamily,
     setLineHeight,
     increaseFontSize,
-    decreaseFontSize,
-    applyTheme
+    decreaseFontSize
   };
 };
 

@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 import { NovelStatusProvider } from './context/NovelStatusContext';
 import { NovelProvider } from './context/NovelContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { initGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
@@ -33,32 +34,34 @@ const App = () => {
 
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <NovelProvider>
-          <NovelStatusProvider>
-            <BookmarkProvider>
-              <div className="app">
-                <StructuredData type="website" />
-                <div 
-                  className="background-container"
-                  style={{
-                    backgroundImage: `var(--app-background)`
-                  }}
-                />
-                <Navbar />
-                <SecondaryNavbar />
-                <main className="main-content">
-                  <RouteTracker />
-                  <AppRoutes />
-                </main>
-                <Footer />
-                {/* Global ScrollToTop button that appears on all pages */}
-                <ScrollToTop threshold={300} />
-              </div>
-            </BookmarkProvider>
-          </NovelStatusProvider>
-        </NovelProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <NovelProvider>
+            <NovelStatusProvider>
+              <BookmarkProvider>
+                <div className="app">
+                  <StructuredData type="website" />
+                  <div 
+                    className="background-container"
+                    style={{
+                      backgroundImage: `var(--app-background)`
+                    }}
+                  />
+                  <Navbar />
+                  <SecondaryNavbar />
+                  <main className="main-content">
+                    <RouteTracker />
+                    <AppRoutes />
+                  </main>
+                  <Footer />
+                  {/* Global ScrollToTop button that appears on all pages */}
+                  <ScrollToTop threshold={300} />
+                </div>
+              </BookmarkProvider>
+            </NovelStatusProvider>
+          </NovelProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </HelmetProvider>
   );
 };
