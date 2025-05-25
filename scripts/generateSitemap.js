@@ -20,13 +20,9 @@ async function generateSitemap() {
     
     // Add static pages
     sitemap += `  <url>\n    <loc>${baseUrl}/</loc>\n    <priority>1.0</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${baseUrl}/homepage</loc>\n    <priority>1.0</priority>\n  </url>\n`;
     
     // Add SEO-optimized Vietnamese light novel pages
     sitemap += `  <url>\n    <loc>${baseUrl}/light-novel-vietsub</loc>\n    <priority>0.9</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${baseUrl}/light-novel-tieng-viet</loc>\n    <priority>0.9</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${baseUrl}/doc-light-novel-vietsub</loc>\n    <priority>0.9</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${baseUrl}/latest-update</loc>\n    <priority>0.8</priority>\n  </url>\n`;
     sitemap += `  <url>\n    <loc>${baseUrl}/novel-directory</loc>\n    <priority>0.8</priority>\n  </url>\n`;
     sitemap += `  <url>\n    <loc>${baseUrl}/oln</loc>\n    <priority>0.7</priority>\n  </url>\n`;
     
@@ -50,9 +46,9 @@ async function generateSitemap() {
       console.warn(`Backend URL attempted: ${backendUrl}`);
     }
     
-    // Add homepage pagination (first 20 pages)
+    // Add homepage pagination (first 20 pages) - using root path
     for (let i = 1; i <= totalPages; i++) {
-      sitemap += `  <url>\n    <loc>${baseUrl}/homepage/page/${i}</loc>\n    <priority>0.8</priority>\n  </url>\n`;
+      sitemap += `  <url>\n    <loc>${baseUrl}/page/${i}</loc>\n    <priority>0.8</priority>\n  </url>\n`;
     }
     
     // Add novel detail pages with enhanced SEO metadata
@@ -65,6 +61,24 @@ async function generateSitemap() {
       if (novel.alternativeTitles && novel.alternativeTitles.length > 0) {
         // Log alternative titles for SEO tracking
         console.log(`  → Novel "${novel.title}" has alternative titles: ${novel.alternativeTitles.join(', ')}`);
+      }
+      
+      // Add chapters for this novel (limit to first 50 chapters per novel for sitemap size)
+      try {
+        const chaptersResponse = await axios.get(`${backendUrl}/api/chapters/novel/${novel._id}?limit=50`);
+        const chapters = chaptersResponse.data || [];
+        
+        for (const chapter of chapters) {
+          const chapterLastModified = new Date(chapter.updatedAt || chapter.createdAt).toISOString();
+          sitemap += `  <url>\n    <loc>${baseUrl}/novel/${novel._id}/chapter/${chapter._id}</loc>\n    <lastmod>${chapterLastModified}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
+        }
+        
+        if (chapters.length > 0) {
+          console.log(`  → Added ${chapters.length} chapters for "${novel.title}"`);
+        }
+      } catch (chapterError) {
+        // Silently continue if chapters can't be fetched
+        console.log(`  → Could not fetch chapters for "${novel.title}"`);
       }
     }
     

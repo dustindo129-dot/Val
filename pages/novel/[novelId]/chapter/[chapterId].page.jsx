@@ -36,7 +36,8 @@ export async function onBeforeRender(pageContext) {
       
       // Then get novel data for title
       try {
-        novel = await api.fetchNovelWithModules(novelId);
+        const response = await api.fetchNovelWithModules(novelId);
+        novel = response?.novel;
       } catch (novelError) {
         console.error(`Error pre-fetching novel with ID: ${novelId}`, novelError);
       }

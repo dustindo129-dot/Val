@@ -22,6 +22,50 @@
     Cache-Control = "public, max-age=86400"
 
 [[redirects]]
+  from = "/homepage"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/light-novel-tieng-viet"
+  to = "/light-novel-vietsub"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/doc-light-novel-vietsub"
+  to = "/light-novel-vietsub"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/latest-update"
+  to = "/light-novel-vietsub"
+  status = 301
+  force = true
+
+# Redirect URLs with trailing slashes to clean URLs
+[[redirects]]
+  from = "/novel/:novelId/"
+  to = "/novel/:novelId"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/novel/:novelId/chapter/:chapterId/"
+  to = "/novel/:novelId/chapter/:chapterId"
+  status = 301
+  force = true
+
+# Redirect URLs with query parameters to clean URLs
+[[redirects]]
+  from = "/novel/:novelId/chapter/:chapterId?*"
+  to = "/novel/:novelId/chapter/:chapterId"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/sitemap.xml"
   status = 200

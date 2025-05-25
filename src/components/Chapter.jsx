@@ -43,15 +43,19 @@ const ChapterSEO = ({ novel, chapter }) => {
 
   // Generate SEO-optimized title for chapter
   const generateSEOTitle = () => {
-    return `${chapter.title} - ${novel.title} Vietsub | Đọc Light Novel Online | Valvrareteam`;
+    const chapterTitle = chapter?.title || 'Chapter';
+    const novelTitle = novel?.title || 'Light Novel';
+    return `${chapterTitle} - ${novelTitle} Vietsub | Đọc Light Novel Online | Valvrareteam`;
   };
 
   // Generate SEO description for chapter
   const generateSEODescription = () => {
-    let description = `Đọc ${chapter.title} của ${novel.title} vietsub miễn phí tại Valvrareteam. `;
+    const chapterTitle = chapter?.title || 'Chapter';
+    const novelTitle = novel?.title || 'Light Novel';
+    let description = `Đọc ${chapterTitle} của ${novelTitle} vietsub miễn phí tại Valvrareteam. `;
     
     // Add chapter excerpt if available
-    if (chapter.content) {
+    if (chapter?.content) {
       const plainText = chapter.content.replace(/<[^>]*>/g, '').trim();
       const excerpt = plainText.substring(0, 100).trim();
       if (excerpt) {
@@ -59,21 +63,23 @@ const ChapterSEO = ({ novel, chapter }) => {
       }
     }
     
-    description += `Light Novel ${novel.title} tiếng Việt chất lượng cao, đọc ngay không bỏ lỡ!`;
+    description += `Light Novel ${novelTitle} tiếng Việt chất lượng cao, đọc ngay không bỏ lỡ!`;
     
     return description.substring(0, 160);
   };
 
   // Generate keywords for chapter
   const generateKeywords = () => {
+    const chapterTitle = chapter?.title || 'Chapter';
+    const novelTitle = novel?.title || 'Light Novel';
     const keywords = [
-      chapter.title,
-      `${chapter.title} vietsub`,
-      novel.title,
-      `${novel.title} vietsub`,
-      `đọc ${novel.title}`,
-      `${novel.title} ${chapter.title}`,
-      `${novel.title} chapter ${chapter.chapterNumber || ''}`,
+      chapterTitle,
+      `${chapterTitle} vietsub`,
+      novelTitle,
+      `${novelTitle} vietsub`,
+      `đọc ${novelTitle}`,
+      `${novelTitle} ${chapterTitle}`,
+      `${novelTitle} chapter ${chapter?.chapterNumber || ''}`,
       'Light Novel vietsub',
       'Light Novel tiếng Việt',
       'Đọc Light Novel online',
@@ -81,7 +87,7 @@ const ChapterSEO = ({ novel, chapter }) => {
     ];
     
     // Add novel genres
-    if (novel.genres) {
+    if (novel?.genres) {
       keywords.push(...novel.genres);
     }
     
@@ -104,13 +110,13 @@ const ChapterSEO = ({ novel, chapter }) => {
       },
       "description": generateSEODescription(),
       "inLanguage": "vi-VN",
-      "url": `https://valvrareteam.com/novel/${novel._id}/chapter/${chapter._id}`,
+      "url": `https://valvrareteam.net/novel/${novel._id}/chapter/${chapter._id}`,
       "datePublished": chapter.createdAt,
       "dateModified": chapter.updatedAt,
-      "publisher": {
+              "publisher": {
         "@type": "Organization",
         "name": "Valvrareteam",
-        "url": "https://valvrareteam.com"
+        "url": "https://valvrareteam.net"
       }
     };
   };
@@ -125,19 +131,19 @@ const ChapterSEO = ({ novel, chapter }) => {
           "@type": "ListItem",
           "position": 1,
           "name": "Trang chủ",
-          "item": "https://valvrareteam.com"
+          "item": "https://valvrareteam.net"
         },
         {
           "@type": "ListItem",
           "position": 2,
           "name": novel.title,
-          "item": `https://valvrareteam.com/novel/${novel._id}`
+          "item": `https://valvrareteam.net/novel/${novel._id}`
         },
         {
           "@type": "ListItem",
           "position": 3,
           "name": chapter.title,
-          "item": `https://valvrareteam.com/novel/${novel._id}/chapter/${chapter._id}`
+          "item": `https://valvrareteam.net/novel/${novel._id}/chapter/${chapter._id}`
         }
       ]
     };
@@ -158,7 +164,7 @@ const ChapterSEO = ({ novel, chapter }) => {
       <meta property="og:title" content={generateSEOTitle()} />
       <meta property="og:description" content={generateSEODescription()} />
       <meta property="og:image" content={novel.illustration} />
-      <meta property="og:url" content={`https://valvrareteam.com/novel/${novel._id}/chapter/${chapter._id}`} />
+      <meta property="og:url" content={`https://valvrareteam.net/novel/${novel._id}/chapter/${chapter._id}`} />
       <meta property="og:type" content="article" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -175,8 +181,8 @@ const ChapterSEO = ({ novel, chapter }) => {
       <meta name="twitter:description" content={generateSEODescription()} />
       <meta name="twitter:image" content={novel.illustration} />
       
-      {/* Canonical URL */}
-      <link rel="canonical" href={`https://valvrareteam.com/novel/${novel._id}/chapter/${chapter._id}`} />
+      {/* Canonical URL - Always use the clean URL without query parameters */}
+      <link rel="canonical" href={`https://valvrareteam.net/novel/${novel._id}/chapter/${chapter._id}`} />
       
       {/* Chapter Structured Data */}
       <script type="application/ld+json">

@@ -26,7 +26,8 @@ export async function onBeforeRender(pageContext) {
   
   try {
     if (pageContext.isBot || process.env.NODE_ENV === 'production') {
-      novel = await api.fetchNovelWithModules(novelId);
+      const response = await api.fetchNovelWithModules(novelId);
+      novel = response?.novel;
       
       if (novel) {
         pageTitle = `${novel.title} - Valvrareteam`;

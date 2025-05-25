@@ -4,9 +4,7 @@ Allow: /
 
 # Allow all important SEO pages
 Allow: /light-novel-vietsub
-Allow: /light-novel-tieng-viet
-Allow: /doc-light-novel-vietsub
-Allow: /homepage/*
+Allow: /page/*
 Allow: /novel/*
 
 # Disallow admin and user-specific pages

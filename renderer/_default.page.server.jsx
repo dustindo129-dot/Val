@@ -79,7 +79,7 @@ async function render(pageContext) {
         // TODO: Add your API fetch logic for novels
         // await queryClient.prefetchQuery(['novel', novelId], () => fetchNovel(novelId));
       }
-    } else if (urlOriginal === '/' || urlOriginal.includes('/homepage')) {
+    } else if (urlOriginal === '/' || urlOriginal.includes('/page/')) {
       // Prefetch homepage data
       // TODO: Add your API fetch logic for homepage
       // await queryClient.prefetchQuery(['novels'], () => fetchNovels());

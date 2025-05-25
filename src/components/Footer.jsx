@@ -18,11 +18,7 @@ const Footer = () => {
     
     if (path.includes('light-novel-vietsub')) {
       return 'trending';
-    } else if (path.includes('light-novel-tieng-viet')) {
-      return 'popular';
-    } else if (path.includes('doc-light-novel-vietsub')) {
-      return 'recent';
-    } else if (path === '/' || path.includes('homepage')) {
+    } else if (path === '/' || path.includes('page/')) {
       return 'home';
     }
     

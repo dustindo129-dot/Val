@@ -278,10 +278,6 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
         
         if (path.includes('light-novel-vietsub')) {
             return 'trending';
-        } else if (path.includes('light-novel-tieng-viet')) {
-            return 'popular';
-        } else if (path.includes('doc-light-novel-vietsub')) {
-            return 'recent';
         } else if (filter === 'latest') {
             return 'recent';
         } else if (filter === 'trending') {
@@ -358,7 +354,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     }, [novels, data]);
 
     const handlePageChange = (page) => {
-        navigate(`/homepage/page/${page}`);
+        navigate(`/page/${page}`);
     };
 
     const renderPagination = () => {
@@ -375,7 +371,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key="1"
-                    to="/homepage/page/1"
+                    to="/page/1"
                     className={`pagination-button ${1 === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -391,7 +387,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key={i}
-                    to={`/homepage/page/${i}`}
+                    to={`/page/${i}`}
                     className={`pagination-button ${i === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -407,7 +403,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key={pagination.totalPages}
-                    to={`/homepage/page/${pagination.totalPages}`}
+                    to={`/page/${pagination.totalPages}`}
                     className={`pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -419,7 +415,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
         return (
             <div className="pagination">
                 <Link
-                    to={currentPage > 1 ? `/homepage/page/${currentPage - 1}` : '#'}
+                    to={currentPage > 1 ? `/page/${currentPage - 1}` : '#'}
                     onClick={(e) => {
                         if (currentPage === 1) e.preventDefault();
                         else window.scrollTo(0, 0);
@@ -430,7 +426,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                 </Link>
                 {pages}
                 <Link
-                    to={currentPage < pagination.totalPages ? `/homepage/page/${currentPage + 1}` : '#'}
+                    to={currentPage < pagination.totalPages ? `/page/${currentPage + 1}` : '#'}
                     onClick={(e) => {
                         if (currentPage === pagination.totalPages) e.preventDefault();
                         else window.scrollTo(0, 0);

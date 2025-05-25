@@ -230,8 +230,8 @@ const NovelContributions = ({ novelId }) => {
 const NovelSEO = ({ novel }) => {
   // Generate SEO-optimized title with Vietnamese keywords
   const generateSEOTitle = () => {
-    const baseTitle = novel.title;
-    const altTitles = novel.alternativeTitles || [];
+    const baseTitle = novel?.title || 'Light Novel';
+    const altTitles = novel?.alternativeTitles || [];
     
     // Always include "vietsub" for Vietnamese audience
     let seoTitle = `${baseTitle} Vietsub - Đọc Light Novel Miễn Phí | Valvrareteam`;
@@ -241,26 +241,27 @@ const NovelSEO = ({ novel }) => {
 
   // Generate SEO description with Vietnamese keywords and alternative titles
   const generateSEODescription = () => {
-    let description = `Đọc ${novel.title} vietsub miễn phí tại Valvrareteam. `;
+    const novelTitle = novel?.title || 'Light Novel';
+    let description = `Đọc ${novelTitle} vietsub miễn phí tại Valvrareteam. `;
     
     // Add alternative titles if available
-    if (novel.alternativeTitles && novel.alternativeTitles.length > 0) {
+    if (novel?.alternativeTitles && novel.alternativeTitles.length > 0) {
       description += `Còn được biết đến với tên: ${novel.alternativeTitles.join(', ')}. `;
     }
     
     // Add description excerpt
-    if (novel.description) {
+    if (novel?.description) {
       const cleanDesc = DOMPurify.sanitize(novel.description, { ALLOWED_TAGS: [] });
       const excerpt = cleanDesc.substring(0, 100).trim();
       description += `${excerpt}... `;
     }
     
     // Add status and genres
-    if (novel.status) {
+    if (novel?.status) {
       description += `Trạng thái: ${novel.status}. `;
     }
     
-    if (novel.genres && novel.genres.length > 0) {
+    if (novel?.genres && novel.genres.length > 0) {
       description += `Thể loại: ${novel.genres.slice(0, 3).join(', ')}. `;
     }
     
@@ -271,12 +272,13 @@ const NovelSEO = ({ novel }) => {
 
   // Generate keywords including Vietnamese terms and alternative titles
   const generateKeywords = () => {
+    const novelTitle = novel?.title || 'Light Novel';
     const keywords = [
-      novel.title,
-      `${novel.title} vietsub`,
-      `${novel.title} tiếng việt`,
-      `đọc ${novel.title}`,
-      `${novel.title} online`,
+      novelTitle,
+      `${novelTitle} vietsub`,
+      `${novelTitle} tiếng việt`,
+      `đọc ${novelTitle}`,
+      `${novelTitle} online`,
       'Light Novel vietsub',
       'Light Novel tiếng Việt',
       'Đọc Light Novel miễn phí',
@@ -286,14 +288,14 @@ const NovelSEO = ({ novel }) => {
     ];
     
     // Add alternative titles
-    if (novel.alternativeTitles) {
+    if (novel?.alternativeTitles) {
       novel.alternativeTitles.forEach(altTitle => {
         keywords.push(altTitle, `${altTitle} vietsub`, `đọc ${altTitle}`);
       });
     }
     
     // Add genres
-    if (novel.genres) {
+    if (novel?.genres) {
       keywords.push(...novel.genres);
     }
     
@@ -316,9 +318,9 @@ const NovelSEO = ({ novel }) => {
       "publisher": {
         "@type": "Organization",
         "name": "Valvrareteam",
-        "url": "https://valvrareteam.com"
+        "url": "https://valvrareteam.net"
       },
-      "url": `https://valvrareteam.com/novel/${novel._id}`,
+      "url": `https://valvrareteam.net/novel/${novel._id}`,
       "image": novel.illustration,
       "datePublished": novel.createdAt,
       "dateModified": novel.updatedAt
@@ -358,7 +360,7 @@ const NovelSEO = ({ novel }) => {
       <meta property="og:title" content={generateSEOTitle()} />
       <meta property="og:description" content={generateSEODescription()} />
       <meta property="og:image" content={novel.illustration} />
-      <meta property="og:url" content={`https://valvrareteam.com/novel/${novel._id}`} />
+      <meta property="og:url" content={`https://valvrareteam.net/novel/${novel._id}`} />
       <meta property="og:type" content="book" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -375,7 +377,7 @@ const NovelSEO = ({ novel }) => {
       <meta property="book:release_date" content={novel.createdAt} />
       
       {/* Canonical URL */}
-      <link rel="canonical" href={`https://valvrareteam.com/novel/${novel._id}`} />
+      <link rel="canonical" href={`https://valvrareteam.net/novel/${novel._id}`} />
       
       {/* Structured Data */}
       <script type="application/ld+json">
@@ -1046,11 +1048,11 @@ const NovelDetail = () => {
         <LoadingSpinner />
       ) : error ? (
         <div className="error-message">Lỗi tải truyện: {error.message}</div>
-      ) : data ? (
+      ) : data?.novel ? (
         <>
-          <NovelSEO novel={data} />
+          <NovelSEO novel={data.novel} />
           <NovelInfo 
-            novel={data}
+            novel={data.novel}
             user={user}
             userInteraction={userInteraction}
             hasChapters={hasChapters}
