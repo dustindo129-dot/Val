@@ -21,6 +21,18 @@
     Content-Type = "text/plain; charset=utf-8"
     Cache-Control = "public, max-age=86400"
 
+# Static file redirects (highest priority)
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+
+[[redirects]]
+  from = "/robots.txt"
+  to = "/robots.txt"
+  status = 200
+
+# Legacy URL redirects
 [[redirects]]
   from = "/homepage"
   to = "/"
@@ -45,7 +57,7 @@
   status = 301
   force = true
 
-# Redirect URLs with trailing slashes to clean URLs
+# Clean URL redirects (remove trailing slashes)
 [[redirects]]
   from = "/novel/:novelId/"
   to = "/novel/:novelId"
@@ -58,23 +70,14 @@
   status = 301
   force = true
 
-# Redirect URLs with query parameters to clean URLs
+# API routes should not be caught by SPA fallback
 [[redirects]]
-  from = "/novel/:novelId/chapter/:chapterId?*"
-  to = "/novel/:novelId/chapter/:chapterId"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/sitemap.xml"
-  to = "/sitemap.xml"
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
   status = 200
 
-[[redirects]]
-  from = "/robots.txt"
-  to = "/robots.txt"
-  status = 200
-
+# SPA fallback - handle all other routes with React Router
+# This must be LAST to avoid conflicts
 [[redirects]]
   from = "/*"
   to = "/index.html"

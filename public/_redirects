@@ -1,0 +1,19 @@
+# Static files
+/sitemap.xml /sitemap.xml 200
+/robots.txt /robots.txt 200
+
+# Legacy redirects
+/homepage / 301!
+/light-novel-tieng-viet /light-novel-vietsub 301!
+/doc-light-novel-vietsub /light-novel-vietsub 301!
+/latest-update /light-novel-vietsub 301!
+
+# Clean URLs (remove trailing slashes)
+/novel/:novelId/ /novel/:novelId 301!
+/novel/:novelId/chapter/:chapterId/ /novel/:novelId/chapter/:chapterId 301!
+
+# API routes
+/api/* /.netlify/functions/:splat 200
+
+# SPA fallback for client-side routing
+/* /index.html 200 
