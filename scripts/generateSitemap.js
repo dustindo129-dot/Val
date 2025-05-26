@@ -2,19 +2,29 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
+import { config } from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env files
+config({ path: path.resolve(__dirname, '../.env.local') });
+config({ path: path.resolve(__dirname, '../.env') });
 
 // Import slug utility
 import { createUniqueSlug } from '../src/utils/slugUtils.js';
 
 // Node.js compatible config
-const backendUrl = process.env.VITE_BACKEND_URL || 'https://valvrareteam-backend.onrender.com';
+// Priority: SITEMAP_BACKEND_URL > VITE_DEV_BACKEND_URL > VITE_BACKEND_URL > fallback
+const backendUrl = process.env.SITEMAP_BACKEND_URL || 
+                   process.env.VITE_DEV_BACKEND_URL || 
+                   process.env.VITE_BACKEND_URL || 
+                   'https://valvrareteam-backend.onrender.com';
 
 async function generateSitemap() {
   const baseUrl = process.env.FRONTEND_URL || 'https://valvrareteam.net';
   const outputPath = path.resolve(__dirname, '../dist/sitemap.xml');
+  
   
   try {
     // Start XML content

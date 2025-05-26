@@ -15,11 +15,64 @@
   --font-size: 1.3rem;
   --mono: "Oxygen mono", monospace;
   --sans: Oxygen, sans-serif;
+  
+  /* Color scheme */
+  --primary-color: #3498db;
+  --primary-hover: #2980b9;
+  --secondary-color: #7f8c8d;
+  --success-color: #2ecc71;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --info-color: #3498db;
+  --accent-color: #9b59b6;
+  
+  /* Text colors */
+  --text-color: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --text-tertiary: #95a5a6;
+  
+  /* Background colors */
+  --bg-color: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --card-bg: #ffffff;
+  --light-bg: #f8f9fa;
+  
+  /* Border and layout */
+  --border-color: #e1e8ed;
+  --border-radius: 8px;
+  --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+  
+  /* Staff role colors */
+  --translator-color: #3498db;
+  --editor-color: #e74c3c;
+  --qc-color: #f39c12;
+  
   --app-background: url('https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif');
 }
 
 /* Dark mode variables */
 .dark-mode {
+  /* Dark mode color overrides */
+  --text-color: #ecf0f1;
+  --text-secondary: #bdc3c7;
+  --text-tertiary: #95a5a6;
+  --text-secondary-dark: #bdc3c7;
+  --text-color-dark: #ecf0f1;
+  --text-tertiary-dark: #95a5a6;
+  
+  /* Dark mode backgrounds */
+  --bg-color: #2c3e50;
+  --bg-secondary: #34495e;
+  --bg-color-dark: #2c3e50;
+  --card-bg: #34495e;
+  --light-bg: #34495e;
+  --input-bg-dark: #2c3e50;
+  
+  /* Dark mode borders */
+  --border-color: #4a5568;
+  --border-color-dark: #4a5568;
+  
   --app-background: url('https://Valvrareteam.b-cdn.net/Konachan.com%20-%20366111%20animated%20building%20grass%20moon%20night%20no_humans%20original%20scenic%20setamo_map%20sky%20stairs%20stars%20tree%20waifu2x.gif');
 }
 
