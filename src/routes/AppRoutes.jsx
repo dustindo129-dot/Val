@@ -93,7 +93,7 @@ function AppRoutes() {
       />
       {/* New route for adding chapter to specific module */}
       <Route 
-        path="/novel/:novelId/module/:moduleId/add-chapter" 
+        path="/novel/:novelId/module/:moduleSlug/add-chapter" 
         element={
           <LazyRoute>
             <ProtectedRoute>

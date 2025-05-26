@@ -112,6 +112,9 @@ export default defineConfig(({ command, mode }) => {
       ],
       alias: {
         '~': path.resolve(__dirname, './src'),
+        // Force scheduler to use the same instance
+        'scheduler': path.resolve(__dirname, 'node_modules/scheduler'),
+        'scheduler/tracing': path.resolve(__dirname, 'node_modules/scheduler/tracing'),
       },
     },
     plugins: [
@@ -128,6 +131,8 @@ export default defineConfig(({ command, mode }) => {
     define: {
       ...sharedDefines,
       ...(isProduction ? productionDefines : developmentDefines),
+      // Ensure global is defined for scheduler
+      global: 'globalThis',
     },
     build: {
       minify: isProduction,
@@ -139,75 +144,19 @@ export default defineConfig(({ command, mode }) => {
       // Ensure proper chunking
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Vendor chunks for external libraries
-            if (id.includes('node_modules')) {
-              // React ecosystem
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'react-vendor';
-              }
-              // Router
-              if (id.includes('react-router')) {
-                return 'router';
-              }
-              // Query library
-              if (id.includes('@tanstack/react-query')) {
-                return 'query';
-              }
-              // UI and styling libraries
-              if (id.includes('dompurify') || id.includes('helmet') || id.includes('fontawesome')) {
-                return 'ui-vendor';
-              }
-              // HTTP and utilities
-              if (id.includes('axios') || id.includes('lodash')) {
-                return 'utils-vendor';
-              }
-              // All other node_modules
-              return 'vendor';
-            }
-            
-            // Application chunks based on functionality
-            // Authentication related components
-            if (id.includes('/auth/') || id.includes('Auth')) {
-              return 'auth';
-            }
-            
-            // Novel detail and related components (largest component)
-            if (id.includes('NovelDetail') || id.includes('novel-detail/') || 
-                id.includes('ModuleChapters') || id.includes('ModuleForm') || 
-                id.includes('ModuleList') || id.includes('NovelInfo')) {
-              return 'novel-detail';
-            }
-            
-            // Admin and dashboard components
-            if (id.includes('Admin') || id.includes('Dashboard') || 
-                id.includes('Management') || id.includes('TopUp')) {
-              return 'admin';
-            }
-            
-            // User profile and settings
-            if (id.includes('UserProfile') || id.includes('UserBookmarks') || 
-                id.includes('ChangePassword') || id.includes('pages/')) {
-              return 'user-pages';
-            }
-            
-            // Comments and interactions
-            if (id.includes('Comment') || id.includes('Rating') || 
-                id.includes('Bookmark') || id.includes('Modal')) {
-              return 'interactions';
-            }
-            
-            // Chapter reading components
-            if (id.includes('Chapter') && !id.includes('ModuleChapters')) {
-              return 'chapter-reader';
-            }
-            
-            // Novel listing and browsing
-            if (id.includes('NovelList') || id.includes('HotNovels') || 
-                id.includes('NovelDirectory') || id.includes('OLN')) {
-              return 'novel-browse';
-            }
-          }
+          // Use a more conservative chunking strategy to avoid circular dependencies
+          manualChunks: {
+            // Keep React ecosystem together but separate from other vendors
+            'react-vendor': ['react', 'react-dom', 'scheduler'],
+            'router': ['react-router-dom'],
+            'query': ['@tanstack/react-query'],
+            'ui-vendor': ['@fortawesome/react-fontawesome', '@fortawesome/free-solid-svg-icons', '@fortawesome/free-regular-svg-icons', '@fortawesome/free-brands-svg-icons'],
+            'utils-vendor': ['axios', 'dompurify']
+          },
+          // Ensure proper module format and interop
+          format: 'es',
+          exports: 'named',
+          interop: 'auto'
         }
       },
     },
@@ -216,10 +165,18 @@ export default defineConfig(({ command, mode }) => {
         'react',
         'react-dom',
         'react-router-dom',
-        '@tanstack/react-query'
+        '@tanstack/react-query',
+        'scheduler'
       ],
-      // Force Vite to use a single version of React
-      force: true
+      // Force Vite to use a single version of React and scheduler
+      force: true,
+      esbuildOptions: {
+        // Ensure proper global handling and target
+        target: 'es2020',
+        define: {
+          global: 'globalThis'
+        }
+      }
     }
   };
 });

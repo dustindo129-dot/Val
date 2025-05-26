@@ -240,7 +240,7 @@ const ModuleList = memo(({
                       </button>
                     )}
                     <Link
-                      to={`/novel/${createUniqueSlug(novelTitle, novelId)}/module/${module._id}/add-chapter`}
+                      to={`/novel/${createUniqueSlug(novelTitle, novelId)}/module/${createUniqueSlug(module.title, module._id)}/add-chapter`}
                       className="add-chapter-btn"
                       title="Thêm chương vào tập"
                     >

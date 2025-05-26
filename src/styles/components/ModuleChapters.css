@@ -143,6 +143,28 @@
   font-weight: bold;
 }
 
+/* Delete chapter button styles */
+.delete-chapter-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin: 0 4px;
+}
+
+.delete-chapter-btn:hover {
+  background: #c0392b;
+}
+
+.delete-chapter-btn:active {
+  transform: translateY(1px);
+}
+
 /* Make chapter items appear faded when they're part of a paid module */
 .module-chapter-item.chapter-mode-paid {
   border-left: 2px solid #3498db;

@@ -43,11 +43,11 @@ import { createUniqueSlug } from '../utils/slugUtils';
  */
 const ChapterDashboard = () => {
   // Get novel ID from URL parameters and module ID from route params or query parameters
-  const { novelId, moduleId: urlModuleId, chapterId } = useParams();
+  const { novelId, moduleSlug: urlModuleSlug, chapterId } = useParams();
   const [searchParams] = useSearchParams();
   const queryModuleId = searchParams.get('moduleId');
-  // Use moduleId from URL params first, then fall back to query params
-  const moduleId = urlModuleId || queryModuleId;
+  // Use moduleSlug from URL params first, then fall back to query params for backward compatibility
+  const moduleSlugOrId = urlModuleSlug || queryModuleId;
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -57,6 +57,8 @@ const ChapterDashboard = () => {
   // State management for novel data and form inputs
   const [novel, setNovel] = useState(null);
   const [module, setModule] = useState(null);
+  const [resolvedNovelId, setResolvedNovelId] = useState(null);
+  const [resolvedModuleId, setResolvedModuleId] = useState(null);
   const [chapterTitle, setChapterTitle] = useState('');
   const [chapterContent, setChapterContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -259,8 +261,15 @@ const ChapterDashboard = () => {
         setError('');
         setModuleError(false);
 
-        // Fetch novel data
-        const novelResponse = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
+        // First resolve the novel ID from the slug
+        const idResponse = await axios.get(`${config.backendUrl}/api/novels/slug/${novelId}`);
+        const resolvedNovelId = idResponse.data.id;
+        
+        // Store the resolved novel ID in state
+        setResolvedNovelId(resolvedNovelId);
+
+        // Then fetch novel data with the resolved ID
+        const novelResponse = await axios.get(`${config.backendUrl}/api/novels/${resolvedNovelId}`);
         const novelData = novelResponse.data;
         setNovel(novelData);
 
@@ -278,10 +287,21 @@ const ChapterDashboard = () => {
           // Proofreader defaults to none
         }
 
-        // Fetch module data if moduleId exists
-        if (moduleId) {
+        // Fetch module data if moduleSlugOrId exists
+        if (moduleSlugOrId) {
           try {
-            const moduleResponse = await axios.get(`${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}`);
+            let actualModuleId = moduleSlugOrId;
+            
+            // If moduleSlugOrId looks like a slug (not a 24-char MongoDB ID), resolve it
+            if (!/^[0-9a-fA-F]{24}$/.test(moduleSlugOrId)) {
+              const moduleIdResponse = await axios.get(`${config.backendUrl}/api/modules/slug/${moduleSlugOrId}`);
+              actualModuleId = moduleIdResponse.data.id;
+            }
+            
+            // Store the resolved module ID
+            setResolvedModuleId(actualModuleId);
+            
+            const moduleResponse = await axios.get(`${config.backendUrl}/api/modules/${resolvedNovelId}/modules/${actualModuleId}`);
             const moduleData = moduleResponse.data;
             setModule(moduleData);
           } catch (moduleErr) {
@@ -303,7 +323,7 @@ const ChapterDashboard = () => {
     };
 
     fetchData();
-  }, [novelId, moduleId, isEditMode, fetchChapterData]);
+  }, [novelId, moduleSlugOrId, isEditMode, fetchChapterData]);
 
   /**
    * Handles chapter form submission
@@ -317,9 +337,16 @@ const ChapterDashboard = () => {
     setError('');
     setSuccess('');
 
-    // Validate moduleId
-    if (!moduleId) {
+    // Validate moduleSlugOrId
+    if (!moduleSlugOrId) {
       setError('Không có module được chọn. Vui lòng chọn module trước.');
+      setSaving(false);
+      return;
+    }
+
+    // Validate that we have a resolved module ID
+    if (!resolvedModuleId) {
+      setError('Không thể xác định ID của module. Vui lòng thử lại.');
       setSaving(false);
       return;
     }
@@ -372,8 +399,8 @@ const ChapterDashboard = () => {
 
       // Create the chapter data object
       const chapterData = {
-        novelId: novelId,
-        moduleId: moduleId,
+        novelId: resolvedNovelId || novelId, // Use resolved ID if available, fallback to original
+        moduleId: resolvedModuleId || moduleSlugOrId, // Use resolved module ID if available
         title: chapterTitle,
         content: cleanedContent,
         mode: mode,
@@ -411,26 +438,26 @@ const ChapterDashboard = () => {
           const optimisticNovel = {...currentNovelData};
           const timestamp = new Date().toISOString();
 
-          // Find the target module and add chapter to it
-          if (optimisticNovel.modules) {
-            const targetModule = optimisticNovel.modules.find(m => m._id === moduleId);
-            if (targetModule) {
-              // Create optimistic chapter with temporary ID
-              const optimisticChapter = {
-                _id: `temp-${Date.now()}`,
-                title: chapterTitle,
-                content: cleanedContent,
-                novelId,
-                moduleId,
-                mode,
-                translator,
-                editor,
-                proofreader,
-                footnotes,
-                chapterBalance: mode === 'paid' ? parseInt(chapterBalance) || 0 : 0,
-                createdAt: timestamp,
-                updatedAt: timestamp
-              };
+                      // Find the target module and add chapter to it
+            if (optimisticNovel.modules) {
+              const targetModule = optimisticNovel.modules.find(m => m._id === (resolvedModuleId || moduleSlugOrId));
+              if (targetModule) {
+                // Create optimistic chapter with temporary ID
+                const optimisticChapter = {
+                  _id: `temp-${Date.now()}`,
+                  title: chapterTitle,
+                  content: cleanedContent,
+                  novelId: resolvedNovelId || novelId,
+                  moduleId: resolvedModuleId || moduleSlugOrId,
+                  mode,
+                  translator,
+                  editor,
+                  proofreader,
+                  footnotes,
+                  chapterBalance: mode === 'paid' ? parseInt(chapterBalance) || 0 : 0,
+                  createdAt: timestamp,
+                  updatedAt: timestamp
+                };
 
               // Add to module's chapters if it exists
               if (!targetModule.chapters) {
@@ -515,7 +542,7 @@ const ChapterDashboard = () => {
   }
 
   // Show error if module is not found AFTER loading is complete
-  if (moduleError && moduleId && !loading) {
+  if (moduleError && moduleSlugOrId && !loading) {
     const novelSlug = createUniqueSlug(novel?.title, novelId);
     return (
         <div className="error-message">
