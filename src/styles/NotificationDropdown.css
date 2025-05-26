@@ -1,0 +1,432 @@
+/**
+ * NotificationDropdown.css
+ * 
+ * Styles for the notification dropdown component.
+ * Features:
+ * - Modern dropdown design
+ * - Scrollable notification list
+ * - Unread notification indicators
+ * - Dark theme support
+ * - Responsive design
+ */
+
+/* Main notification dropdown container */
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  min-width: 380px;
+  max-width: 420px;
+  z-index: 1200;
+  overflow: hidden;
+  animation: notificationDropdownFadeIn 0.2s ease;
+  border: 1px solid #e1e5e9;
+}
+
+:root.dark-mode .notification-dropdown {
+  background-color: #2d2d2d;
+  border-color: #444;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes notificationDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Notification dropdown header */
+.notification-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e1e5e9;
+  background-color: #f8f9fa;
+}
+
+:root.dark-mode .notification-dropdown-header {
+  background-color: #1a1a1a;
+  border-bottom-color: #444;
+}
+
+.notification-dropdown-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+}
+
+:root.dark-mode .notification-dropdown-header h3 {
+  color: #fff;
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.clear-all-btn:hover {
+  color: #495057;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+:root.dark-mode .clear-all-btn {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .clear-all-btn:hover {
+  color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Notification dropdown content */
+.notification-dropdown-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar */
+.notification-dropdown-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-dropdown-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.notification-dropdown-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.notification-dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+:root.dark-mode .notification-dropdown-content::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+:root.dark-mode .notification-dropdown-content::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+:root.dark-mode .notification-dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Loading state */
+.notification-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #6c757d;
+}
+
+:root.dark-mode .notification-loading {
+  color: #a0a0a0;
+}
+
+/* Error state */
+.notification-error {
+  padding: 40px 20px;
+  text-align: center;
+  color: #dc3545;
+  font-style: italic;
+}
+
+:root.dark-mode .notification-error {
+  color: #ff6b6b;
+}
+
+/* No notifications state */
+.no-notifications {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  text-align: center;
+}
+
+:root.dark-mode .no-notifications {
+  color: #a0a0a0;
+}
+
+.no-notifications i {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+/* Notification list */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Individual notification item */
+.notification-item {
+  position: relative;
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+:root.dark-mode .notification-item {
+  border-bottom-color: #444;
+}
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+:root.dark-mode .notification-item:hover {
+  background-color: #363636;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+/* Unread notification styling */
+.notification-item.unread {
+  background-color: #f0f8ff;
+}
+
+:root.dark-mode .notification-item.unread {
+  background-color: #1a2332;
+}
+
+.notification-item.unread:hover {
+  background-color: #e6f3ff;
+}
+
+:root.dark-mode .notification-item.unread:hover {
+  background-color: #1e2a3a;
+}
+
+/* Notification link */
+.notification-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.notification-link:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Notification content */
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+/* Notification icon */
+.notification-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-top: 2px;
+}
+
+.notification-icon i[class*="fa-reply"] {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.notification-icon i[class*="fa-comment"] {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.notification-icon i[class*="fa-book-open"] {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-reply"] {
+  background-color: #1a365d;
+  color: #63b3ed;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-comment"] {
+  background-color: #44337a;
+  color: #b794f6;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-book-open"] {
+  background-color: #1a365d;
+  color: #68d391;
+}
+
+/* Notification text */
+.notification-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-message {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #212529;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+}
+
+:root.dark-mode .notification-message {
+  color: #e0e0e0;
+}
+
+.notification-timestamp {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+:root.dark-mode .notification-timestamp {
+  color: #a0a0a0;
+}
+
+/* Unread indicator */
+.unread-indicator {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  background-color: #007bff;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+:root.dark-mode .unread-indicator {
+  background-color: #63b3ed;
+}
+
+/* Notification dropdown footer */
+.notification-dropdown-footer {
+  border-top: 1px solid #e1e5e9;
+  padding: 12px 20px;
+  background-color: #f8f9fa;
+}
+
+:root.dark-mode .notification-dropdown-footer {
+  border-top-color: #444;
+  background-color: #1a1a1a;
+}
+
+.clear-all-footer-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.clear-all-footer-btn:hover {
+  color: #495057;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+:root.dark-mode .clear-all-footer-btn {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .clear-all-footer-btn:hover {
+  color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.clear-all-footer-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .notification-dropdown {
+    min-width: 320px;
+    max-width: calc(100vw - 40px);
+    right: -10px;
+  }
+
+  .notification-dropdown-header,
+  .notification-content,
+  .notification-dropdown-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .notification-dropdown-content {
+    max-height: 300px;
+  }
+
+  .notification-message {
+    font-size: 13px;
+  }
+
+  .notification-timestamp {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notification-dropdown {
+    min-width: 280px;
+    right: -20px;
+  }
+
+  .notification-dropdown-header,
+  .notification-content,
+  .notification-dropdown-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .notification-content {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .notification-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+} 

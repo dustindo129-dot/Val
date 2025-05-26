@@ -26,7 +26,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import '../styles/components/NovelDetail.css';
 import '../styles/components/RedesignedNovelDetail.css';
-import { CommentIcon, LockIcon } from './novel-detail/NovelIcons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faComment, faLock } from '@fortawesome/free-solid-svg-icons';
 import LoadingSpinner from './LoadingSpinner';
 import NovelInfo from './novel-detail/NovelInfo';
 import ScrollToTop from './ScrollToTop';
@@ -110,7 +111,7 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess }) => 
       {/* Action Buttons */}
       <div className="contribution-actions">
         <button 
-          className="btn btn-primary" 
+          className="btn btn-primary contribution-btn-primary" 
           onClick={() => {
             if (!isAuthenticated) {
               alert('Vui lòng đăng nhập để đóng góp');
@@ -124,7 +125,7 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess }) => 
           <span>Góp lúa</span>
         </button>
         <button 
-          className="btn btn-secondary" 
+          className="btn btn-secondary contribution-btn-secondary" 
           onClick={() => setIsHistoryModalOpen(true)}
         >
           <i className="fas fa-history"></i>
@@ -346,6 +347,7 @@ const NovelDetail = ({ novelId }) => {
   });
   const [editingModule, setEditingModule] = useState(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
   
   // Handler for contribution success
   const handleContributionSuccess = useCallback(() => {
@@ -1003,12 +1005,12 @@ const NovelDetail = ({ novelId }) => {
             >
               {isCommentsOpen ? (
                 <>
-                  <LockIcon size={18} style={{ marginRight: '8px' }} />
+                  <FontAwesomeIcon icon={faLock} style={{ marginRight: '8px' }} />
                   Ẩn bình luận
                 </>
               ) : (
                 <>
-                  <CommentIcon size={18} style={{ marginRight: '8px' }} />
+                  <FontAwesomeIcon icon={faComment} style={{ marginRight: '8px' }} />
                   Hiển thị bình luận
                 </>
               )}

@@ -164,6 +164,38 @@
   color: #e0e0e0;
 }
 
+.report-response-section {
+  margin-bottom: 12px;
+}
+
+.report-response-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+.report-response-input:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+:root.dark-mode .report-response-input {
+  background-color: #1a1a1a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .report-response-input:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 0.2rem rgba(99, 179, 237, 0.25);
+}
+
 .report-actions {
   display: flex;
   justify-content: flex-end;

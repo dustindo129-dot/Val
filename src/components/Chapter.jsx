@@ -8,7 +8,6 @@ import '../styles/components/Chapter.css';
 import config from '../config/config';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { createUniqueSlug } from '../utils/slugUtils';
 
 // Import components

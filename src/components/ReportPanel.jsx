@@ -9,6 +9,7 @@ import LoadingSpinner from './LoadingSpinner';
 const ReportPanel = ({ user }) => {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(true);
+  const [responseMessages, setResponseMessages] = useState({});
 
   // Only show for admin and moderator users
   if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
@@ -24,15 +25,29 @@ const ReportPanel = ({ user }) => {
 
   // Resolve report mutation
   const resolveMutation = useMutation({
-    mutationFn: (reportId) => api.resolveReport(reportId),
+    mutationFn: ({ reportId, responseMessage }) => api.resolveReport(reportId, responseMessage),
     onSuccess: () => {
       // Invalidate reports query to refetch data
       queryClient.invalidateQueries({ queryKey: ['reports'] });
+      // Clear the response message for this report
+      setResponseMessages(prev => {
+        const newMessages = { ...prev };
+        delete newMessages[resolveMutation.variables?.reportId];
+        return newMessages;
+      });
     },
   });
 
   const handleResolve = (reportId) => {
-    resolveMutation.mutate(reportId);
+    const responseMessage = responseMessages[reportId] || '';
+    resolveMutation.mutate({ reportId, responseMessage });
+  };
+
+  const handleResponseMessageChange = (reportId, message) => {
+    setResponseMessages(prev => ({
+      ...prev,
+      [reportId]: message
+    }));
   };
 
   const formatDate = (dateString) => {
@@ -117,13 +132,22 @@ const ReportPanel = ({ user }) => {
                       {report.details}
                     </div>
                   )}
+                  <div className="report-response-section">
+                    <textarea
+                      className="report-response-input"
+                      placeholder="Trả lời báo cáo (nếu có)..."
+                      value={responseMessages[report._id] || ''}
+                      onChange={(e) => handleResponseMessageChange(report._id, e.target.value)}
+                      rows={2}
+                    />
+                  </div>
                   <div className="report-actions">
                     <button 
                       className="resolve-btn"
                       onClick={() => handleResolve(report._id)}
                       disabled={resolveMutation.isPending}
                     >
-                      {resolveMutation.isPending && resolveMutation.variables === report._id
+                      {resolveMutation.isPending && resolveMutation.variables?.reportId === report._id
                         ? 'Đang tải...'
                         : 'Đã xử lý'
                       }

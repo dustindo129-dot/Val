@@ -75,7 +75,7 @@ class SSEService {
       });
 
       // Set up default event listeners
-      const events = ['update', 'novel_status_changed', 'novel_deleted', 'refresh', 'new_novel', 'new_chapter'];
+      const events = ['update', 'novel_status_changed', 'novel_deleted', 'refresh', 'new_novel', 'new_chapter', 'new_notification', 'notification_read', 'notifications_cleared'];
       events.forEach(eventName => {
         this.eventSource.addEventListener(eventName, (event) => {
           const listeners = this.listeners.get(eventName) || [];

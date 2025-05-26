@@ -37,4 +37,41 @@
 
 :root.dark-mode .loading-text {
   color: #d1d5db;
+}
+
+/* Inline spinner styles */
+.loading-spinner-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-spinner-css {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(74, 144, 226, 0.2);
+  border-top: 2px solid #4a90e2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text-inline {
+  font-size: 0.875rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Dark mode support for inline spinner */
+:root.dark-mode .loading-spinner-css {
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-color: #66b0ff;
+}
+
+:root.dark-mode .loading-text-inline {
+  color: #d1d5db;
 } 

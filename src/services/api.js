@@ -470,11 +470,11 @@ const api = {
     }
   },
 
-  resolveReport: async (reportId) => {
+  resolveReport: async (reportId, responseMessage = '') => {
     try {
       const response = await axios.put(
         `${config.backendUrl}/api/reports/${reportId}/resolve`,
-        {},
+        { responseMessage },
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -585,6 +585,77 @@ const api = {
     } catch (error) {
       console.error("Error fetching contribution history:", error);
       return { contributions: [] };
+    }
+  },
+
+  // Notification related API calls
+  getNotifications: async (page = 1, limit = 10) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/notifications?page=${page}&limit=${limit}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+      throw error;
+    }
+  },
+
+  markNotificationAsRead: async (notificationId) => {
+    try {
+      const response = await axios.put(
+        `${config.backendUrl}/api/notifications/${notificationId}/read`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+      throw error;
+    }
+  },
+
+  markAllNotificationsAsRead: async () => {
+    try {
+      const response = await axios.put(
+        `${config.backendUrl}/api/notifications/read-all`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+      throw error;
+    }
+  },
+
+  getUnreadNotificationCount: async () => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/notifications/unread-count`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data.count;
+    } catch (error) {
+      console.error('Failed to fetch unread notification count:', error);
+      return 0;
     }
   }
 };

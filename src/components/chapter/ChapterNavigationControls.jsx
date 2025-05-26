@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes, faEllipsisV, faList, faCog,
-  faChevronLeft, faChevronRight, faSpinner, faBars, faLock
+  faChevronLeft, faChevronRight, faBars, faLock
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ChapterNavigationControls.css';
 import { createUniqueSlug } from '../../utils/slugUtils';

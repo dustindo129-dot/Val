@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faCog, faSave, faSpinner, faHome, faBookmark } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faCog, faSave, faHome, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
 import { createUniqueSlug } from '../../utils/slugUtils';
+import LoadingSpinner from '../LoadingSpinner';
 
 const ChapterHeader = ({
   novel,
@@ -91,9 +92,7 @@ const ChapterHeader = ({
                   disabled={isSaving}
                 >
                   {isSaving ? (
-                    <>
-                      <FontAwesomeIcon icon={faSpinner} spin /> Đang lưu...
-                    </>
+                    <LoadingSpinner inline text="Đang lưu..." />
                   ) : (
                     <>
                       <FontAwesomeIcon icon={faSave} /> Lưu thay đổi

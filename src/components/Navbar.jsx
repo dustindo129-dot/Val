@@ -21,14 +21,18 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBookmarks } from '../context/BookmarkContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Login from './auth/Login';
 import SignUp from './auth/SignUp';
+import NotificationDropdown from './NotificationDropdown';
 import axios from 'axios';
 import '../styles/Navbar.css';
 import config from '../config/config';
 import Modal from './auth/Modal';
 import cdnConfig from '../config/bunny';
 import { createUniqueSlug } from '../utils/slugUtils';
+import api from '../services/api';
+import sseService from '../services/sseService';
 
 /**
  * Navbar Component
@@ -52,9 +56,71 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { bookmarkedNovels } = useBookmarks();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Add state for dropdown
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  // Add state for notification dropdown
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+
+  // Fetch unread notification count (no polling, only initial load and manual refetch)
+  const { data: unreadCount = 0, refetch: refetchUnreadCount } = useQuery({
+    queryKey: ['unreadNotificationCount'],
+    queryFn: () => api.getUnreadNotificationCount(),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Disable refetch on window focus since we use SSE
+  });
+
+  // Set up SSE listeners for real-time unread count updates
+  useEffect(() => {
+    if (!user) return;
+
+    const handleNewNotification = (data) => {
+      // Only handle notifications for the current user
+      if (data.userId === user.id || data.userId === user._id) {
+        console.log('New notification received, updating unread count');
+        queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
+      }
+    };
+
+    const handleNotificationRead = (data) => {
+      // Only handle for the current user
+      if (data.userId === user.id || data.userId === user._id) {
+        console.log('Notification marked as read, updating unread count');
+        queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
+      }
+    };
+
+    const handleNotificationsCleared = (data) => {
+      // Only handle for the current user
+      if (data.userId === user.id || data.userId === user._id) {
+        console.log('All notifications cleared, setting unread count to 0');
+        queryClient.setQueryData(['unreadNotificationCount'], 0);
+      }
+    };
+
+    // Add SSE event listeners
+    sseService.addEventListener('new_notification', handleNewNotification);
+    sseService.addEventListener('notification_read', handleNotificationRead);
+    sseService.addEventListener('notifications_cleared', handleNotificationsCleared);
+
+    // Clean up on unmount or user change
+    return () => {
+      sseService.removeEventListener('new_notification', handleNewNotification);
+      sseService.removeEventListener('notification_read', handleNotificationRead);
+      sseService.removeEventListener('notifications_cleared', handleNotificationsCleared);
+    };
+  }, [user, queryClient]);
+
+  // Initial fetch when user logs in
+  useEffect(() => {
+    if (user) {
+      refetchUnreadCount();
+    }
+  }, [user, refetchUnreadCount]);
 
   // Add event listener for openLoginModal event
   useEffect(() => {
@@ -69,6 +135,20 @@ const Navbar = () => {
       window.removeEventListener('openLoginModal', handleOpenLoginModal);
     };
   }, []);
+
+  // Add event listener for login events to immediately refetch notifications
+  useEffect(() => {
+    const handleAuthLogin = () => {
+      // Immediately refetch unread count when user logs in
+      refetchUnreadCount();
+    };
+
+    window.addEventListener('authLogin', handleAuthLogin);
+
+    return () => {
+      window.removeEventListener('authLogin', handleAuthLogin);
+    };
+  }, [refetchUnreadCount]);
 
   /**
    * Handles the search input changes and fetches results
@@ -168,23 +248,50 @@ const Navbar = () => {
     setShowDropdown(false);
   };
 
+  /**
+   * Toggles the notification dropdown
+   */
+  const toggleNotificationDropdown = () => {
+    setShowNotificationDropdown(prev => !prev);
+    // Close user dropdown if it's open
+    if (showDropdown) {
+      setShowDropdown(false);
+    }
+  };
+
+  /**
+   * Closes the notification dropdown
+   */
+  const closeNotificationDropdown = () => {
+    setShowNotificationDropdown(false);
+  };
+
   // Add event listener to close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       const dropdown = document.querySelector('.user-dropdown-container');
+      const notificationDropdown = document.querySelector('.notification-dropdown-container');
+      const notificationButton = document.querySelector('.notification-icon-only');
+      
       if (dropdown && !dropdown.contains(event.target)) {
         closeDropdown();
       }
+      
+      // Only close notification dropdown if clicking outside both the dropdown and the bell icon
+      if (notificationDropdown && !notificationDropdown.contains(event.target) && 
+          notificationButton && !notificationButton.contains(event.target)) {
+        closeNotificationDropdown();
+      }
     };
 
-    if (showDropdown) {
+    if (showDropdown || showNotificationDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showDropdown]);
+  }, [showDropdown, showNotificationDropdown]);
 
   return (
     <>
@@ -281,6 +388,23 @@ const Navbar = () => {
             {user ? (
               // Logged in user menu
               <div className="auth-buttons">
+                <div className="notification-dropdown-container">
+                  <button 
+                    className="notification-icon-only"
+                    onClick={toggleNotificationDropdown}
+                    title="Thông báo"
+                  >
+                    <i className="fa-regular fa-bell"></i>
+                    {unreadCount > 0 && (
+                      <span className="notification-count">{unreadCount}</span>
+                    )}
+                  </button>
+                  <NotificationDropdown 
+                    isOpen={showNotificationDropdown}
+                    onClose={closeNotificationDropdown}
+                    user={user}
+                  />
+                </div>
                 <Link to={`/user/${user.username}/bookmarks`} className="bookmark-icon-only">
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 

@@ -5,6 +5,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
 import api from '../../services/api';
+import '../../styles/components/ReportModal.css';
 
 export const SettingsModal = ({
   showSettingsModal,
@@ -236,6 +237,13 @@ export const ReportModal = ({
   
   // Early return if modal is not shown
   if (!showReportModal) return null;
+
+  const handleOverlayClick = (e) => {
+    // Close modal if clicking on the overlay (not the content)
+    if (e.target === e.currentTarget) {
+      setShowReportModal(false);
+    }
+  };
   
   const submitReport = async () => {
     if (!reportReason) {
@@ -274,7 +282,10 @@ export const ReportModal = ({
   };
 
   return (
-    <div className="report-modal-container">
+    <div 
+      className="report-modal-container"
+      onClick={handleOverlayClick}
+    >
       <div className="report-modal">
         <div className="report-modal-header">
           <h3>Báo cáo chương</h3>
