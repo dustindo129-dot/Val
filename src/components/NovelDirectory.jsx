@@ -97,23 +97,10 @@ const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
     setImgSrc(defaultImage);
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
   return (
       <div className="novel-image-container">
         <Link to={generateNovelUrl({ _id: novelId, title: alt })} className="novel-image-link">
           <div className="novel-image">
-            {updatedAt && (
-                <span className="dir-update-time">
-                {formatDate(updatedAt)}
-              </span>
-            )}
             <img
                 src={imgSrc}
                 alt={alt}

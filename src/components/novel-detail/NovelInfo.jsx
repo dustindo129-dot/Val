@@ -33,9 +33,8 @@ import {
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
 import { createUniqueSlug } from '../../utils/slugUtils';
-import LoadingSpinner from '../LoadingSpinner';
 
-const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
+const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { updateBookmarkStatus } = useBookmarks();
@@ -382,14 +381,6 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
     
     setIsRatingModalOpen(false);
   };
-
-  if (isLoading) {
-    return (
-      <div className="novel-info-section loading">
-        <LoadingSpinner size="large" text="Đang tải thông tin truyện..." />
-      </div>
-    );
-  }
 
   if (!novel) {
     return <div className="novel-info-section error">Truyện không tồn tại</div>;
