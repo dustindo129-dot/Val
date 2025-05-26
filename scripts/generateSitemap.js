@@ -46,7 +46,7 @@ const backendUrl = process.env.SITEMAP_BACKEND_URL ||
 
 async function generateSitemap() {
   const baseUrl = process.env.FRONTEND_URL || 'https://valvrareteam.net';
-  const outputPath = path.resolve(__dirname, '../dist/sitemap.xml');
+  const outputPath = path.resolve(__dirname, '../public/sitemap.xml');
   
   
   try {
@@ -126,10 +126,10 @@ async function generateSitemap() {
     // Close XML
     sitemap += '</urlset>';
     
-    // Ensure dist directory exists
-    const distDir = path.dirname(outputPath);
-    if (!fs.existsSync(distDir)) {
-      fs.mkdirSync(distDir, { recursive: true });
+    // Ensure public directory exists
+    const publicDir = path.dirname(outputPath);
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
     }
     
     // Write sitemap to file
