@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faFlag, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
+import { createUniqueSlug } from '../../utils/slugUtils';
 
 const ChapterFooter = ({
   novelId,
@@ -13,12 +14,14 @@ const ChapterFooter = ({
   handleBookmark,
   setShowReportModal
 }) => {
+  const novelSlug = createUniqueSlug(novel?.title, novelId);
+  
   return (
     <div className="footer-nav-container">
       <div className="breadcrumb-nav">
         <Link to="/"><FontAwesomeIcon icon={faHome}/> Trang chủ</Link>
         <span className="breadcrumb-separator">&gt;</span>
-        <Link to={`/novel/${novelId}`}>{novel.title}</Link>
+        <Link to={`/novel/${novelSlug}`}>{novel.title}</Link>
         <span className="breadcrumb-separator">&gt;</span>
         {moduleData && (
           <>

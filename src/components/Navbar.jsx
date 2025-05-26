@@ -28,6 +28,7 @@ import '../styles/Navbar.css';
 import config from '../config/config';
 import Modal from './auth/Modal';
 import cdnConfig from '../config/bunny';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 /**
  * Navbar Component
@@ -100,10 +101,11 @@ const Navbar = () => {
 
   /**
    * Handles navigation when a search result is clicked
-   * @param {string} novelId - The ID of the selected novel
+   * @param {Object} novel - The novel object with _id and title
    */
-  const handleNovelClick = (novelId) => {
-    navigate(`/novel/${novelId}`);
+  const handleNovelClick = (novel) => {
+    const novelSlug = createUniqueSlug(novel.title, novel._id);
+    navigate(`/novel/${novelSlug}`);
     setSearchQuery("");
     setSearchResults([]);
   };
@@ -249,7 +251,7 @@ const Navbar = () => {
                     <div 
                       key={novel._id} 
                       className="search-result-item"
-                      onClick={() => handleNovelClick(novel._id)}
+                      onClick={() => handleNovelClick(novel)}
                     >
                       <img 
                         src={novel.illustration || 'https://Valvrareteam.b-cdn.net/%C6%A0%20l%E1%BB%97i%20h%C3%ACnh%20m%E1%BA%A5t%20r%E1%BB%93i.png'}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { formatRelativeTime } from './utils';
+import { createUniqueSlug } from '../../utils/slugUtils';
 
 /**
  * Request Card Component
@@ -64,7 +65,7 @@ const RequestCard = ({
         <div>
           <div className="request-title">
             {request.novel && (
-              <Link to={`/novel/${request.novel._id}`} className="novel-link">
+              <Link to={`/novel/${createUniqueSlug(request.novel.title, request.novel._id)}`} className="novel-link">
                 {request.novel.title}
               </Link>
             )}

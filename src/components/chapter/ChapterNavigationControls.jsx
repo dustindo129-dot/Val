@@ -6,6 +6,7 @@ import {
   faChevronLeft, faChevronRight, faSpinner, faBars, faLock
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ChapterNavigationControls.css';
+import { createUniqueSlug } from '../../utils/slugUtils';
 
 /**
  * ChapterNavigationControls Component
@@ -14,6 +15,7 @@ import '../../styles/components/ChapterNavigationControls.css';
  */
 const ChapterNavigationControls = ({
   novelId,
+  novelTitle,
   chapter,
   chapterId,
   showNavControls,
@@ -46,6 +48,8 @@ const ChapterNavigationControls = ({
     // For regular users, filter out paid chapters
     return moduleChapter.mode !== 'paid';
   });
+
+  const novelSlug = createUniqueSlug(novelTitle, novelId);
 
   return (
     <>
@@ -102,7 +106,7 @@ const ChapterNavigationControls = ({
                 key={chapterItem._id}
                 className={chapterItem._id === chapterId ? 'active' : ''}
               >
-                <Link to={`/novel/${novelId}/chapter/${chapterItem._id}`}>
+                <Link to={`/novel/${novelSlug}/chapter/${createUniqueSlug(chapterItem.title, chapterItem._id)}`}>
                   {chapterItem.title}
                 </Link>
               </li>

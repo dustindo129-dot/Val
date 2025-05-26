@@ -33,6 +33,7 @@ import {
 import bunnyUploadService from '../services/bunnyUploadService';
 import hybridCdnService from '../services/bunnyUploadService';
 import LoadingSpinner from './LoadingSpinner';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 /**
  * ChapterDashboard Component
@@ -479,8 +480,9 @@ const ChapterDashboard = () => {
         setSaving(false);
       } else {
         // For new chapter, navigate back to novel page after delay
+        const novelSlug = createUniqueSlug(novel?.title, novelId);
         setTimeout(() => {
-          navigate(`/novel/${novelId}`, {
+          navigate(`/novel/${novelSlug}`, {
             replace: true,
             state: {
               from: 'addChapter',
@@ -514,13 +516,16 @@ const ChapterDashboard = () => {
 
   // Show error if module is not found AFTER loading is complete
   if (moduleError && moduleId && !loading) {
+    const novelSlug = createUniqueSlug(novel?.title, novelId);
     return (
         <div className="error-message">
           <FontAwesomeIcon icon={faExclamationTriangle} /> Module không tồn tại.
-          <Link to={`/novel/${novelId}`} className="return-link"> Trở lại trang novel</Link>
+          <Link to={`/novel/${novelSlug}`} className="return-link"> Trở lại trang novel</Link>
         </div>
     );
   }
+
+  const novelSlug = createUniqueSlug(novel?.title, novelId);
 
   return (
       <div className="chapter-dashboard">
@@ -531,7 +536,7 @@ const ChapterDashboard = () => {
             <h2>{novel?.title}</h2>
             {module && <div className="module-title">Module: {module.title}</div>}
           </div>
-          <Link to={`/novel/${novelId}`} className="back-to-novel">
+          <Link to={`/novel/${novelSlug}`} className="back-to-novel">
             <FontAwesomeIcon icon={faArrowLeft} /> Trở lại trang novel
           </Link>
         </div>
@@ -848,7 +853,7 @@ const ChapterDashboard = () => {
                   </>
               )}
             </button>
-            <Link to={`/novel/${novelId}`} className="cancel-btn">
+            <Link to={`/novel/${novelSlug}`} className="cancel-btn">
               <FontAwesomeIcon icon={faTimes} /> Hủy bỏ
             </Link>
           </div>

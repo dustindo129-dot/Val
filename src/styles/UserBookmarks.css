@@ -101,6 +101,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding-left: 27px;
+  text-decoration: none;
 }
 
 .bookmark-card .bookmark-title-header::before {
@@ -408,9 +409,6 @@ a.bookmark-latest-chapter:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
   
-  .bookmarks-section-header h2 {
-    color: #fff;
-  }
 }
 
 /* Tablet responsive styles */

@@ -1,4 +1,5 @@
 import React from 'react';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 const StructuredData = ({ type = 'website', data }) => {
   let structuredData = {};
@@ -49,6 +50,7 @@ const StructuredData = ({ type = 'website', data }) => {
 
     case 'book':
       if (data) {
+        const novelSlug = createUniqueSlug(data.title, data._id);
         structuredData = {
           "@context": "https://schema.org",
           "@type": "Book",
@@ -59,7 +61,7 @@ const StructuredData = ({ type = 'website', data }) => {
           },
           "description": data.description ? data.description.replace(/<[^>]*>/g, '').substring(0, 200) : "",
           "image": data.coverImage,
-          "url": `https://valvrareteam.net/novel/${data._id}`,
+          "url": `https://valvrareteam.net/novel/${novelSlug}`,
           "genre": data.genres || ["Light Novel"],
           "inLanguage": "vi-VN",
           "publisher": {

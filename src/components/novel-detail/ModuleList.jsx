@@ -6,6 +6,7 @@ import { faLock } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
+import { createUniqueSlug } from '../../utils/slugUtils';
 
 /**
  * DeleteModuleConfirmationModal Component
@@ -55,6 +56,7 @@ const DeleteModuleConfirmationModal = ({ module, onConfirm, onCancel }) => {
 const ModuleList = memo(({
   modules,
   novelId,
+  novelTitle,
   user,
   handleModuleReorder,
   handleModuleDelete,
@@ -235,7 +237,7 @@ const ModuleList = memo(({
                       </button>
                     )}
                     <Link
-                      to={`/novel/${novelId}/module/${module._id}/add-chapter`}
+                      to={`/novel/${createUniqueSlug(novelTitle, novelId)}/module/${module._id}/add-chapter`}
                       className="add-chapter-btn"
                       title="Thêm chương vào tập"
                     >
@@ -265,6 +267,7 @@ const ModuleList = memo(({
                 <ModuleChapters
                   chapters={module.chapters || []}
                   novelId={novelId}
+                  novelTitle={novelTitle}
                   moduleId={module._id}
                   user={user}
                   canEdit={canEdit}

@@ -31,6 +31,7 @@ import {
   faBookmark 
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
+import { createUniqueSlug } from '../../utils/slugUtils';
 
 const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
   const queryClient = useQueryClient();
@@ -577,7 +578,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 <div className="rd-actions-row">
                   {chaptersData?.chapters?.length > 0 ? (
                     <Link 
-                      to={`/novel/${novelId}/chapter/${chaptersData.chapters[0]?._id}`} 
+                      to={`/novel/${createUniqueSlug(novelData.title, novelId)}/chapter/${createUniqueSlug(chaptersData.chapters[0]?.title, chaptersData.chapters[0]?._id)}`} 
                       className="rd-btn rd-btn-primary"
                     >
                       <FontAwesomeIcon icon={faChevronRight} />
@@ -593,7 +594,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                   {chaptersData?.chapters?.length > 0 ? (
                     bookmarkData?.bookmarkedChapter ? (
                       <Link 
-                        to={`/novel/${novelId}/chapter/${bookmarkData.bookmarkedChapter.id}`} 
+                        to={`/novel/${createUniqueSlug(novelData.title, novelId)}/chapter/${createUniqueSlug(bookmarkData.bookmarkedChapter.title, bookmarkData.bookmarkedChapter.id)}`} 
                         className="rd-btn rd-btn-primary"
                         title={`Continue from: ${bookmarkData.bookmarkedChapter.title}`}
                       >
@@ -602,7 +603,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                       </Link>
                     ) : (
                       <Link 
-                        to={`/novel/${novelId}/chapter/${chaptersData.chapters[chaptersData.chapters.length - 1]?._id}`} 
+                        to={`/novel/${createUniqueSlug(novelData.title, novelId)}/chapter/${createUniqueSlug(chaptersData.chapters[chaptersData.chapters.length - 1]?.title, chaptersData.chapters[chaptersData.chapters.length - 1]?._id)}`} 
                         className="rd-btn rd-btn-primary"
                       >
                         <FontAwesomeIcon icon={faForward} />

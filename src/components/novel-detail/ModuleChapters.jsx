@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
+import { createUniqueSlug } from '../../utils/slugUtils';
 import '../../styles/components/ModuleChapters.css';
 
 // Helper function for date formatting in Vietnamese format (DD/MM/YYYY)
@@ -46,6 +47,7 @@ const isChapterNew = (date) => {
 const ModuleChapters = memo(({ 
   chapters, 
   novelId, 
+  novelTitle,
   moduleId, 
   user, 
   canEdit,
@@ -163,7 +165,7 @@ const ModuleChapters = memo(({
                   
                   {chapterIsAccessible ? (
                     <Link 
-                      to={`/novel/${novelId}/chapter/${chapterId}`} 
+                      to={`/novel/${createUniqueSlug(novelTitle, novelId)}/chapter/${createUniqueSlug(chapter.title, chapterId)}`} 
                       className={`chapter-title-link ${chapterModeClass}`}
                       key={`chapter-link-${chapterId}`}
                     >

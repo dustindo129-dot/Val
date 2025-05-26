@@ -41,6 +41,7 @@ import ModuleList from './novel-detail/ModuleList';
 import axios from 'axios';
 import config from '../config/config';
 import DOMPurify from 'dompurify';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 // Lazy load components that exist as separate files
 const Login = lazy(() => import('./auth/Login'));
@@ -304,6 +305,7 @@ const NovelSEO = ({ novel }) => {
 
   // Generate structured data for search engines
   const generateStructuredData = () => {
+    const novelSlug = createUniqueSlug(novel.title, novel._id);
     const structuredData = {
       "@context": "https://schema.org",
       "@type": "Book",
@@ -320,7 +322,7 @@ const NovelSEO = ({ novel }) => {
         "name": "Valvrareteam",
         "url": "https://valvrareteam.net"
       },
-      "url": `https://valvrareteam.net/novel/${novel._id}`,
+      "url": `https://valvrareteam.net/novel/${novelSlug}`,
       "image": novel.illustration,
       "datePublished": novel.createdAt,
       "dateModified": novel.updatedAt
@@ -345,6 +347,8 @@ const NovelSEO = ({ novel }) => {
     return structuredData;
   };
 
+  const novelSlug = createUniqueSlug(novel?.title, novel?._id);
+
   return (
     <Helmet>
       {/* Basic meta tags */}
@@ -360,7 +364,7 @@ const NovelSEO = ({ novel }) => {
       <meta property="og:title" content={generateSEOTitle()} />
       <meta property="og:description" content={generateSEODescription()} />
       <meta property="og:image" content={novel.illustration} />
-      <meta property="og:url" content={`https://valvrareteam.net/novel/${novel._id}`} />
+      <meta property="og:url" content={`https://valvrareteam.net/novel/${novelSlug}`} />
       <meta property="og:type" content="book" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -377,7 +381,7 @@ const NovelSEO = ({ novel }) => {
       <meta property="book:release_date" content={novel.createdAt} />
       
       {/* Canonical URL */}
-      <link rel="canonical" href={`https://valvrareteam.net/novel/${novel._id}`} />
+      <link rel="canonical" href={`https://valvrareteam.net/novel/${novelSlug}`} />
       
       {/* Structured Data */}
       <script type="application/ld+json">
@@ -1121,6 +1125,7 @@ const NovelDetail = ({ novelId }) => {
               <ModuleList
                 modules={data.modules}
                 novelId={novelId}
+                novelTitle={data.novel.title}
                 user={user}
                 handleModuleReorder={handleModuleReorder}
                 handleModuleDelete={handleDeleteModule}

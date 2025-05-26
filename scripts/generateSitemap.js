@@ -6,6 +6,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Import slug utility
+import { createUniqueSlug } from '../src/utils/slugUtils.js';
+
 // Node.js compatible config
 const backendUrl = process.env.VITE_BACKEND_URL || 'https://valvrareteam-backend.onrender.com';
 
@@ -54,7 +57,8 @@ async function generateSitemap() {
     // Add novel detail pages with enhanced SEO metadata
     for (const novel of novels) {
       const lastModified = new Date(novel.updatedAt || novel.createdAt).toISOString();
-      sitemap += `  <url>\n    <loc>${baseUrl}/novel/${novel._id}</loc>\n    <lastmod>${lastModified}</lastmod>\n    <priority>0.9</priority>\n  </url>\n`;
+      const novelSlug = createUniqueSlug(novel.title, novel._id);
+      sitemap += `  <url>\n    <loc>${baseUrl}/novel/${novelSlug}</loc>\n    <lastmod>${lastModified}</lastmod>\n    <priority>0.9</priority>\n  </url>\n`;
       
       // Add alternative title variations as separate URLs if needed
       // This helps with SEO for different ways users might search
@@ -70,7 +74,8 @@ async function generateSitemap() {
         
         for (const chapter of chapters) {
           const chapterLastModified = new Date(chapter.updatedAt || chapter.createdAt).toISOString();
-          sitemap += `  <url>\n    <loc>${baseUrl}/novel/${novel._id}/chapter/${chapter._id}</loc>\n    <lastmod>${chapterLastModified}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
+          const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
+          sitemap += `  <url>\n    <loc>${baseUrl}/novel/${novelSlug}/chapter/${chapterSlug}</loc>\n    <lastmod>${chapterLastModified}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
         }
         
         if (chapters.length > 0) {

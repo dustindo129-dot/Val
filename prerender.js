@@ -1,6 +1,7 @@
 // This script runs as part of the vite-plugin-ssr prerender process
 // to fetch and prerender dynamic novel pages and chapter pages
 import api from './src/services/api';
+import { createUniqueSlug } from './src/utils/slugUtils.js';
 
 export default async function generateDynamicPaths() {
   try {
@@ -12,7 +13,10 @@ export default async function generateDynamicPaths() {
     const novels = data.novels || [];
     
     // Generate novel detail page URLs
-    const novelUrls = novels.map(novel => `/novel/${novel._id}`);
+    const novelUrls = novels.map(novel => {
+      const novelSlug = createUniqueSlug(novel.title, novel._id);
+      return `/novel/${novelSlug}`;
+    });
     
     // Generate chapter page URLs
     const chapterUrls = [];
@@ -32,7 +36,9 @@ export default async function generateDynamicPaths() {
                 if (chapter._id) {
                   // Skip draft/private chapters
                   if (chapter.mode === 'published' || !chapter.mode) {
-                    chapterUrls.push(`/novel/${novel._id}/chapter/${chapter._id}`);
+                    const novelSlug = createUniqueSlug(novel.title, novel._id);
+                    const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
+                    chapterUrls.push(`/novel/${novelSlug}/chapter/${chapterSlug}`);
                   }
                 }
               });

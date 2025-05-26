@@ -20,6 +20,7 @@ import axios from 'axios';
 import '../styles/components/RecentComments.css';
 import config from '../config/config';
 import LoadingSpinner from './LoadingSpinner';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 // Format date to relative time (reusing from CommentSection)
 const formatRelativeTime = (dateString) => {
@@ -60,12 +61,18 @@ const CommentCard = memo(({ comment }) => {
   let linkTitle = '';
   
   if (comment.contentType === 'novels') {
-    linkPath = `/novel/${comment.contentId}`;
+    // Generate slug-based URL for novel
+    const novelSlug = createUniqueSlug(comment.contentTitle || 'Novel', comment.contentId);
+    linkPath = `/novel/${novelSlug}`;
     linkTitle = comment.contentTitle || 'Novel';
   } else if (comment.contentType === 'chapters') {
     // For chapters, the contentId format is "novelId-chapterId"
     const [novelId, chapterId] = comment.contentId.split('-');
-    linkPath = `/novel/${novelId}/chapter/${chapterId}`;
+    
+    // Generate slug-based URLs for both novel and chapter
+    const novelSlug = createUniqueSlug(comment.contentTitle || 'Novel', novelId);
+    const chapterSlug = createUniqueSlug(comment.chapterTitle || 'Chapter', chapterId);
+    linkPath = `/novel/${novelSlug}/chapter/${chapterSlug}`;
     
     // Use both novel title and chapter title if available
     if (comment.contentTitle && comment.chapterTitle) {

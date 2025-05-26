@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/ReportPanel.css';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 const ReportPanel = ({ user }) => {
   const queryClient = useQueryClient();
@@ -42,14 +43,21 @@ const ReportPanel = ({ user }) => {
   const getContentLink = (report) => {
     if (report.contentType === 'chapter' && report.contentId) {
       // If we have a novelId, use it, otherwise use a default route
-      if (report.novelId) {
-        return `/novel/${report.novelId}/chapter/${report.contentId}`;
+      if (report.novelId && report.novelTitle && report.contentTitle) {
+        const novelSlug = createUniqueSlug(report.novelTitle, report.novelId);
+        const chapterSlug = createUniqueSlug(report.contentTitle, report.contentId);
+        return `/novel/${novelSlug}/chapter/${chapterSlug}`;
       } else {
         // If no novelId, we may need to fetch it or just provide a limited link
         return `/chapters/${report.contentId}`;
       }
     } else if (report.contentType === 'novel' && report.contentId) {
-      return `/novel/${report.contentId}`;
+      if (report.contentTitle) {
+        const novelSlug = createUniqueSlug(report.contentTitle, report.contentId);
+        return `/novel/${novelSlug}`;
+      } else {
+        return `/novel/${report.contentId}`;
+      }
     } else {
       return '#'; // Fallback if no valid link can be generated
     }
