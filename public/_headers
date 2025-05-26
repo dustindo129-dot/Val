@@ -1,0 +1,24 @@
+# Cache static assets
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache images
+/images/*
+  Cache-Control: public, max-age=31536000
+
+# Don't cache the main HTML file to ensure SPA routing works
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Cache API responses briefly
+/api/*
+  Cache-Control: public, max-age=300
+
+# Cache sitemap and robots
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+  Content-Type: application/xml
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain 

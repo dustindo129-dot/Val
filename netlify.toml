@@ -1,6 +1,6 @@
 [build]
-  # Build and ensure _redirects is copied
-  command = "npm run build && cp public/_redirects dist/_redirects"
+  # Build and copy necessary files
+  command = "npm run build && cp public/_redirects dist/_redirects && cp public/_headers dist/_headers"
   publish = "dist"
   base = "/"
 
