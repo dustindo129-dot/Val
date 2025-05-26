@@ -1,6 +1,6 @@
 [build]
-  # Install devDependencies explicitly, then build
-  command = "npm install --include=dev && npm run build"
+  # Install devDependencies explicitly, then build, and ensure _redirects is copied
+  command = "npm install --include=dev && npm run build && cp public/_redirects dist/_redirects"
   publish = "dist"
   base = "/"
 
@@ -57,7 +57,13 @@
   status = 301
   force = true
 
-# Clean URL redirects (remove trailing slashes)
+# API routes should not be caught by SPA fallback
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Clean URL redirects (remove trailing slashes) - but only if they have trailing slashes
 [[redirects]]
   from = "/novel/:novelId/"
   to = "/novel/:novelId"
@@ -70,15 +76,10 @@
   status = 301
   force = true
 
-# API routes should not be caught by SPA fallback
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
 # SPA fallback - handle all other routes with React Router
-# This must be LAST to avoid conflicts
+# This must be LAST to avoid conflicts and should NOT be forced
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false
