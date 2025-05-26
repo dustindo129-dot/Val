@@ -301,12 +301,12 @@ const Navbar = () => {
                   )}
                 </Link>
                 <div className="user-info">
-                  <span className="user-username">{user.username}</span>
+                  <span className="user-username">{user.displayName || user.username}</span>
                   <div className="user-dropdown-container">
                     <div className="navbar-user-avatar" onClick={toggleDropdown}>
                       <img 
                         src={user.avatar || '/default-avatar.png'} 
-                        alt={`${user.username}'s avatar`} 
+                        alt={`${user.displayName || user.username}'s avatar`} 
                         className="avatar-image"
                       />
                     </div>

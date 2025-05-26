@@ -241,7 +241,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
               {reviewsData.reviews.map(review => (
                 <div key={review.id} className="review-item">
                   <div className="review-header">
-                    <span className="review-user">{review.user.username}</span>
+                    <span className="review-user">{review.user.displayName || review.user.username}</span>
                     <div className="review-rating">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>

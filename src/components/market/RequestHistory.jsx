@@ -58,7 +58,7 @@ const RequestHistory = ({
               <div key={request._id} className={`history-item status-${request.status}`}>
                 <div className="history-header">
                   <div className="history-user">
-                    <span className="history-username">{request.user.username}</span>
+                    <span className="history-username">{request.user.displayName || request.user.username}</span>
                     <span className="history-type">
                       {request.type === 'new' 
                         ? 'Truyện mới' 
@@ -107,7 +107,7 @@ const RequestHistory = ({
                     {contributions[request._id].map(contribution => (
                       <div key={contribution._id} className={`history-contribution status-${contribution.status}`}>
                         <div className="contribution-header">
-                          <span className="contribution-username">{contribution.user.username}</span>
+                          <span className="contribution-username">{contribution.user.displayName || contribution.user.username}</span>
                           <span className={`contribution-status status-${contribution.status}`}>
                             {contribution.status.charAt(0).toUpperCase() + contribution.status.slice(1)}
                           </span>

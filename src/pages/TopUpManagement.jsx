@@ -655,15 +655,15 @@ const TopUpManagement = () => {
                     >
                       <div className="user-avatar">
                         {user.avatar ? (
-                          <img src={user.avatar} alt={user.username} />
+                          <img src={user.avatar} alt={user.displayName || user.username} />
                         ) : (
                           <div className="default-avatar">
-                            {user.username.charAt(0).toUpperCase()}
+                            {(user.displayName || user.username).charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="topup-user-info">
-                        <div className="user-username">{user.username}</div>
+                        <div className="user-username">{user.displayName || user.username}</div>
                         <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
                       </div>
                     </div>
@@ -798,7 +798,7 @@ const TopUpManagement = () => {
                     </div>
                     {transaction.performedBy && (
                       <div className="transaction-admin">
-                        Thực hiện bởi: {transaction.performedBy.username}
+                        Thực hiện bởi: {transaction.performedBy.displayName || transaction.performedBy.username}
                       </div>
                     )}
                     {transaction.sourceModel && (
@@ -874,15 +874,15 @@ const TopUpManagement = () => {
                       >
                         <div className="user-avatar">
                           {user.avatar ? (
-                            <img src={user.avatar} alt={user.username} />
+                            <img src={user.avatar} alt={user.displayName || user.username} />
                           ) : (
                             <div className="default-avatar">
-                              {user.username.charAt(0).toUpperCase()}
+                              {(user.displayName || user.username).charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
                         <div className="topup-user-info">
-                          <div className="user-username">{user.username}</div>
+                          <div className="user-username">{user.displayName || user.username}</div>
                           <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
                         </div>
                       </div>
@@ -925,7 +925,7 @@ const TopUpManagement = () => {
                   <div key={transaction._id} className="user-transaction-item">
                     <div className="transaction-header">
                       <div className="transaction-user">
-                        <span className="username">{transaction.user.username}</span>
+                        <span className="username">{transaction.user.displayName || transaction.user.username}</span>
                         <span className="transaction-id">ID: {transaction._id}</span>
                       </div>
                       <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
@@ -946,7 +946,7 @@ const TopUpManagement = () => {
                     </div>
                     {transaction.performedBy && (
                       <div className="transaction-admin">
-                        Thực hiện bởi: {transaction.performedBy.username}
+                        Thực hiện bởi: {transaction.performedBy.displayName || transaction.performedBy.username}
                       </div>
                     )}
                     {transaction.sourceModel && (
@@ -1067,15 +1067,15 @@ const TopUpManagement = () => {
                                 >
                                   <div className="user-avatar">
                                     {user.avatar ? (
-                                      <img src={user.avatar} alt={user.username} />
+                                      <img src={user.avatar} alt={user.displayName || user.username} />
                                     ) : (
                                       <div className="default-avatar">
-                                        {user.username.charAt(0).toUpperCase()}
+                                        {(user.displayName || user.username).charAt(0).toUpperCase()}
                                       </div>
                                     )}
                                   </div>
                                   <div className="topup-user-info">
-                                    <div className="user-username">{user.username}</div>
+                                    <div className="user-username">{user.displayName || user.username}</div>
                                     <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
                                   </div>
                                 </div>
@@ -1151,7 +1151,7 @@ const TopUpManagement = () => {
                 <div key={request._id} className="pending-request-item">
                   <div className="request-header">
                     <div className="request-user">
-                      <span className="username">{request.user.username}</span>
+                      <span className="username">{request.user.displayName || request.user.username}</span>
                       <span className="request-id">ID: {request._id}
                         {request.paymentMethod === 'bank' && request.details?.transferContent && 
                           <span className="transfer-content"> | Nội dung chuyển khoản: {request.details.transferContent}</span>
@@ -1251,7 +1251,7 @@ const TopUpManagement = () => {
                     <div key={transaction._id} className="transaction-item">
                       <div className="transaction-header">
                         <div className="transaction-user">
-                          <span className="username">{transaction.user.username}</span>
+                          <span className="username">{transaction.user.displayName || transaction.user.username}</span>
                           <span className="transaction-id">ID: {transaction._id}</span>
                         </div>
                         <span className="transaction-date">{formatDate(transaction.createdAt)}</span>

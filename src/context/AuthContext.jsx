@@ -130,7 +130,29 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('user');
         if (storedUser && checkSessionValidity()) {
           const userData = JSON.parse(storedUser);
-          setUser(userData);
+          
+          // Check if displayName is missing and refresh user data if needed
+          if (!userData.displayName && userData.username) {
+            try {
+              const response = await axios.get(`${config.backendUrl}/api/users/${userData.username}/profile`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+              });
+              
+              const updatedUserData = {
+                ...userData,
+                displayName: response.data.displayName || userData.username
+              };
+              
+              localStorage.setItem('user', JSON.stringify(updatedUserData));
+              setUser(updatedUserData);
+            } catch (refreshError) {
+              console.warn('Could not refresh user data:', refreshError);
+              setUser(userData);
+            }
+          } else {
+            setUser(userData);
+          }
+          
           setIsAuthenticated(true);
           // Use the stored remember me preference
           const rememberMe = localStorage.getItem('rememberMe') === 'true';

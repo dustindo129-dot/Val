@@ -39,6 +39,7 @@ const UserProfile = () => {
   const [avatar, setAvatar] = useState('');
   const [email, setEmail] = useState('');
   const [emailCurrentPassword, setEmailCurrentPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [passwordCurrentPassword, setPasswordCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -46,6 +47,8 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [bannedUsers, setBannedUsers] = useState([]);
+  const [canChangeDisplayName, setCanChangeDisplayName] = useState(true);
+  const [nextDisplayNameChange, setNextDisplayNameChange] = useState(null);
 
   /**
    * Initialize form data with user information
@@ -54,6 +57,11 @@ const UserProfile = () => {
     if (user) {
       setEmail(user.email || '');
       setAvatar(user.avatar || '');
+      setDisplayName(user.displayName || user.username || '');
+      
+      // Check if user can change display name
+      checkDisplayNameChangeEligibility();
+      
       if (user.role === 'admin') {
         fetchBannedUsers();
       } else {
@@ -61,6 +69,37 @@ const UserProfile = () => {
       }
     }
   }, [user]);
+
+  const checkDisplayNameChangeEligibility = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/users/${username}/profile`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      if (response.data.displayNameLastChanged) {
+        const lastChanged = new Date(response.data.displayNameLastChanged);
+        const oneMonthLater = new Date(lastChanged);
+        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+        
+        const now = new Date();
+        if (now < oneMonthLater) {
+          setCanChangeDisplayName(false);
+          setNextDisplayNameChange(oneMonthLater);
+        } else {
+          setCanChangeDisplayName(true);
+          setNextDisplayNameChange(null);
+        }
+      } else {
+        setCanChangeDisplayName(true);
+        setNextDisplayNameChange(null);
+      }
+    } catch (error) {
+      console.error('Error checking display name eligibility:', error);
+    }
+  };
 
   const fetchBlockedUsers = async () => {
     try {
@@ -174,6 +213,70 @@ const UserProfile = () => {
       setMessage({ 
         type: 'error', 
         text: 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.' 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handles display name update form submission
+   * @param {Event} e - Form submission event
+   */
+  const handleDisplayNameUpdate = async (e) => {
+    e.preventDefault();
+    
+    if (!displayName.trim()) {
+      setMessage({ type: 'error', text: 'Tên hiển thị không được để trống' });
+      return;
+    }
+
+    if (displayName.trim().length > 50) {
+      setMessage({ type: 'error', text: 'Tên hiển thị không được vượt quá 50 ký tự' });
+      return;
+    }
+
+    if (!canChangeDisplayName) {
+      setMessage({ type: 'error', text: 'Bạn chỉ có thể thay đổi tên hiển thị một lần mỗi tháng' });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setMessage({ type: 'info', text: 'Đang cập nhật tên hiển thị...' });
+
+      const api = axios.create({
+        baseURL: config.backendUrl,
+        withCredentials: true,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const response = await api.put(
+        `/api/users/${username}/display-name`,
+        { displayName: displayName.trim() }
+      );
+
+      // Update user data in localStorage and AuthContext
+      const updatedUser = { ...user, displayName: response.data.displayName };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      updateUser(updatedUser);
+
+      setMessage({ type: 'success', text: 'Tên hiển thị đã được cập nhật thành công' });
+      
+      // Update eligibility status
+      setCanChangeDisplayName(false);
+      const nextChange = new Date();
+      nextChange.setMonth(nextChange.getMonth() + 1);
+      setNextDisplayNameChange(nextChange);
+      
+    } catch (error) {
+      console.error('Display name update error:', error);
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || 'Không thể cập nhật tên hiển thị. Vui lòng thử lại.' 
       });
     } finally {
       setIsLoading(false);
@@ -324,7 +427,7 @@ const UserProfile = () => {
                 <i className="fa-solid fa-camera"></i>
               </label>
             </div>
-            <h2 className="profile-username">{username}</h2>
+            <h2 className="profile-username">{user?.displayName || username}</h2>
           </div>
         </div>
 
@@ -334,7 +437,7 @@ const UserProfile = () => {
           <form onSubmit={handleEmailUpdate} className="settings-form">
             <h2>Cài đặt email</h2>
             <div className="profile-form-group">
-              <label>Email Address</label>
+              <label>Địa chỉ Email</label>
               <input
                 type="email"
                 value={email}
@@ -357,6 +460,38 @@ const UserProfile = () => {
             </div>
             <button type="submit" className="btn btn-primary" disabled={isLoading}>
               Cập nhật email
+            </button>
+          </form>
+
+          {/* Display name update form */}
+          <form onSubmit={handleDisplayNameUpdate} className="settings-form">
+            <h2>Cài đặt tên hiển thị</h2>
+            <div className="profile-form-group">
+              <label>Tên hiển thị</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="form-control"
+                disabled={isLoading || !canChangeDisplayName}
+                maxLength={50}
+                required
+              />
+              <small className="form-text">
+                Tên hiển thị sẽ được hiển thị thay vì tên người dùng trong các bình luận và trang cá nhân.
+              </small>
+              {!canChangeDisplayName && nextDisplayNameChange && (
+                <small className="form-text text-warning">
+                  Bạn có thể thay đổi tên hiển thị tiếp theo vào ngày: {new Date(nextDisplayNameChange).toLocaleDateString('vi-VN')}
+                </small>
+              )}
+            </div>
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              disabled={isLoading || !canChangeDisplayName}
+            >
+              {canChangeDisplayName ? 'Cập nhật tên hiển thị' : 'Không thể thay đổi'}
             </button>
           </form>
 
@@ -415,7 +550,7 @@ const UserProfile = () => {
                       alt={`${bannedUser.username}'s avatar`} 
                       className="blocked-user-avatar"
                     />
-                    <span className="blocked-username">{bannedUser.username}</span>
+                    <span className="blocked-username">{bannedUser.displayName || bannedUser.username}</span>
                   </div>
                   <button
                     className="unblock-btn"
@@ -435,7 +570,7 @@ const UserProfile = () => {
                       alt={`${blockedUser.username}'s avatar`} 
                       className="blocked-user-avatar"
                     />
-                    <span className="blocked-username">{blockedUser.username}</span>
+                    <span className="blocked-username">{blockedUser.displayName || blockedUser.username}</span>
                   </div>
                   <button
                     className="unblock-btn"

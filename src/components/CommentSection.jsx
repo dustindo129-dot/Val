@@ -185,7 +185,11 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       setComments(prevComments => [
         {
           _id: data._id,
-          user: { username: user.username, avatar: user.avatar || '' },
+          user: { 
+            username: user.username, 
+            displayName: user.displayName || user.username,
+            avatar: user.avatar || '' 
+          },
           text: newComment,
           createdAt: new Date().toISOString(),
           likes: [],
@@ -497,6 +501,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             text: data.text,
             user: {
               username: user.username,
+              displayName: user.displayName || user.username,
               avatar: user.avatar || ''
             },
             createdAt: new Date().toISOString(),
@@ -556,10 +561,10 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       <div className="comment-item">
         <div className="comment-avatar">
           {comment.user.avatar ? (
-            <img src={comment.user.avatar} alt={comment.user.username} />
+            <img src={comment.user.avatar} alt={comment.user.displayName || comment.user.username} />
           ) : (
             <div className="default-avatar">
-              {comment.user.username.charAt(0).toUpperCase()}
+              {(comment.user.displayName || comment.user.username).charAt(0).toUpperCase()}
             </div>
           )}
         </div>
@@ -567,7 +572,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           <div className="comment-header">
             <div className="comment-user-info">
               <span className="comment-username">
-                {comment.isDeleted && !comment.adminDeleted ? '[deleted]' : comment.user.username}
+                {comment.isDeleted && !comment.adminDeleted ? '[deleted]' : (comment.user.displayName || comment.user.username)}
               </span>
               {isAuthenticated && user && !comment.isDeleted && comment.user.username !== user.username && (
                 <button

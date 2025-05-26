@@ -43,13 +43,15 @@ const ReportPanel = ({ user }) => {
   // Function to generate content link based on content type
   const getContentLink = (report) => {
     if (report.contentType === 'chapter' && report.contentId) {
-      // If we have a novelId, use it, otherwise use a default route
-      if (report.novelId && report.novelTitle && report.contentTitle) {
-        const novelSlug = createUniqueSlug(report.novelTitle, report.novelId);
+      // For chapters, we need both novelId and contentTitle (chapter title)
+      if (report.novelId && report.contentTitle) {
+        // Create chapter slug from chapter title and chapter ID
         const chapterSlug = createUniqueSlug(report.contentTitle, report.contentId);
-        return `/novel/${novelSlug}/chapter/${chapterSlug}`;
+        // Use the novelId directly in the URL path for now
+        // This will work with the slug lookup system that can handle both slugs and IDs
+        return `/novel/${report.novelId}/chapter/${chapterSlug}`;
       } else {
-        // If no novelId, we may need to fetch it or just provide a limited link
+        // Fallback to direct chapter ID route
         return `/chapters/${report.contentId}`;
       }
     } else if (report.contentType === 'novel' && report.contentId) {
@@ -89,7 +91,7 @@ const ReportPanel = ({ user }) => {
                 <div key={report._id} className="report-card">
                   <div className="report-meta">
                     <div className="reporter-info">
-                      {report.reporter?.username || 'Anonymous'}
+                      {report.reporter?.displayName || report.reporter?.username || 'Anonymous'}
                     </div>
                     <div className="report-timestamp">
                       {formatDate(report.createdAt)}

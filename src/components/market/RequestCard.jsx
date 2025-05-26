@@ -64,7 +64,7 @@ const RequestCard = ({
           <div className="request-title">
             <span>{request.novel?.title || request.title || "Yêu cầu truyện mới chưa có tên"}</span>
           </div>
-          <div className="request-username">Đề xuất bởi: {request.user.username}</div>
+          <div className="request-username">Đề xuất bởi: {request.user.displayName || request.user.username}</div>
         </div>
         <div className="request-info">
           <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
@@ -115,7 +115,7 @@ const RequestCard = ({
           {contributions[request._id].map(contribution => (
             <div key={contribution._id} className={`donor-item status-${contribution.status}`}>
               <div>
-                <span className="donor-name">{contribution.user.username}</span> - 
+                <span className="donor-name">{contribution.user.displayName || contribution.user.username}</span> - 
                 <span className="donor-amount">{contribution.amount} 🌾</span>
               </div>
               {contribution.note && (
