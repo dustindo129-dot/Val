@@ -23,7 +23,8 @@ const ChapterContent = ({
   editorRef,
   onModeChange,
   canEdit = false,
-  userRole = 'user'
+  userRole = 'user',
+  moduleData = null
 }) => {
   const contentRef = useRef(null);
   const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
@@ -32,6 +33,19 @@ const ChapterContent = ({
   const [editedChapterBalance, setEditedChapterBalance] = useState(chapter.chapterBalance || 0);
   const [originalMode] = useState(chapter.mode || 'published');
   const [originalChapterBalance] = useState(chapter.chapterBalance || 0);
+  const [modeError, setModeError] = useState('');
+
+  // Check if the current module is in paid mode
+  const isModulePaid = moduleData?.mode === 'paid';
+
+  // Effect to handle when module becomes paid - automatically change chapter mode
+  useEffect(() => {
+    if (isModulePaid && editedMode === 'paid') {
+      setEditedMode('published');
+      setEditedChapterBalance(0);
+      setModeError('Chương đã được chuyển về chế độ công khai vì tập hiện tại đã ở chế độ trả phí.');
+    }
+  }, [isModulePaid, editedMode]);
   
   // Initialize localFootnotes and nextFootnoteId when entering edit mode
   useEffect(() => {
@@ -227,7 +241,14 @@ const ChapterContent = ({
   }, []);
 
   const handleModeChange = (value) => {
+    // Validate that paid chapters cannot be set in paid modules
+    if (value === 'paid' && isModulePaid) {
+      setModeError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+      return;
+    }
+    
     setEditedMode(value);
+    setModeError(''); // Clear any previous errors
     
     // If mode changes from paid to something else, reset chapter balance locally
     if (value !== 'paid') {
@@ -332,13 +353,21 @@ const ChapterContent = ({
               onChange={(e) => handleModeChange(e.target.value)}
               className="mode-dropdown"
             >
-              <option value="published">Đã xuất bản (Hiển thị cho tất cả)</option>
+              <option value="published">Công khai (Hiển thị cho tất cả)</option>
               <option value="draft">Nháp (Chỉ admin/mod)</option>
               <option value="protected">Bảo mật (Yêu cầu đăng nhập)</option>
               {userRole === 'admin' && (
-                <option value="paid">Nội dung trả phí</option>
+                <option value="paid" disabled={isModulePaid}>
+                  {isModulePaid ? 'Nội dung trả phí (Không khả dụng - Tập đã trả phí)' : 'Nội dung trả phí'}
+                </option>
               )}
             </select>
+            
+            {modeError && (
+              <div className="mode-error" style={{ color: 'red', fontSize: '14px', marginTop: '5px' }}>
+                {modeError}
+              </div>
+            )}
             
             {editedMode === 'paid' && userRole === 'admin' && (
               <div className="chapter-balance-input">
@@ -468,7 +497,7 @@ const ChapterContent = ({
                       <textarea
                         value={footnote.content}
                         onChange={(e) => updateFootnote(footnote.id, e.target.value)}
-                        placeholder={`Enter footnote ${footnote.id} content...`}
+                        placeholder={`Nhập chú thích ${footnote.id}...`}
                       />
                     </div>
                     <div className="footnote-controls">
@@ -476,7 +505,7 @@ const ChapterContent = ({
                         type="button"
                         className="footnote-delete-btn"
                         onClick={() => deleteFootnote(footnote.id)}
-                        title="Delete footnote"
+                        title="Xóa chú thích"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
@@ -485,12 +514,12 @@ const ChapterContent = ({
                 ))}
               </div>
             ) : (
-              <p>Hướng dẫn chỉnh sửa footnote:
-                 <br />1. Nếu muốn x&oacute;a hoặc chỉnh sửa footnote h&atilde;y thao t&aacute;c ở khu vực b&ecirc;n dưới,
-                  kh&ocirc;ng n&ecirc;n x&oacute;a footnote bằng tay ở khu vực text b&ecirc;n tr&ecirc;n,
-                   c&oacute; thể g&acirc;y ra m&acirc;u thuẫn data v&agrave; l&agrave;m hỏng content.
-                   <br />2. Tương tự như chapter dashboard, c&aacute;c thay đổi chỉ ấn định sau khi bấm Save changes,
-                    n&ecirc;n nếu lỡ tay h&atilde;y Cancel Edit v&agrave; l&agrave;m lại.</p>
+              <p>Hướng dẫn chỉnh sửa chú thích:
+                 <br />1. Nếu muốn xóa hoặc chỉnh sửa chú thích hãy thao tác ở khu vực bên dưới,
+                  không nên xóa chú thích bằng tay ở khu vực chữ bên trên,
+                   có thể gây ra mâu thuẫn dữ liệu và làm hỏng nội dung.
+                   <br />2. Tương tự như mục thêm chương, các thay đổi chỉ ấn định sau khi bấm Lưu chương,
+                    nên nếu lỡ tay hãy Hủy bỏ thay đổi và làm lại.</p>
             )}
 
             <button
@@ -498,7 +527,7 @@ const ChapterContent = ({
               className="add-footnote-btn"
               onClick={addFootnote}
             >
-              <FontAwesomeIcon icon={faPlus} /> Thêm footnote
+              <FontAwesomeIcon icon={faPlus} /> Thêm chú thích
             </button>
           </div>
         </>
@@ -562,7 +591,10 @@ ChapterContent.propTypes = {
   editorRef: PropTypes.object,
   onModeChange: PropTypes.func,
   canEdit: PropTypes.bool,
-  userRole: PropTypes.string
+  userRole: PropTypes.string,
+  moduleData: PropTypes.shape({
+    mode: PropTypes.string
+  })
 };
 
 export default ChapterContent; 

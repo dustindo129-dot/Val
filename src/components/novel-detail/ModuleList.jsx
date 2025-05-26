@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useState, useEffect, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faSeedling } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -65,8 +65,7 @@ const ModuleList = memo(({
   handleModuleDelete,
   handleEditModule,
   handleChapterReorder,
-  handleChapterDelete,
-  onOpenModuleRequest
+  handleChapterDelete
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   // Add state for delete confirmation modal
@@ -216,8 +215,14 @@ const ModuleList = memo(({
             <div className="module-details">
               <div className="module-header">
                 <div className="module-title-area">
-                  <h3 className="module-title">
+                  <h3 className={`module-title ${module.mode === 'paid' && !canAccessPaidContent ? 'paid-module-title' : ''}`}>
                     {module.title || 'Tập không có tên'}
+                    {module.mode === 'paid' && !canAccessPaidContent && module.moduleBalance > 0 && (
+                      <div className="module-balance-required">
+                        <FontAwesomeIcon icon={faSeedling} className="module-balance-icon" />
+                        <span>{module.moduleBalance} lúa</span>
+                      </div>
+                    )}
                   </h3>
                 </div>
                 
@@ -250,23 +255,8 @@ const ModuleList = memo(({
                 )}
               </div>
 
-              {/* Render module content with locking layer for paid modules */}
-              <div className={`module-content-wrapper ${module.mode === 'paid' && !canAccessPaidContent ? 'locked-content' : ''}`}>
-                {module.mode === 'paid' && !canAccessPaidContent && (
-                  <div className="locked-layer">
-                    <div className="locked-content-message">
-                      <FontAwesomeIcon icon={faLock} className="lock-icon" />
-                      <p>Cần {module.moduleBalance} 🌾 để mở khóa.</p>
-                      <button 
-                        className="unlock-now-btn"
-                        onClick={() => onOpenModuleRequest(module)}
-                      >
-                        Mở ngay!
-                      </button>
-                    </div>
-                  </div>
-                )}
-
+              {/* Render module content without locking layer */}
+              <div className="module-content-wrapper">
                 <Suspense fallback={<LoadingSpinner />}>
                   <ModuleChapters
                     chapters={module.chapters || []}
@@ -281,7 +271,6 @@ const ModuleList = memo(({
                     isPaidModule={module.mode === 'paid'}
                     canAccessPaidContent={canAccessPaidContent}
                     pendingRequestsCount={pendingRequestsCount}
-                    onOpenChapterRequest={(chapter) => onOpenModuleRequest(module, chapter)}
                   />
                 </Suspense>
               </div>

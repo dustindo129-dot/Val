@@ -2,9 +2,9 @@ import React from 'react';
 import Modal from '../auth/Modal';
 
 /**
- * Contribution Modal Component
+ * Market Contribution Modal Component
  * 
- * Modal for users to contribute to a request
+ * Modal for users to contribute to a market request
  * 
  * @param {Object} props - Component props
  * @param {boolean} props.isOpen - Whether the modal is open
@@ -17,9 +17,9 @@ import Modal from '../auth/Modal';
  * @param {boolean} props.submitting - Whether submission is in progress
  * @param {Function} props.handleSubmit - Function to handle form submission
  * @param {number} props.userBalance - The user's current balance
- * @returns {JSX.Element} Contribution modal component
+ * @returns {JSX.Element} Market contribution modal component
  */
-const ContributionModal = ({
+const MarketContributionModal = ({
   isOpen,
   onClose,
   currentRequest,
@@ -34,14 +34,14 @@ const ContributionModal = ({
   if (!currentRequest) return null;
   
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Góp lúa cho ${currentRequest.novel 
-        ? currentRequest.novel.title 
-        : currentRequest.title}`}
-    >
-      <div className="contribution-modal-content">
+    <div className="market-contribution-modal">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={`Góp lúa cho ${currentRequest.novel 
+          ? currentRequest.novel.title 
+          : currentRequest.title}`}
+      >
         <div className="contribution-input-container">
           <label htmlFor="contribution-amount">Số lúa góp</label>
           <input
@@ -87,9 +87,9 @@ const ContributionModal = ({
             {submitting ? 'Đang góp...' : 'Xác nhận góp lúa'}
           </button>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </div>
   );
 };
 
-export default ContributionModal; 
+export default MarketContributionModal; 

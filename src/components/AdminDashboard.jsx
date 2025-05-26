@@ -1201,44 +1201,52 @@ const AdminDashboard = () => {
                       {novel.title}
                     </Link>
                     <div className="novel-balance">
-                      {editingBalanceId === novel._id ? (
-                        <div className="balance-edit-container">
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={balanceValue}
-                            onChange={(e) => setBalanceValue(e.target.value)}
-                            className="balance-edit-input"
-                          />
-                          <div className="balance-edit-actions">
-                            <button 
-                              onClick={() => saveBalanceChange(novel._id)}
-                              className="save-balance-btn"
-                            >
-                              Save
-                            </button>
-                            <button 
-                              onClick={cancelEditBalance}
-                              className="cancel-balance-btn"
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                      <div className="balance-info">
+                        <div className="budget-display">
+                          Kho lúa: {novel.novelBudget || 0} 🌾
                         </div>
-                      ) : (
-                        <>
-                          Số dư truyện: {novel.novelBalance || 0}
-                          {user?.role === 'admin' && (
-                            <button
-                              onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
-                              className="edit-balance-btn"
-                            >
-                              Chỉnh sửa
-                            </button>
+                        <div className="balance-display">
+                          {editingBalanceId === novel._id ? (
+                            <div className="balance-edit-container">
+                              <span>Số dư truyện: </span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={balanceValue}
+                                onChange={(e) => setBalanceValue(e.target.value)}
+                                className="balance-edit-input"
+                              />
+                              <div className="balance-edit-actions">
+                                <button 
+                                  onClick={() => saveBalanceChange(novel._id)}
+                                  className="save-balance-btn"
+                                >
+                                  Save
+                                </button>
+                                <button 
+                                  onClick={cancelEditBalance}
+                                  className="cancel-balance-btn"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              Số dư truyện: {novel.novelBalance || 0} 🌾
+                              {user?.role === 'admin' && (
+                                <button
+                                  onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
+                                  className="edit-balance-btn"
+                                >
+                                  Chỉnh sửa
+                                </button>
+                              )}
+                            </>
                           )}
-                        </>
-                      )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

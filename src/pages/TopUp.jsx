@@ -438,7 +438,7 @@ const TopUp = () => {
 
   return (
     <div className="top-up-container">
-      <h1>Nạp 🌾 vào tài khoản (Hệ thống đang phát triển dự kiến hoàn thành giữa tháng 6)</h1>
+      <h1>Nạp 🌾 vào tài khoản</h1>
       
       {/* Rules section */}
       <section className="top-up-section rules-section">

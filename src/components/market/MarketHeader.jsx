@@ -10,18 +10,18 @@ import React from 'react';
 const MarketHeader = () => {
   return (
     <section className="market-section">
-      <h2>Hướng dẫn chung (Hệ thống đang phát triển dự kiến hoàn thành giữa tháng 6)</h2>
+      <h2>Hướng dẫn chung</h2>
       <div className="market-overview">
-        <p style={{ marginBottom: '1em' }}>Đây là nơi bạn có thể dùng 🌾 để yêu cầu truyện dịch mới hoặc yêu cầu mở chương/tập mới/sẵn có.</p>
+        <p style={{ marginBottom: '1em' }}>Đây là nơi bạn có thể dùng 🌾 để yêu cầu truyện dịch mới hoặc ủng hộ cho đề xuất từ nhóm dịch.</p>
         
         <div className="overview-section">
           <h3>Quy tắc chung:</h3>
           <ul>
             <li>Số 🌾 cọc tối thiểu là 100.</li>
-            <li>Yêu cầu có thể rút lại sau 24h (sau 24h nút rút lại sẽ hiện ra), trừ trường hợp chọn Mở ngay!</li>
+            <li>Yêu cầu có thể rút lại sau 24h (sau 24h nút rút lại sẽ hiện ra)</li>
             <li>Có thể góp 🌾 vào yêu cầu có sẵn, bằng nút "góp" ở mỗi yêu cầu.</li>
             <li>Nếu yêu cầu bị từ chối, số 🌾 cọc/đóng góp sẽ được trả lại cho người dùng.</li>
-            <li>Nếu thanh đóng góp vượt quá 100%, nó sẽ đổi màu.</li>
+            <li>Nếu thanh đóng góp vượt quá 100%, nó sẽ đổi màu!!!</li>
           </ul>
         </div>
 
@@ -30,7 +30,7 @@ const MarketHeader = () => {
           <ul>
             <li>Điền tên bộ truyện bạn muốn yêu cầu + nhắn nhủ thêm nếu có</li>
             <li>Cọc một số 🌾 bất kì (tối thiểu 100). Nếu dịch giả quyết định chạy bộ truyện yêu cầu, sẽ dựa vào con số này để quyết định làm bao nhiêu khi mới bắt đầu chạy, ví dụ 100 🌾 thì chắc vừa đủ mở project hoặc cùng lắm làm cái mở đầu hoặc đăng minh họa, nên cách tốt nhất hãy kêu gọi mọi người góp 🌾 cùng.</li>
-            <li>Đăng yêu cầu và chờ đợi. Bên team dịch sẽ chỉ chấp nhận yêu cầu khi có thể đảm bảo tiến độ và chất lượng, nên sẽ mất chút thời gian để tìm được người dịch phù hợp nhất tùy theo yêu cầu.</li>
+            <li>Đăng yêu cầu và chờ đợi. Bên nhóm dịch sẽ chỉ chấp nhận yêu cầu khi có thể đảm bảo tiến độ và chất lượng, nên sẽ mất chút thời gian để tìm được người dịch phù hợp nhất tùy theo yêu cầu.</li>
             <li>Dịch giả chỉ có thể chấp nhận yêu cầu sau khi project được tạo trên trang web (cơ chế bắt buộc), nếu chấp nhận sẽ nhận về toàn bộ số 🌾 từ yêu cầu bao gồm cả cọc lẫn đóng góp, tức là làm thì ăn cả hoặc không làm, không được nửa vời.</li>
             <li>Số 🌾 mục tiêu để mở truyện mới mặc định là 1000 (tương đương khoảng 100k), đây chỉ là con số mang tính minh họa, không phải yêu cầu bắt buộc.</li>
 
@@ -57,7 +57,7 @@ const MarketHeader = () => {
         </div>
 
         <div className="update-date">
-          <em>Cập nhật ngày 05/05/2025</em>
+          <em>Cập nhật ngày 26/05/2025</em>
         </div>
       </div>
     </section>

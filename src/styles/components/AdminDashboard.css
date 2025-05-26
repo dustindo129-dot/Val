@@ -538,12 +538,31 @@
 }
 
 .novel-balance {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   font-size: 0.8rem;
   color: var(--text-secondary, #6c757d);
   margin-top: 0.25rem;
+}
+
+.balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.budget-display,
+.balance-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.budget-display {
+  color: var(--success-color, #27ae60);
+  font-weight: 500;
+}
+
+.balance-display {
+  color: var(--text-secondary, #6c757d);
 }
 
 .edit-balance-btn {
@@ -613,6 +632,14 @@
 }
 
 :root.dark-mode .novel-balance {
+  color: var(--text-secondary-dark, #adb5bd);
+}
+
+:root.dark-mode .budget-display {
+  color: var(--success-color-dark, #2ecc71);
+}
+
+:root.dark-mode .balance-display {
   color: var(--text-secondary-dark, #adb5bd);
 }
 

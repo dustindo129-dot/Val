@@ -43,7 +43,8 @@ const RatingModal = lazy(() => import('./RatingModal'));
 const ModuleChapters = lazy(() => import('./novel-detail/ModuleChapters'));
 const ModuleForm = lazy(() => import('./novel-detail/ModuleForm'));
 const ModuleList = lazy(() => import('./novel-detail/ModuleList'));
-const OpenRequestModal = lazy(() => import('./novel-detail/OpenRequestModal'));
+const ContributionModal = lazy(() => import('./novel-detail/ContributionModal'));
+const ContributionHistoryModal = lazy(() => import('./novel-detail/ContributionHistoryModal'));
 const Login = lazy(() => import('./auth/Login'));
 
 // Utility for HTML truncation, used in description
@@ -82,140 +83,68 @@ const truncateHTML = (html, maxLength) => {
 /**
  * NovelContributions Component
  * 
- * Displays approved contributions and requests for a novel in the sidebar
+ * Displays novel budget and contribution interface
  */
-const NovelContributions = ({ novelId }) => {
-  const { data: contributionsData, isLoading: isLoadingContributions } = useQuery({
-    queryKey: ['novel-contributions', novelId],
-    queryFn: async () => {
-      try {
-        // This fetches both approved contributions and approved requests
-        const response = await api.fetchNovelContributions(novelId);
-        return response;
-      } catch (error) {
-        console.error("Error fetching contributions:", error);
-        return { contributions: [], requests: [] };
-      }
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  // Format date to readable format in Vietnamese format (DD/MM/YYYY)
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  // Combine and sort contributions and requests by date
-  const allItems = useMemo(() => {
-    const contributions = contributionsData?.contributions || [];
-    const requests = contributionsData?.requests || [];
-    
-    const combined = [
-      ...contributions.map(item => ({ ...item, type: 'contribution' })),
-      ...requests.map(item => ({ 
-        ...item, 
-        isRequest: true
-      }))
-    ];
-    
-    // Sort by updatedAt date descending (newest first)
-    return combined.sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
-  }, [contributionsData]);
-
-  // Calculate total number of items
-  const totalCount = allItems.length;
-
-  // Generate contribution message based on item type
-  const getContributionMessage = (item) => {
-    if (item.type === 'open' || item.request?.type === 'open') {
-      const isFullyOpened = item.opened;
-      return (
-        <>
-          Cảm ơn <span className="rd-contributor-name">
-            {item.user?.username || "Người dùng ẩn danh"}
-          </span> đã đóng góp <span className="rd-contribution-amount">
-            {item.deposit} 🌾
-          </span> {isFullyOpened ? (
-            <>để mở <span className="rd-module-title">
-              {item.chapter ? item.chapter.title : item.module.title}
-            </span></>
-          ) : (
-            <>để mở <span className="rd-module-title">
-              {item.chapter ? item.chapter.title : item.module.title}
-            </span></>
-          )}
-        </>
-      );
-    } else if (item.type === 'new' || item.request?.type === 'new') {
-      return (
-        <>
-          Cảm ơn <span className="rd-contributor-name">
-            {item.user?.username || "Người dùng ẩn danh"}
-          </span> đã đóng góp <span className="rd-contribution-amount">
-            {item.amount} 🌾
-          </span> để yêu cầu truyện mới
-        </>
-      );
-    } else if (item.type === 'web' || item.request?.type === 'web') {
-      return (
-        <>
-          Cảm ơn <span className="rd-contributor-name">
-            {item.user?.username || "Người dùng ẩn danh"}
-          </span> đã đóng góp <span className="rd-contribution-amount">
-            {item.amount} 🌾
-          </span> cho đề xuất từ nhóm dịch
-        </>
-      );
-    } else {
-      // Replace the generic fallback with one that only handles contributions
-      return (
-        <>
-          Cảm ơn <span className="rd-contributor-name">
-            {item.user?.username || "Người dùng ẩn danh"}
-          </span> đã đóng góp <span className="rd-contribution-amount">
-            {item.type === 'contribution' ? item.amount : item.deposit} 🌾
-          </span>
-        </>
-      );
-    }
-  };
+const NovelContributions = ({ novelId, novelBudget, onContributionSuccess }) => {
+  const { user, isAuthenticated } = useAuth();
+  const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   return (
     <div className="rd-contribution-section">
       <div className="rd-contribution-section-title">
-        ĐÓNG GÓP ({totalCount})
+        ĐÓNG GÓP
       </div>
-      <div className="rd-contribution-list">
-        {isLoadingContributions ? (
-          <div className="rd-loading-spinner-small">
-            <LoadingSpinner size="small" text="Đang tải..." />
+      
+      {/* Novel Budget Card */}
+      <div className="novel-budget">
+        <div className="balance-icon">
+          <i className="fas fa-seedling"></i>
           </div>
-        ) : allItems.length > 0 ? (
-          allItems.map((item, index) => (
-            <div key={`${item.type}-${item._id}`} className="rd-contribution-item">
-              <div className="rd-contribution-content">
-                {getContributionMessage(item)}
+        <div className="balance-info">
+          <div className="balance-label">Kho lúa</div>
+          <div className="balance-value">{(novelBudget || 0).toLocaleString()} 🌾</div>
               </div>
-              {(item.note || item.text) && (
-                <div className="rd-contribution-message">
-                  "{item.note || item.text}"
                 </div>
-              )}
-              <div className="rd-contribution-date">
-                {formatDate(item.updatedAt)}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="rd-no-contributions">Chưa có đóng góp</div>
-        )}
+
+      {/* Action Buttons */}
+      <div className="contribution-actions">
+        <button 
+          className="btn btn-primary" 
+          onClick={() => {
+            if (!isAuthenticated) {
+              alert('Vui lòng đăng nhập để đóng góp');
+              window.dispatchEvent(new CustomEvent('openLoginModal'));
+              return;
+            }
+            setIsContributeModalOpen(true);
+          }}
+        >
+          <i className="fas fa-plus-circle"></i>
+          <span>Góp lúa</span>
+        </button>
+        <button 
+          className="btn btn-secondary" 
+          onClick={() => setIsHistoryModalOpen(true)}
+        >
+          <i className="fas fa-history"></i>
+          <span>Lịch sử đóng góp</span>
+        </button>
       </div>
+
+      {/* Modals */}
+      <ContributionModal
+        isOpen={isContributeModalOpen}
+        onClose={() => setIsContributeModalOpen(false)}
+        novelId={novelId}
+        onContributionSuccess={onContributionSuccess}
+      />
+      
+      <ContributionHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        novelId={novelId}
+      />
     </div>
   );
 };
@@ -418,11 +347,11 @@ const NovelDetail = ({ novelId }) => {
   const [editingModule, setEditingModule] = useState(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   
-  // New state for open request modal
-  const [openRequestModalOpen, setOpenRequestModalOpen] = useState(false);
-  const [openRequestTarget, setOpenRequestTarget] = useState(null);
-  const [submittingOpenRequest, setSubmittingOpenRequest] = useState(false);
-  const [userBalance, setUserBalance] = useState(0);
+  // Handler for contribution success
+  const handleContributionSuccess = useCallback(() => {
+    // Refresh the novel data to update the budget
+    queryClient.invalidateQueries(['novel', novelId]);
+  }, [queryClient, novelId]);
 
   // Fetch user balance when authenticated
   useEffect(() => {
@@ -447,13 +376,13 @@ const NovelDetail = ({ novelId }) => {
   const handleDeleteModule = useCallback(async (moduleId) => {
     if (!user || (user.role !== 'admin')) return;
     
-    if (window.confirm('Bạn có chắc chắn muốn xóa module này?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa tập này?')) {
       try {
         await api.deleteModule(novelId, moduleId);
         // Refresh the data
         queryClient.invalidateQueries(['novel', novelId]);
       } catch (error) {
-        console.error('Không thể xóa module:', error);
+        console.error('Không thể xóa tập:', error);
         alert('Không thể xóa module. Vui lòng thử lại.');
       }
     }
@@ -714,88 +643,6 @@ const NovelDetail = ({ novelId }) => {
       queryClient.refetchQueries(['novel', novelId]);
     }
   }, [moduleForm, editingModule, novelId, queryClient]);
-  
-  // Handler for opening the request modal for modules or chapters
-  const handleOpenRequestModal = useCallback((module, chapter = null) => {
-    if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để mở nội dung');
-      window.dispatchEvent(new CustomEvent('openLoginModal'));
-      return;
-    }
-    
-    // Set the target to either the module or the chapter
-    setOpenRequestTarget(chapter || module);
-    setOpenRequestModalOpen(true);
-  }, [isAuthenticated]);
-
-  // Handler for submitting an open request
-  const handleSubmitOpenRequest = useCallback(async (depositAmount) => {
-    if (!isAuthenticated || !openRequestTarget) {
-      return;
-    }
-    
-    setSubmittingOpenRequest(true);
-    
-    try {
-      // Determine if we're opening a module or chapter
-      const isModule = openRequestTarget.moduleBalance !== undefined;
-      
-      // Create the request data
-      const openRequestData = {
-        type: 'open',
-        title: DOMPurify.sanitize(`Yêu cầu được thông qua tự động`),
-        novelId,
-        deposit: Number(depositAmount)
-      };
-      
-      // Add module or chapter ID based on the target
-      if (isModule) {
-        openRequestData.moduleId = openRequestTarget._id;
-      } else {
-        openRequestData.chapterId = openRequestTarget._id;
-      }
-      
-      // Submit the request to the API
-      const response = await axios.post(
-        `${config.backendUrl}/api/requests`,
-        openRequestData,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      // Check if there was a refund
-      if (response.data.refundAmount) {
-        // Update local user balance to reflect refund
-        setUserBalance(prevBalance => prevBalance - depositAmount + response.data.refundAmount);
-        
-        alert(`Yêu cầu đã được xử lí thành công. ${isModule ? 'Tập' : 'Chương'} đã được mở! Một số dư hoàn lại ${response.data.refundAmount} đã được thêm vào số 🌾 hiện tại của bạn.`);
-      } else if (response.data.opened) {
-        // Content was successfully opened
-        // Update local user balance
-        setUserBalance(prevBalance => prevBalance - depositAmount);
-        
-        alert(`Yêu cầu của bạn đã được xử lý thành công. ${isModule ? 'Tập' : 'Chương'} đã được mở!`);
-      } else {
-        // Content was not opened (not enough balance)
-        // Update local user balance
-        setUserBalance(prevBalance => prevBalance - depositAmount);
-        
-        alert(`Yêu cầu của bạn đã được xử lý thành công. Cảm ơn đã góp 🌾 để mở ${isModule ? 'Tập' : 'Chương'}!`);
-      }
-      
-      // Close the modal
-      setOpenRequestModalOpen(false);
-      setOpenRequestTarget(null);
-      
-      // Refresh the novel data to show unlocked content
-      queryClient.invalidateQueries(['novel', novelId]);
-      
-    } catch (err) {
-      console.error('Failed to submit open request:', err);
-      alert(err.response?.data?.message || 'Failed to submit open request');
-    } finally {
-      setSubmittingOpenRequest(false);
-    }
-  }, [isAuthenticated, openRequestTarget, novelId, queryClient]);
   
   // Check if token exists
   useEffect(() => {
@@ -1065,7 +912,11 @@ const NovelDetail = ({ novelId }) => {
             handleModuleFormToggle={handleModuleFormToggle}
             truncateHTML={truncateHTML}
             chaptersData={chaptersData}
-            sidebar={<NovelContributions novelId={novelId} />}
+            sidebar={<NovelContributions 
+              novelId={novelId} 
+              novelBudget={data.novel.novelBudget} 
+              onContributionSuccess={handleContributionSuccess}
+            />}
           />
           
           <div className="chapter-list-container">
@@ -1139,7 +990,6 @@ const NovelDetail = ({ novelId }) => {
                   handleEditModule={handleEditModule}
                   handleChapterReorder={handleChapterReorder}
                   handleChapterDelete={handleChapterDelete}
-                  onOpenModuleRequest={handleOpenRequestModal}
                 />
               </Suspense>
             )}
@@ -1187,21 +1037,6 @@ const NovelDetail = ({ novelId }) => {
               />
             </Suspense>
           )}
-          
-          {/* Open Request Modal */}
-          <Suspense fallback={<LoadingSpinner />}>
-            <OpenRequestModal
-              isOpen={openRequestModalOpen}
-              onClose={() => {
-                setOpenRequestModalOpen(false);
-                setOpenRequestTarget(null);
-              }}
-              onSubmit={handleSubmitOpenRequest}
-              target={openRequestTarget}
-              userBalance={userBalance}
-              submitting={submittingOpenRequest}
-            />
-          </Suspense>
           
           {/* Add ScrollToTop component */}
           <ScrollToTop threshold={400} />

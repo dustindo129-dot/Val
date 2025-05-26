@@ -435,6 +435,14 @@
   overflow: hidden;
 }
 
+/* Gift section */
+.rd-gift-section {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
 .rd-description-title {
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
@@ -494,6 +502,12 @@
 }
 
 :root.dark-mode .rd-description-section {
+  background-color: #2a2a2a;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode support for gift section */
+:root.dark-mode .rd-gift-section {
   background-color: #2a2a2a;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
@@ -799,6 +813,226 @@
 
 :root.dark-mode .rd-no-contributions {
   color: #aaa;
+}
+
+/* Novel Budget Card */
+.novel-budget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px;
+  background-color: #effaf5;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #2ecc71;
+}
+
+.balance-icon {
+  font-size: 24px;
+  color: #2ecc71;
+}
+
+.balance-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.balance-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2ecc71;
+}
+
+/* Contribution Actions */
+.contribution-actions {
+  display: flex;
+  gap: 10px;
+  margin: 15px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.btn-primary {
+  background-color: #1e3a8a;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1e40af;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+/* Contribute Form */
+.contribute-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.form-group input, .form-group textarea {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.user-balance-info {
+  background-color: #f0f9ff;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border-left: 4px solid #3b82f6;
+}
+
+/* History Table */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th, .history-table td {
+  padding: 10px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.history-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.history-user {
+  font-weight: 500;
+}
+
+.history-amount {
+  font-weight: 600;
+}
+
+.history-amount.positive {
+  color: #2ecc71;
+}
+
+.history-amount.negative {
+  color: #e74c3c;
+}
+
+.history-balance {
+  color: #2ecc71;
+  font-weight: 600;
+}
+
+.system-row {
+  background-color: #f8f9fa;
+}
+
+.system-user {
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+/* Dark mode support for new elements */
+:root.dark-mode .novel-budget {
+  background-color: #1a3a2e;
+  border-color: #27ae60;
+}
+
+:root.dark-mode .balance-label {
+  color: #aaa;
+}
+
+:root.dark-mode .balance-value {
+  color: #27ae60;
+}
+
+:root.dark-mode .btn-secondary {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #f0f0f0;
+}
+
+:root.dark-mode .btn-secondary:hover {
+  background-color: #333;
+}
+
+:root.dark-mode .modal-content {
+  background-color: #2a2a2a;
+}
+
+:root.dark-mode .form-group input,
+:root.dark-mode .form-group textarea {
+  background-color: #333;
+  border-color: #555;
+  color: #f0f0f0;
+}
+
+:root.dark-mode .form-group label {
+  color: #ccc;
+}
+
+:root.dark-mode .user-balance-info {
+  background-color: #1a2332;
+  border-color: #3b82f6;
+}
+
+:root.dark-mode .history-table th {
+  background-color: #333;
+  color: #f0f0f0;
+}
+
+:root.dark-mode .history-table td {
+  border-color: #555;
+  color: #f0f0f0;
+}
+
+:root.dark-mode .system-row {
+  background-color: #333;
 }
 
 /* Responsive styles */

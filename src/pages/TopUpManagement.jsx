@@ -600,6 +600,7 @@ const TopUpManagement = () => {
       'open': 'Mở chương/tập',
       'admin': 'Điều chỉnh thủ công',
       'contribution': 'Đóng góp',
+      'gift': 'Quà tặng',
       'refund': 'Hoàn tiền',
       'withdrawal': 'Rút tiền',
       'other': 'Khác'

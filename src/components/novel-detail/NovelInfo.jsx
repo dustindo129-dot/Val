@@ -7,6 +7,7 @@ import { BookmarkIcon, BookmarkActiveIcon, HeartIcon, HeartFilledIcon, ViewsIcon
 import api from '../../services/api';
 import RatingModal from '../../components/RatingModal';
 import { useBookmarks } from '../../context/BookmarkContext';
+import GiftRow from './GiftRow';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faFacebookF, 
@@ -647,6 +648,18 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 {isDescriptionExpanded ? 'Hiển thị ít hơn' : 'Hiển thị thêm'}
               </a>
             </div>
+
+            {/* Gift Section */}
+            <div className="rd-gift-section">
+              <h2 className="rd-description-title">TẶNG QUÀ</h2>
+              <GiftRow 
+                novelId={novelId} 
+                onGiftSuccess={() => {
+                  // Refresh novel data when gifts are sent
+                  queryClient.invalidateQueries(['novel', novelId]);
+                }}
+              />
+            </div>
           </div>
 
           <div className="rd-novel-sidebar">
@@ -776,9 +789,6 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
               </div>
             </div>
 
-            {/* Contributions Section - Always show regardless of novel.note */}
-            {sidebar}
-
             {/* Announcement Section */}
             {novelData.note && (
               <div className="rd-section">
@@ -807,6 +817,9 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                 </div>
               </div>
             )}
+
+            {/* Contributions Section - Always show regardless of novel.note */}
+            {sidebar}
           </div>
         </div>
       </div>

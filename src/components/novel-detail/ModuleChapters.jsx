@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faSeedling } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import { createUniqueSlug } from '../../utils/slugUtils';
 import '../../styles/components/ModuleChapters.css';
@@ -135,35 +135,20 @@ const ModuleChapters = memo(({
             const chapterModeClass = chapter.mode === 'draft' ? 'chapter-mode-draft' : '';
             const isPaidChapter = chapter.mode === 'paid';
             const chapterIsAccessible = canAccessChapter(chapter);
+            const isInPaidModule = isPaidModule && !canAccessPaidContent;
             
             return (
               <div 
                 key={`chapter-item-${chapterId}`}
-                className={`module-chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''} ${!chapterIsAccessible ? 'locked-chapter' : ''}`}
+                className={`module-chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''} ${!chapterIsAccessible || isInPaidModule ? 'locked-chapter' : ''}`}
                 style={{ transition: 'all 0.3s ease' }}
               >
-                {/* Locked layer for paid chapters */}
-                {isPaidChapter && !canAccessPaidContent && (
-                  <div className="chapter-locked-layer">
-                    <div className="locked-content-info">
-                      <FontAwesomeIcon icon={faLock} className="lock-icon-small" />
-                      <span>Cần {chapter.chapterBalance || 0} 🌾 để mở khóa.</span>
-                      <button 
-                        className="chapter-unlock-now-btn"
-                        onClick={() => onOpenChapterRequest(chapter)}
-                      >
-                        Mở ngay!
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 <div className="chapter-list-content" key={`chapter-content-${chapterId}`}>
                   <div className="chapter-number" key={`chapter-number-${chapterId}`}>
                     {typeof chapter.order === 'number' ? chapter.order : chapter.order || 0}
                   </div>
                   
-                  {chapterIsAccessible ? (
+                  {chapterIsAccessible && !isInPaidModule ? (
                     <Link 
                       to={`/novel/${createUniqueSlug(novelTitle, novelId)}/chapter/${createUniqueSlug(chapter.title, chapterId)}`} 
                       className={`chapter-title-link ${chapterModeClass}`}
@@ -175,12 +160,22 @@ const ModuleChapters = memo(({
                       )}
                     </Link>
                   ) : (
-                    <div className="chapter-title-link locked">
+                    <div className={`chapter-title-link locked ${isInPaidModule ? 'paid-module-chapter' : ''}`}>
+                      {(isInPaidModule || !chapterIsAccessible) && (
+                        <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
+                      )}
                       {chapter.title}
-                      <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
-                      {chapter.mode === 'protected' && (
+                      {chapter.mode === 'protected' && !isInPaidModule && (
                         <span className="login-required-text">(Yêu cầu đăng nhập)</span>
                       )}
+                    </div>
+                  )}
+
+                  {/* Balance required for paid chapters (not in paid modules) */}
+                  {isPaidChapter && !isInPaidModule && chapter.chapterBalance > 0 && (
+                    <div className="balance-required">
+                      <FontAwesomeIcon icon={faSeedling} className="balance-icon" />
+                      <span>{chapter.chapterBalance} lúa</span>
                     </div>
                   )}
                 </div>

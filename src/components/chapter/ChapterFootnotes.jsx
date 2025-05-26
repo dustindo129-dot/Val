@@ -7,7 +7,7 @@ const ChapterFootnotes = ({ footnotes, onFootnoteClick }) => {
 
   return (
     <div className="chapter-footnotes">
-      <h3 className="footnotes-title">Footnotes</h3>
+      <h3 className="footnotes-title">Chú thích</h3>
       <div className="footnotes-list">
         {footnotes.map((footnote) => (
           <div key={footnote.id} className="footnote-item" id={`note-${footnote.id}`}>

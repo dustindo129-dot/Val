@@ -83,6 +83,31 @@ const ChapterDashboard = () => {
   // Reference to the editor
   const editorRef = useRef(null);
 
+  // Check if the current module is in paid mode
+  const isModulePaid = module?.mode === 'paid';
+
+  // Handle mode change with validation
+  const handleModeChange = (e) => {
+    const newMode = e.target.value;
+    
+    if (newMode === 'paid' && isModulePaid) {
+      setError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+      return;
+    }
+    
+    setMode(newMode);
+    setError(''); // Clear any previous errors
+  };
+
+  // Effect to handle when module becomes paid - automatically change chapter mode
+  useEffect(() => {
+    if (isModulePaid && mode === 'paid') {
+      setMode('published');
+      setChapterBalance(0);
+      setError('Chương đã được chuyển về chế độ công khai vì tập hiện tại đã ở chế độ trả phí.');
+    }
+  }, [isModulePaid, mode]);
+
   /**
    * Adds a footnote marker to the editor content at the current cursor position
    * @param {number} footnoteNumber - The footnote number to insert
@@ -351,6 +376,13 @@ const ChapterDashboard = () => {
       return;
     }
 
+    // Validate that paid chapters cannot be created in paid modules
+    if (mode === 'paid' && isModulePaid) {
+      setError('Không thể tạo chương trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+      setSaving(false);
+      return;
+    }
+
     try {
       // Get content from TinyMCE editor and clean it
       const content = editorRef.current.getContent();
@@ -384,7 +416,7 @@ const ChapterDashboard = () => {
       // Check for markers without footnotes
       const missingFootnotes = footnoteIdsInContent.filter(id => !footnoteIdsInState.includes(id));
       if (missingFootnotes.length > 0) {
-        setError(`Có dấu footnote trong chương không có nội dung (IDs: ${missingFootnotes.join(', ')}). Vui lòng thêm nội dung footnote hoặc xóa các dấu footnote.`);
+        setError(`Có chú thích trong chương không có nội dung (IDs: ${missingFootnotes.join(', ')}). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
         setSaving(false);
         return;
       }
@@ -392,7 +424,7 @@ const ChapterDashboard = () => {
       // Check for footnotes without markers
       const orphanedFootnotes = footnoteIdsInState.filter(id => !footnoteIdsInContent.includes(id));
       if (orphanedFootnotes.length > 0) {
-        setError(`Có footnote trong chương không có dấu footnote (IDs: ${orphanedFootnotes.join(', ')}). Vui lòng thêm dấu footnote hoặc xóa các footnote.`);
+        setError(`Có chú thích trong chương không có dấu chú thích (IDs: ${orphanedFootnotes.join(', ')}). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
         setSaving(false);
         return;
       }
@@ -561,7 +593,7 @@ const ChapterDashboard = () => {
           <div className="header-content">
             <h1>{isEditMode ? 'Chỉnh sửa chương' : 'Thêm chương mới'}</h1>
             <h2>{novel?.title}</h2>
-            {module && <div className="module-title">Module: {module.title}</div>}
+            {module && <div className="module-title">Tập: {module.title}</div>}
           </div>
           <Link to={`/novel/${novelSlug}`} className="back-to-novel">
             <FontAwesomeIcon icon={faArrowLeft} /> Trở lại trang novel
@@ -599,26 +631,32 @@ const ChapterDashboard = () => {
                 <label>Chế độ chương:</label>
                 <select
                     value={mode}
-                    onChange={(e) => setMode(e.target.value)}
+                    onChange={handleModeChange}
                     className="mode-dropdown"
                 >
-                  <option value="published">Đã xuất bản (Hiển thị cho tất cả mọi người)</option>
+                  <option value="published">Công khai (Hiển thị cho tất cả mọi người)</option>
                   <option value="draft">Bản nháp (Chỉ admin/mod)</option>
                   <option value="protected">Bảo vệ (Yêu cầu đăng nhập)</option>
                   {user?.role === 'admin' && (
-                    <option value="paid">Nội dung trả phí</option>
+                    <option value="paid" disabled={isModulePaid}>
+                      {isModulePaid ? 'Nội dung trả phí (Không khả dụng - Tập đã trả phí)' : 'Nội dung trả phí'}
+                    </option>
                   )}
                 </select>
               </div>
-              {mode === 'paid' && user?.role === 'admin' && (
-                <div className="chapter-balance-input">
-                  <label>Số tiền chương:</label>
+              {user?.role === 'admin' && (
+                <div className="chapter-balance-input" style={{ 
+                  visibility: mode === 'paid' ? 'visible' : 'hidden',
+                  opacity: mode === 'paid' ? 1 : 0
+                }}>
+                  <label>Số lúa chương:</label>
                   <input
                     type="number"
                     min="0"
                     value={chapterBalance}
                     onChange={(e) => setChapterBalance(e.target.value)}
-                    placeholder="Nhập số tiền chương"
+                    placeholder="Nhập số lúa chương"
+                    disabled={mode !== 'paid'}
                   />
                 </div>
               )}
@@ -822,7 +860,7 @@ const ChapterDashboard = () => {
 
           {/* Footnotes section */}
           <div className="form-section footnote-section">
-            <h3 className="form-section-title">Footnotes</h3>
+            <h3 className="form-section-title">Chú thích</h3>
 
             {footnotes.length > 0 ? (
                 <div className="footnote-list">
@@ -850,12 +888,12 @@ const ChapterDashboard = () => {
                   ))}
                 </div>
             ) : (
-              <p>Hướng dẫn sử dụng footnote:
-                 <br />1. Add to&agrave;n bộ content v&agrave;o trước.
-                 <br />2. Bấm v&agrave;o chỗ muốn th&ecirc;m footnote trong nội dung.
-                 <br />3. + Add footnote
-                 <br />4. Lặp lại bước 2 v&agrave; 3 đến khi đầy đủ footnote.
-                 <br />5. Nếu th&ecirc;m nhầm c&oacute; thể bấm x&oacute;a, tất cả nội dung v&agrave; footnote chỉ ấn định sau khi bấm Save Chapter.</p>
+              <p>Hướng dẫn sử dụng chú thích:
+                 <br />1. Nhập toàn bộ nội dung chương vào trước.
+                 <br />2. Bấm vào chỗ muốn thêm chú thích trong nội dung.
+                 <br />3. + Thêm chú thích
+                 <br />4. Lặp lại bước 2 và 3 đến khi đầy đủ chú thích.
+                 <br />5. Nếu thêm nhầm có thể bấm xóa, tất cả nội dung và chú thích chỉ ấn định sau khi bấm Lưu chương.</p>
             )}
 
             <button
@@ -863,7 +901,7 @@ const ChapterDashboard = () => {
                 className="add-footnote-btn"
                 onClick={addFootnote}
             >
-              <FontAwesomeIcon icon={faPlus} /> Thêm footnote
+              <FontAwesomeIcon icon={faPlus} /> Thêm chú thích
             </button>
           </div>
 

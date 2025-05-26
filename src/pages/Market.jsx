@@ -12,7 +12,7 @@ import {
   MarketRequestsList,
   MarketRequestForm,
   RequestHistory,
-  ContributionModal
+  MarketContributionModal
 } from '../components/market';
 
 /**
@@ -863,8 +863,8 @@ const Market = () => {
         </section>
       </div>
       
-      {/* Contribution Modal */}
-      <ContributionModal
+      {/* Market Contribution Modal */}
+      <MarketContributionModal
           isOpen={contributionModalOpen}
           onClose={handleCloseContributionModal}
         currentRequest={currentRequestForContribution}

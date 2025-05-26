@@ -1289,7 +1289,7 @@ const Chapter = ({ novelId, chapterId }) => {
       />
 
       {/* Chapter Content with Access Guard */}
-      <ChapterAccessGuard chapter={chapter} user={user}>
+      <ChapterAccessGuard chapter={chapter} moduleData={moduleData} user={user}>
         <ChapterContent
           key={`chapter-content-${chapterId}`}
           chapter={chapter}
@@ -1306,6 +1306,7 @@ const Chapter = ({ novelId, chapterId }) => {
           onModeChange={handleModeChange}
           canEdit={canEdit}
           userRole={user?.role || 'user'}
+          moduleData={moduleData}
         />
       </ChapterAccessGuard>
 

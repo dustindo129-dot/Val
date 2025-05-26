@@ -132,21 +132,29 @@
 /* Chapter Title and Status Styling */
 .chapter-title-status-group {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  gap: 20px;
   width: 100%;
+  align-items: flex-end;
 }
 
 .chapter-title-input {
-  width: 100%;
+  flex: 2;
+  min-width: 0;
 }
 
 .chapter-mode-input {
-  width: 100%;
+  flex: 1;
+  min-width: 200px;
+}
+
+.chapter-balance-input {
+  flex: 1;
+  min-width: 150px;
 }
 
 .chapter-title-input input,
-.chapter-mode-input label {
+.chapter-mode-input select,
+.chapter-balance-input input {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
@@ -155,8 +163,10 @@
 }
 
 .chapter-title-status-group label {
+  display: block;
   margin-bottom: 5px;
   font-weight: 600;
+  color: var(--secondary-color);
 }
 
 /* Status section styles - Remove since we're not using status anymore */
@@ -494,11 +504,15 @@
   .chapter-title-status-group {
     flex-direction: column;
     gap: 10px;
+    align-items: stretch;
   }
 
   .chapter-title-input,
-  .chapter-mode-input {
+  .chapter-mode-input,
+  .chapter-balance-input {
+    flex: none;
     width: 100%;
+    min-width: auto;
   }
 
   .header-content h1 {
@@ -580,22 +594,4 @@
   }
 }
 
-.chapter-balance-input {
-  flex: 1;
-  min-width: 200px;
-  margin-top: 10px;
-}
-
-.chapter-balance-input label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.chapter-balance-input input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
+/* Chapter balance input styles are now defined above in the main group */

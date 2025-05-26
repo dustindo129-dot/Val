@@ -555,6 +555,37 @@ const api = {
       console.error("Error fetching novel reviews:", error);
       return { reviews: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0 } };
     }
+  },
+
+  // Novel contribution methods
+  contributeToNovel: async (novelId, amount, note) => {
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/novels/${novelId}/contribute`,
+        { amount, note },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getContributionHistory: async (novelId) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/novels/${novelId}/contribution-history`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching contribution history:", error);
+      return { contributions: [] };
+    }
   }
 };
 

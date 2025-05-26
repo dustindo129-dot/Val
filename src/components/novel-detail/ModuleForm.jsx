@@ -39,6 +39,21 @@ const ModuleForm = memo(({
   const handleSubmit = (e) => {
     e.preventDefault(); // Prevent default form submission
     
+    // Validate paid module balance
+    if (mode === 'paid') {
+      const balance = parseInt(moduleBalance) || 0;
+      if (balance < 100) {
+        setModuleForm(prev => ({ 
+          ...prev, 
+          error: 'Số lượng lúa cần phải tối thiểu là 100 🌾' 
+        }));
+        return;
+      }
+    }
+    
+    // Clear any previous errors
+    setModuleForm(prev => ({ ...prev, error: '' }));
+    
     // Create updated form data with current mode and moduleBalance
     const updatedForm = {
       ...moduleForm,
@@ -109,13 +124,15 @@ const ModuleForm = memo(({
         {/* Module Balance Input - Only shows when mode is paid */}
         {isAdmin && mode === 'paid' && (
           <div className="form-group" style={{margin: '10px 0'}}>
-            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Số lượng 🌾 cần:</label>
+            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>
+              Số lượng 🌾 cần (tối thiểu 100):
+            </label>
             <input
               type="number"
-              min="0"
+              min="100"
               value={moduleBalance}
               onChange={handleModuleBalanceChange}
-              placeholder="Nhập giá 🌾 "
+              placeholder="Nhập giá 🌾 (tối thiểu 100)"
               style={{
                 width: '100%',
                 padding: '8px',
