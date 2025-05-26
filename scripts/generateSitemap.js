@@ -139,22 +139,9 @@ async function generateSitemap() {
     const robotsSourcePath = path.resolve(__dirname, '../public/robots.txt');
     const robotsOutputPath = path.resolve(__dirname, '../dist/robots.txt');
     
-    // Ensure dist directory exists before copying robots.txt
-    const distDir = path.dirname(robotsOutputPath);
-    if (!fs.existsSync(distDir)) {
-      fs.mkdirSync(distDir, { recursive: true });
-      console.log(`✓ Created dist directory: ${distDir}`);
-    }
-    
     if (fs.existsSync(robotsSourcePath)) {
-      try {
-        fs.copyFileSync(robotsSourcePath, robotsOutputPath);
-        console.log(`✓ Robots.txt copied to ${robotsOutputPath}`);
-      } catch (error) {
-        console.warn(`⚠ Could not copy robots.txt: ${error.message}`);
-      }
-    } else {
-      console.warn(`⚠ Source robots.txt not found at ${robotsSourcePath}`);
+      fs.copyFileSync(robotsSourcePath, robotsOutputPath);
+      console.log(`✓ Robots.txt copied to ${robotsOutputPath}`);
     }
     
     console.log(`✓ Sitemap generated at ${outputPath}`);

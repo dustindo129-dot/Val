@@ -28,27 +28,24 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize the application unless we're being rendered by vite-plugin-ssr
-// This ensures the app renders in both DEV and PROD when not using SSR
-if (!window.__VITE_PLUGIN_SSR) {
-  // Get the root element
-  const root = document.getElementById('root');
+// Initialize the application for regular SPA build
+// Get the root element
+const root = document.getElementById('root');
 
-  // Render the app only if the root element exists
-  if (root) {
-    createRoot(root).render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </QueryClientProvider>
-      </React.StrictMode>
-    );
-  }
+// Render the app only if the root element exists
+if (root) {
+  createRoot(root).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
 }
 
-// Export the app component with providers for vite-plugin-ssr
+// Export the app component with providers (for potential future SSR use)
 export default function MainApp() {
   return (
     <React.StrictMode>
