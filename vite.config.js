@@ -141,6 +141,8 @@ export default defineConfig(({ command, mode }) => {
       emptyOutDir: false,
       // Increase chunk size warning limit to 1MB (1000KB) since 500KB is too restrictive for modern apps
       chunkSizeWarningLimit: 1000,
+      // Ensure proper output directory
+      outDir: 'dist',
       // Ensure proper chunking
       rollupOptions: {
         output: {
