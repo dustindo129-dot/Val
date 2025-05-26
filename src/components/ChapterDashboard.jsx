@@ -384,7 +384,7 @@ const ChapterDashboard = () => {
       // Check for markers without footnotes
       const missingFootnotes = footnoteIdsInContent.filter(id => !footnoteIdsInState.includes(id));
       if (missingFootnotes.length > 0) {
-        setError(`There are footnote markers in the content without corresponding footnotes (IDs: ${missingFootnotes.join(', ')}). Please add those footnotes or remove the markers.`);
+        setError(`Có dấu footnote trong chương không có nội dung (IDs: ${missingFootnotes.join(', ')}). Vui lòng thêm nội dung footnote hoặc xóa các dấu footnote.`);
         setSaving(false);
         return;
       }
@@ -392,7 +392,7 @@ const ChapterDashboard = () => {
       // Check for footnotes without markers
       const orphanedFootnotes = footnoteIdsInState.filter(id => !footnoteIdsInContent.includes(id));
       if (orphanedFootnotes.length > 0) {
-        setError(`There are footnotes without markers in the content (IDs: ${orphanedFootnotes.join(', ')}). Please insert markers for these footnotes or remove them.`);
+        setError(`Có footnote trong chương không có dấu footnote (IDs: ${orphanedFootnotes.join(', ')}). Vui lòng thêm dấu footnote hoặc xóa các footnote.`);
         setSaving(false);
         return;
       }

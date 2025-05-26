@@ -37,7 +37,7 @@ const SlugWrapper = ({ component: Component, type }) => {
               newParams.novelId = novelId;
             } catch (err) {
               console.error('Failed to resolve novel slug:', err);
-              setError('Novel not found');
+              setError('Không tìm thấy truyện');
               return;
             }
           }
@@ -55,7 +55,7 @@ const SlugWrapper = ({ component: Component, type }) => {
               newParams.chapterId = chapterId;
             } catch (err) {
               console.error('Failed to resolve chapter slug:', err);
-              setError('Chapter not found');
+              setError('Không tìm thấy chương');
               return;
             }
           }
@@ -64,7 +64,7 @@ const SlugWrapper = ({ component: Component, type }) => {
         setResolvedParams(newParams);
       } catch (err) {
         console.error('Error resolving params:', err);
-        setError('Failed to load content');
+        setError('Không thể tải nội dung');
       } finally {
         setLoading(false);
       }

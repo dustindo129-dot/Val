@@ -66,7 +66,7 @@ const Login = ({ onClose, onSignUp }) => {
       const response = await login(formData.username, formData.password, formData.rememberMe);
       onClose(); // Close modal on successful login
     } catch (err) {
-      setError('Invalid username or password');
+      setError('Tên người dùng hoặc mật khẩu không chính xác');
       console.error('Login error:', err);
     } finally {
       setLoading(false);

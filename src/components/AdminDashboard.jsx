@@ -357,13 +357,13 @@ const AdminDashboard = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file');
+      setError('Vui lòng tải lên tệp ảnh');
       return;
     }
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size should be less than 5MB');
+      setError('Kích thước ảnh phải nhỏ hơn 5MB');
       return;
     }
 
@@ -391,8 +391,8 @@ const AdminDashboard = () => {
 
       setError('');
     } catch (err) {
-      setError('Failed to upload illustration');
-      console.error('Illustration upload error:', err);
+      setError('Không thể tải lên ảnh');
+      console.error('Lỗi tải lên ảnh:', err);
     } finally {
       setLoading(false);
     }

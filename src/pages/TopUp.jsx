@@ -258,7 +258,7 @@ const TopUp = () => {
       
     } catch (err) {
       console.error('Failed to create QR code and payment request:', err);
-      setError(err.response?.data?.message || 'Failed to create payment request');
+      setError(err.response?.data?.message || 'Không thể tạo yêu cầu thanh toán');
     } finally {
       setLoading(false);
     }

@@ -87,7 +87,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
       if (context?.previousInteraction) {
         queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
       }
-      setError('Failed to update rating. Please try again.');
+      setError('Không thể cập nhật đánh giá. Vui lòng thử lại.');
     },
     onSuccess: (response) => {
       // Update with actual server data
