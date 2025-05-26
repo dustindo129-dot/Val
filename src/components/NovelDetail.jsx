@@ -19,7 +19,7 @@
  * - Navigation breadcrumbs
  */
 
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,22 +28,22 @@ import '../styles/components/NovelDetail.css';
 import '../styles/components/RedesignedNovelDetail.css';
 import { CommentIcon, LockIcon } from './novel-detail/NovelIcons';
 import LoadingSpinner from './LoadingSpinner';
-import CommentSection from './CommentSection';
-import RatingModal from './RatingModal';
-import ModuleChapters from './novel-detail/ModuleChapters';
-import ModuleForm from './novel-detail/ModuleForm';
 import NovelInfo from './novel-detail/NovelInfo';
 import ScrollToTop from './ScrollToTop';
-import OpenRequestModal from './novel-detail/OpenRequestModal';
 import api from '../services/api';
 import sseService from '../services/sseService';
-import ModuleList from './novel-detail/ModuleList';
 import axios from 'axios';
 import config from '../config/config';
 import DOMPurify from 'dompurify';
 import { createUniqueSlug } from '../utils/slugUtils';
 
-// Lazy load components that exist as separate files
+// Lazy load components that are not immediately visible
+const CommentSection = lazy(() => import('./CommentSection'));
+const RatingModal = lazy(() => import('./RatingModal'));
+const ModuleChapters = lazy(() => import('./novel-detail/ModuleChapters'));
+const ModuleForm = lazy(() => import('./novel-detail/ModuleForm'));
+const ModuleList = lazy(() => import('./novel-detail/ModuleList'));
+const OpenRequestModal = lazy(() => import('./novel-detail/OpenRequestModal'));
 const Login = lazy(() => import('./auth/Login'));
 
 // Utility for HTML truncation, used in description
@@ -1098,44 +1098,50 @@ const NovelDetail = ({ novelId }) => {
                 background: 'white',
                 boxShadow: '0 0 20px rgba(0,0,0,0.5)'
               }}>
-                <ModuleForm 
-                  key={`edit-${editingModule}`}
-                  moduleForm={moduleForm} 
-                  setModuleForm={setModuleForm} 
-                  handleModuleSubmit={handleModuleSubmit} 
-                  handleModuleCoverUpload={handleModuleCoverUpload} 
-                  handleModuleFormToggle={handleModuleFormToggle}
-                  editingModule={editingModule} 
-                />
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ModuleForm 
+                    key={`edit-${editingModule}`}
+                    moduleForm={moduleForm} 
+                    setModuleForm={setModuleForm} 
+                    handleModuleSubmit={handleModuleSubmit} 
+                    handleModuleCoverUpload={handleModuleCoverUpload} 
+                    handleModuleFormToggle={handleModuleFormToggle}
+                    editingModule={editingModule} 
+                  />
+                </Suspense>
               </div>
             )}
             
             {/* Regular position for the add form */}
             {showModuleForm && !editingModule && (
-              <ModuleForm 
-                key="new-module"
-                moduleForm={moduleForm} 
-                setModuleForm={setModuleForm} 
-                handleModuleSubmit={handleModuleSubmit} 
-                handleModuleCoverUpload={handleModuleCoverUpload} 
-                handleModuleFormToggle={handleModuleFormToggle}
-                editingModule={null} 
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <ModuleForm 
+                  key="new-module"
+                  moduleForm={moduleForm} 
+                  setModuleForm={setModuleForm} 
+                  handleModuleSubmit={handleModuleSubmit} 
+                  handleModuleCoverUpload={handleModuleCoverUpload} 
+                  handleModuleFormToggle={handleModuleFormToggle}
+                  editingModule={null} 
+                />
+              </Suspense>
             )}
             
             {data?.modules && (
-              <ModuleList
-                modules={data.modules}
-                novelId={novelId}
-                novelTitle={data.novel.title}
-                user={user}
-                handleModuleReorder={handleModuleReorder}
-                handleModuleDelete={handleDeleteModule}
-                handleEditModule={handleEditModule}
-                handleChapterReorder={handleChapterReorder}
-                handleChapterDelete={handleChapterDelete}
-                onOpenModuleRequest={handleOpenRequestModal}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <ModuleList
+                  modules={data.modules}
+                  novelId={novelId}
+                  novelTitle={data.novel.title}
+                  user={user}
+                  handleModuleReorder={handleModuleReorder}
+                  handleModuleDelete={handleDeleteModule}
+                  handleEditModule={handleEditModule}
+                  handleChapterReorder={handleChapterReorder}
+                  handleChapterDelete={handleChapterDelete}
+                  onOpenModuleRequest={handleOpenRequestModal}
+                />
+              </Suspense>
             )}
           </div>
 
@@ -1159,37 +1165,43 @@ const NovelDetail = ({ novelId }) => {
             </button>
             
             {isCommentsOpen && (
-              <CommentSection 
-                contentId={novelId}
-                contentType="novels"
-                user={user}
-                isAuthenticated={!!user}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <CommentSection 
+                  contentId={novelId}
+                  contentType="novels"
+                  user={user}
+                  isAuthenticated={!!user}
+                />
+              </Suspense>
             )}
           </div>
 
           {/* Rating Modal */}
           {isRatingModalOpen && (
-            <RatingModal 
-              novelId={novelId}
-              isOpen={isRatingModalOpen}
-              onClose={() => setIsRatingModalOpen(false)}
-              currentRating={userInteraction?.rating || 0}
-            />
+            <Suspense fallback={<LoadingSpinner />}>
+              <RatingModal 
+                novelId={novelId}
+                isOpen={isRatingModalOpen}
+                onClose={() => setIsRatingModalOpen(false)}
+                currentRating={userInteraction?.rating || 0}
+              />
+            </Suspense>
           )}
           
           {/* Open Request Modal */}
-          <OpenRequestModal
-            isOpen={openRequestModalOpen}
-            onClose={() => {
-              setOpenRequestModalOpen(false);
-              setOpenRequestTarget(null);
-            }}
-            onSubmit={handleSubmitOpenRequest}
-            target={openRequestTarget}
-            userBalance={userBalance}
-            submitting={submittingOpenRequest}
-          />
+          <Suspense fallback={<LoadingSpinner />}>
+            <OpenRequestModal
+              isOpen={openRequestModalOpen}
+              onClose={() => {
+                setOpenRequestModalOpen(false);
+                setOpenRequestTarget(null);
+              }}
+              onSubmit={handleSubmitOpenRequest}
+              target={openRequestTarget}
+              userBalance={userBalance}
+              submitting={submittingOpenRequest}
+            />
+          </Suspense>
           
           {/* Add ScrollToTop component */}
           <ScrollToTop threshold={400} />

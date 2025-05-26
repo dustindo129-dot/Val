@@ -134,22 +134,79 @@ export default defineConfig(({ command, mode }) => {
       sourcemap: !isProduction,
       // Don't empty outDir to preserve the .gitkeep file
       emptyOutDir: false,
+      // Increase chunk size warning limit to 1MB (1000KB) since 500KB is too restrictive for modern apps
+      chunkSizeWarningLimit: 1000,
       // Ensure proper chunking
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': [
-              'react', 
-              'react-dom',
-              'react/jsx-runtime',
-              'react/jsx-dev-runtime'
-            ],
-            'router': [
-              'react-router-dom'
-            ],
-            'query': [
-              '@tanstack/react-query'
-            ]
+          manualChunks: (id) => {
+            // Vendor chunks for external libraries
+            if (id.includes('node_modules')) {
+              // React ecosystem
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-vendor';
+              }
+              // Router
+              if (id.includes('react-router')) {
+                return 'router';
+              }
+              // Query library
+              if (id.includes('@tanstack/react-query')) {
+                return 'query';
+              }
+              // UI and styling libraries
+              if (id.includes('dompurify') || id.includes('helmet') || id.includes('fontawesome')) {
+                return 'ui-vendor';
+              }
+              // HTTP and utilities
+              if (id.includes('axios') || id.includes('lodash')) {
+                return 'utils-vendor';
+              }
+              // All other node_modules
+              return 'vendor';
+            }
+            
+            // Application chunks based on functionality
+            // Authentication related components
+            if (id.includes('/auth/') || id.includes('Auth')) {
+              return 'auth';
+            }
+            
+            // Novel detail and related components (largest component)
+            if (id.includes('NovelDetail') || id.includes('novel-detail/') || 
+                id.includes('ModuleChapters') || id.includes('ModuleForm') || 
+                id.includes('ModuleList') || id.includes('NovelInfo')) {
+              return 'novel-detail';
+            }
+            
+            // Admin and dashboard components
+            if (id.includes('Admin') || id.includes('Dashboard') || 
+                id.includes('Management') || id.includes('TopUp')) {
+              return 'admin';
+            }
+            
+            // User profile and settings
+            if (id.includes('UserProfile') || id.includes('UserBookmarks') || 
+                id.includes('ChangePassword') || id.includes('pages/')) {
+              return 'user-pages';
+            }
+            
+            // Comments and interactions
+            if (id.includes('Comment') || id.includes('Rating') || 
+                id.includes('Bookmark') || id.includes('Modal')) {
+              return 'interactions';
+            }
+            
+            // Chapter reading components
+            if (id.includes('Chapter') && !id.includes('ModuleChapters')) {
+              return 'chapter-reader';
+            }
+            
+            // Novel listing and browsing
+            if (id.includes('NovelList') || id.includes('HotNovels') || 
+                id.includes('NovelDirectory') || id.includes('OLN')) {
+              return 'novel-browse';
+            }
           }
         }
       },

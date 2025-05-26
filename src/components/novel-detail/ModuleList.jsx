@@ -1,12 +1,15 @@
-import React, { memo, useCallback, useState, useEffect } from 'react';
+import React, { memo, useCallback, useState, useEffect, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import ModuleChapters from './ModuleChapters';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { createUniqueSlug } from '../../utils/slugUtils';
+import LoadingSpinner from '../LoadingSpinner';
+
+// Lazy load ModuleChapters for consistency
+const ModuleChapters = lazy(() => import('./ModuleChapters'));
 
 /**
  * DeleteModuleConfirmationModal Component
@@ -264,21 +267,23 @@ const ModuleList = memo(({
                   </div>
                 )}
 
-                <ModuleChapters
-                  chapters={module.chapters || []}
-                  novelId={novelId}
-                  novelTitle={novelTitle}
-                  moduleId={module._id}
-                  user={user}
-                  canEdit={canEdit}
-                  canDelete={canDelete}
-                  handleChapterReorder={handleChapterReorder}
-                  handleChapterDelete={handleChapterDelete}
-                  isPaidModule={module.mode === 'paid'}
-                  canAccessPaidContent={canAccessPaidContent}
-                  pendingRequestsCount={pendingRequestsCount}
-                  onOpenChapterRequest={(chapter) => onOpenModuleRequest(module, chapter)}
-                />
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ModuleChapters
+                    chapters={module.chapters || []}
+                    novelId={novelId}
+                    novelTitle={novelTitle}
+                    moduleId={module._id}
+                    user={user}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    handleChapterReorder={handleChapterReorder}
+                    handleChapterDelete={handleChapterDelete}
+                    isPaidModule={module.mode === 'paid'}
+                    canAccessPaidContent={canAccessPaidContent}
+                    pendingRequestsCount={pendingRequestsCount}
+                    onOpenChapterRequest={(chapter) => onOpenModuleRequest(module, chapter)}
+                  />
+                </Suspense>
               </div>
             </div>
           </div>
