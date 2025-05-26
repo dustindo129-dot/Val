@@ -14,6 +14,21 @@ config({ path: path.resolve(__dirname, '../.env') });
 // Import slug utility
 import { createUniqueSlug } from '../src/utils/slugUtils.js';
 
+// Function to escape XML entities
+function escapeXml(unsafe) {
+  if (typeof unsafe !== 'string') return unsafe;
+  return unsafe.replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
+
 // Node.js compatible config
 // Priority: SITEMAP_BACKEND_URL > VITE_DEV_BACKEND_URL > VITE_BACKEND_URL > fallback
 const backendUrl = process.env.SITEMAP_BACKEND_URL || 
@@ -32,12 +47,12 @@ async function generateSitemap() {
     sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
     
     // Add static pages
-    sitemap += `  <url>\n    <loc>${baseUrl}/</loc>\n    <priority>1.0</priority>\n  </url>\n`;
+    sitemap += `  <url>\n    <loc>${escapeXml(baseUrl)}/</loc>\n    <priority>1.0</priority>\n  </url>\n`;
     
     // Add SEO-optimized Vietnamese light novel pages
-    sitemap += `  <url>\n    <loc>${baseUrl}/light-novel-vietsub</loc>\n    <priority>0.9</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${baseUrl}/novel-directory</loc>\n    <priority>0.8</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${baseUrl}/oln</loc>\n    <priority>0.7</priority>\n  </url>\n`;
+    sitemap += `  <url>\n    <loc>${escapeXml(baseUrl)}/light-novel-vietsub</loc>\n    <priority>0.9</priority>\n  </url>\n`;
+    sitemap += `  <url>\n    <loc>${escapeXml(baseUrl)}/novel-directory</loc>\n    <priority>0.8</priority>\n  </url>\n`;
+    sitemap += `  <url>\n    <loc>${escapeXml(baseUrl)}/oln</loc>\n    <priority>0.7</priority>\n  </url>\n`;
     
     let novels = [];
     let totalPages = 20; // Default fallback
@@ -61,14 +76,16 @@ async function generateSitemap() {
     
     // Add homepage pagination (first 20 pages) - using root path
     for (let i = 1; i <= totalPages; i++) {
-      sitemap += `  <url>\n    <loc>${baseUrl}/page/${i}</loc>\n    <priority>0.8</priority>\n  </url>\n`;
+      const escapedPageUrl = escapeXml(`${baseUrl}/page/${i}`);
+      sitemap += `  <url>\n    <loc>${escapedPageUrl}</loc>\n    <priority>0.8</priority>\n  </url>\n`;
     }
     
     // Add novel detail pages with enhanced SEO metadata
     for (const novel of novels) {
       const lastModified = new Date(novel.updatedAt || novel.createdAt).toISOString();
       const novelSlug = createUniqueSlug(novel.title, novel._id);
-      sitemap += `  <url>\n    <loc>${baseUrl}/novel/${novelSlug}</loc>\n    <lastmod>${lastModified}</lastmod>\n    <priority>0.9</priority>\n  </url>\n`;
+      const escapedUrl = escapeXml(`${baseUrl}/novel/${novelSlug}`);
+      sitemap += `  <url>\n    <loc>${escapedUrl}</loc>\n    <lastmod>${lastModified}</lastmod>\n    <priority>0.9</priority>\n  </url>\n`;
       
       // Add alternative title variations as separate URLs if needed
       // This helps with SEO for different ways users might search
@@ -85,7 +102,8 @@ async function generateSitemap() {
         for (const chapter of chapters) {
           const chapterLastModified = new Date(chapter.updatedAt || chapter.createdAt).toISOString();
           const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
-          sitemap += `  <url>\n    <loc>${baseUrl}/novel/${novelSlug}/chapter/${chapterSlug}</loc>\n    <lastmod>${chapterLastModified}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
+          const escapedChapterUrl = escapeXml(`${baseUrl}/novel/${novelSlug}/chapter/${chapterSlug}`);
+          sitemap += `  <url>\n    <loc>${escapedChapterUrl}</loc>\n    <lastmod>${chapterLastModified}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
         }
         
         if (chapters.length > 0) {
