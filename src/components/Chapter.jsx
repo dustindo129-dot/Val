@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Helmet } from 'react-helmet-async';
@@ -198,8 +198,7 @@ const ChapterSEO = ({ novel, chapter }) => {
   );
 };
 
-const Chapter = () => {
-  const { novelId, chapterId } = useParams();
+const Chapter = ({ novelId, chapterId }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();

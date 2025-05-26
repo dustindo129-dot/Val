@@ -24,6 +24,7 @@ import '../styles/components/HotNovels.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from './LoadingSpinner';
+import { generateNovelUrl } from '../utils/slugUtils';
 
 // Memoized novel card component for better performance
 const NovelCard = memo(({ novel }) => {
@@ -33,7 +34,7 @@ const NovelCard = memo(({ novel }) => {
         : null;
 
     return (
-        <Link to={`/novel/${novel._id}`} className="hot-novel-card">
+        <Link to={generateNovelUrl(novel)} className="hot-novel-card">
             <div className="hot-novel-cover">
                 <img
                     className="novel-card-image"

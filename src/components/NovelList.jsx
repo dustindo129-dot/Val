@@ -29,6 +29,7 @@ import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import api from '../utils/apiHelper';
 import LoadingSpinner from './LoadingSpinner';
+import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
 
 /**
  * NovelImage Component
@@ -70,7 +71,7 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
         {status || 'ONGOING'}
       </span>
             {firstChapter && (
-                <Link to={`/novel/${novelId}/chapter/${firstChapter._id}`} className="first-chapter">
+                <Link to={generateChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
                     &gt;&gt; Chương đầu
                 </Link>
             )}
@@ -610,7 +611,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                                     }}>
                                         {/* Novel header with title and update time */}
                                         <div className="novel-header">
-                                            <Link to={`/novel/${novel._id}`} className="novel-list-title-link">
+                                            <Link to={generateNovelUrl(novel)} className="novel-list-title-link">
                                                 <h3 className="novel-title">{novel.title}</h3>
                                             </Link>
                                             <div className="update-time">
@@ -694,7 +695,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                                                     {sortedChapters.map(chapter => (
                                                         <div key={chapter._id} className="novel-list-chapter-item">
                                                             <Link
-                                                                to={`/novel/${novel._id}/chapter/${chapter._id}`}
+                                                                to={generateChapterUrl(novel, chapter)}
                                                                 className="novel-list-chapter-title"
                                                             >
                                                                 {chapter.title}

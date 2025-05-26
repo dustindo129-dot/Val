@@ -16,6 +16,7 @@ import OLN from '../pages/OLN';
 import Market from '../pages/Market';
 import TopUp from '../pages/TopUp';
 import TopUpManagement from '../pages/TopUpManagement';
+import SlugWrapper from '../components/SlugWrapper';
 
 function AppRoutes() {
   return (
@@ -28,8 +29,8 @@ function AppRoutes() {
       <Route path="/novel-directory/page/:page" element={<NovelDirectory />} />
       <Route path="/oln" element={<OLN />} />
       <Route path="/oln/page/:page" element={<OLN />} />
-      <Route path="/novel/:novelId" element={<NovelDetail />} />
-      <Route path="/novel/:novelId/chapter/:chapterId" element={<Chapter />} />
+      <Route path="/novel/:novelId" element={<SlugWrapper component={NovelDetail} type="novel" />} />
+      <Route path="/novel/:novelId/chapter/:chapterId" element={<SlugWrapper component={Chapter} type="chapter" />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/feedback" element={<Feedback />} />
       <Route path="/donate" element={<Donate />} />

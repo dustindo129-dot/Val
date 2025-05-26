@@ -29,6 +29,7 @@ import { useNovelStatus } from '../context/NovelStatusContext';
 import { useNovel } from '../context/NovelContext';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import bunnyUploadService from '../services/bunnyUploadService';
+import { generateNovelUrl } from '../utils/slugUtils';
 
 /**
  * DeleteConfirmationModal Component
@@ -1194,7 +1195,7 @@ const AdminDashboard = () => {
                 <div className="novel-title-section">
                   <div className="novel-info">
                     <Link 
-                      to={`/novel/${novel._id}`}
+                      to={generateNovelUrl(novel)}
                       className="novel-title-link"
                     >
                       {novel.title}

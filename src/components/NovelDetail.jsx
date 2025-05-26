@@ -20,7 +20,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -393,8 +393,7 @@ const NovelSEO = ({ novel }) => {
  * Main component that displays comprehensive information about a novel
  * and manages user interactions with the novel content.
  */
-const NovelDetail = () => {
-  const { novelId } = useParams();
+const NovelDetail = ({ novelId }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated } = useAuth();

@@ -4,6 +4,26 @@ import { queryClient } from '../lib/react-query';
 import hybridCdnService from './bunnyUploadService';
 
 const api = {
+  // Lookup novel ID from slug
+  lookupNovelId: async (slug) => {
+    try {
+      const response = await axios.get(`${config.backendUrl}/api/novels/slug/${slug}`);
+      return response.data.id;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Lookup chapter ID from slug
+  lookupChapterId: async (slug) => {
+    try {
+      const response = await axios.get(`${config.backendUrl}/api/chapters/slug/${slug}`);
+      return response.data.id;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   fetchNovelWithModules: async (novelId, forceRefresh = false, countView = false) => {
     try {
       // Add skipViewTracking parameter when forceRefresh is true (coming from add chapter)
