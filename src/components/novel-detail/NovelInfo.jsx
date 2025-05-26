@@ -299,12 +299,12 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
 
       if (diffInHours < 1) {
         const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-        return `${diffInMinutes || 0} minutes ago`;
+        return `${diffInMinutes || 0} phút trước`;
       } else if (diffInHours < 24) {
-        return `${diffInHours} hours ago`;
+        return `${diffInHours} giờ trước`;
       } else {
         const diffInDays = Math.floor(diffInHours / 24);
-        return `${diffInDays} days ago`;
+        return `${diffInDays} ngày trước`;
       }
     } catch (e) {
       console.error("Lỗi định dạng ngày:", e);
@@ -448,7 +448,7 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
                     }}
                   />
                   <div className="rd-update-time">
-                    Updated: {formatTimeAgo(novelData.updatedAt)}
+                    Cập nhật: {formatTimeAgo(novelData.updatedAt)}
                   </div>
                 </div>
 
