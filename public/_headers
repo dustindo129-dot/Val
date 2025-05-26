@@ -7,18 +7,10 @@
   Cache-Control: public, max-age=31536000
 
 # Don't cache the main HTML file to ensure SPA routing works
+# This is CRITICAL for SPA routing to work properly
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
 
 # Cache API responses briefly
 /api/*
-  Cache-Control: public, max-age=300
-
-# Cache sitemap and robots
-/sitemap.xml
-  Cache-Control: public, max-age=3600
-  Content-Type: application/xml
-
-/robots.txt
-  Cache-Control: public, max-age=86400
-  Content-Type: text/plain 
+  Cache-Control: public, max-age=300 
