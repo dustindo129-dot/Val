@@ -75,12 +75,10 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Novel link styling */
-.novel-link {
+/* Title link styling */
+.title-link {
   text-decoration: none;
   color: inherit;
-  flex: 1;
-  display: block;
 }
 
 /* Bookmark title header */
@@ -101,7 +99,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding-left: 27px;
-  text-decoration: none;
 }
 
 .bookmark-card .bookmark-title-header::before {
@@ -466,7 +463,6 @@ a.bookmark-latest-chapter:hover {
 
   .bookmark-card .bookmark-title-header {
     font-size: 14px;
-    padding: 8px 12px;
   }
   
   .bookmark-cover {

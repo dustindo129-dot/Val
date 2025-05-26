@@ -7,6 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ChapterNavigationControls.css';
 import { createUniqueSlug } from '../../utils/slugUtils';
+import LoadingSpinner from '../LoadingSpinner';
 
 /**
  * ChapterNavigationControls Component
@@ -96,8 +97,7 @@ const ChapterNavigationControls = ({
 
         {isModuleChaptersLoading ? (
           <div className="dropdown-loading">
-            <FontAwesomeIcon icon={faSpinner} spin/>
-            <span>Đang tải chương...</span>
+            <LoadingSpinner size="small" text="Đang tải chương..." />
           </div>
         ) : filteredChapters.length > 0 ? (
           <ul className="chapter-dropdown-list">

@@ -1,8 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { formatRelativeTime } from './utils';
-import { createUniqueSlug } from '../../utils/slugUtils';
 
 /**
  * Request Card Component
@@ -64,14 +62,7 @@ const RequestCard = ({
       <div className="request-header">
         <div>
           <div className="request-title">
-            {request.novel && (
-              <Link to={`/novel/${createUniqueSlug(request.novel.title, request.novel._id)}`} className="novel-link">
-                {request.novel.title}
-              </Link>
-            )}
-            {!request.novel && (
-              <span>{request.title || "Yêu cầu truyện mới chưa có tên"}</span>
-            )}
+            <span>{request.novel?.title || request.title || "Yêu cầu truyện mới chưa có tên"}</span>
           </div>
           <div className="request-username">Đề xuất bởi: {request.user.username}</div>
         </div>

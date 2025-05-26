@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createUniqueSlug } from '../../utils/slugUtils';
+import LoadingSpinner from '../LoadingSpinner';
 
 /**
  * Request History Component
@@ -47,7 +48,7 @@ const RequestHistory = ({
         </button>
       </div>
       {historyLoading ? (
-        <p>Đang tải lịch sử...</p>
+        <LoadingSpinner size="medium" text="Đang tải lịch sử..." />
       ) : requestHistory.length === 0 ? (
         <p>Không có lịch sử yêu cầu</p>
       ) : (

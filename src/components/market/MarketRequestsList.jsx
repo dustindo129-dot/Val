@@ -1,5 +1,6 @@
 import React from 'react';
 import RequestCard from './RequestCard';
+import LoadingSpinner from '../LoadingSpinner';
 
 /**
  * Market Requests List Component
@@ -97,7 +98,7 @@ const MarketRequestsList = ({
       </div>
       <div className="request-grid">
         {isLoading ? (
-          <p>Đang tải yêu cầu...</p>
+          <LoadingSpinner size="medium" text="Đang tải yêu cầu..." />
         ) : error ? (
           <p className="error">{error}</p>
         ) : webRequests.length === 0 ? (
@@ -151,7 +152,7 @@ const MarketRequestsList = ({
       </div>
       <div className="request-grid">
         {isLoading ? (
-          <p>Đang tải yêu cầu...</p>
+          <LoadingSpinner size="medium" text="Đang tải yêu cầu..." />
         ) : error ? (
           <p className="error">{error}</p>
         ) : userRequests.length === 0 ? (

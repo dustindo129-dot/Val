@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/ReportPanel.css';
 import { createUniqueSlug } from '../utils/slugUtils';
+import LoadingSpinner from './LoadingSpinner';
 
 const ReportPanel = ({ user }) => {
   const queryClient = useQueryClient();
@@ -75,7 +76,9 @@ const ReportPanel = ({ user }) => {
       {isExpanded && (
         <div className="report-panel-content">
           {isLoading ? (
-            <div className="report-loading">Đang tải báo cáo...</div>
+            <div className="report-loading">
+              <LoadingSpinner size="small" text="Đang tải báo cáo..." />
+            </div>
           ) : error ? (
             <div className="report-error">Không thể tải báo cáo</div>
           ) : reports.length === 0 ? (

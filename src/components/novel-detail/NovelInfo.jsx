@@ -32,6 +32,7 @@ import {
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
 import { createUniqueSlug } from '../../utils/slugUtils';
+import LoadingSpinner from '../LoadingSpinner';
 
 const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
   const queryClient = useQueryClient();
@@ -382,7 +383,11 @@ const NovelInfo = ({ novel, isLoading, readingProgress, chaptersData, userIntera
   };
 
   if (isLoading) {
-    return <div className="novel-info-section loading">Đang tải thông tin truyện...</div>;
+    return (
+      <div className="novel-info-section loading">
+        <LoadingSpinner size="large" text="Đang tải thông tin truyện..." />
+      </div>
+    );
   }
 
   if (!novel) {

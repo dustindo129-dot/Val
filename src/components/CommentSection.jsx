@@ -4,6 +4,7 @@ import axios from 'axios';
 import config from '../config/config';
 import { Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
+import LoadingSpinner from './LoadingSpinner';
 
 /**
  * Comment section component for novels
@@ -673,7 +674,11 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   };
 
   if (isLoading) {
-    return <div className="comments-loading">Đang tải bình luận...</div>;
+    return (
+      <div className="comments-loading">
+        <LoadingSpinner size="medium" text="Đang tải bình luận..." />
+      </div>
+    );
   }
   
   if (error) {

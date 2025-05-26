@@ -193,7 +193,9 @@ const NovelContributions = ({ novelId }) => {
       </div>
       <div className="rd-contribution-list">
         {isLoadingContributions ? (
-          <div className="rd-loading-spinner-small">Đang tải...</div>
+          <div className="rd-loading-spinner-small">
+            <LoadingSpinner size="small" text="Đang tải..." />
+          </div>
         ) : allItems.length > 0 ? (
           allItems.map((item, index) => (
             <div key={`${item.type}-${item._id}`} className="rd-contribution-item">

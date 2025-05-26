@@ -24,6 +24,7 @@ import ChapterCommentsSection from './chapter/ChapterCommentsSection';
 import ChapterAccessGuard from './chapter/ChapterAccessGuard';
 import { SettingsModal, RatingModal, ReportModal } from './chapter/ChapterModals';
 import ScrollToTop from './ScrollToTop';
+import LoadingSpinner from './LoadingSpinner';
 
 // Import utilities 
 import {
@@ -1225,8 +1226,7 @@ const Chapter = ({ novelId, chapterId }) => {
   if (isLoading) {
     return (
       <div className="loading">
-        <FontAwesomeIcon icon={faSpinner} spin style={{fontSize: '2rem', marginBottom: '1rem'}}/>
-        <p>Đang tải chương...</p>
+        <LoadingSpinner size="large" text="Đang tải chương..." />
       </div>
     );
   }
