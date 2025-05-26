@@ -11,7 +11,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 0.5rem;
-  /*grid-template-columns: 1fr 300px;*/
+  grid-template-columns: 1fr 300px;
 }
 
 .directory .main-content {
