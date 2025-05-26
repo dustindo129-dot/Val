@@ -1,12 +1,12 @@
 [build]
-  # Install devDependencies explicitly, then build, and ensure _redirects is copied
-  command = "npm install --include=dev && npm run build && cp public/_redirects dist/_redirects"
+  # Build and ensure _redirects is copied
+  command = "npm run build && cp public/_redirects dist/_redirects"
   publish = "dist"
   base = "/"
 
 [build.environment]
   NODE_VERSION = "20"
-  NODE_ENV = "production"              # keeps runtime behavior
+  # Remove NODE_ENV=production to allow devDependencies installation
   VITE_RUNTIME_ENV = "production"      # custom flag for frontend logic
 
 [[headers]]
@@ -21,65 +21,5 @@
     Content-Type = "text/plain; charset=utf-8"
     Cache-Control = "public, max-age=86400"
 
-# Static file redirects (highest priority)
-[[redirects]]
-  from = "/sitemap.xml"
-  to = "/sitemap.xml"
-  status = 200
-
-[[redirects]]
-  from = "/robots.txt"
-  to = "/robots.txt"
-  status = 200
-
-# Legacy URL redirects
-[[redirects]]
-  from = "/homepage"
-  to = "/"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/light-novel-tieng-viet"
-  to = "/light-novel-vietsub"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/doc-light-novel-vietsub"
-  to = "/light-novel-vietsub"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/latest-update"
-  to = "/light-novel-vietsub"
-  status = 301
-  force = true
-
-# API routes should not be caught by SPA fallback
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# Clean URL redirects (remove trailing slashes) - but only if they have trailing slashes
-[[redirects]]
-  from = "/novel/:novelId/"
-  to = "/novel/:novelId"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/novel/:novelId/chapter/:chapterId/"
-  to = "/novel/:novelId/chapter/:chapterId"
-  status = 301
-  force = true
-
-# SPA fallback - handle all other routes with React Router
-# This must be LAST to avoid conflicts and should NOT be forced
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
+# All redirects are now handled by the _redirects file
+# This avoids duplication and makes maintenance easier
