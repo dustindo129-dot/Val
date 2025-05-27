@@ -371,13 +371,13 @@ const ChapterContent = ({
             
             {editedMode === 'paid' && userRole === 'admin' && (
               <div className="chapter-balance-input">
-                <label>Số dư chương:</label>
+                <label>Số lúa chương (Tối thiểu 50 🌾):</label>
                 <input
                   type="number"
-                  min="0"
+                  min="50"
                   value={editedChapterBalance}
                   onChange={(e) => setEditedChapterBalance(e.target.value)}
-                  placeholder="Nhập số dư chương"
+                  placeholder="Nhập số lúa chương (tối thiểu 50)"
                 />
               </div>
             )}

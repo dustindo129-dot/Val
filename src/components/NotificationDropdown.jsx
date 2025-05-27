@@ -100,16 +100,57 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       }
     };
 
+    const handleNotificationsDeleted = (data) => {
+      // Only handle for the current user
+      if (data.userId === user.id || data.userId === user._id) {
+        console.log('All notifications deleted via SSE');
+        // Clear all notifications from cache
+        queryClient.setQueryData(['notifications'], {
+          notifications: [],
+          pagination: {
+            currentPage: 1,
+            totalPages: 0,
+            totalItems: 0
+          }
+        });
+        // Update unread count to 0
+        queryClient.setQueryData(['unreadNotificationCount'], 0);
+      }
+    };
+
+    const handleNotificationDeleted = (data) => {
+      // Only handle for the current user
+      if (data.userId === user.id || data.userId === user._id) {
+        console.log('Individual notification deleted via SSE:', data.notificationId);
+        // Remove the specific notification from cache
+        queryClient.setQueryData(['notifications'], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            notifications: oldData.notifications.filter(notification =>
+              notification._id !== data.notificationId
+            )
+          };
+        });
+        // Update unread count
+        queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
+      }
+    };
+
     // Add SSE event listeners
     sseService.addEventListener('new_notification', handleNewNotification);
     sseService.addEventListener('notification_read', handleNotificationRead);
     sseService.addEventListener('notifications_cleared', handleNotificationsCleared);
+    sseService.addEventListener('notifications_deleted', handleNotificationsDeleted);
+    sseService.addEventListener('notification_deleted', handleNotificationDeleted);
 
     // Clean up on unmount or user change
     return () => {
       sseService.removeEventListener('new_notification', handleNewNotification);
       sseService.removeEventListener('notification_read', handleNotificationRead);
       sseService.removeEventListener('notifications_cleared', handleNotificationsCleared);
+      sseService.removeEventListener('notifications_deleted', handleNotificationsDeleted);
+      sseService.removeEventListener('notification_deleted', handleNotificationDeleted);
     };
   }, [user, queryClient]);
 
@@ -159,10 +200,145 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     },
   });
 
-  // Mark all notifications as read mutation
+  // Mark all notifications as read mutation with optimistic updates
   const markAllAsReadMutation = useMutation({
     mutationFn: () => api.markAllNotificationsAsRead(),
-    onSuccess: () => {
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['unreadNotificationCount'] });
+
+      // Snapshot the previous values
+      const previousNotifications = queryClient.getQueryData(['notifications']);
+      const previousUnreadCount = queryClient.getQueryData(['unreadNotificationCount']);
+
+      // Optimistically mark all notifications as read
+      if (previousNotifications) {
+        queryClient.setQueryData(['notifications'], {
+          ...previousNotifications,
+          notifications: previousNotifications.notifications.map(notification => ({
+            ...notification,
+            isRead: true
+          }))
+        });
+      }
+
+      // Optimistically set unread count to 0
+      queryClient.setQueryData(['unreadNotificationCount'], 0);
+
+      // Return context for rollback
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (err, variables, context) => {
+      // Roll back on error
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['unreadNotificationCount'], context.previousUnreadCount);
+      }
+      console.error('Failed to mark all notifications as read:', err);
+    },
+    onSettled: () => {
+      // Always refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
+    },
+  });
+
+  // Delete all notifications mutation with optimistic updates
+  const deleteAllNotificationsMutation = useMutation({
+    mutationFn: () => api.deleteAllNotifications(),
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['unreadNotificationCount'] });
+
+      // Snapshot the previous values
+      const previousNotifications = queryClient.getQueryData(['notifications']);
+      const previousUnreadCount = queryClient.getQueryData(['unreadNotificationCount']);
+
+      // Optimistically clear all notifications
+      queryClient.setQueryData(['notifications'], {
+        notifications: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalItems: 0
+        }
+      });
+
+      // Optimistically set unread count to 0
+      queryClient.setQueryData(['unreadNotificationCount'], 0);
+
+      // Return context for rollback
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (err, variables, context) => {
+      // Roll back on error
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['unreadNotificationCount'], context.previousUnreadCount);
+      }
+      console.error('Failed to delete all notifications:', err);
+    },
+    onSettled: () => {
+      // Always refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
+    },
+  });
+
+  // Delete individual notification mutation with optimistic updates
+  const deleteNotificationMutation = useMutation({
+    mutationFn: (notificationId) => api.deleteNotification(notificationId),
+    onMutate: async (notificationId) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['unreadNotificationCount'] });
+
+      // Snapshot the previous values
+      const previousNotifications = queryClient.getQueryData(['notifications']);
+      const previousUnreadCount = queryClient.getQueryData(['unreadNotificationCount']);
+
+      // Find the notification being deleted to check if it was unread
+      const notificationToDelete = previousNotifications?.notifications?.find(
+        notification => notification._id === notificationId
+      );
+      const wasUnread = notificationToDelete && !notificationToDelete.isRead;
+
+      // Optimistically update notifications list
+      if (previousNotifications) {
+        queryClient.setQueryData(['notifications'], {
+          ...previousNotifications,
+          notifications: previousNotifications.notifications.filter(
+            notification => notification._id !== notificationId
+          )
+        });
+      }
+
+      // Optimistically update unread count if the deleted notification was unread
+      if (wasUnread && typeof previousUnreadCount === 'number') {
+        queryClient.setQueryData(['unreadNotificationCount'], Math.max(0, previousUnreadCount - 1));
+      }
+
+      // Return a context object with the snapshotted values
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (err, notificationId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(['notifications'], context.previousNotifications);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['unreadNotificationCount'], context.previousUnreadCount);
+      }
+      console.error('Failed to delete notification:', err);
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
@@ -250,10 +426,28 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
   };
 
   /**
-   * Handles clear all notifications
+   * Handles delete all notifications (top button)
    */
-  const handleClearAll = () => {
+  const handleDeleteAll = () => {
+    deleteAllNotificationsMutation.mutate();
+  };
+
+  /**
+   * Handles mark all notifications as read (footer button)
+   */
+  const handleMarkAllAsRead = () => {
     markAllAsReadMutation.mutate();
+  };
+
+  /**
+   * Handles delete individual notification
+   * @param {Event} e - Click event
+   * @param {string} notificationId - ID of notification to delete
+   */
+  const handleDeleteNotification = (e, notificationId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    deleteNotificationMutation.mutate(notificationId);
   };
 
   if (!isOpen) return null;
@@ -265,10 +459,10 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         {notifications.length > 0 && (
           <button 
             className="clear-all-btn"
-            onClick={handleClearAll}
-            disabled={markAllAsReadMutation.isPending}
+            onClick={handleDeleteAll}
+            disabled={deleteAllNotificationsMutation.isPending}
           >
-            {markAllAsReadMutation.isPending ? 'Đang xóa...' : 'Xóa tất cả'}
+            {deleteAllNotificationsMutation.isPending ? 'Đang xóa...' : 'Xóa tất cả'}
           </button>
         )}
       </div>
@@ -315,6 +509,14 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       </div>
                     </div>
                     {!notification.isRead && <div className="unread-indicator"></div>}
+                    <button
+                      className="delete-notification-btn"
+                      onClick={(e) => handleDeleteNotification(e, notification._id)}
+                      disabled={deleteNotificationMutation.isPending}
+                      title="Xóa thông báo"
+                    >
+                      <i className="fa-solid fa-times"></i>
+                    </button>
                   </Link>
                 ) : (
                   <div className="notification-content">
@@ -330,6 +532,14 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       </div>
                     </div>
                     {!notification.isRead && <div className="unread-indicator"></div>}
+                    <button
+                      className="delete-notification-btn"
+                      onClick={(e) => handleDeleteNotification(e, notification._id)}
+                      disabled={deleteNotificationMutation.isPending}
+                      title="Xóa thông báo"
+                    >
+                      <i className="fa-solid fa-times"></i>
+                    </button>
                   </div>
                 )}
               </div>
@@ -342,11 +552,11 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         <div className="notification-dropdown-footer">
           <button 
             className="clear-all-footer-btn"
-            onClick={handleClearAll}
+            onClick={handleMarkAllAsRead}
             disabled={markAllAsReadMutation.isPending}
           >
             <i className="fa-solid fa-check-double"></i>
-            {markAllAsReadMutation.isPending ? 'Đang xóa...' : 'Đánh dấu tất cả đã đọc'}
+            {markAllAsReadMutation.isPending ? 'Đang xử lý...' : 'Đánh dấu tất cả đã đọc'}
           </button>
         </div>
       )}

@@ -803,6 +803,13 @@ const Chapter = ({ novelId, chapterId }) => {
         }
       }
       
+      // Validate minimum chapter balance for paid chapters
+      if (updatedMode === 'paid' && updatedChapterBalance < 50) {
+        setError('Số lúa chương tối thiểu là 50 🌾 cho chương trả phí.');
+        setIsSaving(false);
+        return;
+      }
+
       // Extract footnotes from editedContent
       let footnotes = [];
       if (editedContent && editedContent.footnotes) {

@@ -647,6 +647,40 @@ const api = {
       console.error('Failed to fetch unread notification count:', error);
       return 0;
     }
+  },
+
+  deleteAllNotifications: async () => {
+    try {
+      const response = await axios.delete(
+        `${config.backendUrl}/api/notifications/delete-all`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete all notifications:', error);
+      throw error;
+    }
+  },
+
+  deleteNotification: async (notificationId) => {
+    try {
+      const response = await axios.delete(
+        `${config.backendUrl}/api/notifications/${notificationId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+      throw error;
+    }
   }
 };
 

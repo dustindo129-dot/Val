@@ -383,6 +383,13 @@ const ChapterDashboard = () => {
       return;
     }
 
+    // Validate minimum chapter balance for paid chapters
+    if (mode === 'paid' && parseInt(chapterBalance) < 50) {
+      setError('Số lúa chương tối thiểu là 50 🌾 cho chương trả phí.');
+      setSaving(false);
+      return;
+    }
+
     try {
       // Get content from TinyMCE editor and clean it
       const content = editorRef.current.getContent();
@@ -649,13 +656,13 @@ const ChapterDashboard = () => {
                   visibility: mode === 'paid' ? 'visible' : 'hidden',
                   opacity: mode === 'paid' ? 1 : 0
                 }}>
-                  <label>Số lúa chương:</label>
+                  <label>Số lúa chương (Tối thiểu 50 🌾):</label>
                   <input
                     type="number"
-                    min="0"
+                    min="50"
                     value={chapterBalance}
                     onChange={(e) => setChapterBalance(e.target.value)}
-                    placeholder="Nhập số lúa chương"
+                    placeholder="Nhập số lúa chương (tối thiểu 50)"
                     disabled={mode !== 'paid'}
                   />
                 </div>

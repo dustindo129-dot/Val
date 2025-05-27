@@ -102,16 +102,35 @@ const Navbar = () => {
       }
     };
 
+    const handleNotificationsDeleted = (data) => {
+      // Only handle for the current user
+      if (data.userId === user.id || data.userId === user._id) {
+        queryClient.setQueryData(['unreadNotificationCount'], 0);
+      }
+    };
+
+    const handleNotificationDeleted = (data) => {
+      // Only handle for the current user
+      if (data.userId === user.id || data.userId === user._id) {
+        console.log('Individual notification deleted, updating unread count');
+        queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
+      }
+    };
+
     // Add SSE event listeners
     sseService.addEventListener('new_notification', handleNewNotification);
     sseService.addEventListener('notification_read', handleNotificationRead);
     sseService.addEventListener('notifications_cleared', handleNotificationsCleared);
+    sseService.addEventListener('notifications_deleted', handleNotificationsDeleted);
+    sseService.addEventListener('notification_deleted', handleNotificationDeleted);
 
     // Clean up on unmount or user change
     return () => {
       sseService.removeEventListener('new_notification', handleNewNotification);
       sseService.removeEventListener('notification_read', handleNotificationRead);
       sseService.removeEventListener('notifications_cleared', handleNotificationsCleared);
+      sseService.removeEventListener('notifications_deleted', handleNotificationsDeleted);
+      sseService.removeEventListener('notification_deleted', handleNotificationDeleted);
     };
   }, [user, queryClient]);
 
