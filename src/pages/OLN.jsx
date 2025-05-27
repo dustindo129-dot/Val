@@ -1,12 +1,90 @@
 import { useState, useEffect, memo, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/NovelList.css';
 import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { generateNovelUrl, generateChapterUrl, generateLocalizedNovelUrl, generateLocalizedChapterUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
+
+/**
+ * OLNSEO Component
+ * 
+ * Provides SEO optimization for the OLN (Original Light Novel) page including:
+ * - Dynamic title based on current page
+ * - Meta description
+ * - Keywords
+ * - Open Graph tags
+ */
+const OLNSEO = ({ currentPage = 1 }) => {
+  // Generate SEO-optimized title
+  const generateSEOTitle = () => {
+    let baseTitle = 'Truyện Sáng Tác - Original Light Novel Tiếng Việt | Valvrareteam';
+    
+    // Add page number if not on first page
+    if (currentPage > 1) {
+      baseTitle += ` - Trang ${currentPage}`;
+    }
+    
+    return baseTitle;
+  };
+
+  // Generate SEO description
+  const generateSEODescription = () => {
+    return 'Khám phá những tác phẩm Light Novel sáng tác gốc tiếng Việt tại Valvrareteam. Đọc truyện sáng tác chất lượng cao từ các tác giả Việt Nam, cập nhật liên tục, hoàn toàn miễn phí.';
+  };
+
+  // Generate keywords
+  const generateKeywords = () => {
+    const keywords = [
+      'truyện sáng tác',
+      'original light novel',
+      'light novel việt nam',
+      'truyện gốc tiếng việt',
+      'tác giả việt nam',
+      'light novel sáng tác',
+      'oln vietsub',
+      'truyện tự viết',
+      'valvrareteam',
+      'đọc truyện sáng tác miễn phí'
+    ];
+    
+    return keywords.join(', ');
+  };
+
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>{generateSEOTitle()}</title>
+      <meta name="description" content={generateSEODescription()} />
+      <meta name="keywords" content={generateKeywords()} />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content={generateSEOTitle()} />
+      <meta property="og:description" content={generateSEODescription()} />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content="https://valvrareteam.net/oln" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={generateSEOTitle()} />
+      <meta name="twitter:description" content={generateSEODescription()} />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      
+      {/* Canonical URL */}
+      <link rel="canonical" href={currentPage > 1 ? `https://valvrareteam.net/oln/trang/${currentPage}` : "https://valvrareteam.net/oln"} />
+    </Helmet>
+  );
+};
 
 // NovelImage Component - Reused from NovelList
 const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
@@ -452,6 +530,7 @@ const OLN = () => {
 
     return (
         <>
+            <OLNSEO currentPage={currentPage} />
             <div className="novel-list-container">
                 <div className="content-layout">
                     {/* Main content area */}

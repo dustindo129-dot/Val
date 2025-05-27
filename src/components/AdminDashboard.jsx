@@ -20,6 +20,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/components/AdminDashboard.css';
 import config from '../config/config';
@@ -30,6 +31,45 @@ import { useNovel } from '../context/NovelContext';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import bunnyUploadService from '../services/bunnyUploadService';
 import { generateNovelUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
+
+/**
+ * AdminDashboardSEO Component
+ * 
+ * Provides SEO optimization for the AdminDashboard page including:
+ * - Meta title and description
+ * - Keywords
+ * - Open Graph tags
+ */
+const AdminDashboardSEO = () => {
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>Bảng Quản Trị - Dành cho Admin và Mod | Valvrareteam</title>
+      <meta name="description" content="Trang quản trị dành cho admin và moderator Valvrareteam. Quản lý truyện, thêm/sửa/xóa Light Novel, quản lý thể loại và nội dung website." />
+      <meta name="keywords" content="bảng quản trị, admin dashboard, quản lý truyện, light novel management, valvrareteam, admin panel" />
+      <meta name="robots" content="noindex, nofollow" />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content="Bảng Quản Trị - Dành cho Admin và Mod | Valvrareteam" />
+      <meta property="og:description" content="Trang quản trị dành cho admin và moderator Valvrareteam." />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content="https://valvrareteam.net/bang-quan-tri" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="BBảng Quản Trị - Dành cho Admin và Mod| Valvrareteam" />
+      <meta name="twitter:description" content="Trang quản trị dành cho admin và moderator Valvrareteam." />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+    </Helmet>
+  );
+};
 
 /**
  * DeleteConfirmationModal Component
@@ -800,6 +840,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
+      <AdminDashboardSEO />
       <h2 className="section-title">Quản lý truyện</h2>
       {error && <div className="error">{error}</div>}
       

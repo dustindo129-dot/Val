@@ -156,14 +156,9 @@ async function generateSitemap() {
     console.log(`✓ Frontend URL: ${baseUrl}`);
     console.log(`✓ Novel pages: ${novels.length}`);
     console.log(`✓ Pagination pages: ${totalPages}`);
-    console.log(`✓ Using Vietnamese localized URLs for better SEO`);
     
-    // Note about manual sitemap submission
-    console.log(`ℹ Sitemap URL: ${baseUrl}/sitemap.xml`);
-    console.log(`ℹ Search engines no longer accept sitemap pings. Please:`);
-    console.log(`  → Submit sitemap manually via Google Search Console`);
-    console.log(`  → Submit sitemap manually via Bing Webmaster Tools`);
-    console.log(`  → Add "Sitemap: ${baseUrl}/sitemap.xml" to your robots.txt`);
+    // Note about sitemap URL
+    console.log(`Sitemap URL: ${baseUrl}/sitemap.xml`);
     
   } catch (error) {
     console.error('❌ Error generating sitemap:', error.message);

@@ -18,11 +18,53 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/UserProfile.css';
 import config from '../config/config';
 import ReportPanel from '../components/ReportPanel';
 import bunnyUploadService from '../services/bunnyUploadService';
+
+/**
+ * UserProfileSEO Component
+ * 
+ * Provides SEO optimization for the UserProfile page including:
+ * - Meta title and description
+ * - Keywords
+ * - Open Graph tags
+ */
+const UserProfileSEO = ({ user, username }) => {
+  const displayName = user?.displayName || username;
+  
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>{`Trang Cá Nhân - ${displayName} | Valvrareteam`}</title>
+      <meta name="description" content={`Trang cá nhân của ${displayName} tại Valvrareteam. Cài đặt thông tin cá nhân, thay đổi avatar, email và mật khẩu.`} />
+      <meta name="keywords" content="trang cá nhân, cài đặt tài khoản, thay đổi thông tin, avatar, email, mật khẩu, valvrareteam" />
+      <meta name="robots" content="noindex, nofollow" />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content={`Trang Cá Nhân - ${displayName} | Valvrareteam`} />
+      <meta property="og:description" content={`Trang cá nhân của ${displayName} tại Valvrareteam.`} />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${username}/trang-ca-nhan`} />
+      <meta property="og:type" content="profile" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={`Trang Cá Nhân - ${displayName} | Valvrareteam`} />
+      <meta name="twitter:description" content={`Trang cá nhân của ${displayName} tại Valvrareteam.`} />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+    </Helmet>
+  );
+};
 
 /**
  * UserProfile Component
@@ -404,6 +446,7 @@ const UserProfile = () => {
 
   return (
     <div className="profile-container">
+      <UserProfileSEO user={user} username={username} />
       {/* Profile header */}
       <div className="profile-header">
         <h1>Cài đặt trang cá nhân</h1>

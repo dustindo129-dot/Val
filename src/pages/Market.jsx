@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
 import DOMPurify from 'dompurify';
@@ -14,6 +15,47 @@ import {
   RequestHistory,
   MarketContributionModal
 } from '../components/market';
+
+/**
+ * MarketSEO Component
+ * 
+ * Provides SEO optimization for the Market page including:
+ * - Meta title and description
+ * - Keywords
+ * - Open Graph tags
+ */
+const MarketSEO = () => {
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>Bảng Yêu Cầu - Đề Xuất Light Novel Mới | Valvrareteam</title>
+      <meta name="description" content="Đề xuất Light Novel mới và góp lúa để ủng hộ dịch thuật tại Valvrareteam. Cộng đồng độc giả cùng nhau quyết định những bộ truyện sẽ được dịch tiếp theo." />
+      <meta name="keywords" content="bảng yêu cầu, đề xuất truyện, light novel mới, góp lúa, ủng hộ dịch thuật, valvrareteam, cộng đồng độc giả" />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content="Bảng Yêu Cầu - Đề Xuất Light Novel Mới | Valvrareteam" />
+      <meta property="og:description" content="Đề xuất Light Novel mới và góp lúa để ủng hộ dịch thuật tại Valvrareteam. Cộng đồng độc giả cùng nhau quyết định những bộ truyện sẽ được dịch tiếp theo." />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content="https://valvrareteam.net/bang-yeu-cau" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Bảng Yêu Cầu - Đề Xuất Light Novel Mới | Valvrareteam" />
+      <meta name="twitter:description" content="Đề xuất Light Novel mới và góp lúa để ủng hộ dịch thuật tại Valvrareteam." />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      
+      {/* Canonical URL */}
+      <link rel="canonical" href="https://valvrareteam.net/bang-yeu-cau" />
+    </Helmet>
+  );
+};
 
 /**
  * Market Page Component
@@ -788,7 +830,10 @@ const Market = () => {
 
   return (
     <div className="market-container">
-      <h1>Bảng Yêu Cầu</h1>
+      <MarketSEO />
+      <div className="market-header">
+        <h1>Bảng yêu cầu</h1>
+      </div>
       <div className="market-content">
         {/* Market Header */}
         <MarketHeader />

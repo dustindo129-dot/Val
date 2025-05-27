@@ -1,9 +1,51 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
 import '../styles/TopUp.css';
+
+/**
+ * TopUpSEO Component
+ * 
+ * Provides SEO optimization for the TopUp page including:
+ * - Meta title and description
+ * - Keywords
+ * - Open Graph tags
+ */
+const TopUpSEO = () => {
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>Nạp Lúa - Nạp Tiền Vào Tài Khoản | Valvrareteam</title>
+      <meta name="description" content="Nạp lúa vào tài khoản Valvrareteam để mở chương/tập, đề xuất truyện mới, mở khóa chức năng đặc biệt và hỗ trợ dịch giả/tác giả. Thanh toán nhanh chóng, an toàn." />
+      <meta name="keywords" content="nạp lúa, nạp tiền, thanh toán, mở chương, đề xuất truyện, hỗ trợ dịch giả, valvrareteam, light novel" />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content="Nạp Lúa - Nạp Tiền Vào Tài Khoản | Valvrareteam" />
+      <meta property="og:description" content="Nạp lúa vào tài khoản Valvrareteam để mở chương/tập, đề xuất truyện mới, mở khóa chức năng đặc biệt và hỗ trợ dịch giả/tác giả." />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content="https://valvrareteam.net/top-up" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Nạp Lúa - Nạp Tiền Vào Tài Khoản | Valvrareteam" />
+      <meta name="twitter:description" content="Nạp lúa vào tài khoản Valvrareteam để mở chương/tập, đề xuất truyện mới, mở khóa chức năng đặc biệt và hỗ trợ dịch giả/tác giả." />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      
+      {/* Canonical URL */}
+      <link rel="canonical" href="https://valvrareteam.net/top-up" />
+    </Helmet>
+  );
+};
 
 /**
  * TopUp Page Component
@@ -438,6 +480,7 @@ const TopUp = () => {
 
   return (
     <div className="top-up-container">
+      <TopUpSEO />
       <h1>Nạp 🌾 vào tài khoản</h1>
       
       {/* Rules section */}

@@ -18,12 +18,54 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import '../styles/UserBookmarks.css';
 import { useBookmarks } from '../context/BookmarkContext';
 import api from '../services/api';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { generateNovelUrl, generateChapterUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
+
+/**
+ * UserBookmarksSEO Component
+ * 
+ * Provides SEO optimization for the UserBookmarks page including:
+ * - Meta title and description
+ * - Keywords
+ * - Open Graph tags
+ */
+const UserBookmarksSEO = ({ user, username, totalBookmarks = 0 }) => {
+  const displayName = user?.displayName || username;
+  
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>{`Truyện Đã Đánh Dấu - ${displayName} | Valvrareteam`}</title>
+      <meta name="description" content={`Xem danh sách ${totalBookmarks} truyện đã đánh dấu của ${displayName} tại Valvrareteam. Quản lý và theo dõi tiến độ đọc Light Novel yêu thích.`} />
+      <meta name="keywords" content="truyện đánh dấu, bookmark, light novel yêu thích, theo dõi đọc truyện, valvrareteam" />
+      <meta name="robots" content="noindex, nofollow" />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content={`Truyện Đã Đánh Dấu - ${displayName} | Valvrareteam`} />
+      <meta property="og:description" content={`Xem danh sách truyện đã đánh dấu của ${displayName} tại Valvrareteam.`} />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content={`https://valvrareteam.net/user/${username}/bookmarks`} />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={`Truyện Đã Đánh Dấu - ${displayName} | Valvrareteam`} />
+      <meta name="twitter:description" content={`Xem danh sách truyện đã đánh dấu của ${displayName} tại Valvrareteam.`} />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+    </Helmet>
+  );
+};
 
 /**
  * UserBookmarks Component
@@ -157,127 +199,142 @@ const UserBookmarks = () => {
   // Check if user has permission to view these bookmarks
   if (!user || user.username !== username) {
     return (
-      <div className="bookmarks-container">
-        <div className="no-bookmarks">
-          <p>Bạn không có quyền xem các truyện đã đánh dấu này.</p>
+      <>
+        <UserBookmarksSEO user={user} username={username} totalBookmarks={0} />
+        <div className="bookmarks-container">
+          <div className="no-bookmarks">
+            <p>Bạn không có quyền xem các truyện đã đánh dấu này.</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   // Show empty state immediately if we know there are no bookmarks
   if (totalBookmarks === 0 && !loading) {
     return (
-      <div className="bookmarks-container">
-        <div className="bookmarks-section-header">
-          <h2>TRUYỆN ĐÃ ĐÁNH DẤU (0)</h2>
+      <>
+        <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+        <div className="bookmarks-container">
+          <div className="bookmarks-section-header">
+            <h2>TRUYỆN ĐÃ ĐÁNH DẤU (0)</h2>
+          </div>
+          <div className="no-bookmarks">
+            <p>Bạn chưa đánh dấu bất kỳ truyện nào.</p>
+            <Link to="/danh-sach-truyen/trang/1" className="browse-novels-btn">
+              Xem truyện
+            </Link>
+          </div>
         </div>
-        <div className="no-bookmarks">
-          <p>Bạn chưa đánh dấu bất kỳ truyện nào.</p>
-          <Link to="/danh-sach-truyen/trang/1" className="browse-novels-btn">
-            Xem truyện
-          </Link>
-        </div>
-      </div>
+      </>
     );
   }
 
   if (loading) {
     return (
-      <div className="bookmarks-container">
-        <div className="loading">
-          <LoadingSpinner size="large" text="Đang tải..." />
+      <>
+        <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+        <div className="bookmarks-container">
+          <div className="loading">
+            <LoadingSpinner size="large" text="Đang tải..." />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="bookmarks-container">
-        <div className="error">
-          <p>{error}</p>
-          <button onClick={fetchBookmarks} className="retry-btn">
-            Thử lại
-          </button>
+      <>
+        <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+        <div className="bookmarks-container">
+          <div className="error">
+            <p>{error}</p>
+            <button onClick={fetchBookmarks} className="retry-btn">
+              Thử lại
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="bookmarks-container">
-      <div className="bookmarks-section-header">
-        <h2>TRUYỆN ĐÃ ĐÁNH DẤU ({totalBookmarks})</h2>
-      </div>
+    <>
+      <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+      <div className="bookmarks-container">
+        <div className="bookmarks-section-header">
+          <h2>TRUYỆN ĐÃ ĐÁNH DẤU ({totalBookmarks})</h2>
+        </div>
 
-      <div className="bookmarks-grid">
-        {bookmarks.map(novel => (
-          <div key={novel._id} className="bookmark-card">
+        <div className="bookmarks-grid">
+          {bookmarks.map(novel => (
+            <div key={novel._id} className="bookmark-card">
                           <Link to={generateLocalizedNovelUrl(novel)} className="title-link">
-              <h3 className="bookmark-title-header">{novel.title}</h3>
-            </Link>
-            <div className="bookmark-card-content">
-              <img 
-                src={novel.illustration || cdnConfig.defaultImages.novel}
-                alt={novel.title} 
-                className="bookmark-cover"
-                onError={(e) => {
-                  e.target.src = cdnConfig.defaultImages.novel;
-                }}
-              />
-              <div className="bookmark-info">
-                <div className="bookmark-reading-status">
-                  <span className="bookmark-status-label">
-                    Chương đánh dấu: <span className="bookmark-status-value">
-                      {novel.bookmarkedChapter?.title || 'Không có'}
-                      {novel.bookmarkedChapter && (
-                        <button 
-                          onClick={(e) => handleUnbookmarkChapter(novel._id, e)}
-                          className="unbookmark-chapter-btn"
-                          title="Bỏ đánh dấu chương"
-                        >
-                          ×
-                        </button>
-                      )}
+                <h3 className="bookmark-title-header">{novel.title}</h3>
+              </Link>
+              <div className="bookmark-card-content">
+                <img 
+                  src={novel.illustration || cdnConfig.defaultImages.novel}
+                  alt={novel.title} 
+                  className="bookmark-cover"
+                  onError={(e) => {
+                    e.target.src = cdnConfig.defaultImages.novel;
+                  }}
+                />
+                <div className="bookmark-info">
+                  <div className="bookmark-reading-status">
+                    <span className="bookmark-status-label">
+                      Chương đánh dấu: <span className="bookmark-status-value">
+                        {novel.bookmarkedChapter?.title || 'Không có'}
+                        {novel.bookmarkedChapter && (
+                          <button 
+                            onClick={(e) => handleUnbookmarkChapter(novel._id, e)}
+                            className="unbookmark-chapter-btn"
+                            title="Bỏ đánh dấu chương"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </span>
                     </span>
-                  </span>
-                </div>
-                <div className="bookmark-details">
-                  <span className="bookmark-status-label">
-                    Chương mới nhất: <span className="bookmark-status-value">
-                      {novel.latestChapter?.title || 'Chưa có chương'}
+                  </div>
+                  <div className="bookmark-details">
+                    <span className="bookmark-status-label">
+                      Chương mới nhất: <span className="bookmark-status-value">
+                        {novel.latestChapter?.title || 'Chưa có chương'}
+                      </span>
                     </span>
-                  </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <button 
-              onClick={(e) => handleRemoveBookmark(novel._id, e)}
-              className="remove-bookmark"
-              title="Xóa khỏi truyện đã đánh dấu"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
+              <button 
+                onClick={(e) => handleRemoveBookmark(novel._id, e)}
+                className="remove-bookmark"
+                title="Xóa khỏi truyện đã đánh dấu"
               >
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-            </button>
-          </div>
-        ))}
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -20,6 +20,7 @@
 import {useState, useEffect, memo, useRef} from 'react';
 import {Link, useNavigate, useParams, useLocation} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import HotNovels from './HotNovels';
 import RecentlyRead from './RecentlyRead';
@@ -213,6 +214,120 @@ const FacebookPlugin = memo(() => {
         </div>
     );
 });
+
+/**
+ * NovelListSEO Component
+ * 
+ * Provides SEO optimization for the novel list/homepage including:
+ * - Dynamic title based on page type and current page
+ * - Meta description
+ * - Keywords
+ * - Open Graph tags
+ */
+const NovelListSEO = ({ pageType = 'home', currentPage = 1 }) => {
+  // Generate SEO-optimized title based on page type and current page
+  const generateSEOTitle = () => {
+    let baseTitle = '';
+    
+    switch (pageType) {
+      case 'trending':
+        baseTitle = 'Light Novel Vietsub Trending - Truyện Hot Nhất';
+        break;
+      case 'popular':
+        baseTitle = 'Light Novel Tiếng Việt Phổ Biến - Top Truyện Hay';
+        break;
+      case 'recent':
+        baseTitle = 'Đọc Light Novel Vietsub Mới Nhất - Cập Nhật Hàng Ngày';
+        break;
+      default:
+        baseTitle = 'Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất';
+        break;
+    }
+    
+    // Add page number if not on first page
+    if (currentPage > 1) {
+      baseTitle += ` - Trang ${currentPage}`;
+    }
+    
+    return baseTitle;
+  };
+
+  // Generate SEO description
+  const generateSEODescription = () => {
+    switch (pageType) {
+      case 'trending':
+        return 'Khám phá những bộ Light Novel vietsub đang được yêu thích nhất tại Valvrareteam. Đọc Light Novel tiếng Việt chất lượng cao, cập nhật nhanh.';
+      case 'popular':
+        return 'Tuyển tập Light Novel tiếng Việt được độc giả đánh giá cao nhất. Đọc Light Novel vietsub miễn phí tại Valvrareteam.';
+      case 'recent':
+        return 'Light Novel vietsub mới cập nhật hàng ngày. Đọc ngay không bỏ lỡ những chương mới nhất tại Valvrareteam.';
+      default:
+        return 'Thư viện Light Novel vietsub lớn nhất Việt Nam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh, dịch chất lượng cao. Hàng nghìn bộ Light Novel hay đang chờ bạn khám phá!';
+    }
+  };
+
+  // Generate keywords
+  const generateKeywords = () => {
+    const baseKeywords = [
+      'light novel vietsub',
+      'light novel tiếng việt',
+      'đọc light novel vietsub',
+      'light novel việt nam',
+      'truyện light novel',
+      'ln vietsub',
+      'light novel online',
+      'đọc ln online',
+      'light novel dịch việt',
+      'novel tiếng việt',
+      'valvrareteam'
+    ];
+    
+    switch (pageType) {
+      case 'trending':
+        baseKeywords.push('light novel hot', 'light novel trending', 'light novel phổ biến');
+        break;
+      case 'popular':
+        baseKeywords.push('light novel hay nhất', 'top light novel', 'light novel đánh giá cao');
+        break;
+      case 'recent':
+        baseKeywords.push('light novel mới', 'light novel cập nhật', 'light novel mới nhất');
+        break;
+    }
+    
+    return baseKeywords.join(', ');
+  };
+
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>{generateSEOTitle()}</title>
+      <meta name="description" content={generateSEODescription()} />
+      <meta name="keywords" content={generateKeywords()} />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content={generateSEOTitle()} />
+      <meta property="og:description" content={generateSEODescription()} />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content="https://valvrareteam.net" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={generateSEOTitle()} />
+      <meta name="twitter:description" content={generateSEODescription()} />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      
+      {/* Canonical URL */}
+      <link rel="canonical" href={currentPage > 1 ? `https://valvrareteam.net/trang/${currentPage}` : "https://valvrareteam.net"} />
+    </Helmet>
+  );
+};
 
 // Small SEO Header Component for top placement
 const SEOHeader = ({ pageType = 'home' }) => {
@@ -584,7 +699,19 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     if (isLoading) return <div className="loading"><LoadingSpinner size="large" text="Đang tải truyện..." /></div>;    if (error) return <div className="error">{error.message}</div>;    if (!novels || novels.length === 0) return <div className="loading">Không có truyện nào.</div>;
 
     return (
-                <>            <div className="novel-list-container">                {/* SEO Header above main content - only on first page */}                {currentPage === 1 && <SEOHeader pageType={getSEOPageType()} />}                                <div className="content-layout">                    {/* Main content area */}                    <div className="main-content">                        <div className="section-headers">                            <h2>MỚI CẬP NHẬT</h2>                        </div>
+        <>
+            {/* SEO Component for title and meta tags */}
+            <NovelListSEO pageType={getSEOPageType()} currentPage={currentPage} />
+            
+            <div className="novel-list-container">
+                {/* SEO Header above main content - only on first page */}
+                {currentPage === 1 && <SEOHeader pageType={getSEOPageType()} />}
+                <div className="content-layout">
+                    {/* Main content area */}
+                    <div className="main-content">
+                        <div className="section-headers">
+                            <h2>MỚI CẬP NHẬT</h2>
+                        </div>
                         {/* Novel grid */}
                         <div className="novel-grid">
                             {novels.map(novel => {

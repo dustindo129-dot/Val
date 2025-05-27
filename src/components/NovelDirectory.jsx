@@ -10,6 +10,7 @@
 import { useState, useEffect, memo, useMemo, useRef, useCallback } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/NovelDirectory.css';
 import config from '../config/config';
@@ -76,6 +77,101 @@ const truncateHTML = (html, maxLength) => {
   }
 
   return truncated + '...';
+};
+
+/**
+ * NovelDirectorySEO Component
+ * 
+ * Provides SEO optimization for the novel directory page including:
+ * - Dynamic title based on current page and filters
+ * - Meta description
+ * - Keywords
+ * - Open Graph tags
+ */
+const NovelDirectorySEO = ({ currentPage = 1, appliedGenres = {}, totalItems = 0 }) => {
+  // Generate SEO-optimized title
+  const generateSEOTitle = () => {
+    const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
+    let baseTitle = 'Danh Sách Light Novel Vietsub - Thư Viện Truyện Đầy Đủ | Valvrareteam';
+    
+    if (activeGenres.length > 0) {
+      const genreText = activeGenres.slice(0, 3).join(', ');
+      baseTitle = `Light Novel ${genreText} Vietsub - Danh Sách Truyện | Valvrareteam`;
+    }
+    
+    // Add page number if not on first page
+    if (currentPage > 1) {
+      baseTitle += ` - Trang ${currentPage}`;
+    }
+    
+    return baseTitle;
+  };
+
+  // Generate SEO description
+  const generateSEODescription = () => {
+    const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
+    
+    if (activeGenres.length > 0) {
+      const genreText = activeGenres.slice(0, 3).join(', ');
+      return `Khám phá danh sách Light Novel ${genreText} vietsub tại Valvrareteam. ${totalItems} truyện chất lượng cao, dịch chuẩn, cập nhật nhanh. Đọc Light Novel tiếng Việt miễn phí.`;
+    }
+    
+    return `Danh sách đầy đủ các Light Novel vietsub tại Valvrareteam. Hàng nghìn bộ truyện Light Novel tiếng Việt chất lượng cao, phân loại theo thể loại, dễ dàng tìm kiếm và đọc miễn phí.`;
+  };
+
+  // Generate keywords
+  const generateKeywords = () => {
+    const baseKeywords = [
+      'danh sách light novel vietsub',
+      'light novel tiếng việt',
+      'thư viện light novel',
+      'light novel theo thể loại',
+      'tìm kiếm light novel',
+      'light novel việt nam',
+      'đọc light novel online',
+      'valvrareteam'
+    ];
+    
+    const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
+    if (activeGenres.length > 0) {
+      activeGenres.forEach(genre => {
+        baseKeywords.push(`light novel ${genre.toLowerCase()}`, `${genre.toLowerCase()} vietsub`);
+      });
+    }
+    
+    return baseKeywords.join(', ');
+  };
+
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>{generateSEOTitle()}</title>
+      <meta name="description" content={generateSEODescription()} />
+      <meta name="keywords" content={generateKeywords()} />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content={generateSEOTitle()} />
+      <meta property="og:description" content={generateSEODescription()} />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content="https://valvrareteam.net/danh-sach-truyen" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={generateSEOTitle()} />
+      <meta name="twitter:description" content={generateSEODescription()} />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      
+      {/* Canonical URL */}
+      <link rel="canonical" href={currentPage > 1 ? `https://valvrareteam.net/danh-sach-truyen/trang/${currentPage}` : "https://valvrareteam.net/danh-sach-truyen"} />
+    </Helmet>
+  );
 };
 
 /**
@@ -419,14 +515,154 @@ const NovelDirectory = () => {
 
   if (!novels || novels.length === 0) {
     return (
+        <>
+          {/* SEO Component for title and meta tags */}
+          <NovelDirectorySEO currentPage={currentPage} appliedGenres={appliedGenres} totalItems={totalItems} />
+          
+          <div className="novel-list-container directory">
+            <div className="content-layout directory">
+              <div className="main-content directory">
+                <div className="section-headers directory">
+                  <h2>DANH SÁCH TRUYỆN</h2>
+                </div>
+                <div className="no-results directory">Không có truyện nào phù hợp với các bộ lọc đã chọn.</div>
+                <button className="reset-all-filters directory" onClick={resetFilters}>Xóa tất cả bộ lọc</button>
+              </div>
+
+              {/* Sidebar with genre filters */}
+              <div className="sidebar" ref={sidebarRef}>
+                <div className="filter-panel">
+                  <h3>Lọc theo thể loại</h3>
+
+                  {Object.entries(genreCategories).map(([category, genres]) => (
+                      <div key={category} className="genre-category">
+                        <h4 className="genre-category-title">{category}</h4>
+                        <div className="genre-checkboxes">
+                          {genres.map(genre => (
+                              <div key={genre} className="genre-checkbox">
+                                <input
+                                    type="checkbox"
+                                    id={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}
+                                    checked={!!selectedGenres[genre]}
+                                    onChange={() => handleGenreChange(genre)}
+                                />
+                                <label htmlFor={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}>
+                                  {genre}
+                                </label>
+                              </div>
+                          ))}
+                        </div>
+                      </div>
+                  ))}
+
+                  <div className="filter-actions">
+                    <button className="filter-button apply-filters" onClick={applyFilters}>
+                      Áp dụng bộ lọc
+                    </button>
+                    <button className="filter-button reset-filters" onClick={resetFilters}>
+                      Xóa bộ lọc
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+    );
+  }
+
+  return (
+      <>
+        {/* SEO Component for title and meta tags */}
+        <NovelDirectorySEO currentPage={currentPage} appliedGenres={appliedGenres} totalItems={totalItems} />
+        
         <div className="novel-list-container directory">
           <div className="content-layout directory">
+            {/* Main content area */}
             <div className="main-content directory">
               <div className="section-headers directory">
                 <h2>DANH SÁCH TRUYỆN</h2>
+                <div className="results-count directory">
+                  Hiển thị {novels.length} trong tổng số {totalItems} truyện
+                </div>
               </div>
-              <div className="no-results directory">Không có truyện nào phù hợp với các bộ lọc đã chọn.</div>
-              <button className="reset-all-filters directory" onClick={resetFilters}>Xóa tất cả bộ lọc</button>
+              <div className="novel-grid directory">
+                {novels.map(novel => {
+                  // Get formatted genre tags for this novel
+                  const genreTags = getGenreTags(novel);
+
+                  return (
+                      <div key={novel._id} className="novel-card">
+                        {/* Novel cover image with status and update time */}
+                        <NovelImage
+                            src={novel.illustration || cdnConfig.defaultImageUrl}
+                            alt={novel.title}
+                            status={novel.status}
+                            novelId={novel._id}
+                            updatedAt={novel.updatedAt}
+                        />
+
+                        {/* Novel content section */}
+                        <div className="novel-content">
+                          {/* Novel title */}
+                          <Link to={generateLocalizedNovelUrl(novel)} className="dir-novel-title-link">
+                            <h3 className="dir-novel-title">{novel.title}</h3>
+                          </Link>
+
+                          {/* Genre tags - limited to 2 rows with toggle option */}
+                          {genreTags.length > 0 && (
+                              <div
+                                  ref={el => tagListRefs.current[novel._id] = el}
+                                  className={`dir-tag-list ${expandedTags[novel._id] ? 'expanded' : ''}`}
+                              >
+                                {genreTags.map((genre, index) => (
+                                    <span key={index} className={`dir-tag ${genre.class}`}>
+                                      {genre.name}
+                                    </span>
+                                ))}
+
+                                {needsTagToggle[novel._id] && (
+                                    <span
+                                        className="dir-toggle-tags"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          toggleTags(novel._id);
+                                        }}
+                                    >
+                                      {expandedTags[novel._id] ? 'Show less' : '...'}
+                                    </span>
+                                )}
+                              </div>
+                          )}
+
+                          <div className="dir-novel-description-container" style={{position: 'relative'}}>
+                            <div
+                                className={`dir-novel-description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                                ref={el => descriptionRefs.current[novel._id] = el}
+                            >
+                              <div dangerouslySetInnerHTML={{
+                                __html: novel.description || ''
+                              }} />
+                            </div>
+
+                            {novel.description && (
+                                <button
+                                    className="dir-read-more"
+                                    onClick={() => toggleDescription(novel._id)}
+                                >
+                                  {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
+                                </button>
+                            )}
+                          </div>
+
+                        </div>
+                      </div>
+                  );
+                })}
+              </div>
+
+              {/* Pagination controls */}
+              {renderPagination()}
             </div>
 
             {/* Sidebar with genre filters */}
@@ -434,6 +670,7 @@ const NovelDirectory = () => {
               <div className="filter-panel">
                 <h3>Lọc theo thể loại</h3>
 
+                {/* Genre category sections */}
                 {Object.entries(genreCategories).map(([category, genres]) => (
                     <div key={category} className="genre-category">
                       <h4 className="genre-category-title">{category}</h4>
@@ -455,6 +692,7 @@ const NovelDirectory = () => {
                     </div>
                 ))}
 
+                {/* Filter actions */}
                 <div className="filter-actions">
                   <button className="filter-button apply-filters" onClick={applyFilters}>
                     Áp dụng bộ lọc
@@ -467,139 +705,7 @@ const NovelDirectory = () => {
             </div>
           </div>
         </div>
-    );
-  }
-
-  return (
-      <div className="novel-list-container directory">
-        <div className="content-layout directory">
-          {/* Main content area */}
-          <div className="main-content directory">
-            <div className="section-headers directory">
-              <h2>DANH SÁCH TRUYỆN</h2>
-              <div className="results-count directory">
-                Hiển thị {novels.length} trong tổng số {totalItems} truyện
-              </div>
-            </div>
-            <div className="novel-grid directory">
-              {novels.map(novel => {
-                // Get formatted genre tags for this novel
-                const genreTags = getGenreTags(novel);
-
-                return (
-                    <div key={novel._id} className="novel-card">
-                      {/* Novel cover image with status and update time */}
-                      <NovelImage
-                          src={novel.illustration || cdnConfig.defaultImageUrl}
-                          alt={novel.title}
-                          status={novel.status}
-                          novelId={novel._id}
-                          updatedAt={novel.updatedAt}
-                      />
-
-                      {/* Novel content section */}
-                      <div className="novel-content">
-                        {/* Novel title */}
-                        <Link to={generateLocalizedNovelUrl(novel)} className="dir-novel-title-link">
-                          <h3 className="dir-novel-title">{novel.title}</h3>
-                        </Link>
-
-                        {/* Genre tags - limited to 2 rows with toggle option */}
-                        {genreTags.length > 0 && (
-                            <div
-                                ref={el => tagListRefs.current[novel._id] = el}
-                                className={`dir-tag-list ${expandedTags[novel._id] ? 'expanded' : ''}`}
-                            >
-                              {genreTags.map((genre, index) => (
-                                  <span key={index} className={`dir-tag ${genre.class}`}>
-                                    {genre.name}
-                                  </span>
-                              ))}
-
-                              {needsTagToggle[novel._id] && (
-                                  <span
-                                      className="dir-toggle-tags"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        toggleTags(novel._id);
-                                      }}
-                                  >
-                                    {expandedTags[novel._id] ? 'Show less' : '...'}
-                                  </span>
-                              )}
-                            </div>
-                        )}
-
-                        <div className="dir-novel-description-container" style={{position: 'relative'}}>
-                          <div
-                              className={`dir-novel-description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
-                              ref={el => descriptionRefs.current[novel._id] = el}
-                          >
-                            <div dangerouslySetInnerHTML={{
-                              __html: novel.description || ''
-                            }} />
-                          </div>
-
-                          {novel.description && (
-                              <button
-                                  className="dir-read-more"
-                                  onClick={() => toggleDescription(novel._id)}
-                              >
-                                {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
-                              </button>
-                          )}
-                        </div>
-
-                      </div>
-                    </div>
-                );
-              })}
-            </div>
-
-            {/* Pagination controls */}
-            {renderPagination()}
-          </div>
-
-          {/* Sidebar with genre filters */}
-          <div className="sidebar" ref={sidebarRef}>
-            <div className="filter-panel">
-              <h3>Lọc theo thể loại</h3>
-
-              {/* Genre category sections */}
-              {Object.entries(genreCategories).map(([category, genres]) => (
-                  <div key={category} className="genre-category">
-                    <h4 className="genre-category-title">{category}</h4>
-                    <div className="genre-checkboxes">
-                      {genres.map(genre => (
-                          <div key={genre} className="genre-checkbox">
-                            <input
-                                type="checkbox"
-                                id={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}
-                                checked={!!selectedGenres[genre]}
-                                onChange={() => handleGenreChange(genre)}
-                            />
-                            <label htmlFor={`genre-${genre.replace(/\s+/g, '-').toLowerCase()}`}>
-                              {genre}
-                            </label>
-                          </div>
-                      ))}
-                    </div>
-                  </div>
-              ))}
-
-              {/* Filter actions */}
-              <div className="filter-actions">
-                <button className="filter-button apply-filters" onClick={applyFilters}>
-                  Áp dụng bộ lọc
-                </button>
-                <button className="filter-button reset-filters" onClick={resetFilters}>
-                  Xóa bộ lọc
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </>
   );
 };
 

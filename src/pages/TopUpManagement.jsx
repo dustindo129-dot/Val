@@ -1,10 +1,51 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
 import '../styles/TopUpManagement.css';
 import '../styles/TopUp.css';
+
+/**
+ * TopUpManagementSEO Component
+ * 
+ * Provides SEO optimization for the TopUpManagement page including:
+ * - Meta title and description
+ * - Keywords
+ * - Open Graph tags
+ */
+const TopUpManagementSEO = () => {
+  return (
+    <Helmet>
+      {/* Basic meta tags */}
+      <title>Quản Lý Giao Dịch - Admin Panel | Valvrareteam</title>
+      <meta name="description" content="Trang quản lý giao dịch dành cho admin Valvrareteam. Xử lý yêu cầu nạp lúa, quản lý giao dịch người dùng và theo dõi hoạt động tài chính." />
+      <meta name="keywords" content="quản lý giao dịch, admin panel, nạp lúa, giao dịch người dùng, valvrareteam, quản trị viên" />
+      <meta name="robots" content="noindex, nofollow" />
+      
+      {/* Language and charset */}
+      <meta httpEquiv="Content-Language" content="vi-VN" />
+      <meta name="language" content="Vietnamese" />
+      
+      {/* Open Graph meta tags */}
+      <meta property="og:title" content="Quản Lý Giao Dịch - Admin Panel | Valvrareteam" />
+      <meta property="og:description" content="Trang quản lý giao dịch dành cho admin Valvrareteam." />
+      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      <meta property="og:url" content="https://valvrareteam.net/quan-ly-giao-dich" />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card meta tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Quản Lý Giao Dịch - Admin Panel | Valvrareteam" />
+      <meta name="twitter:description" content="Trang quản lý giao dịch dành cho admin Valvrareteam." />
+      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+    </Helmet>
+  );
+};
+
 /**
  * TopUpManagement Page Component
  * 
@@ -625,6 +666,7 @@ const TopUpManagement = () => {
 
   return (
     <div className="top-up-container">
+      <TopUpManagementSEO />
       <h1>Quản lý giao dịch</h1>
       <div className="top-up-content">
         <section className="top-up-section">
