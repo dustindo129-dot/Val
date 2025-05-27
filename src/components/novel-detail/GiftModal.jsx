@@ -171,7 +171,7 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
                   </div>
                   <div className="gift-note">
                     <i className="fas fa-info-circle"></i>
-                    <span>Quà tặng trực tiếp dành cho dịch giả/tác giả, sẽ không được thêm vào Kho lúa</span>
+                    <span>Quà tặng trực tiếp dành cho dịch giả/tác giả, không được thêm vào Kho lúa</span>
                   </div>
                 </div>
               )}
