@@ -274,9 +274,19 @@ const UserProfile = () => {
       
     } catch (error) {
       console.error('Display name update error:', error);
+      let errorMessage = 'Không thể cập nhật tên hiển thị. Vui lòng thử lại.';
+      
+      if (error.response?.data?.message) {
+        if (error.response.data.message.includes('already taken')) {
+          errorMessage = 'Tên hiển thị này đã được sử dụng. Vui lòng chọn tên khác.';
+        } else {
+          errorMessage = error.response.data.message;
+        }
+      }
+      
       setMessage({ 
         type: 'error', 
-        text: error.response?.data?.message || 'Không thể cập nhật tên hiển thị. Vui lòng thử lại.' 
+        text: errorMessage
       });
     } finally {
       setIsLoading(false);
