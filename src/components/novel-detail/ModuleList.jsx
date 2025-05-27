@@ -7,6 +7,7 @@ import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { createUniqueSlug } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
+import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 
 // Lazy load ModuleChapters for consistency
 const ModuleChapters = lazy(() => import('./ModuleChapters'));
@@ -194,7 +195,7 @@ const ModuleList = memo(({
                   </div>
                   {module.mode === 'paid' && (
                     <div className="module-mode-tag">
-                      <span className="mode-tag mode-paid">TRẢ PHÍ</span>
+                      <span className="mode-tag mode-paid">{translateChapterModuleStatus('PAID')}</span>
                       {module.moduleBalance > 0 && (
                         <div className="module-balance-row">
                           <span className="module-balance">{module.moduleBalance}</span>

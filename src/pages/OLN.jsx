@@ -6,6 +6,7 @@ import '../styles/NovelList.css';
 import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
+import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 // NovelImage Component - Reused from NovelList
 const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
@@ -28,12 +29,12 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
                 loading="lazy"
                 className="novel-cover"
             />
-            <span className="status-badge" data-status={status || 'ONGOING'}>
-                {status || 'ONGOING'}
+            <span className="status-badge" data-status={getStatusForCSS(status)}>
+                {translateStatus(status)}
             </span>
             {firstChapter && (
                 <Link to={generateChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
-                    &gt;&gt; First Chapter
+                    &gt;&gt; Chương đầu
                 </Link>
             )}
         </div>

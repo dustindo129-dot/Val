@@ -34,6 +34,7 @@ import bunnyUploadService from '../services/bunnyUploadService';
 import hybridCdnService from '../services/bunnyUploadService';
 import LoadingSpinner from './LoadingSpinner';
 import { createUniqueSlug } from '../utils/slugUtils';
+import { translateChapterModuleStatus } from '../utils/statusTranslation';
 
 /**
  * ChapterDashboard Component
@@ -585,8 +586,8 @@ const ChapterDashboard = () => {
     const novelSlug = createUniqueSlug(novel?.title, novelId);
     return (
         <div className="error-message">
-          <FontAwesomeIcon icon={faExclamationTriangle} /> Module không tồn tại.
-          <Link to={`/novel/${novelSlug}`} className="return-link"> Trở lại trang novel</Link>
+          <FontAwesomeIcon icon={faExclamationTriangle} /> Tập không tồn tại.
+          <Link to={`/novel/${novelSlug}`} className="return-link"> Trở lại trang truyện</Link>
         </div>
     );
   }
@@ -603,7 +604,7 @@ const ChapterDashboard = () => {
             {module && <div className="module-title">Tập: {module.title}</div>}
           </div>
           <Link to={`/novel/${novelSlug}`} className="back-to-novel">
-            <FontAwesomeIcon icon={faArrowLeft} /> Trở lại trang novel
+            <FontAwesomeIcon icon={faArrowLeft} /> Trở lại trang truyện
           </Link>
         </div>
 
@@ -641,12 +642,12 @@ const ChapterDashboard = () => {
                     onChange={handleModeChange}
                     className="mode-dropdown"
                 >
-                  <option value="published">Công khai (Hiển thị cho tất cả mọi người)</option>
-                  <option value="draft">Bản nháp (Chỉ admin/mod)</option>
-                  <option value="protected">Bảo vệ (Yêu cầu đăng nhập)</option>
+                  <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất cả)</option>
+                  <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
+                  <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng nhập)</option>
                   {user?.role === 'admin' && (
                     <option value="paid" disabled={isModulePaid}>
-                      {isModulePaid ? 'Nội dung trả phí (Không khả dụng - Tập đã trả phí)' : 'Nội dung trả phí'}
+                      {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
                     </option>
                   )}
                 </select>

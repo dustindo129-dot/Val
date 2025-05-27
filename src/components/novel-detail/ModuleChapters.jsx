@@ -5,6 +5,7 @@ import { faLock, faSeedling } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import { createUniqueSlug } from '../../utils/slugUtils';
 import '../../styles/components/ModuleChapters.css';
+import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 
 // Helper function for date formatting in Vietnamese format (DD/MM/YYYY)
 const formatDateUtil = (date) => {
@@ -234,7 +235,7 @@ const ModuleChapters = memo(({
                     )}
                     <span className="chapter-mode-indicator">
                       <span className={`mode-tag mode-${chapter.mode || 'published'}`}>
-                        {(chapter.mode || 'published').toUpperCase()}
+                        {translateChapterModuleStatus((chapter.mode || 'published').toUpperCase())}
                       </span>
                       {chapter.mode === 'paid' && chapter.chapterBalance > 0 && (
                         <span className="chapter-balance">{chapter.chapterBalance}</span>

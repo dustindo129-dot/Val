@@ -33,6 +33,7 @@ import {
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
 import { createUniqueSlug } from '../../utils/slugUtils';
+import { translateStatus, getStatusForCSS } from '../../utils/statusTranslation';
 
 const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
   const queryClient = useQueryClient();
@@ -402,8 +403,8 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
             <h1 className="rd-novel-title">
               {novelTitle || 'Đang tải...'}
             </h1>
-            <span className={`rd-status-badge rd-status-${novelData.status?.toLowerCase() || 'ongoing'}`}>
-              {novelData.status || 'Đang tiến hành'}
+            <span className={`rd-status-badge rd-status-${getStatusForCSS(novelData.status)?.toLowerCase() || 'ongoing'}`}>
+              {translateStatus(novelData.status)}
             </span>
           </div>
 

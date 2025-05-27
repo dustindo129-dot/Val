@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import './ChapterContent.css';
 import hybridCdnService from '../../services/bunnyUploadService';
+import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 
 const ChapterContent = ({
   chapter,
@@ -353,12 +354,12 @@ const ChapterContent = ({
               onChange={(e) => handleModeChange(e.target.value)}
               className="mode-dropdown"
             >
-              <option value="published">Công khai (Hiển thị cho tất cả)</option>
-              <option value="draft">Nháp (Chỉ admin/mod)</option>
-              <option value="protected">Bảo mật (Yêu cầu đăng nhập)</option>
+              <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất cả)</option>
+              <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
+              <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng nhập)</option>
               {userRole === 'admin' && (
                 <option value="paid" disabled={isModulePaid}>
-                  {isModulePaid ? 'Nội dung trả phí (Không khả dụng - Tập đã trả phí)' : 'Nội dung trả phí'}
+                  {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
                 </option>
               )}
             </select>

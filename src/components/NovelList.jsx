@@ -30,6 +30,7 @@ import cdnConfig from '../config/bunny';
 import api from '../utils/apiHelper';
 import LoadingSpinner from './LoadingSpinner';
 import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
+import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 /**
  * NovelImage Component
@@ -67,8 +68,8 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
                 loading="lazy"
                 className="novel-cover"
             />
-            <span className="status-badge" data-status={status || 'ONGOING'}>
-        {status || 'ONGOING'}
+            <span className="status-badge" data-status={getStatusForCSS(status)}>
+        {translateStatus(status)}
       </span>
             {firstChapter && (
                 <Link to={generateChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">

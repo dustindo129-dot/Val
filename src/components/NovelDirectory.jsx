@@ -16,6 +16,7 @@ import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from './LoadingSpinner';
 import { generateNovelUrl } from '../utils/slugUtils';
+import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 // Genre categories for filtering
 const genreCategories = {
@@ -110,8 +111,8 @@ const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
           </div>
         </Link>
         {/* Status nằm dưới hình ảnh */}
-        <span className="dir-novel-status" data-status={status || 'ONGOING'}>
-          {status || 'ONGOING'}
+        <span className="dir-novel-status" data-status={getStatusForCSS(status)}>
+          {translateStatus(status)}
         </span>
       </div>
   );

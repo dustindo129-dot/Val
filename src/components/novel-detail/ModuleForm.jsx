@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 
 const ModuleForm = memo(({ 
   moduleForm, 
@@ -115,8 +116,8 @@ const ModuleForm = memo(({
                 borderRadius: '4px'
               }}
             >
-              <option value="published">CÔNG KHAI (Hiển thị cho mọi người)</option>
-              <option value="paid">TRẢ PHÍ (Cần mở khóa)</option>
+              <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho mọi người)</option>
+              <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
             </select>
           </div>
         )}

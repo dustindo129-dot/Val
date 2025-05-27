@@ -25,6 +25,7 @@ import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from './LoadingSpinner';
 import { generateNovelUrl } from '../utils/slugUtils';
+import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 // Memoized novel card component for better performance
 const NovelCard = memo(({ novel }) => {
@@ -47,8 +48,8 @@ const NovelCard = memo(({ novel }) => {
             </div>
             <div className="hot-novel-info">
                 <h3 className="hot-novel-title">{novel.title}</h3>
-                <span className="hot-novel-status" data-status={novel.status || 'Đang tiến hành'}>
-                    {novel.status || 'Đang tiến hành'}
+                <span className="hot-novel-status" data-status={getStatusForCSS(novel.status)}>
+                    {translateStatus(novel.status)}
                 </span>
                 {latestChapter && (
                     <span className="hot-novel-chapter">
