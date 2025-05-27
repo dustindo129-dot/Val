@@ -30,7 +30,7 @@ import '../styles/Navbar.css';
 import config from '../config/config';
 import Modal from './auth/Modal';
 import cdnConfig from '../config/bunny';
-import { createUniqueSlug, generateLocalizedUserBookmarksUrl, generateLocalizedUserProfileUrl } from '../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedUserBookmarksUrl, generateLocalizedUserProfileUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
 import { translateStatus } from '../utils/statusTranslation';
 import api from '../services/api';
 import sseService from '../services/sseService';
