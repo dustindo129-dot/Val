@@ -454,6 +454,32 @@
   width: 100px;
 }
 
+.match-balance-control input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  color: #333;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-balance-control input:focus {
+  outline: none;
+  border-color: #ff9800;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
+}
+
+.match-balance-control input:invalid {
+  border-color: #f44336;
+}
+
+.match-balance-control input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
 .match-actions {
   display: flex;
   gap: 10px;
@@ -486,4 +512,249 @@
 
 .actual-amount .amount-mismatch {
   color: #f44336;
-} 
+}
+
+/* Dark mode support */
+:root.dark-mode .top-up-container {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .topup-form-group input,
+:root.dark-mode .topup-form-group select {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .topup-form-group label {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .management-submit-button {
+  background-color: #4CAF50;
+}
+
+:root.dark-mode .management-submit-button:hover {
+  background-color: #45a049;
+}
+
+:root.dark-mode .refresh-button {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .refresh-button:hover {
+  background-color: #333;
+}
+
+:root.dark-mode .refresh-button:disabled {
+  background-color: #2a2a2a;
+  color: #666;
+}
+
+/* Dark mode for transaction items */
+:root.dark-mode .transaction-item,
+:root.dark-mode .pending-request-item,
+:root.dark-mode .unmatched-transaction-item {
+  border-color: #404040;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .transaction-id,
+:root.dark-mode .request-id {
+  color: #aaa;
+}
+
+:root.dark-mode .transaction-date,
+:root.dark-mode .request-date {
+  color: #aaa;
+}
+
+:root.dark-mode .transaction-admin,
+:root.dark-mode .transaction-notes {
+  color: #aaa;
+}
+
+/* Dark mode for pending request actions */
+:root.dark-mode .balance-adjustment label {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .balance-adjustment input {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .confirm-button {
+  background-color: #4CAF50;
+}
+
+:root.dark-mode .decline-button {
+  background-color: #f44336;
+}
+
+/* Dark mode for bank transactions */
+:root.dark-mode .bank-transactions {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .transactions-title {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .bank-transaction-item {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .description-text {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .description-label {
+  color: #e0e0e0;
+}
+
+/* Dark mode for user search */
+:root.dark-mode .user-search-results {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .user-result {
+  border-bottom-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .user-result:hover {
+  background-color: #333;
+}
+
+:root.dark-mode .user-avatar {
+  background-color: #404040;
+}
+
+:root.dark-mode .default-avatar {
+  color: #aaa;
+}
+
+:root.dark-mode .topup-user-balance {
+  color: #aaa;
+}
+
+:root.dark-mode .no-results {
+  color: #aaa;
+}
+
+:root.dark-mode .no-user-selected {
+  color: #aaa;
+}
+
+/* Dark mode for pagination */
+:root.dark-mode .pagination button {
+  border-color: #404040;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .pagination button:disabled {
+  color: #666;
+}
+
+:root.dark-mode .page-info {
+  color: #e0e0e0;
+}
+
+/* Dark mode for transaction filter */
+:root.dark-mode .transaction-filter input {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .reset-filter-button {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .reset-filter-button:hover {
+  background-color: #333;
+}
+
+/* Dark mode for unmatched transaction styling */
+:root.dark-mode .unmatched-transaction-item {
+  border-left-color: #ff9800;
+}
+
+:root.dark-mode .match-transaction-form {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .match-form-header {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .match-user-control input,
+:root.dark-mode .match-balance-control input {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .match-balance-control input:focus {
+  border-color: #ff9800;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.3);
+}
+
+:root.dark-mode .match-balance-control input::placeholder {
+  color: #666;
+}
+
+:root.dark-mode .match-button {
+  background-color: #ff9800;
+}
+
+:root.dark-mode .cancel-match-button {
+  background-color: #9e9e9e;
+}
+
+:root.dark-mode .transfer-content {
+  color: #ffb74d;
+}
+
+/* Dark mode for transaction status */
+:root.dark-mode .transaction-status.completed,
+:root.dark-mode .transaction-status.successful {
+  background-color: rgba(46, 125, 50, 0.2);
+  color: #66bb6a;
+}
+
+:root.dark-mode .transaction-status.pending {
+  background-color: rgba(245, 127, 23, 0.2);
+  color: #ffb74d;
+}
+
+:root.dark-mode .transaction-status.failed,
+:root.dark-mode .transaction-status.cancelled {
+  background-color: rgba(198, 40, 40, 0.2);
+  color: #ef5350;
+}
+
+/* Dark mode for transaction amounts */
+:root.dark-mode .amount-positive {
+  color: #66bb6a;
+}
+
+:root.dark-mode .amount-negative {
+  color: #ef5350;
+}
+
+:root.dark-mode .actual-amount .amount-mismatch {
+  color: #ef5350;
+}

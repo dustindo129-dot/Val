@@ -461,7 +461,7 @@ const Market = () => {
       return;
     }
     
-    // Only allow approving 'new' and 'web' type requests, since 'open' requests are auto-processed
+            // Only allow approving 'new' and 'web' type requests
     if (requestToApprove.type !== 'new' && requestToApprove.type !== 'web') {
       alert('This type of request is automatically processed and cannot be manually approved.');
       return;

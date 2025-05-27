@@ -85,11 +85,32 @@ const truncateHTML = (html, maxLength) => {
  * NovelContributions Component
  * 
  * Displays novel budget and contribution interface
+ * Only shows if the novel has paid modules or chapters
  */
-const NovelContributions = ({ novelId, novelBudget, onContributionSuccess }) => {
+const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modules }) => {
   const { user, isAuthenticated } = useAuth();
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+
+  // Check if the novel has any paid content (modules or chapters)
+  const hasPaidContent = useMemo(() => {
+    if (!modules || modules.length === 0) return false;
+    
+    // Check for paid modules
+    const hasPaidModules = modules.some(module => module.mode === 'paid');
+    
+    // Check for paid chapters within modules
+    const hasPaidChapters = modules.some(module => 
+      module.chapters && module.chapters.some(chapter => chapter.mode === 'paid')
+    );
+    
+    return hasPaidModules || hasPaidChapters;
+  }, [modules]);
+
+  // Don't render the contribution section if there's no paid content
+  if (!hasPaidContent) {
+    return null;
+  }
 
   return (
     <div className="rd-contribution-section">
@@ -918,6 +939,7 @@ const NovelDetail = ({ novelId }) => {
               novelId={novelId} 
               novelBudget={data.novel.novelBudget} 
               onContributionSuccess={handleContributionSuccess}
+              modules={data.modules}
             />}
           />
           

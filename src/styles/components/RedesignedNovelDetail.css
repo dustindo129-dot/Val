@@ -1001,10 +1001,6 @@
   background-color: #333;
 }
 
-:root.dark-mode .modal-content {
-  background-color: #2a2a2a;
-}
-
 :root.dark-mode .form-group input,
 :root.dark-mode .form-group textarea {
   background-color: #333;

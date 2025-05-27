@@ -81,14 +81,7 @@ const ModuleList = memo(({
   // Check if user can access paid content
   const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
   
-  // Fetch pending requests count for this novel with React Query
-  const { data: pendingRequestsCount = 0 } = useQuery({
-    queryKey: ['pending-requests', novelId],
-    queryFn: () => novelId ? api.getPendingNovelRequests(novelId) : 0,
-    enabled: !!novelId,
-    staleTime: 30000, // Cache for 30 seconds
-    retry: false
-  });
+
 
   const handleReorderClick = useCallback(async (moduleId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
@@ -270,7 +263,6 @@ const ModuleList = memo(({
                     handleChapterDelete={handleChapterDelete}
                     isPaidModule={module.mode === 'paid'}
                     canAccessPaidContent={canAccessPaidContent}
-                    pendingRequestsCount={pendingRequestsCount}
                   />
                 </Suspense>
               </div>

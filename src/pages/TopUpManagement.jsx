@@ -216,7 +216,7 @@ const TopUpManagement = () => {
       console.error('Failed to fetch novel transactions:', err);
       setNovelTransactions([]);
       setNovelTransactionLoading(false);
-      alert('Không thể tải nhật ký giao dịch tiểu thuyết. Vui lòng thử lại sau.');
+      alert('Không thể tải nhật ký giao dịch truyện. Vui lòng thử lại sau.');
     }
   };
 
@@ -703,12 +703,12 @@ const TopUpManagement = () => {
         {/* New section: Novel Transaction History */}
         <section className="top-up-section transaction-section">
           <div className="transaction-header-container">
-            <h2>Nhật ký giao dịch tiểu thuyết</h2>
+            <h2>Nhật ký giao dịch truyện</h2>
             <div className="transaction-filter">
               <div className="user-search-container">
                 <input 
                   type="text" 
-                  placeholder="Tìm kiếm tiểu thuyết để xem giao dịch..."
+                  placeholder="Tìm kiếm truyện để xem giao dịch..."
                   value={novelSearchQuery}
                   onChange={(e) => {
                     setNovelSearchQuery(e.target.value);
@@ -764,12 +764,12 @@ const TopUpManagement = () => {
           
           {!selectedNovel ? (
             <div className="no-user-selected">
-              <p>Hãy tìm kiếm và chọn tiểu thuyết để xem lịch sử giao dịch</p>
+              <p>Hãy tìm kiếm và chọn truyện để xem lịch sử giao dịch</p>
             </div>
           ) : novelTransactionLoading ? (
             <p>Đang tải nhật ký giao dịch...</p>
           ) : novelTransactions.length === 0 ? (
-            <p>Không tìm thấy giao dịch nào cho tiểu thuyết này</p>
+            <p>Không tìm thấy giao dịch nào cho truyện này</p>
           ) : (
             <>
               <div className="user-transactions-list">

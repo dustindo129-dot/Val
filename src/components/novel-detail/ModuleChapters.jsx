@@ -55,8 +55,7 @@ const ModuleChapters = memo(({
   handleChapterReorder, 
   handleChapterDelete,
   isPaidModule,
-  canAccessPaidContent,
-  onOpenChapterRequest
+  canAccessPaidContent
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   const { isAuthenticated } = useAuth();
