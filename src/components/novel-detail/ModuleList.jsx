@@ -5,7 +5,7 @@ import { faLock, faSeedling } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
-import { createUniqueSlug } from '../../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedAddChapterUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 
@@ -239,7 +239,10 @@ const ModuleList = memo(({
                       </button>
                     )}
                     <Link
-                      to={`/novel/${createUniqueSlug(novelTitle, novelId)}/module/${createUniqueSlug(module.title, module._id)}/add-chapter`}
+                      to={generateLocalizedAddChapterUrl(
+                { _id: novelId, title: novelTitle },
+                module
+              )}
                       className="add-chapter-btn"
                       title="Thêm chương vào tập"
                     >

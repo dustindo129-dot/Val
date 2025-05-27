@@ -2,7 +2,16 @@
 User-agent: *
 Allow: /
 
-# Allow all important SEO pages
+# Allow all important Vietnamese SEO pages
+Allow: /danh-sach-truyen
+Allow: /trang/*
+Allow: /truyen/*
+Allow: /chuong/*
+Allow: /phan-hoi
+Allow: /bang-yeu-cau
+Allow: /nap-them
+
+# Also allow legacy English URLs for backward compatibility
 Allow: /light-novel-vietsub
 Allow: /page/*
 Allow: /novel/*
@@ -13,6 +22,23 @@ Disallow: /login
 Disallow: /register
 Disallow: /profile
 Disallow: /api/
+Disallow: /bang-quan-tri
+Disallow: /quan-ly-giao-dich
+
+# Disallow common sensitive files and directories
+Disallow: /.env
+Disallow: /config/
+Disallow: /scripts/
+Disallow: /node_modules/
+Disallow: /.git/
+Disallow: /package.json
+Disallow: /package-lock.json
+
+# Disallow search and filter parameters to avoid duplicate content
+Disallow: /*?search=*
+Disallow: /*?filter=*
+Disallow: /*?sort=*
+Disallow: /*?page=*&*
 
 # Sitemap location
 Sitemap: https://valvrareteam.net/sitemap.xml

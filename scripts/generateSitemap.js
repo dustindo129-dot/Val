@@ -54,13 +54,15 @@ async function generateSitemap() {
     let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
     sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
     
-    // Add static pages
+    // Add static pages with Vietnamese URLs
     sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/')}</loc>\n    <priority>1.0</priority>\n  </url>\n`;
     
-    // Add SEO-optimized Vietnamese light novel pages
-    sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/light-novel-vietsub')}</loc>\n    <priority>0.9</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/novel-directory')}</loc>\n    <priority>0.8</priority>\n  </url>\n`;
+    // Add localized Vietnamese pages
+    sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/danh-sach-truyen')}</loc>\n    <priority>0.9</priority>\n  </url>\n`;
     sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/oln')}</loc>\n    <priority>0.7</priority>\n  </url>\n`;
+    sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/phan-hoi')}</loc>\n    <priority>0.6</priority>\n  </url>\n`;
+    sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/bang-yeu-cau')}</loc>\n    <priority>0.6</priority>\n  </url>\n`;
+    sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/nap-them')}</loc>\n    <priority>0.5</priority>\n  </url>\n`;
     
     let novels = [];
     let totalPages = 20; // Default fallback
@@ -82,17 +84,23 @@ async function generateSitemap() {
       console.warn(`Backend URL attempted: ${backendUrl}`);
     }
     
-    // Add homepage pagination (first 20 pages) - using root path
+    // Add homepage pagination with Vietnamese URLs (first 20 pages)
     for (let i = 1; i <= totalPages; i++) {
-      const safePageUrl = createSafeUrl(baseUrl, `/page/${i}`);
+      const safePageUrl = createSafeUrl(baseUrl, `/trang/${i}`);
       sitemap += `  <url>\n    <loc>${safePageUrl}</loc>\n    <priority>0.8</priority>\n  </url>\n`;
     }
     
-    // Add novel detail pages with enhanced SEO metadata
+    // Add novel directory pagination with Vietnamese URLs
+    for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+      const safePageUrl = createSafeUrl(baseUrl, `/danh-sach-truyen/trang/${i}`);
+      sitemap += `  <url>\n    <loc>${safePageUrl}</loc>\n    <priority>0.7</priority>\n  </url>\n`;
+    }
+    
+    // Add novel detail pages with Vietnamese URLs and enhanced SEO metadata
     for (const novel of novels) {
       const lastModified = new Date(novel.updatedAt || novel.createdAt).toISOString();
       const novelSlug = createUniqueSlug(novel.title, novel._id);
-      const safeNovelUrl = createSafeUrl(baseUrl, `/novel/${novelSlug}`);
+      const safeNovelUrl = createSafeUrl(baseUrl, `/truyen/${novelSlug}`);
       sitemap += `  <url>\n    <loc>${safeNovelUrl}</loc>\n    <lastmod>${lastModified}</lastmod>\n    <priority>0.9</priority>\n  </url>\n`;
       
       // Add alternative title variations as separate URLs if needed
@@ -102,7 +110,7 @@ async function generateSitemap() {
         console.log(`  → Novel "${novel.title}" has alternative titles: ${novel.alternativeTitles.join(', ')}`);
       }
       
-      // Add chapters for this novel (limit to first 50 chapters per novel for sitemap size)
+      // Add chapters for this novel with Vietnamese URLs (limit to first 50 chapters per novel for sitemap size)
       try {
         const chaptersResponse = await axios.get(`${backendUrl}/api/chapters/novel/${novel._id}?limit=50`);
         const chapters = chaptersResponse.data || [];
@@ -110,7 +118,7 @@ async function generateSitemap() {
         for (const chapter of chapters) {
           const chapterLastModified = new Date(chapter.updatedAt || chapter.createdAt).toISOString();
           const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
-          const safeChapterUrl = createSafeUrl(baseUrl, `/novel/${novelSlug}/chapter/${chapterSlug}`);
+          const safeChapterUrl = createSafeUrl(baseUrl, `/truyen/${novelSlug}/chuong/${chapterSlug}`);
           sitemap += `  <url>\n    <loc>${safeChapterUrl}</loc>\n    <lastmod>${chapterLastModified}</lastmod>\n    <priority>0.7</priority>\n  </url>\n`;
         }
         
@@ -146,9 +154,17 @@ async function generateSitemap() {
     
     console.log(`✓ Sitemap generated at ${outputPath}`);
     console.log(`✓ Frontend URL: ${baseUrl}`);
-    console.log(`✓ Static pages: 8 SEO-optimized pages`);
     console.log(`✓ Novel pages: ${novels.length}`);
     console.log(`✓ Pagination pages: ${totalPages}`);
+    console.log(`✓ Using Vietnamese localized URLs for better SEO`);
+    
+    // Note about manual sitemap submission
+    console.log(`ℹ Sitemap URL: ${baseUrl}/sitemap.xml`);
+    console.log(`ℹ Search engines no longer accept sitemap pings. Please:`);
+    console.log(`  → Submit sitemap manually via Google Search Console`);
+    console.log(`  → Submit sitemap manually via Bing Webmaster Tools`);
+    console.log(`  → Add "Sitemap: ${baseUrl}/sitemap.xml" to your robots.txt`);
+    
   } catch (error) {
     console.error('❌ Error generating sitemap:', error.message);
   }

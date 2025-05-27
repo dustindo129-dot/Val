@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProtectedRoute from '../components/ProtectedRoute';
+import LocalizedRoute from '../components/LocalizedRoute';
 
 // Lazy load components for better code splitting
 const NovelList = lazy(() => import('../components/NovelList'));
@@ -31,78 +32,97 @@ const LazyRoute = ({ children }) => (
 
 function AppRoutes() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<LazyRoute><NovelList /></LazyRoute>} />
-      <Route path="/page/:page" element={<LazyRoute><NovelList /></LazyRoute>} />
-      <Route path="/light-novel-vietsub" element={<LazyRoute><NovelList filter="trending" /></LazyRoute>} />
-      <Route path="/novel-directory" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
-      <Route path="/novel-directory/page/:page" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
-      <Route path="/oln" element={<LazyRoute><OLN /></LazyRoute>} />
-      <Route path="/oln/page/:page" element={<LazyRoute><OLN /></LazyRoute>} />
-      <Route path="/novel/:novelId" element={<LazyRoute><SlugWrapper component={NovelDetail} type="novel" /></LazyRoute>} />
-      <Route path="/novel/:novelId/chapter/:chapterId" element={<LazyRoute><SlugWrapper component={Chapter} type="chapter" /></LazyRoute>} />
-      <Route path="/reset-password/:token" element={<LazyRoute><ResetPassword /></LazyRoute>} />
-      <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
-      <Route path="/donate" element={<LazyRoute><Donate /></LazyRoute>} />
-      <Route path="/market" element={<LazyRoute><Market /></LazyRoute>} />
-      
-      {/* User Routes */}
-      <Route path="/user/:username/profile" element={<LazyRoute><UserProfile /></LazyRoute>} />
-      <Route path="/user/:username/bookmarks" element={<LazyRoute><UserBookmarks /></LazyRoute>} />
-      <Route path="/user/:username/change-password" element={<LazyRoute><ChangePassword /></LazyRoute>} />
-      
-      {/* Admin Routes */}
-      <Route 
-        path="/admin-dashboard" 
-        element={
-          <LazyRoute>
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          </LazyRoute>
-        } 
-      />
-      <Route 
-        path="/top-up" 
-        element={
-          <LazyRoute>
-            <TopUp />
-          </LazyRoute>
-        } 
-      />
-      <Route 
-        path="/topup-management" 
-        element={
-          <LazyRoute>
-            <ProtectedRoute>
-              <TopUpManagement />
-            </ProtectedRoute>
-          </LazyRoute>
-        } 
-      />
-      <Route 
-        path="/novel/:novelId/chapter/add" 
-        element={
-          <LazyRoute>
-            <ProtectedRoute>
-              <ChapterDashboard />
-            </ProtectedRoute>
-          </LazyRoute>
-        } 
-      />
-      {/* New route for adding chapter to specific module */}
-      <Route 
-        path="/novel/:novelId/module/:moduleSlug/add-chapter" 
-        element={
-          <LazyRoute>
-            <ProtectedRoute>
-              <ChapterDashboard />
-            </ProtectedRoute>
-          </LazyRoute>
-        } 
-      />
-    </Routes>
+    <LocalizedRoute>
+      <Routes>
+        {/* Localized Vietnamese Routes */}
+        <Route path="/trang/:page" element={<LazyRoute><NovelList /></LazyRoute>} />
+        <Route path="/danh-sach-truyen" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
+        <Route path="/danh-sach-truyen/trang/:page" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
+        <Route path="/truyen/:novelId" element={<LazyRoute><SlugWrapper component={NovelDetail} type="novel" /></LazyRoute>} />
+        <Route path="/truyen/:novelId/chuong/:chapterId" element={<LazyRoute><SlugWrapper component={Chapter} type="chapter" /></LazyRoute>} />
+        <Route path="/phan-hoi" element={<LazyRoute><Feedback /></LazyRoute>} />
+        <Route path="/bang-yeu-cau" element={<LazyRoute><Market /></LazyRoute>} />
+        <Route path="/nap-them" element={<LazyRoute><TopUp /></LazyRoute>} />
+        <Route path="/quan-ly-giao-dich" element={<LazyRoute><ProtectedRoute><TopUpManagement /></ProtectedRoute></LazyRoute>} />
+        <Route path="/bang-quan-tri" element={<LazyRoute><ProtectedRoute><AdminDashboard /></ProtectedRoute></LazyRoute>} />
+        <Route path="/nguoi-dung/:username/trang-ca-nhan" element={<LazyRoute><UserProfile /></LazyRoute>} />
+        <Route path="/nguoi-dung/:username/truyen-danh-dau" element={<LazyRoute><UserBookmarks /></LazyRoute>} />
+        <Route path="/nguoi-dung/:username/thay-doi-mat-khau" element={<LazyRoute><ChangePassword /></LazyRoute>} />
+        <Route path="/phuc-hoi-mat-khau/:token" element={<LazyRoute><ResetPassword /></LazyRoute>} />
+        <Route path="/truyen/:novelId/tap/:moduleSlug/them-chuong" element={<LazyRoute><ProtectedRoute><ChapterDashboard /></ProtectedRoute></LazyRoute>} />
+
+        {/* Original English Routes (for backward compatibility) */}
+        <Route path="/" element={<LazyRoute><NovelList /></LazyRoute>} />
+        <Route path="/page/:page" element={<LazyRoute><NovelList /></LazyRoute>} />
+        <Route path="/light-novel-vietsub" element={<LazyRoute><NovelList filter="trending" /></LazyRoute>} />
+        <Route path="/novel-directory" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
+        <Route path="/novel-directory/page/:page" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
+        <Route path="/oln" element={<LazyRoute><OLN /></LazyRoute>} />
+        <Route path="/oln/page/:page" element={<LazyRoute><OLN /></LazyRoute>} />
+        <Route path="/novel/:novelId" element={<LazyRoute><SlugWrapper component={NovelDetail} type="novel" /></LazyRoute>} />
+        <Route path="/novel/:novelId/chapter/:chapterId" element={<LazyRoute><SlugWrapper component={Chapter} type="chapter" /></LazyRoute>} />
+        <Route path="/reset-password/:token" element={<LazyRoute><ResetPassword /></LazyRoute>} />
+        <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
+        <Route path="/donate" element={<LazyRoute><Donate /></LazyRoute>} />
+        <Route path="/market" element={<LazyRoute><Market /></LazyRoute>} />
+        
+        {/* User Routes */}
+        <Route path="/user/:username/profile" element={<LazyRoute><UserProfile /></LazyRoute>} />
+        <Route path="/user/:username/bookmarks" element={<LazyRoute><UserBookmarks /></LazyRoute>} />
+        <Route path="/user/:username/change-password" element={<LazyRoute><ChangePassword /></LazyRoute>} />
+        
+        {/* Admin Routes */}
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <LazyRoute>
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            </LazyRoute>
+          } 
+        />
+        <Route 
+          path="/top-up" 
+          element={
+            <LazyRoute>
+              <TopUp />
+            </LazyRoute>
+          } 
+        />
+        <Route 
+          path="/topup-management" 
+          element={
+            <LazyRoute>
+              <ProtectedRoute>
+                <TopUpManagement />
+              </ProtectedRoute>
+            </LazyRoute>
+          } 
+        />
+        <Route 
+          path="/novel/:novelId/chapter/add" 
+          element={
+            <LazyRoute>
+              <ProtectedRoute>
+                <ChapterDashboard />
+              </ProtectedRoute>
+            </LazyRoute>
+          } 
+        />
+        {/* New route for adding chapter to specific module */}
+        <Route 
+          path="/novel/:novelId/module/:moduleSlug/add-chapter" 
+          element={
+            <LazyRoute>
+              <ProtectedRoute>
+                <ChapterDashboard />
+              </ProtectedRoute>
+            </LazyRoute>
+          } 
+        />
+      </Routes>
+    </LocalizedRoute>
   );
 }
 

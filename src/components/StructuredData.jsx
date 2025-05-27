@@ -61,7 +61,7 @@ const StructuredData = ({ type = 'website', data }) => {
           },
           "description": data.description ? data.description.replace(/<[^>]*>/g, '').substring(0, 200) : "",
           "image": data.coverImage,
-          "url": `https://valvrareteam.net/novel/${novelSlug}`,
+          "url": `https://valvrareteam.net/truyen/${novelSlug}`,
           "genre": data.genres || ["Light Novel"],
           "inLanguage": "vi-VN",
           "publisher": {

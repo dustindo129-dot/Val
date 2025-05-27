@@ -23,7 +23,7 @@ import { useBookmarks } from '../context/BookmarkContext';
 import api from '../services/api';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
+import { generateNovelUrl, generateChapterUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
 
 /**
  * UserBookmarks Component
@@ -174,7 +174,7 @@ const UserBookmarks = () => {
         </div>
         <div className="no-bookmarks">
           <p>Bạn chưa đánh dấu bất kỳ truyện nào.</p>
-          <Link to="/novel-directory/page/1" className="browse-novels-btn">
+          <Link to="/danh-sach-truyen/trang/1" className="browse-novels-btn">
             Xem truyện
           </Link>
         </div>
@@ -214,7 +214,7 @@ const UserBookmarks = () => {
       <div className="bookmarks-grid">
         {bookmarks.map(novel => (
           <div key={novel._id} className="bookmark-card">
-                          <Link to={generateNovelUrl(novel)} className="title-link">
+                          <Link to={generateLocalizedNovelUrl(novel)} className="title-link">
               <h3 className="bookmark-title-header">{novel.title}</h3>
             </Link>
             <div className="bookmark-card-content">

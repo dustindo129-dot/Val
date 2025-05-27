@@ -32,7 +32,7 @@ import {
   faBookmark 
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
-import { createUniqueSlug } from '../../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedChapterUrl } from '../../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../../utils/statusTranslation';
 
 const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
@@ -576,7 +576,10 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                 <div className="rd-actions-row">
                   {chaptersData?.chapters?.length > 0 ? (
                     <Link 
-                      to={`/novel/${createUniqueSlug(novelData.title, novelId)}/chapter/${createUniqueSlug(chaptersData.chapters[0]?.title, chaptersData.chapters[0]?._id)}`} 
+                      to={generateLocalizedChapterUrl(
+                        { _id: novelId, title: novelData.title },
+                        chaptersData.chapters[0]
+                      )} 
                       className="rd-btn rd-btn-primary"
                     >
                       <FontAwesomeIcon icon={faChevronRight} />
@@ -592,7 +595,10 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                   {chaptersData?.chapters?.length > 0 ? (
                     bookmarkData?.bookmarkedChapter ? (
                       <Link 
-                        to={`/novel/${createUniqueSlug(novelData.title, novelId)}/chapter/${createUniqueSlug(bookmarkData.bookmarkedChapter.title, bookmarkData.bookmarkedChapter.id)}`} 
+                        to={generateLocalizedChapterUrl(
+                          { _id: novelId, title: novelData.title },
+                          { _id: bookmarkData.bookmarkedChapter.id, title: bookmarkData.bookmarkedChapter.title }
+                        )} 
                         className="rd-btn rd-btn-primary"
                         title={`Continue from: ${bookmarkData.bookmarkedChapter.title}`}
                       >
@@ -600,10 +606,13 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                         Tiếp tục đọc
                       </Link>
                     ) : (
-                      <Link 
-                        to={`/novel/${createUniqueSlug(novelData.title, novelId)}/chapter/${createUniqueSlug(chaptersData.chapters[chaptersData.chapters.length - 1]?.title, chaptersData.chapters[chaptersData.chapters.length - 1]?._id)}`} 
-                        className="rd-btn rd-btn-primary"
-                      >
+                                              <Link 
+                          to={generateLocalizedChapterUrl(
+                            { _id: novelId, title: novelData.title },
+                            chaptersData.chapters[chaptersData.chapters.length - 1]
+                          )} 
+                          className="rd-btn rd-btn-primary"
+                        >
                         <FontAwesomeIcon icon={faForward} />
                         Chương mới nhất
                       </Link>

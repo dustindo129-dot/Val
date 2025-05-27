@@ -549,7 +549,7 @@ const UserProfile = () => {
 
         {/* Blocked/Banned Users Section */}
         <div className="blocked-users-section">
-          <h2>{user?.role === 'admin' ? `Người dùng bị cấm (${bannedUsers.length}/50)` : `Người dùng bị chặn (${blockedUsers.length}/50)`}</h2>
+          <h2>{user?.role === 'admin' ? `Danh sách đen (${bannedUsers.length}/50)` : `Người dùng bị chặn (${blockedUsers.length}/50)`}</h2>
           <div className="blocked-users-list">
             {user?.role === 'admin' ? (
               bannedUsers.map(bannedUser => (
@@ -593,9 +593,9 @@ const UserProfile = () => {
               ))
             )}
             {((user?.role === 'admin' && bannedUsers.length === 0) || 
-              (!user?.role === 'admin' && blockedUsers.length === 0)) && (
+              (user?.role !== 'admin' && blockedUsers.length === 0)) && (
               <p className="no-blocked-users">
-                Không có người dùng bị {user?.role === 'admin' ? 'banned' : 'blocked'}
+                {user?.role === 'admin' ? 'Không có ai trong danh sách đen' : 'Không có người dùng bị chặn'}
               </p>
             )}
           </div>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faCog, faSave, faHome, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
-import { createUniqueSlug } from '../../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedNovelUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 
 const ChapterHeader = ({
@@ -29,6 +29,7 @@ const ChapterHeader = ({
   handleBookmark
 }) => {
   const novelSlug = createUniqueSlug(novel?.title, novelId);
+  const localizedNovelUrl = generateLocalizedNovelUrl(novel || { _id: novelId, title: '' });
   
   return (
     <div className="header-nav-container">
@@ -36,7 +37,7 @@ const ChapterHeader = ({
         <div className="breadcrumb-info">
           <Link to="/"><FontAwesomeIcon icon={faHome}/> Trang chủ</Link>
           <span className="breadcrumb-separator">&gt;</span>
-          <Link to={`/novel/${novelSlug}`}>{novel?.title}</Link>
+          <Link to={localizedNovelUrl}>{novel?.title}</Link>
           <span className="breadcrumb-separator">&gt;</span>
           {moduleData && (
             <>

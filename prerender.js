@@ -12,10 +12,10 @@ export default async function generateDynamicPaths() {
     const data = await response.json();
     const novels = data.novels || [];
     
-    // Generate novel detail page URLs
+    // Generate novel detail page URLs (using localized paths)
     const novelUrls = novels.map(novel => {
       const novelSlug = createUniqueSlug(novel.title, novel._id);
-      return `/novel/${novelSlug}`;
+      return `/truyen/${novelSlug}`;
     });
     
     // Generate chapter page URLs
@@ -38,7 +38,8 @@ export default async function generateDynamicPaths() {
                   if (chapter.mode === 'published' || !chapter.mode) {
                     const novelSlug = createUniqueSlug(novel.title, novel._id);
                     const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
-                    chapterUrls.push(`/novel/${novelSlug}/chapter/${chapterSlug}`);
+                    // Use localized URLs for sitemap
+                    chapterUrls.push(`/truyen/${novelSlug}/chuong/${chapterSlug}`);
                   }
                 }
               });

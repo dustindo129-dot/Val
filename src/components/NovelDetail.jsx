@@ -275,7 +275,7 @@ const NovelSEO = ({ novel }) => {
         "name": "Valvrareteam",
         "url": "https://valvrareteam.net"
       },
-      "url": `https://valvrareteam.net/novel/${novelSlug}`,
+      "url": `https://valvrareteam.net/truyen/${novelSlug}`,
       "image": novel.illustration,
       "datePublished": novel.createdAt,
       "dateModified": novel.updatedAt
@@ -317,7 +317,7 @@ const NovelSEO = ({ novel }) => {
       <meta property="og:title" content={generateSEOTitle()} />
       <meta property="og:description" content={generateSEODescription()} />
       <meta property="og:image" content={novel.illustration} />
-      <meta property="og:url" content={`https://valvrareteam.net/novel/${novelSlug}`} />
+      <meta property="og:url" content={`https://valvrareteam.net/truyen/${novelSlug}`} />
       <meta property="og:type" content="book" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -334,7 +334,7 @@ const NovelSEO = ({ novel }) => {
       <meta property="book:release_date" content={novel.createdAt} />
       
       {/* Canonical URL */}
-      <link rel="canonical" href={`https://valvrareteam.net/novel/${novelSlug}`} />
+      <link rel="canonical" href={`https://valvrareteam.net/truyen/${novelSlug}`} />
       
       {/* Structured Data */}
       <script type="application/ld+json">

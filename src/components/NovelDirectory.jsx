@@ -15,7 +15,7 @@ import '../styles/NovelDirectory.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from './LoadingSpinner';
-import { generateNovelUrl } from '../utils/slugUtils';
+import { generateNovelUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 // Genre categories for filtering
@@ -100,7 +100,7 @@ const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
 
   return (
       <div className="novel-image-container">
-        <Link to={generateNovelUrl({ _id: novelId, title: alt })} className="novel-image-link">
+                    <Link to={generateLocalizedNovelUrl({ _id: novelId, title: alt })} className="novel-image-link">
           <div className="novel-image">
             <img
                 src={imgSrc}
@@ -254,9 +254,9 @@ const NovelDirectory = () => {
     const genreFilters = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
 
     if (genreFilters.length > 0) {
-      navigate(`/novel-directory/page/1?genres=${genreFilters.join(',')}`);
+      navigate(`/danh-sach-truyen/trang/1?genres=${genreFilters.join(',')}`);
     } else {
-      navigate('/novel-directory/page/1');
+      navigate('/danh-sach-truyen/trang/1');
     }
   }, [selectedGenres, navigate]);
 
@@ -264,7 +264,7 @@ const NovelDirectory = () => {
   const resetFilters = useCallback(() => {
     setSelectedGenres({});
     setAppliedGenres({});
-    navigate('/novel-directory/page/1');
+    navigate('/danh-sach-truyen/trang/1');
   }, [navigate]);
 
   // Toggle description expansion
@@ -355,7 +355,7 @@ const NovelDirectory = () => {
       pages.push(
           <Link
               key="1"
-              to={`/novel-directory/page/1${queryParams}`}
+              to={`/danh-sach-truyen/trang/1${queryParams}`}
               className="pagination-button directory"
           >
             1
@@ -370,7 +370,7 @@ const NovelDirectory = () => {
       pages.push(
           <Link
               key={i}
-              to={`/novel-directory/page/${i}${queryParams}`}
+              to={`/danh-sach-truyen/trang/${i}${queryParams}`}
               className={`pagination-button directory ${i === currentPage ? 'active' : ''}`}
           >
             {i}
@@ -385,7 +385,7 @@ const NovelDirectory = () => {
       pages.push(
           <Link
               key={totalPages}
-              to={`/novel-directory/page/${totalPages}${queryParams}`}
+              to={`/danh-sach-truyen/trang/${totalPages}${queryParams}`}
               className="pagination-button directory"
           >
             {totalPages}
@@ -396,14 +396,14 @@ const NovelDirectory = () => {
     return (
         <div className="pagination directory">
           <Link
-              to={currentPage > 1 ? `/novel-directory/page/${currentPage - 1}${queryParams}` : '#'}
+              to={currentPage > 1 ? `/danh-sach-truyen/trang/${currentPage - 1}${queryParams}` : '#'}
               className={`pagination-button directory nav ${currentPage === 1 ? 'disabled' : ''}`}
           >
             ‹
           </Link>
           {pages}
           <Link
-              to={currentPage < totalPages ? `/novel-directory/page/${currentPage + 1}${queryParams}` : '#'}
+              to={currentPage < totalPages ? `/danh-sach-truyen/trang/${currentPage + 1}${queryParams}` : '#'}
               className={`pagination-button directory nav ${currentPage === totalPages ? 'disabled' : ''}`}
           >
             ›
@@ -500,7 +500,7 @@ const NovelDirectory = () => {
                       {/* Novel content section */}
                       <div className="novel-content">
                         {/* Novel title */}
-                        <Link to={generateNovelUrl(novel)} className="dir-novel-title-link">
+                        <Link to={generateLocalizedNovelUrl(novel)} className="dir-novel-title-link">
                           <h3 className="dir-novel-title">{novel.title}</h3>
                         </Link>
 

@@ -30,7 +30,8 @@ import '../styles/Navbar.css';
 import config from '../config/config';
 import Modal from './auth/Modal';
 import cdnConfig from '../config/bunny';
-import { createUniqueSlug } from '../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedUserBookmarksUrl, generateLocalizedUserProfileUrl } from '../utils/slugUtils';
+import { translateStatus } from '../utils/statusTranslation';
 import api from '../services/api';
 import sseService from '../services/sseService';
 
@@ -203,8 +204,8 @@ const Navbar = () => {
    * @param {Object} novel - The novel object with _id and title
    */
   const handleNovelClick = (novel) => {
-    const novelSlug = createUniqueSlug(novel.title, novel._id);
-    navigate(`/novel/${novelSlug}`);
+    const localizedUrl = generateLocalizedNovelUrl(novel);
+    navigate(localizedUrl);
     setSearchQuery("");
     setSearchResults([]);
   };
@@ -391,7 +392,7 @@ const Navbar = () => {
                         <div className="search-result-title">{novel.title}</div>
                         <div className="search-result-details">
                           <span>Tổng chương: {novel.totalChapters || 0}</span>{' '}
-                          <span>{novel.status}</span>
+                          <span>{translateStatus(novel.status)}</span>
                         </div>
                       </div>
                     </div>
@@ -424,7 +425,7 @@ const Navbar = () => {
                     user={user}
                   />
                 </div>
-                <Link to={`/user/${user.username}/bookmarks`} className="bookmark-icon-only">
+                <Link to={generateLocalizedUserBookmarksUrl(user.username)} className="bookmark-icon-only">
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
                     width="24" 
@@ -455,7 +456,7 @@ const Navbar = () => {
                     </div>
                     {showDropdown && (
                       <div className="user-dropdown">
-                        <Link to={`/user/${user.username}/profile`} className="dropdown-item" onClick={closeDropdown}>
+                        <Link to={generateLocalizedUserProfileUrl(user.username)} className="dropdown-item" onClick={closeDropdown}>
                           Trang cá nhân
                         </Link>
                         {user?.role === 'admin' && (

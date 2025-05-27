@@ -8,7 +8,7 @@ import '../styles/components/Chapter.css';
 import config from '../config/config';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { createUniqueSlug } from '../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedChapterUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
 
 // Import components
 import ChapterHeader from './chapter/ChapterHeader';
@@ -115,7 +115,7 @@ const ChapterSEO = ({ novel, chapter }) => {
       },
       "description": generateSEODescription(),
       "inLanguage": "vi-VN",
-      "url": `https://valvrareteam.net/novel/${novelSlug}/chapter/${chapterSlug}`,
+      "url": `https://valvrareteam.net/truyen/${novelSlug}/chuong/${chapterSlug}`,
       "datePublished": chapter.createdAt,
       "dateModified": chapter.updatedAt,
               "publisher": {
@@ -145,13 +145,13 @@ const ChapterSEO = ({ novel, chapter }) => {
           "@type": "ListItem",
           "position": 2,
           "name": novel.title,
-          "item": `https://valvrareteam.net/novel/${novelSlug}`
+          "item": `https://valvrareteam.net/truyen/${novelSlug}`
         },
         {
           "@type": "ListItem",
           "position": 3,
           "name": chapter.title,
-          "item": `https://valvrareteam.net/novel/${novelSlug}/chapter/${chapterSlug}`
+          "item": `https://valvrareteam.net/truyen/${novelSlug}/chuong/${chapterSlug}`
         }
       ]
     };
@@ -175,7 +175,7 @@ const ChapterSEO = ({ novel, chapter }) => {
       <meta property="og:title" content={generateSEOTitle()} />
       <meta property="og:description" content={generateSEODescription()} />
       <meta property="og:image" content={novel.illustration} />
-      <meta property="og:url" content={`https://valvrareteam.net/novel/${novelSlug}/chapter/${chapterSlug}`} />
+      <meta property="og:url" content={`https://valvrareteam.net/truyen/${novelSlug}/chuong/${chapterSlug}`} />
       <meta property="og:type" content="article" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -193,7 +193,7 @@ const ChapterSEO = ({ novel, chapter }) => {
       <meta name="twitter:image" content={novel.illustration} />
       
       {/* Canonical URL - Always use the clean URL without query parameters */}
-      <link rel="canonical" href={`https://valvrareteam.net/novel/${novelSlug}/chapter/${chapterSlug}`} />
+      <link rel="canonical" href={`https://valvrareteam.net/truyen/${novelSlug}/chuong/${chapterSlug}`} />
       
       {/* Chapter Structured Data */}
       <script type="application/ld+json">
@@ -694,9 +694,10 @@ const Chapter = ({ novelId, chapterId }) => {
             return response.data;
           }
         });
-        const novelSlug = createUniqueSlug(novel.title, novelId);
-        const chapterSlug = createUniqueSlug(chapter.prevChapter.title, chapter.prevChapter._id);
-        navigate(`/novel/${novelSlug}/chapter/${chapterSlug}`);
+        navigate(generateLocalizedChapterUrl(
+          { _id: novelId, title: novel.title },
+          chapter.prevChapter
+        ));
         // Scroll after navigation
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
@@ -722,9 +723,10 @@ const Chapter = ({ novelId, chapterId }) => {
             return response.data;
           }
         });
-        const novelSlug = createUniqueSlug(novel.title, novelId);
-        const chapterSlug = createUniqueSlug(chapter.nextChapter.title, chapter.nextChapter._id);
-        navigate(`/novel/${novelSlug}/chapter/${chapterSlug}`);
+        navigate(generateLocalizedChapterUrl(
+          { _id: novelId, title: novel.title },
+          chapter.nextChapter
+        ));
         // Scroll after navigation
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
@@ -764,8 +766,7 @@ const Chapter = ({ novelId, chapterId }) => {
       queryClient.invalidateQueries({queryKey: ['novel', novelId]});
 
       // Navigate back to novel page
-      const novelSlug = createUniqueSlug(novel.title, novelId);
-      navigate(`/novel/${novelSlug}`, {replace: true});
+      navigate(generateLocalizedNovelUrl({ _id: novelId, title: novel.title }), {replace: true});
     } catch (err) {
       console.error('Không thể xóa chương:', err);
       setError('Không thể xóa chương. Vui lòng thử lại.');

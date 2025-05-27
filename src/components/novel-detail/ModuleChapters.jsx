@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faSeedling } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
-import { createUniqueSlug } from '../../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedChapterUrl } from '../../utils/slugUtils';
 import '../../styles/components/ModuleChapters.css';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 
@@ -150,7 +150,10 @@ const ModuleChapters = memo(({
                   
                   {chapterIsAccessible && !isInPaidModule ? (
                     <Link 
-                      to={`/novel/${createUniqueSlug(novelTitle, novelId)}/chapter/${createUniqueSlug(chapter.title, chapterId)}`} 
+                      to={generateLocalizedChapterUrl(
+                { _id: novelId, title: novelTitle },
+                { _id: chapterId, title: chapter.title }
+              )} 
                       className={`chapter-title-link ${chapterModeClass}`}
                       key={`chapter-link-${chapterId}`}
                     >

@@ -107,6 +107,81 @@ export const generateChapterUrl = (novel, chapter) => {
 };
 
 /**
+ * Generates a localized novel URL with Vietnamese path segments
+ * @param {Object} novel - Novel object with _id and title
+ * @returns {string} Localized novel URL with slug
+ */
+export const generateLocalizedNovelUrl = (novel) => {
+  if (!novel || !novel._id) return '/';
+  const slug = createUniqueSlug(novel.title, novel._id);
+  return `/truyen/${slug}`;
+};
+
+/**
+ * Generates a localized chapter URL with Vietnamese path segments
+ * @param {Object} novel - Novel object with _id and title
+ * @param {Object} chapter - Chapter object with _id and title
+ * @returns {string} Localized chapter URL with slug
+ */
+export const generateLocalizedChapterUrl = (novel, chapter) => {
+  if (!novel || !novel._id || !chapter || !chapter._id) return '/';
+  const novelSlug = createUniqueSlug(novel.title, novel._id);
+  const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
+  return `/truyen/${novelSlug}/chuong/${chapterSlug}`;
+};
+
+/**
+ * Generates a localized user profile URL
+ * @param {string} username - The username
+ * @returns {string} Localized user profile URL
+ */
+export const generateLocalizedUserProfileUrl = (username) => {
+  if (!username) return '/';
+  return `/nguoi-dung/${username}/trang-ca-nhan`;
+};
+
+/**
+ * Generates a localized user bookmarks URL
+ * @param {string} username - The username
+ * @returns {string} Localized user bookmarks URL
+ */
+export const generateLocalizedUserBookmarksUrl = (username) => {
+  if (!username) return '/';
+  return `/nguoi-dung/${username}/truyen-danh-dau`;
+};
+
+/**
+ * Generates a localized change password URL
+ * @param {string} username - The username
+ * @returns {string} Localized change password URL
+ */
+export const generateLocalizedChangePasswordUrl = (username) => {
+  if (!username) return '/';
+  return `/nguoi-dung/${username}/thay-doi-mat-khau`;
+};
+
+/**
+ * Generates a localized add chapter URL
+ * @param {Object} novel - Novel object with _id and title
+ * @param {Object} module - Module object with _id and title
+ * @returns {string} Localized add chapter URL
+ */
+export const generateLocalizedAddChapterUrl = (novel, module) => {
+  if (!novel || !novel._id || !module || !module._id) return '/';
+  const novelSlug = createUniqueSlug(novel.title, novel._id);
+  const moduleSlug = createUniqueSlug(module.title, module._id);
+  return `/truyen/${novelSlug}/tap/${moduleSlug}/them-chuong`;
+};
+
+/**
+ * Generates a localized admin dashboard URL
+ * @returns {string} Localized admin dashboard URL
+ */
+export const generateLocalizedAdminDashboardUrl = () => {
+  return '/bang-quan-tri';
+};
+
+/**
  * Parses a novel slug to extract the ID
  * @param {string} novelSlug - The novel slug from URL
  * @returns {string|null} The novel ID or null if invalid

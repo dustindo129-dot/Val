@@ -29,7 +29,7 @@ import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import api from '../utils/apiHelper';
 import LoadingSpinner from './LoadingSpinner';
-import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
+import { generateNovelUrl, generateChapterUrl, generateLocalizedNovelUrl, generateLocalizedChapterUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 /**
@@ -72,7 +72,7 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
         {translateStatus(status)}
       </span>
             {firstChapter && (
-                <Link to={generateChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
+                <Link to={generateLocalizedChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
                     &gt;&gt; Chương đầu
                 </Link>
             )}
@@ -612,7 +612,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                                     }}>
                                         {/* Novel header with title and update time */}
                                         <div className="novel-header">
-                                            <Link to={generateNovelUrl(novel)} className="novel-list-title-link">
+                                            <Link to={generateLocalizedNovelUrl(novel)} className="novel-list-title-link">
                                                 <h3 className="novel-title">{novel.title}</h3>
                                             </Link>
                                             <div className="update-time">
@@ -696,7 +696,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                                                     {sortedChapters.map(chapter => (
                                                         <div key={chapter._id} className="novel-list-chapter-item">
                                                             <Link
-                                                                to={generateChapterUrl(novel, chapter)}
+                                                                to={generateLocalizedChapterUrl(novel, chapter)}
                                                                 className="novel-list-chapter-title"
                                                             >
                                                                 {chapter.title}

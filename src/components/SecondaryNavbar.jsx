@@ -122,13 +122,13 @@ const SecondaryNavbar = () => {
             <Link to="/" className={`nav-link ${isActive('/')}`} onClick={() => setIsMenuOpen(false)}>
               Trang chủ
             </Link>
-            <Link to="/novel-directory" className={`nav-link ${isActive('/novel-directory')}`} onClick={() => setIsMenuOpen(false)}>
+            <Link to="/danh-sach-truyen" className={`nav-link ${isActive('/danh-sach-truyen')}`} onClick={() => setIsMenuOpen(false)}>
               Danh sách truyện
             </Link>
             <Link to="/oln" className={`nav-link ${isActive('/oln')}`} onClick={() => setIsMenuOpen(false)}>
               Truyện sáng tác
             </Link>
-            <Link to="/feedback" className={`nav-link ${isActive('/feedback')}`} onClick={() => setIsMenuOpen(false)}>
+            <Link to="/phan-hoi" className={`nav-link ${isActive('/phan-hoi')}`} onClick={() => setIsMenuOpen(false)}>
               Phản hồi
             </Link>
             {/* Donate link */}
@@ -136,12 +136,12 @@ const SecondaryNavbar = () => {
               Donate
             </Link>
             {/* Market link - visible to everyone */}
-            <Link to="/market" className={`nav-link ${isActive('/market')}`} onClick={() => setIsMenuOpen(false)}>
+            <Link to="/bang-yeu-cau" className={`nav-link ${isActive('/bang-yeu-cau')}`} onClick={() => setIsMenuOpen(false)}>
               Bảng yêu cầu
             </Link>
             {/* Admin and Moderator dashboard link */}
             {(user?.role === 'admin' || user?.role === 'moderator') && (
-              <Link to="/admin-dashboard" className={`nav-link ${isActive('/admin-dashboard')}`} onClick={() => setIsMenuOpen(false)}>
+              <Link to="/bang-quan-tri" className={`nav-link ${isActive('/bang-quan-tri')}`} onClick={() => setIsMenuOpen(false)}>
                 Bảng quản trị
               </Link>
             )}
