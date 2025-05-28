@@ -827,11 +827,6 @@
   border-left: 4px solid #2ecc71;
 }
 
-.balance-icon {
-  font-size: 24px;
-  color: #2ecc71;
-}
-
 .balance-info {
   display: flex;
   flex-direction: column;

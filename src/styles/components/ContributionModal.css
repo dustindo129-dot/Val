@@ -411,10 +411,6 @@
   color: var(--text-color-dark, #e2e8f0);
 }
 
-:root.dark-mode .history-table tbody tr:hover {
-  background: var(--table-row-hover-dark, #2d3748);
-}
-
 :root.dark-mode .history-user {
   color: var(--text-color-dark, #e2e8f0);
 }
