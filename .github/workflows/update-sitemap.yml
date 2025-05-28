@@ -35,7 +35,9 @@ jobs:
         run: node scripts/generateSitemap.js
         env:
           # Use environment variables for backend URL
-          SITEMAP_BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://valvrareteam-backend.onrender.com' }}
+          SITEMAP_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          VITE_BUNNY_CDN_URL: ${{ secrets.VITE_BUNNY_CDN_URL }}
           FRONTEND_URL: 'https://valvrareteam.net'
       
       # Check if sitemap was actually updated
@@ -55,7 +57,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add public/sitemap.xml
-          git commit -m "🤖 Auto-update sitemap with Vietnamese URLs - $(date +'%Y-%m-%d %H:%M UTC')"
+          git commit -m "🤖 Auto-update sitemap - $(date +'%Y-%m-%d %H:%M UTC')"
           git push
       
       # Log completion

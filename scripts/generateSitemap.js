@@ -155,8 +155,8 @@ async function generateSitemap() {
           fs.mkdirSync(distDir, { recursive: true });
         }
         
-        fs.copyFileSync(robotsSourcePath, robotsOutputPath);
-        console.log(`✓ Robots.txt copied to ${robotsOutputPath}`);
+      fs.copyFileSync(robotsSourcePath, robotsOutputPath);
+      console.log(`✓ Robots.txt copied to ${robotsOutputPath}`);
       } catch (robotsError) {
         console.log(`⚠ Could not copy robots.txt: ${robotsError.message}`);
       }
