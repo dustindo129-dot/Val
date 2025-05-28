@@ -148,8 +148,20 @@ async function generateSitemap() {
     const robotsOutputPath = path.resolve(__dirname, '../dist/robots.txt');
     
     if (fs.existsSync(robotsSourcePath)) {
-      fs.copyFileSync(robotsSourcePath, robotsOutputPath);
-      console.log(`✓ Robots.txt copied to ${robotsOutputPath}`);
+      try {
+        // Ensure dist directory exists
+        const distDir = path.dirname(robotsOutputPath);
+        if (!fs.existsSync(distDir)) {
+          fs.mkdirSync(distDir, { recursive: true });
+        }
+        
+        fs.copyFileSync(robotsSourcePath, robotsOutputPath);
+        console.log(`✓ Robots.txt copied to ${robotsOutputPath}`);
+      } catch (robotsError) {
+        console.log(`⚠ Could not copy robots.txt: ${robotsError.message}`);
+      }
+    } else {
+      console.log(`⚠ Robots.txt not found at ${robotsSourcePath}`);
     }
     
     console.log(`✓ Sitemap generated at ${outputPath}`);
