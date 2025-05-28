@@ -502,7 +502,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
                       </div>
                       <div className="notification-text">
-                        <div className="notification-message">{notification.message}</div>
+                        <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
                         <div className="notification-timestamp">
                           {formatTimestamp(notification.createdAt)}
                         </div>
@@ -526,7 +526,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
                     </div>
                     <div className="notification-text">
-                      <div className="notification-message">{notification.message}</div>
+                      <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
                       <div className="notification-timestamp">
                         {formatTimestamp(notification.createdAt)}
                       </div>
