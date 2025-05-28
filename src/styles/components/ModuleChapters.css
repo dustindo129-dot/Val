@@ -28,15 +28,6 @@
   color: #212529;
 }
 
-.chapter-balance {
-  background-color: #007bff;
-  color: white;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: bold;
-}
-
 .paid-tag {
   display: inline-block;
   padding: 2px 8px;

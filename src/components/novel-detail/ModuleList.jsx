@@ -196,11 +196,6 @@ const ModuleList = memo(({
                   {module.mode === 'paid' && (
                     <div className="module-mode-tag">
                       <span className="mode-tag mode-paid">{translateChapterModuleStatus('PAID')}</span>
-                      {module.moduleBalance > 0 && (
-                        <div className="module-balance-row">
-                          <span className="module-balance">{module.moduleBalance}</span>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -209,9 +204,9 @@ const ModuleList = memo(({
             <div className="module-details">
               <div className="module-header">
                 <div className="module-title-area">
-                  <h3 className={`module-title ${module.mode === 'paid' && !canAccessPaidContent ? 'paid-module-title' : ''}`}>
+                  <h3 className={`module-title ${module.mode === 'paid' ? 'paid-module-title' : ''}`}>
                     {module.title || 'Tập không có tên'}
-                    {module.mode === 'paid' && !canAccessPaidContent && module.moduleBalance > 0 && (
+                    {module.mode === 'paid' && module.moduleBalance > 0 && (
                       <div className="module-balance-required">
                         <FontAwesomeIcon icon={faSeedling} className="module-balance-icon" />
                         <span>{module.moduleBalance} lúa</span>

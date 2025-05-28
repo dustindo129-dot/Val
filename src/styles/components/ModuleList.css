@@ -18,26 +18,8 @@
   gap: 4px;
 }
 
-.module-balance-row {
-  display: flex;
-  justify-content: center;
-}
-
 .module-container.module-mode-paid {
   border-left: 3px solid #3498db;
-}
-
-.module-balance {
-  font-size: 11px;
-  background: #2980b9;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  min-width: 24px;
-  text-align: center;
-  letter-spacing: 0.5px;
 }
 
 .mode-tag {
