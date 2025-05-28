@@ -1263,13 +1263,13 @@ const AdminDashboard = () => {
                                   onClick={() => saveBalanceChange(novel._id)}
                                   className="save-balance-btn"
                                 >
-                                  Save
+                                  Lưu
                                 </button>
                                 <button 
                                   onClick={cancelEditBalance}
                                   className="cancel-balance-btn"
                                 >
-                                  Cancel
+                                  Hủy bỏ
                                 </button>
                               </div>
                             </div>
