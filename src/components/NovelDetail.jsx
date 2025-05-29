@@ -91,6 +91,7 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
   const { user, isAuthenticated } = useAuth();
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [showFAQ, setShowFAQ] = useState(false);
 
   // Check if the novel has any paid content (modules or chapters)
   const hasPaidContent = useMemo(() => {
@@ -114,9 +115,78 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
 
   return (
     <div className="rd-contribution-section">
-      <div className="rd-contribution-section-title">
+      <div className="rd-contribution-section-title" style={{ position: 'relative' }}>
         ĐÓNG GÓP
+        <button 
+          onClick={() => setShowFAQ(!showFAQ)}
+          style={{
+            position: 'absolute',
+            right: '10px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            padding: '4px 8px',
+            fontSize: '12px',
+            cursor: 'pointer',
+            color: '#666',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          FAQs
+        </button>
       </div>
+      
+      {showFAQ && (
+        <div style={{
+          marginBottom: '1rem',
+          padding: '1rem',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '4px',
+          fontSize: '0.9rem',
+          lineHeight: '1.5'
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '0.75rem' }}>
+            Những câu hỏi thường gặp:
+          </div>
+          
+          <div style={{ marginBottom: '0.5rem' }}>
+            <strong>Hỏi:</strong> Nạp lúa ở đâu?
+          </div>
+          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+            <strong>Đáp:</strong> Nút "Nạp thêm".
+          </div>
+          
+          <div style={{ marginBottom: '0.5rem' }}>
+            <strong>Hỏi:</strong> Kho lúa bị dư thì như thế nào?
+          </div>
+          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+            <strong>Đáp:</strong> Lúa dư sẽ để lại trong kho và tự động trừ để mở chương khi chương trả phí mới được đăng (có lưu lại trong lịch sử đóng góp).
+          </div>
+          
+          <div style={{ marginBottom: '0.5rem' }}>
+            <strong>Hỏi:</strong> Có lúa trong kho nhưng chưa đủ để mở chương thì sao?
+          </div>
+          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+            <strong>Đáp:</strong> Lúa sẽ ở trong kho đến khi góp đủ để mở chương trả phí đăng sớm nhất.
+          </div>
+          
+          <div style={{ marginBottom: '0.5rem' }}>
+            <strong>Hỏi:</strong> Ví dụ chương 1 giá 200 lúa, chương 2 giá 100 lúa, kho lúa có 100 lúa thì chương nào sẽ mở trước?
+          </div>
+          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+            <strong>Đáp:</strong> Không chương nào cả. Lúa sẽ ở trong kho đến khi góp đủ 200 lúa để tự động mở chương 1. Chương được mở theo thứ tự và cả tập cũng vậy.
+          </div>
+          
+          <div style={{ marginBottom: '0.5rem' }}>
+            <strong>Hỏi:</strong> Cách tính giá lúa của chương/tập?
+          </div>
+          <div style={{ paddingLeft: '1rem' }}>
+            <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc.
+          </div>
+        </div>
+      )}
       
       {/* Novel Budget Card */}
       <div className="novel-budget">
