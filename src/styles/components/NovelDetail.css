@@ -97,9 +97,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
 }
 
 .chapters-header h3 {
@@ -405,7 +403,7 @@
 
 /* Module container and content */
 .module-container {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -885,13 +883,6 @@
 
 .add-module-btn svg {
   margin-right: 4px;
-}
-
-.chapters-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
 }
 
 /* Dark mode support */
