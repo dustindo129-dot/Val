@@ -385,8 +385,8 @@ const ChapterDashboard = () => {
     }
 
     // Validate minimum chapter balance for paid chapters
-    if (mode === 'paid' && parseInt(chapterBalance) < 50) {
-      setError('Số lúa chương tối thiểu là 50 🌾 cho chương trả phí.');
+    if (mode === 'paid' && parseInt(chapterBalance) < 1) {
+      setError('Số lúa chương tối thiểu là 1 🌾 cho chương trả phí.');
       setSaving(false);
       return;
     }
@@ -657,13 +657,13 @@ const ChapterDashboard = () => {
                   visibility: mode === 'paid' ? 'visible' : 'hidden',
                   opacity: mode === 'paid' ? 1 : 0
                 }}>
-                  <label>Số lúa chương (Tối thiểu 50 🌾):</label>
+                  <label>Số lúa chương (Tối thiểu 1 🌾):</label>
                   <input
                     type="number"
-                    min="50"
+                    min="1"
                     value={chapterBalance}
                     onChange={(e) => setChapterBalance(e.target.value)}
-                    placeholder="Nhập số lúa chương (tối thiểu 50)"
+                    placeholder="Nhập số lúa chương (tối thiểu 1)"
                     disabled={mode !== 'paid'}
                   />
                 </div>
