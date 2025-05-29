@@ -84,7 +84,8 @@ const RecentlyRead = () => {
       if (!user) return [];
       
       try {
-                const response = await axios.get(          `${config.backendUrl}/api/userchapterinteractions/recently-read?limit=5`,
+        const response = await axios.get(
+          `${config.backendUrl}/api/userchapterinteractions/recently-read?limit=5&sort=lastReadAt`,
           {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -92,17 +93,30 @@ const RecentlyRead = () => {
           }
         );
         
-        return response.data || [];
+        // Filter and sort the data to ensure proper order
+        const filteredData = (response.data || []).filter(readItem => 
+          readItem && (readItem.chapter || readItem.chapterId) && (readItem.novel || readItem.novelId)
+        );
+        
+        const sortedData = filteredData.sort((a, b) => {
+          const dateA = new Date(a.lastReadAt || a.updatedAt || 0);
+          const dateB = new Date(b.lastReadAt || b.updatedAt || 0);
+          return dateB - dateA;
+        });
+        
+        const finalData = sortedData.slice(0, 5);
+        
+        return finalData;
       } catch (err) {
         console.error('Recently Read API Error:', err);
         return [];
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // Data is fresh for 30 seconds 
+    staleTime: 0, // Always consider data stale for immediate updates
     cacheTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: true,
-    refetchOnMount: false, // Don't refetch on mount to prevent race conditions
+    refetchOnWindowFocus: false, // Turn off to reduce race conditions
+    refetchOnMount: true, // Refetch when component mounts (when returning to homepage)
     refetchOnReconnect: true, // Refetch when reconnecting
     refetchInterval: false, // Remove automatic interval refetching
     retry: false // Don't retry on error to prevent continuous API calls
@@ -144,13 +158,7 @@ const RecentlyRead = () => {
           </div>
         ) : data && data.length > 0 ? (
           data
-            .filter(readItem => readItem && (readItem.chapter || readItem.chapterId) && (readItem.novel || readItem.novelId))
-            .sort((a, b) => {
-              // Sort by lastReadAt in descending order (most recent first)
-              const dateA = new Date(a.lastReadAt || a.updatedAt || 0);
-              const dateB = new Date(b.lastReadAt || b.updatedAt || 0);
-              return dateB - dateA;
-            })
+            .slice(0, 5) // Ensure we only show the 5 most recent (data is already sorted)
             .map((readItem, index) => (
               <RecentlyReadCard 
                 key={`${readItem.novelId || readItem.novel?._id}-${readItem.chapterId || readItem.chapter?._id}-${index}`} 

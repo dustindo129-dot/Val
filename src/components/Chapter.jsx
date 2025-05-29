@@ -429,7 +429,7 @@ const Chapter = ({ novelId, chapterId }) => {
         
         // Make the recently read tracking request
         try {
-          await axios.post(
+          const trackingResponse = await axios.post(
             `${config.backendUrl}/api/userchapterinteractions/recently-read`,
             { 
               chapterId,
@@ -445,7 +445,12 @@ const Chapter = ({ novelId, chapterId }) => {
           queryClient.invalidateQueries(['recentlyRead', user?.id]);
           
         } catch (recentReadErr) {
-          console.error('Lỗi ghi nhận lịch sử đọc:', recentReadErr);
+          console.error('❌ Recently read tracking failed:', recentReadErr);
+          console.error('❌ Failed data:', {
+            chapterId,
+            novelId,
+            moduleId: chapter?.moduleId
+          });
         }
         
         return { success: true };
