@@ -53,11 +53,19 @@ const MarketHeader = () => {
         </div>
 
         <div className="overview-section">
+          <h3>Những câu hỏi thường gặp:</h3>
+          <div className="faq-item">
+            <p className="faq-question"><strong>Hỏi:</strong> Nếu muốn ủng hộ một bộ truyện có sẵn trên web nhưng bộ đó hiện không có kho lúa thì phải làm thế nào?</p>
+            <p className="faq-answer"><strong>Đáp:</strong> Hãy tạo yêu cầu ở mục đề xuất, khi yêu cầu được chấp nhận lúa sẽ tự động được thêm vào kho lúa của bộ đó (lưu ý "tên truyện bạn muốn yêu cầu" phải khớp hoàn toàn tên bộ truyện trên web)</p>
+          </div>
+        </div>
+
+        <div className="overview-section">
           <p className="note">Lưu ý: Đối với những yêu cầu liên quan đến truyện bản quyền hoặc 18+, vui lòng liên hệ <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>fanpage</a> để được tư vấn thêm.</p>
         </div>
 
         <div className="update-date">
-          <em>Cập nhật ngày 26/05/2025</em>
+          <em>Cập nhật ngày 29/05/2025</em>
         </div>
       </div>
     </section>

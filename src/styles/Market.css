@@ -396,8 +396,6 @@
   border-radius: 12px;
 }
 
-
-
 .request-time {
   font-size: 0.85rem;
   color: #6c757d;
@@ -1540,6 +1538,27 @@
   margin-top: 1rem;
 }
 
+/* FAQ section styles */
+.faq-item {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #f0f8ff;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+}
+
+.faq-question {
+  margin-bottom: 0.75rem;
+  color: #0056b3;
+  font-weight: 500;
+}
+
+.faq-answer {
+  margin-bottom: 0;
+  color: #495057;
+  line-height: 1.5;
+}
+
 /* Dark mode styles */
 :root.dark-mode .market-overview {
   background-color: #343a40;
@@ -1563,6 +1582,20 @@
 
 :root.dark-mode .note,
 :root.dark-mode .update-date {
+  color: #adb5bd;
+}
+
+/* Dark mode styles for FAQ section */
+:root.dark-mode .faq-item {
+  background-color: #0d2438;
+  border-left-color: #0d6efd;
+}
+
+:root.dark-mode .faq-question {
+  color: #8bb9fe;
+}
+
+:root.dark-mode .faq-answer {
   color: #adb5bd;
 }
 
@@ -2167,4 +2200,25 @@
 
 :root.dark-mode .pagination-info {
   color: #adb5bd;
+}
+
+/* FAQ section styles */
+.faq-item {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #f0f8ff;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+}
+
+.faq-question {
+  margin-bottom: 0.75rem;
+  color: #0056b3;
+  font-weight: 500;
+}
+
+.faq-answer {
+  margin-bottom: 0;
+  color: #495057;
+  line-height: 1.5;
 } 
