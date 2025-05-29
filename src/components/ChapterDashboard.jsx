@@ -640,7 +640,7 @@ const ChapterDashboard = () => {
                 <select
                     value={mode}
                     onChange={handleModeChange}
-                    className="mode-dropdown"
+                    className="chapter-dashboard-mode-dropdown"
                 >
                   <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất cả)</option>
                   <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>

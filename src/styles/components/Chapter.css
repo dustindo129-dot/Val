@@ -1347,6 +1347,22 @@
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
+.mode-dropdown option[value="published"] {
+  color: #2ecc71;
+}
+
+.mode-dropdown option[value="draft"] {
+  color: #f39c12;
+}
+
+.mode-dropdown option[value="protected"] {
+  color: #e74c3c;
+}
+
+.mode-dropdown option[value="paid"] {
+  color: #3498db;
+}
+
 /* Dark mode support */
 :root.dark-mode .chapter-controls {
   background-color: #1a1a1a;

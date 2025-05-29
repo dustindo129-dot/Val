@@ -638,7 +638,6 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         </div>
                       </div>
                     </div>
-                    {!notification.isRead && <div className="unread-indicator"></div>}
                     <button
                       className="delete-notification-btn"
                       onClick={(e) => handleDeleteNotification(e, notification._id)}
@@ -661,7 +660,6 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         {formatTimestamp(notification.createdAt)}
                       </div>
                     </div>
-                    {!notification.isRead && <div className="unread-indicator"></div>}
                     <button
                       className="delete-notification-btn"
                       onClick={(e) => handleDeleteNotification(e, notification._id)}

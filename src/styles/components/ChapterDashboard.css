@@ -551,13 +551,66 @@
 
 /* Add these styles for the chapter mode dropdown */
 
-.mode-dropdown {
+.chapter-dashboard-mode-dropdown {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
   background-color: white;
+}
+
+/* Option labels with color indicators for chapter dashboard */
+.chapter-dashboard-mode-dropdown option[value="published"] {
+  color: #2ecc71;
+}
+
+.chapter-dashboard-mode-dropdown option[value="draft"] {
+  color: #f39c12;
+}
+
+.chapter-dashboard-mode-dropdown option[value="protected"] {
+  color: #e74c3c;
+}
+
+.chapter-dashboard-mode-dropdown option[value="paid"] {
+  color: #3498db;
+}
+
+/* Dark mode support for chapter dashboard mode dropdown */
+:root.dark-mode .chapter-dashboard-mode-dropdown {
+  background-color: white;
+  border-color: #555;
+  color: #333;
+}
+
+/* Keep existing mode-dropdown styles for staff dropdowns */
+.mode-dropdown {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 2px solid #3b82f6;
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e40af;
+  min-width: 150px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-dropdown:hover {
+  border-color: #2563eb;
+  background-color: #f0f9ff;
+}
+
+.mode-dropdown:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.mode-dropdown option {
+  color: initial; 
+  font-size: 14px;
 }
 
 /* Option labels with color indicators */
