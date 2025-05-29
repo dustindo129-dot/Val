@@ -20,7 +20,7 @@ import axios from 'axios';
 import '../styles/components/RecentComments.css';
 import config from '../config/config';
 import LoadingSpinner from './LoadingSpinner';
-import { createUniqueSlug } from '../utils/slugUtils';
+import { createUniqueSlug, generateLocalizedNovelUrl, generateLocalizedChapterUrl } from '../utils/slugUtils';
 
 // Format date to relative time (reusing from CommentSection)
 const formatRelativeTime = (dateString) => {
@@ -61,18 +61,18 @@ const CommentCard = memo(({ comment }) => {
   let linkTitle = '';
   
   if (comment.contentType === 'novels') {
-    // Generate slug-based URL for novel
-    const novelSlug = createUniqueSlug(comment.contentTitle || 'Novel', comment.contentId);
-    linkPath = `/novel/${novelSlug}`;
+    // Generate slug-based URL for novel using proper localized function
+    linkPath = generateLocalizedNovelUrl({ _id: comment.contentId, title: comment.contentTitle });
     linkTitle = comment.contentTitle || 'Novel';
   } else if (comment.contentType === 'chapters') {
     // For chapters, the contentId format is "novelId-chapterId"
     const [novelId, chapterId] = comment.contentId.split('-');
     
-    // Generate slug-based URLs for both novel and chapter
-    const novelSlug = createUniqueSlug(comment.contentTitle || 'Novel', novelId);
-    const chapterSlug = createUniqueSlug(comment.chapterTitle || 'Chapter', chapterId);
-    linkPath = `/novel/${novelSlug}/chapter/${chapterSlug}`;
+    // Generate proper localized URL for chapter
+    linkPath = generateLocalizedChapterUrl(
+      { _id: novelId, title: comment.contentTitle },
+      { _id: chapterId, title: comment.chapterTitle }
+    );
     
     // Use both novel title and chapter title if available
     if (comment.contentTitle && comment.chapterTitle) {

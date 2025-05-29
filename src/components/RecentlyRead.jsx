@@ -99,10 +99,12 @@ const RecentlyRead = () => {
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 30, // Data is fresh for 30 seconds 
     cacheTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false,
-    refetchInterval: 1000 * 60 * 2, // Refresh every 2 minutes
+    refetchOnWindowFocus: true,
+    refetchOnMount: false, // Don't refetch on mount to prevent race conditions
+    refetchOnReconnect: true, // Refetch when reconnecting
+    refetchInterval: false, // Remove automatic interval refetching
     retry: false // Don't retry on error to prevent continuous API calls
   });
 
@@ -143,6 +145,12 @@ const RecentlyRead = () => {
         ) : data && data.length > 0 ? (
           data
             .filter(readItem => readItem && (readItem.chapter || readItem.chapterId) && (readItem.novel || readItem.novelId))
+            .sort((a, b) => {
+              // Sort by lastReadAt in descending order (most recent first)
+              const dateA = new Date(a.lastReadAt || a.updatedAt || 0);
+              const dateB = new Date(b.lastReadAt || b.updatedAt || 0);
+              return dateB - dateA;
+            })
             .map((readItem, index) => (
               <RecentlyReadCard 
                 key={`${readItem.novelId || readItem.novel?._id}-${readItem.chapterId || readItem.chapter?._id}-${index}`} 

@@ -343,8 +343,8 @@ const Chapter = ({ novelId, chapterId }) => {
   // Check if we should record recently read (less restrictive than view counting)
   const recentReadKeyLocal = `recent_read_${chapterId}_last_recorded`;
   const lastRecorded = localStorage.getItem(recentReadKeyLocal);
-  const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-  const shouldRecordRecentRead = !lastRecorded || (now - parseInt(lastRecorded, 10)) > fiveMinutes;
+  const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
+  const shouldRecordRecentRead = !lastRecorded || (now - parseInt(lastRecorded, 10)) > twoMinutes;
 
   // Separate query for view count with fire-and-forget approach
   useQuery({
@@ -418,14 +418,14 @@ const Chapter = ({ novelId, chapterId }) => {
   });
 
   // Track recently read chapters for logged-in users
-  useQuery({
+  const recentlyReadQuery = useQuery({
     queryKey: ['recently-read-track', chapterId, user?.id],
     queryFn: async () => {
       try {
         if (!user) return { success: false };
         
         // Update localStorage immediately to prevent repeated attempts
-        localStorage.setItem(recentReadKeyLocal, now.toString());
+        localStorage.setItem(recentReadKeyLocal, Date.now().toString());
         
         // Make the recently read tracking request
         try {
@@ -456,7 +456,7 @@ const Chapter = ({ novelId, chapterId }) => {
     },
     enabled: !!chapterId && !!chapterData && !!user && shouldRecordRecentRead,
     retry: false,
-    staleTime: fiveMinutes,
+    staleTime: twoMinutes,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     cacheTime: 0 

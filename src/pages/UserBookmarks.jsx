@@ -93,11 +93,23 @@ const UserBookmarks = () => {
       const bookmarksData = await api.getBookmarks();
       // Sort by latest update (assuming lastUpdated field exists)
       const sortedBookmarks = bookmarksData.sort((a, b) => {
-        // Sort by latest chapter update date if available
-        if (a.latestChapter && b.latestChapter) {
+        // Primary sort: by latest chapter creation date if available
+        if (a.latestChapter?.createdAt && b.latestChapter?.createdAt) {
           return new Date(b.latestChapter.createdAt) - new Date(a.latestChapter.createdAt);
         }
-        return 0;
+        
+        // Secondary sort: by novel updatedAt if latestChapter.createdAt is not available
+        if (a.updatedAt && b.updatedAt) {
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+        }
+        
+        // Tertiary sort: by latest chapter number if dates are not available
+        if (a.latestChapter?.number && b.latestChapter?.number) {
+          return b.latestChapter.number - a.latestChapter.number;
+        }
+        
+        // Final fallback: alphabetical by title
+        return a.title.localeCompare(b.title);
       });
       
       setBookmarks(sortedBookmarks);
