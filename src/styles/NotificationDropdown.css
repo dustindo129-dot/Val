@@ -424,6 +424,77 @@
   cursor: not-allowed;
 }
 
+/* Infinite scroll loading indicator */
+.notification-loading-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  color: #6c757d;
+  border-bottom: 1px solid #e9ecef;
+  gap: 8px;
+}
+
+:root.dark-mode .notification-loading-more {
+  color: #a0a0a0;
+  border-bottom-color: #444;
+}
+
+/* Circular loading spinner */
+.circular-loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e9ecef;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+:root.dark-mode .spinner-circle {
+  border-color: #444;
+  border-top-color: #63b3ed;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* End of notifications indicator */
+.notifications-end {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-style: italic;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+:root.dark-mode .notifications-end {
+  color: #6b7280;
+  background-color: #1a1a1a;
+  border-bottom-color: #444;
+}
+
+.notifications-end:last-child {
+  border-bottom: none;
+}
+
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   .notification-dropdown {

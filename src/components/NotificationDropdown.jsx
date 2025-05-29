@@ -7,14 +7,19 @@
  * - New chapter notifications for bookmarked novels
  * 
  * Features:
- * - Shows 4 notifications at a time with scrolling
- * - Timestamp display (e.g., "3 hours ago")
- * - Clear all notifications button
- * - Mark individual notifications as read
+ * - Infinite scroll: loads 20 notifications initially, then 10 more at a time
+ * - Real-time updates via SSE
+ * - Mark as read/delete functionality
  * - Links to relevant content
+ * 
+ * INFINITE SCROLL IMPLEMENTATION:
+ * - Uses page-based pagination on backend (page 1: 20 items, page 2+: 10 items)
+ * - Frontend merges all pages into single array for seamless UX
+ * - Scroll detection triggers new page loads when near bottom
+ * - Alternative approaches: offset-based (?skip=20&limit=10) or cursor-based (?after=timestamp)
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
@@ -33,17 +38,193 @@ import sseService from '../services/sseService';
  */
 const NotificationDropdown = ({ isOpen, onClose, user }) => {
   const dropdownRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const initializedRef = useRef(false); // Track if we've loaded notifications for this session
+  const [allNotifications, setAllNotifications] = useState([]);
+  const [lastFetchedPage, setLastFetchedPage] = useState(0); // Track last successfully fetched page
+  const [isAllDataLoaded, setIsAllDataLoaded] = useState(false); // Track when we've truly loaded everything
 
-  // Fetch notifications (no polling, only initial load and manual refetch)
+  // Fetch notifications with infinite scroll logic
   const { data: notificationsData, isLoading, error, refetch } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: () => api.getNotifications(1, 20), // Get more notifications for scrolling
-    enabled: !!user, // Always enabled when user is logged in
-    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    refetchOnWindowFocus: false, // Disable refetch on window focus since we use SSE
+    queryKey: ['notifications', page],
+    queryFn: async () => {
+      // Prevent fetching the same page multiple times
+      if (page <= lastFetchedPage && page > 1) {
+        return null;
+      }
+      
+      // For initial load (page 1), get 20 notifications
+      // For subsequent loads, get 10 notifications
+      const limit = page === 1 ? 20 : 10;
+      const response = await api.getNotifications(page, limit);
+      
+      return response;
+    },
+    enabled: !!user && page > 0 && page > lastFetchedPage, // Only fetch if page is greater than last fetched
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    keepPreviousData: false,
   });
+
+  // Update allNotifications when new data comes in
+  useEffect(() => {
+    // Only process when we have actual data (not undefined while loading)
+    if (notificationsData !== undefined) {
+      if (notificationsData?.notifications) {
+        const newNotifications = notificationsData.notifications;
+        
+        // Update last fetched page
+        setLastFetchedPage(page);
+        
+        if (page === 1) {
+          // Reset for first page - but only if we don't already have the same data
+          setAllNotifications(current => {
+            // Check if this is the same data we already have
+            if (current.length === newNotifications.length && 
+                current.length > 0 && 
+                current[0]._id === newNotifications[0]._id) {
+              return current;
+            }
+            
+            // Update hasMore for first page
+            const totalItems = notificationsData.pagination?.totalItems || 0;
+            const hasMoreData = newNotifications.length < totalItems;
+            setHasMore(hasMoreData);
+            
+            // Set isAllDataLoaded if we loaded everything on first page
+            if (newNotifications.length >= totalItems) {
+              setIsAllDataLoaded(true);
+            } else {
+              setIsAllDataLoaded(false);
+            }
+            
+            return newNotifications;
+          });
+        } else {
+          // Append for subsequent pages
+          setAllNotifications(prev => {
+            // Check if we already have these notifications to prevent duplicates
+            const newUniqueNotifications = newNotifications.filter(
+              newNotif => !prev.some(existing => existing._id === newNotif._id)
+            );
+            
+            if (newUniqueNotifications.length === 0) {
+              // If no new notifications, we've reached the end
+              setHasMore(false);
+              return prev;
+            }
+            
+            const updatedList = [...prev, ...newUniqueNotifications];
+            
+            // Update hasMore based on the updated list length and total items
+            const totalItems = notificationsData.pagination?.totalItems || 0;
+            const hasMoreData = updatedList.length < totalItems;
+            setHasMore(hasMoreData);
+            
+            // Set isAllDataLoaded only when we've loaded everything
+            if (updatedList.length >= totalItems) {
+              setIsAllDataLoaded(true);
+            }
+            
+            setIsLoadingMore(false);
+            
+            return updatedList;
+          });
+        }
+        
+        setIsLoadingMore(false);
+      } else if (notificationsData && Array.isArray(notificationsData.notifications) && notificationsData.notifications.length === 0) {
+        // Handle case where response has empty notifications array
+        setLastFetchedPage(page); // Still mark as fetched even if empty
+        if (page === 1) {
+          setAllNotifications([]);
+        }
+        setHasMore(false);
+        setIsLoadingMore(false);
+      }
+      // Remove the "notificationsData === null || undefined" case since undefined is normal during loading
+    }
+  }, [notificationsData, page]);
+
+  // Reset when dropdown opens
+  useEffect(() => {
+    if (isOpen && user) {
+      // Only reset if we haven't initialized yet or if we have no notifications
+      if (!initializedRef.current || allNotifications.length === 0) {
+        setPage(1);
+        setLastFetchedPage(0); // Reset last fetched page
+        setHasMore(true);
+        setIsLoadingMore(false);
+        setIsAllDataLoaded(false); // Reset the all data loaded flag
+        
+        // Invalidate all notification queries to force fresh data
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        initializedRef.current = true;
+      }
+    }
+  }, [isOpen, user, queryClient, allNotifications.length]);
+
+  // Force refetch when dropdown opens if needed
+  useEffect(() => {
+    if (isOpen && user && page === 1) {
+      // Only refetch if we don't have recent data
+      const lastFetch = queryClient.getQueryState(['notifications', 1])?.dataUpdatedAt;
+      const now = Date.now();
+      const shouldRefetch = !lastFetch || (now - lastFetch) > 30000; // 30 seconds
+      
+      if (shouldRefetch) {
+        refetch();
+      }
+    }
+  }, [isOpen, user, page, refetch, queryClient]);
+
+  // Scroll handler for infinite scroll
+  const handleScroll = useCallback(async () => {
+    const container = scrollContainerRef.current;
+    if (!container) {
+      return;
+    }
+    
+    if (isLoadingMore) {
+      return;
+    }
+    
+    if (!hasMore) {
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+    
+    // Only load more when user scrolls to within 100px of bottom (increased threshold)
+    if (distanceFromBottom <= 100) {
+      setIsLoadingMore(true);
+      setPage(prev => prev + 1);
+    }
+  }, [isLoadingMore, hasMore, page]);
+
+  // Throttle scroll handler to prevent excessive firing
+  const throttledScrollHandler = useCallback(() => {
+    clearTimeout(throttledScrollHandler.timeoutId);
+    throttledScrollHandler.timeoutId = setTimeout(handleScroll, 150); // 150ms throttle
+  }, [handleScroll]);
+
+  // Attach scroll listener
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container && isOpen) {
+      container.addEventListener('scroll', throttledScrollHandler, { passive: true });
+      return () => {
+        clearTimeout(throttledScrollHandler.timeoutId);
+        container.removeEventListener('scroll', throttledScrollHandler);
+      };
+    }
+  }, [isOpen, throttledScrollHandler]);
 
   // Set up SSE listeners for real-time notification updates
   useEffect(() => {
@@ -52,8 +233,11 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     const handleNewNotification = (data) => {
       // Only handle notifications for the current user
       if (data.userId === user.id || data.userId === user._id) {
-        console.log('New notification received via SSE:', data.notification);
-        // Invalidate and refetch both notifications and unread count
+        // Add new notification to the beginning of the list
+        setAllNotifications(prev => {
+          return [data.notification, ...prev];
+        });
+        // Invalidate queries to keep cache in sync
         queryClient.invalidateQueries({ queryKey: ['notifications'] });
         queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
       }
@@ -62,20 +246,15 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     const handleNotificationRead = (data) => {
       // Only handle for the current user
       if (data.userId === user.id || data.userId === user._id) {
-        console.log('Notification marked as read via SSE:', data.notificationId);
-        // Update the specific notification in cache
-        queryClient.setQueryData(['notifications'], (oldData) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            notifications: oldData.notifications.map(notification =>
-              notification._id === data.notificationId
-                ? { ...notification, isRead: true }
-                : notification
-            )
-          };
+        // Update the specific notification in our local state
+        setAllNotifications(prev => {
+          return prev.map(notification =>
+            notification._id === data.notificationId
+              ? { ...notification, isRead: true }
+              : notification
+          );
         });
-        // Update unread count
+        // Update cache and unread count
         queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
       }
     };
@@ -83,17 +262,12 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     const handleNotificationsCleared = (data) => {
       // Only handle for the current user
       if (data.userId === user.id || data.userId === user._id) {
-        console.log('All notifications marked as read via SSE');
-        // Mark all notifications as read in cache
-        queryClient.setQueryData(['notifications'], (oldData) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            notifications: oldData.notifications.map(notification => ({
-              ...notification,
-              isRead: true
-            }))
-          };
+        // Mark all notifications as read in local state
+        setAllNotifications(prev => {
+          return prev.map(notification => ({
+            ...notification,
+            isRead: true
+          }));
         });
         // Update unread count to 0
         queryClient.setQueryData(['unreadNotificationCount'], 0);
@@ -103,17 +277,9 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     const handleNotificationsDeleted = (data) => {
       // Only handle for the current user
       if (data.userId === user.id || data.userId === user._id) {
-        console.log('All notifications deleted via SSE');
-        // Clear all notifications from cache
-        queryClient.setQueryData(['notifications'], {
-          notifications: [],
-          pagination: {
-            currentPage: 1,
-            totalPages: 0,
-            totalItems: 0
-          }
-        });
-        // Update unread count to 0
+        // Clear all notifications from local state
+        setAllNotifications([]);
+        // Update cache and unread count
         queryClient.setQueryData(['unreadNotificationCount'], 0);
       }
     };
@@ -121,16 +287,9 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     const handleNotificationDeleted = (data) => {
       // Only handle for the current user
       if (data.userId === user.id || data.userId === user._id) {
-        console.log('Individual notification deleted via SSE:', data.notificationId);
-        // Remove the specific notification from cache
-        queryClient.setQueryData(['notifications'], (oldData) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            notifications: oldData.notifications.filter(notification =>
-              notification._id !== data.notificationId
-            )
-          };
+        // Remove the specific notification from local state
+        setAllNotifications(prev => {
+          return prev.filter(notification => notification._id !== data.notificationId);
         });
         // Update unread count
         queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
@@ -154,30 +313,13 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     };
   }, [user, queryClient]);
 
-  // Refetch notifications when dropdown opens (only if data is stale)
-  useEffect(() => {
-    if (isOpen && user) {
-      // Only refetch if data is older than 1 minute
-      const lastFetch = queryClient.getQueryState(['notifications'])?.dataUpdatedAt;
-      const now = Date.now();
-      if (!lastFetch || (now - lastFetch) > 60000) {
-        refetch();
-      }
-    }
-  }, [isOpen, user, refetch, queryClient]);
-
-  // Initial fetch when user logs in
-  useEffect(() => {
-    if (user) {
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
-    }
-  }, [user, refetch, queryClient]);
-
   // Add event listener for login events to immediately refetch notifications
   useEffect(() => {
     const handleAuthLogin = () => {
-      // Immediately refetch notifications when user logs in
+      // Reset state and refetch notifications when user logs in
+      setPage(1);
+      setHasMore(true);
+      setAllNotifications([]);
       refetch();
       queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     };
@@ -209,19 +351,16 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       await queryClient.cancelQueries({ queryKey: ['unreadNotificationCount'] });
 
       // Snapshot the previous values
-      const previousNotifications = queryClient.getQueryData(['notifications']);
+      const previousNotifications = allNotifications;
       const previousUnreadCount = queryClient.getQueryData(['unreadNotificationCount']);
 
-      // Optimistically mark all notifications as read
-      if (previousNotifications) {
-        queryClient.setQueryData(['notifications'], {
-          ...previousNotifications,
-          notifications: previousNotifications.notifications.map(notification => ({
-            ...notification,
-            isRead: true
-          }))
-        });
-      }
+      // Optimistically mark all notifications as read in local state
+      setAllNotifications(prev => 
+        prev.map(notification => ({
+          ...notification,
+          isRead: true
+        }))
+      );
 
       // Optimistically set unread count to 0
       queryClient.setQueryData(['unreadNotificationCount'], 0);
@@ -232,7 +371,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     onError: (err, variables, context) => {
       // Roll back on error
       if (context?.previousNotifications) {
-        queryClient.setQueryData(['notifications'], context.previousNotifications);
+        setAllNotifications(context.previousNotifications);
       }
       if (context?.previousUnreadCount !== undefined) {
         queryClient.setQueryData(['unreadNotificationCount'], context.previousUnreadCount);
@@ -255,18 +394,11 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       await queryClient.cancelQueries({ queryKey: ['unreadNotificationCount'] });
 
       // Snapshot the previous values
-      const previousNotifications = queryClient.getQueryData(['notifications']);
+      const previousNotifications = allNotifications;
       const previousUnreadCount = queryClient.getQueryData(['unreadNotificationCount']);
 
       // Optimistically clear all notifications
-      queryClient.setQueryData(['notifications'], {
-        notifications: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 0,
-          totalItems: 0
-        }
-      });
+      setAllNotifications([]);
 
       // Optimistically set unread count to 0
       queryClient.setQueryData(['unreadNotificationCount'], 0);
@@ -277,7 +409,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     onError: (err, variables, context) => {
       // Roll back on error
       if (context?.previousNotifications) {
-        queryClient.setQueryData(['notifications'], context.previousNotifications);
+        setAllNotifications(context.previousNotifications);
       }
       if (context?.previousUnreadCount !== undefined) {
         queryClient.setQueryData(['unreadNotificationCount'], context.previousUnreadCount);
@@ -300,24 +432,19 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       await queryClient.cancelQueries({ queryKey: ['unreadNotificationCount'] });
 
       // Snapshot the previous values
-      const previousNotifications = queryClient.getQueryData(['notifications']);
+      const previousNotifications = allNotifications;
       const previousUnreadCount = queryClient.getQueryData(['unreadNotificationCount']);
 
       // Find the notification being deleted to check if it was unread
-      const notificationToDelete = previousNotifications?.notifications?.find(
+      const notificationToDelete = allNotifications.find(
         notification => notification._id === notificationId
       );
       const wasUnread = notificationToDelete && !notificationToDelete.isRead;
 
       // Optimistically update notifications list
-      if (previousNotifications) {
-        queryClient.setQueryData(['notifications'], {
-          ...previousNotifications,
-          notifications: previousNotifications.notifications.filter(
-            notification => notification._id !== notificationId
-          )
-        });
-      }
+      setAllNotifications(prev => 
+        prev.filter(notification => notification._id !== notificationId)
+      );
 
       // Optimistically update unread count if the deleted notification was unread
       if (wasUnread && typeof previousUnreadCount === 'number') {
@@ -330,7 +457,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     onError: (err, notificationId, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousNotifications) {
-        queryClient.setQueryData(['notifications'], context.previousNotifications);
+        setAllNotifications(context.previousNotifications);
       }
       if (context?.previousUnreadCount !== undefined) {
         queryClient.setQueryData(['unreadNotificationCount'], context.previousUnreadCount);
@@ -343,6 +470,9 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
   });
+
+  // Get the total items from the latest pagination data
+  const totalNotifications = notificationsData?.pagination?.totalItems || 0;
 
   // Note: Click outside handling is managed by the parent Navbar component
 
@@ -456,7 +586,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     <div className="notification-dropdown" ref={dropdownRef}>
       <div className="notification-dropdown-header">
         <h3>Thông báo</h3>
-        {notifications.length > 0 && (
+        {allNotifications.length > 0 && (
           <button 
             className="clear-all-btn"
             onClick={handleDeleteAll}
@@ -467,8 +597,8 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         )}
       </div>
 
-      <div className="notification-dropdown-content">
-        {isLoading ? (
+      <div className="notification-dropdown-content" ref={scrollContainerRef}>
+        {isLoading && page === 1 ? (
           <div className="notification-loading">
             <LoadingSpinner size="small" text="Đang tải thông báo..." />
           </div>
@@ -476,14 +606,14 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
           <div className="notification-error">
             Không thể tải thông báo
           </div>
-        ) : notifications.length === 0 ? (
+        ) : allNotifications.length === 0 ? (
           <div className="no-notifications">
             <i className="fa-regular fa-bell-slash"></i>
             <span>Không có thông báo mới</span>
           </div>
         ) : (
           <div className="notification-list">
-            {notifications.map((notification) => (
+            {allNotifications.map((notification) => (
               <div
                 key={notification._id}
                 className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
@@ -544,11 +674,28 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                 )}
               </div>
             ))}
+            
+            {/* Infinite scroll loading indicator */}
+            {isLoadingMore && (
+              <div className="notification-loading-more">
+                <div className="circular-loading-spinner">
+                  <div className="spinner-circle"></div>
+                </div>
+                <span className="loading-text">Đang tải thêm...</span>
+              </div>
+            )}
+            
+            {/* End of notifications indicator */}
+            {isAllDataLoaded && !isLoadingMore && allNotifications.length > 0 && (
+              <div className="notifications-end">
+                <span>Đã tải hết thông báo</span>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {notifications.length > 0 && (
+      {allNotifications.length > 0 && (
         <div className="notification-dropdown-footer">
           <button 
             className="clear-all-footer-btn"
