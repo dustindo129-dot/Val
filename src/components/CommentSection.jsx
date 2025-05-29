@@ -150,7 +150,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     e.preventDefault();
     
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để để lại bình luận');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
 
@@ -328,7 +328,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   // Add this function before the RenderComment component
   const handleLike = async (commentId) => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để thích bình luận');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
 
@@ -438,10 +438,19 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       }
     }, [isReplying]);
 
+    // Handle reply button click
+    const handleReplyClick = () => {
+      if (!isAuthenticated) {
+        window.dispatchEvent(new CustomEvent('openLoginModal'));
+        return;
+      }
+      setIsReplying(!isReplying);
+    };
+
     // Local handleReplySubmit function
     const handleReplySubmit = async () => {
       if (!isAuthenticated) {
-        alert('Vui lòng đăng nhập để trả lời bình luận');
+        window.dispatchEvent(new CustomEvent('openLoginModal'));
         return;
       }
   
@@ -597,7 +606,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                 <button 
                   className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
                   onClick={() => handleLike(comment._id)}
-                  disabled={!isAuthenticated || likingComments.has(comment._id)}
+                  disabled={likingComments.has(comment._id)}
                 >
                   <span className="like-icon comment-like-icon">
                     {likingComments.has(comment._id) ? '⏳' : <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
@@ -607,7 +616,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                 </button>
                 <button 
                   className="reply-button"
-                  onClick={() => setIsReplying(!isReplying)}
+                  onClick={handleReplyClick}
                 >
                   Trả lời
                 </button>
