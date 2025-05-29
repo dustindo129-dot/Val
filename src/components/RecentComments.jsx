@@ -123,7 +123,7 @@ const RecentComments = () => {
     queryFn: async () => {
       // Add cache busting parameter to force fresh data
       const cacheBuster = new Date().getTime();
-      const response = await axios.get(`${config.backendUrl}/api/comments/recent?limit=10&_cb=${cacheBuster}`);
+      const response = await axios.get(`${config.backendUrl}/api/comments/recent?limit=15&_cb=${cacheBuster}`);
       return response.data || [];
     },
     staleTime: 24 * 60 * 60 * 1000, // Data remains fresh for 24 hours
