@@ -55,8 +55,45 @@ const TopUpSEO = () => {
  * @returns {JSX.Element} TopUp page component
  */
 const TopUp = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  // Redirect unauthenticated users
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Trigger login modal if available, otherwise redirect to home
+      const hasLoginModal = typeof window !== 'undefined' && window.dispatchEvent;
+      if (hasLoginModal) {
+        window.dispatchEvent(new Event('openLoginModal'));
+        navigate('/', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Don't render the component if user is not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="top-up-container">
+        <TopUpSEO />
+        <div className="auth-required-message">
+          <h2>Yêu cầu đăng nhập</h2>
+          <p>Bạn cần đăng nhập để sử dụng tính năng nạp lúa.</p>
+          <button 
+            onClick={() => {
+              window.dispatchEvent(new Event('openLoginModal'));
+              navigate('/', { replace: true });
+            }}
+            className="login-button"
+          >
+            Đăng nhập ngay
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [loading, setLoading] = useState(false);
