@@ -327,6 +327,25 @@ const TopUp = () => {
     }));
   };
 
+  // Handle QR code download
+  const handleDownloadQR = async () => {
+    try {
+      const response = await fetch(qrCodeUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `QR-Code-${transferContent}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download QR code:', error);
+      alert('Không thể tải xuống mã QR. Vui lòng thử lại.');
+    }
+  };
+
   // Handle QR modal confirm
   const handleQrConfirm = () => {
     // Clear the countdown timer
@@ -652,6 +671,9 @@ const TopUp = () => {
               
               <div className="qr-code-container">
                 <img src={qrCodeUrl} alt="QR Code" />
+                <button className="qr-download-button" onClick={handleDownloadQR}>
+                  Tải mã QR
+                </button>
               </div>
               
               <div className="transfer-info">
@@ -768,4 +790,4 @@ const TopUp = () => {
   );
 };
 
-export default TopUp; 
+export default TopUp;

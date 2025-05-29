@@ -1591,6 +1591,8 @@
 
 .qr-code-container {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   margin-bottom: 1.5rem;
 }
@@ -1754,4 +1756,66 @@
 /* Dark mode styles for countdown timer */
 :root.dark-mode .countdown-timer {
   background-color: #dc3545;
+}
+
+/* QR Code Download Button Styles */
+.qr-download-button {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 200px;
+}
+
+.qr-download-button:hover {
+  background-color: #138496;
+  transform: translateY(-1px);
+}
+
+.qr-download-button:active {
+  transform: translateY(0);
+}
+
+.qr-download-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Update QR code container to center the download button */
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Dark mode styles for QR download button */
+:root.dark-mode .qr-download-button {
+  background-color: #20c997;
+}
+
+:root.dark-mode .qr-download-button:hover {
+  background-color: #1ba87e;
+}
+
+:root.dark-mode .qr-download-button:disabled {
+  background-color: #495057;
+}
+
+/* Mobile responsiveness for QR download button */
+@media (max-width: 576px) {
+  .qr-download-button {
+    max-width: 100%;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
 } 

@@ -335,7 +335,6 @@ const Navbar = () => {
             </svg>
             <div className="title-container">
               <h1 className="navbar-title">Valvrareteam</h1>
-              <span className="beta-tag">BETA</span>
             </div>
           </Link>
           

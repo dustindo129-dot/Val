@@ -25,7 +25,8 @@ const ChapterContent = ({
   onModeChange,
   canEdit = false,
   userRole = 'user',
-  moduleData = null
+  moduleData = null,
+  onWordCountUpdate
 }) => {
   const contentRef = useRef(null);
   const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
@@ -397,12 +398,18 @@ const ChapterContent = ({
                 }
               }}
               value={editedContent?.content || ''}
-              onEditorChange={(content) => {
+              onEditorChange={(content, editor) => {
                 if (setEditedContent) {
                   setEditedContent(prev => ({
                     ...prev,
                     content: content
                   }));
+                }
+                
+                // Update word count using TinyMCE's word count plugin
+                if (onWordCountUpdate && editor && editor.plugins && editor.plugins.wordcount) {
+                  const wordCount = editor.plugins.wordcount.getCount();
+                  onWordCountUpdate(wordCount);
                 }
               }}
               scriptLoading={{ async: true, load: "domainBased" }}
@@ -432,6 +439,35 @@ const ChapterContent = ({
                   .footnote-marker { color: #0066cc; cursor: pointer; }
                   .footnote-marker:hover { text-decoration: underline; }
                 `,
+                // Add setup function to listen for editor events and update word count
+                setup: (editor) => {
+                  // Update word count when editor is ready
+                  editor.on('init', () => {
+                    if (onWordCountUpdate && editor.plugins && editor.plugins.wordcount) {
+                      const wordCount = editor.plugins.wordcount.getCount();
+                      onWordCountUpdate(wordCount);
+                    }
+                  });
+                  
+                  // Update word count on content changes
+                  editor.on('input', () => {
+                    if (onWordCountUpdate && editor.plugins && editor.plugins.wordcount) {
+                      const wordCount = editor.plugins.wordcount.getCount();
+                      onWordCountUpdate(wordCount);
+                    }
+                  });
+                  
+                  // Update word count on paste events
+                  editor.on('paste', () => {
+                    // Use setTimeout to ensure paste content is processed
+                    setTimeout(() => {
+                      if (onWordCountUpdate && editor.plugins && editor.plugins.wordcount) {
+                        const wordCount = editor.plugins.wordcount.getCount();
+                        onWordCountUpdate(wordCount);
+                      }
+                    }, 100);
+                  });
+                },
                 // Preserve footnote markers during paste
                 paste_preprocess: (plugin, args) => {
                   args.content = args.content.replace(
@@ -595,7 +631,8 @@ ChapterContent.propTypes = {
   userRole: PropTypes.string,
   moduleData: PropTypes.shape({
     mode: PropTypes.string
-  })
+  }),
+  onWordCountUpdate: PropTypes.func
 };
 
 export default ChapterContent; 

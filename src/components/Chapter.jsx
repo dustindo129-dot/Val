@@ -28,7 +28,7 @@ import LoadingSpinner from './LoadingSpinner';
 // Import utilities 
 import {
   useReadingSettings, useReadingProgress, getSafeHtml,
-  unescapeHtml, countWords, formatDate
+  unescapeHtml, countWords, formatDate, debugWordCount
 } from './chapter/ChapterUtils';
 
 /**
@@ -600,13 +600,25 @@ const Chapter = ({ novelId, chapterId }) => {
     }
   }, [interactions, chapter]);
 
-  // Effect to calculate word count
+  // Effect to calculate word count - always use TinyMCE's algorithm
   useEffect(() => {
     if (chapter && chapter.content) {
-      const count = countWords(chapter.content);
-      setWordCount(count);
+      // If we're in edit mode and have an editor, use TinyMCE's live word count
+      if (isEditing && editorRef.current && editorRef.current.plugins && editorRef.current.plugins.wordcount) {
+        const count = editorRef.current.plugins.wordcount.getCount();
+        setWordCount(count);
+      } else {
+        // Always use TinyMCE's word counting algorithm on the HTML content
+        const count = countWords(chapter.content);
+        setWordCount(count);
+      }
     }
-  }, [chapter]);
+  }, [chapter, isEditing]);
+
+  // Function to update word count from TinyMCE editor
+  const updateWordCountFromEditor = (count) => {
+    setWordCount(count);
+  };
 
   // Effect to handle edit mode initialization
   useEffect(() => {
@@ -1319,6 +1331,7 @@ const Chapter = ({ novelId, chapterId }) => {
           canEdit={canEdit}
           userRole={user?.role || 'user'}
           moduleData={moduleData}
+          onWordCountUpdate={updateWordCountFromEditor}
         />
       </ChapterAccessGuard>
 

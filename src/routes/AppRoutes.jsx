@@ -16,7 +16,6 @@ const ChangePassword = lazy(() => import('../pages/ChangePassword'));
 const Chapter = lazy(() => import('../components/Chapter'));
 const ResetPassword = lazy(() => import('../components/auth/ResetPassword'));
 const Feedback = lazy(() => import('../pages/Feedback'));
-const Donate = lazy(() => import('../pages/Donate'));
 const OLN = lazy(() => import('../pages/OLN'));
 const Market = lazy(() => import('../pages/Market'));
 const TopUp = lazy(() => import('../pages/TopUp'));
@@ -63,7 +62,6 @@ function AppRoutes() {
         <Route path="/novel/:novelId/chapter/:chapterId" element={<LazyRoute><SlugWrapper component={Chapter} type="chapter" /></LazyRoute>} />
         <Route path="/reset-password/:token" element={<LazyRoute><ResetPassword /></LazyRoute>} />
         <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
-        <Route path="/donate" element={<LazyRoute><Donate /></LazyRoute>} />
         <Route path="/market" element={<LazyRoute><Market /></LazyRoute>} />
         
         {/* User Routes */}

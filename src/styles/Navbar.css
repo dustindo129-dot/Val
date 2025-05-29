@@ -505,12 +505,7 @@ body {
   }
 
   .title-container {
-    gap: 4px;
-  }
-
-  .beta-tag {
-    font-size: 10px;
-    padding: 1px 4px;
+    /* Gap no longer needed since beta tag is removed */
   }
 
   .user-username {
@@ -608,22 +603,8 @@ body {
 .title-container {
   display: flex;
   align-items: center;
-  gap: 8px;
   text-decoration: none;
   color: inherit;
-}
-
-.beta-tag {
-  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.2);
-  margin-left: 8px;
 }
 
 /* Dark theme styles */
