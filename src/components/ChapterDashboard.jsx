@@ -547,9 +547,9 @@ const ChapterDashboard = () => {
         setSaving(false);
       } else {
         // For new chapter, navigate back to novel page after delay
-        const novelSlug = createUniqueSlug(novel?.title, novelId);
+        const novelSlug = createUniqueSlug(novel?.novel?.title, novelId);
         setTimeout(() => {
-          navigate(generateLocalizedNovelUrl({ _id: novelId, title: novel?.title || '' }), {
+          navigate(generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' }), {
             replace: true,
             state: {
               from: 'addChapter',
@@ -583,16 +583,16 @@ const ChapterDashboard = () => {
 
   // Show error if module is not found AFTER loading is complete
   if (moduleError && moduleSlugOrId && !loading) {
-    const novelSlug = createUniqueSlug(novel?.title, novelId);
+    const novelSlug = createUniqueSlug(novel?.novel?.title, novelId);
     return (
         <div className="error-message">
           <FontAwesomeIcon icon={faExclamationTriangle} /> Tập không tồn tại.
-          <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.title || '' })} className="return-link"> Trở lại trang truyện</Link>
+          <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="return-link"> Trở lại trang truyện</Link>
         </div>
     );
   }
 
-  const novelSlug = createUniqueSlug(novel?.title, novelId);
+  const novelSlug = createUniqueSlug(novel?.novel?.title, novelId);
 
   return (
       <div className="chapter-dashboard">
@@ -600,10 +600,10 @@ const ChapterDashboard = () => {
         <div className="chapter-dashboard-header">
           <div className="header-content">
             <h1>{isEditMode ? 'Chỉnh sửa chương' : 'Thêm chương mới'}</h1>
-            <h2>{novel?.title}</h2>
+            <h2>{novel?.novel?.title}</h2>
             {module && <div className="module-title">Tập: {module.title}</div>}
           </div>
-          <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.title || '' })} className="back-to-novel">
+          <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="back-to-novel">
             <FontAwesomeIcon icon={faArrowLeft} /> Trở lại trang truyện
           </Link>
         </div>
@@ -926,7 +926,7 @@ const ChapterDashboard = () => {
                   </>
               )}
             </button>
-            <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.title || '' })} className="cancel-btn">
+            <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="cancel-btn">
               <FontAwesomeIcon icon={faTimes} /> Hủy bỏ
             </Link>
           </div>
