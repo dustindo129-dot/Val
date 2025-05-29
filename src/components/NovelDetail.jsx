@@ -85,17 +85,40 @@ const truncateHTML = (html, maxLength) => {
  * NovelContributions Component
  * 
  * Displays novel budget and contribution interface
- * Only shows if the novel has paid modules or chapters
+ * Only shows if the novel has paid modules or chapters, or if there's contribution history
  */
 const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modules }) => {
   const { user, isAuthenticated } = useAuth();
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
+  const [hasContributionHistory, setHasContributionHistory] = useState(false);
 
-  // Check if the novel has any paid content (modules or chapters)
+  // Check for contribution history
+  useEffect(() => {
+    const checkContributionHistory = async () => {
+      try {
+        const response = await axios.get(
+          `${config.backendUrl}/api/novels/${novelId}/contribution-history`
+        );
+        setHasContributionHistory(response.data.contributions && response.data.contributions.length > 0);
+      } catch (error) {
+        console.error('Failed to check contribution history:', error);
+        setHasContributionHistory(false);
+      }
+    };
+
+    if (novelId) {
+      checkContributionHistory();
+    }
+  }, [novelId]);
+
+  // Check if the novel has any paid content (modules or chapters) or contribution history
   const hasPaidContent = useMemo(() => {
-    if (!modules || modules.length === 0) return false;
+    if (!modules || modules.length === 0) {
+      // If no modules, check if there's contribution history
+      return hasContributionHistory;
+    }
     
     // Check for paid modules
     const hasPaidModules = modules.some(module => module.mode === 'paid');
@@ -105,84 +128,65 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
       module.chapters && module.chapters.some(chapter => chapter.mode === 'paid')
     );
     
-    return hasPaidModules || hasPaidChapters;
-  }, [modules]);
+    // Show if there's paid content OR contribution history
+    return hasPaidModules || hasPaidChapters || hasContributionHistory;
+  }, [modules, hasContributionHistory]);
 
-  // Don't render the contribution section if there's no paid content
+  // Don't render the contribution section if there's no paid content and no contribution history
   if (!hasPaidContent) {
     return null;
   }
 
   return (
     <div className="rd-contribution-section">
-      <div className="rd-contribution-section-title" style={{ position: 'relative' }}>
+      <div className="rd-contribution-section-title">
         ĐÓNG GÓP
         <button 
           onClick={() => setShowFAQ(!showFAQ)}
-          style={{
-            position: 'absolute',
-            right: '10px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'none',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            padding: '4px 8px',
-            fontSize: '12px',
-            cursor: 'pointer',
-            color: '#666',
-            whiteSpace: 'nowrap'
-          }}
+          className="faq-toggle-btn"
         >
           FAQs
         </button>
       </div>
       
       {showFAQ && (
-        <div style={{
-          marginBottom: '1rem',
-          padding: '1rem',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '4px',
-          fontSize: '0.9rem',
-          lineHeight: '1.5'
-        }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '0.75rem' }}>
+        <div className="faq-section">
+          <div className="faq-title">
             Những câu hỏi thường gặp:
           </div>
           
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div className="faq-question">
             <strong>Hỏi:</strong> Nạp lúa ở đâu?
           </div>
-          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+          <div className="faq-answer">
             <strong>Đáp:</strong> Nút "Nạp thêm".
           </div>
           
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div className="faq-question">
             <strong>Hỏi:</strong> Kho lúa bị dư thì như thế nào?
           </div>
-          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+          <div className="faq-answer">
             <strong>Đáp:</strong> Lúa dư sẽ để lại trong kho và tự động trừ để mở chương khi chương trả phí mới được đăng (có lưu lại trong lịch sử đóng góp).
           </div>
           
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div className="faq-question">
             <strong>Hỏi:</strong> Có lúa trong kho nhưng chưa đủ để mở chương thì sao?
           </div>
-          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+          <div className="faq-answer">
             <strong>Đáp:</strong> Lúa sẽ ở trong kho đến khi góp đủ để mở chương trả phí đăng sớm nhất.
           </div>
           
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div className="faq-question">
             <strong>Hỏi:</strong> Ví dụ chương 1 giá 200 lúa, chương 2 giá 100 lúa, kho lúa có 100 lúa thì chương nào sẽ mở trước?
           </div>
-          <div style={{ marginBottom: '1rem', paddingLeft: '1rem' }}>
+          <div className="faq-answer">
             <strong>Đáp:</strong> Không chương nào cả. Lúa sẽ ở trong kho đến khi góp đủ 200 lúa để tự động mở chương 1. Chương được mở theo thứ tự và cả tập cũng vậy.
           </div>
           
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div className="faq-question">
             <strong>Hỏi:</strong> Cách tính giá lúa của chương/tập?
           </div>
-          <div style={{ paddingLeft: '1rem' }}>
+          <div className="faq-answer">
             <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc.
           </div>
         </div>
@@ -1032,17 +1036,7 @@ const NovelDetail = ({ novelId }) => {
             
             {/* Place the form at the top level for maximum visibility when editing */}
             {showModuleForm && editingModule && (
-              <div style={{
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                zIndex: 9999,
-                width: '80%',
-                maxWidth: '600px',
-                background: 'white',
-                boxShadow: '0 0 20px rgba(0,0,0,0.5)'
-              }}>
+              <div className="module-form-modal-overlay">
                 <Suspense fallback={<LoadingSpinner />}>
                   <ModuleForm 
                     key={`edit-${editingModule}`}
@@ -1097,12 +1091,12 @@ const NovelDetail = ({ novelId }) => {
             >
               {isCommentsOpen ? (
                 <>
-                  <FontAwesomeIcon icon={faLock} style={{ marginRight: '8px' }} />
+                  <FontAwesomeIcon icon={faLock} className="icon-margin-right" />
                   Ẩn bình luận
                 </>
               ) : (
                 <>
-                  <FontAwesomeIcon icon={faComment} style={{ marginRight: '8px' }} />
+                  <FontAwesomeIcon icon={faComment} className="icon-margin-right" />
                   Hiển thị bình luận
                 </>
               )}
