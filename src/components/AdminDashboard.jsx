@@ -1299,7 +1299,7 @@ const AdminDashboard = () => {
                   >
                     <option value="Ongoing">Đang tiến hành</option>
                     <option value="Completed">Đã hoàn thành</option>
-                    <option value="Hiatus">Tạm dừng</option>
+                    <option value="Hiatus">Tạm ngưng</option>
                   </select>
                   {(user?.role === 'admin' || user?.role === 'moderator') && (
                     <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
