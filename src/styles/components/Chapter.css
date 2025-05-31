@@ -1352,11 +1352,11 @@
 }
 
 .mode-dropdown option[value="draft"] {
-  color: #f39c12;
+  color: #ffc107;
 }
 
 .mode-dropdown option[value="protected"] {
-  color: #e74c3c;
+  color: #dc2626;
 }
 
 .mode-dropdown option[value="paid"] {

@@ -566,11 +566,11 @@
 }
 
 .chapter-dashboard-mode-dropdown option[value="draft"] {
-  color: #f39c12;
+  color: #ffc107;
 }
 
 .chapter-dashboard-mode-dropdown option[value="protected"] {
-  color: #e74c3c;
+  color: #dc2626;
 }
 
 .chapter-dashboard-mode-dropdown option[value="paid"] {
@@ -619,11 +619,11 @@
 }
 
 .mode-dropdown option[value="draft"] {
-  color: #f39c12;
+  color: #ffc107;
 }
 
 .mode-dropdown option[value="protected"] {
-  color: #e74c3c;
+  color: #dc2626;
 }
 
 .mode-dropdown option[value="paid"] {

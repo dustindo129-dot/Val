@@ -19,13 +19,13 @@
 }
 
 .mode-draft {
-  background-color: #6c757d;
-  color: white;
+  background-color: #ffc107;
+  color: #212529;
 }
 
 .mode-protected {
-  background-color: #ffc107;
-  color: #212529;
+  background-color: #dc2626;
+  color: white;
 }
 
 .paid-tag {
