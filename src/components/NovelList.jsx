@@ -409,7 +409,8 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     const {data, isLoading, error} = useQuery({
         queryKey: ['novels', currentPage],
         queryFn: async () => {
-            const response = await api.get(`/api/novels?page=${currentPage}&limit=15`);
+            const cacheBuster = new Date().getTime();
+            const response = await api.get(`/api/novels?page=${currentPage}&limit=15&_cb=${cacheBuster}`);
             return response.data;
         },
         staleTime: 1000 * 60 * 5,
