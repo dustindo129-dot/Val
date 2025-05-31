@@ -642,54 +642,81 @@ const TopUp = () => {
             {/* Bank transfer details */}
             {paymentMethod === 'bank' && (
               <div className="payment-details">
-                <div className="method-form">
-                  <div className="bank-instructions">
-                    <p>Tạo mã QR để chuyển khoản:</p>
-                    
-                    {/* QR code generate button */}
-                    <button 
-                      className="qr-button" 
-                      onClick={generateQRCode} 
-                      disabled={!selectedAmount || loading}
-                    >
-                      {loading ? 'Đang tạo mã...' : 'Tạo mã QR'}
-                    </button>
-                    
-                    <div className="bank-transfer-info">
-                      <div className="info-row">
-                        <span className="info-label">Ngân hàng:</span>
-                        <span className="info-value">Vietinbank</span>
+                <div className="bank-details-container">
+                  <div className="bank-instructions-column">
+                    <div className="bank-instructions">
+                      <p>Tạo mã QR để chuyển khoản:</p>
+                      
+                      {/* QR code generate button */}
+                      <button 
+                        className="qr-button" 
+                        onClick={generateQRCode} 
+                        disabled={!selectedAmount || loading}
+                      >
+                        {loading ? 'Đang tạo mã...' : 'Tạo mã QR'}
+                      </button>
+                      
+                      <div className="bank-transfer-info">
+                        <div className="info-row">
+                          <span className="info-label">Ngân hàng:</span>
+                          <span className="info-value">Vietinbank</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-label">Tài khoản nhận:</span>
+                          <span className="info-value">100868151423</span>
+                          <button className="copy-button" onClick={() => {navigator.clipboard.writeText("100868151423")}}>[ Sao chép ]</button>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-label">Tên người nhận:</span>
+                          <span className="info-value">TRUONG TAN TAI</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-label">Số tiền:</span>
+                          <span className="info-value info-amount">
+                            {selectedAmount ? formatPrice(selectedAmount.price) : 'Vui lòng chọn số tiền nạp'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="info-row">
-                        <span className="info-label">Tài khoản nhận:</span>
-                        <span className="info-value">100868151423</span>
-                        <button className="copy-button" onClick={() => {navigator.clipboard.writeText("100868151423")}}>[ Sao chép ]</button>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Tên người nhận:</span>
-                        <span className="info-value">TRUONG TAN TAI</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Số tiền:</span>
-                        <span className="info-value info-amount">
-                          {selectedAmount ? formatPrice(selectedAmount.price) : 'Vui lòng chọn số tiền nạp'}
-                        </span>
+                      
+                      <div className="transfer-notes">
+                        <div className="note-title">Chú ý</div>
+                        <ol className="note-list">
+                          <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản (trong trường hợp không thể quét mã QR).</li>
+                          <li>Số dư sẽ được cập nhật trong vòng tối đa 1h sau khi chuyển khoản thành công.</li>
+                          <li>
+                            Nếu có thắc mắc về vấn đề chuyển khoản hoặc chưa nhận được 🌾 1h sau khi thanh toán, vui lòng inbox fanpage{' '}  
+                            <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                              Hội những người yêu thích Light Novel
+                            </a>{' '}
+                             để được hỗ trợ.
+                          </li>
+                        </ol>
                       </div>
                     </div>
-                    
-                    <div className="transfer-notes">
-                      <div className="note-title">Chú ý</div>
-                      <ol className="note-list">
-                        <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản (trong trường hợp không thể quét mã QR).</li>
-                        <li>Số dư sẽ được cập nhật trong vòng tối đa 1h sau khi chuyển khoản thành công.</li>
-                        <li>
-                          Nếu có thắc mắc về vấn đề chuyển khoản hoặc chưa nhận được 🌾 1h sau khi thanh toán, vui lòng inbox fanpage{' '}  
-                          <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                            Hội những người yêu thích Light Novel
-                          </a>{' '}
-                           để được hỗ trợ.
-                        </li>
-                      </ol>
+                  </div>
+                  
+                  <div className="support-message-column">
+                    <div className="support-message">
+                      <div className="support-heart">💗</div>
+                      <h3 className="support-title">Valvrareteam tồn tại là nhờ có bạn!</h3>
+                      <div className="support-content">
+                        <p>
+                          Valvrareteam chính thức quay trở lại vào năm 2025 với mong muốn xây dựng một cộng đồng 
+                          Light Novel cho thế hệ mới, thu hút nhiều độc giả cũng như dịch giả/tác giả, với mục tiêu
+                          lớn nhất là phá vỡ mọi rào cản giữa thị trường Light Novel Việt Nam và thế giới, tức là không 
+                          còn ai phải "đói hàng" nữa :))
+                        </p>
+                        <p>
+                          Muốn nuôi người trước hết phải nuôi được mình. Với mục đích ban đầu chỉ là làm sao để duy trì 
+                          web, để duy trì kinh phí hỗ trợ những bản dịch mới, và sau này thậm chí là cả những tác giả chính
+                          thống, Valvrareteam vô cùng biết ơn mỗi sự đóng góp của các bạn, dù là nhỏ nhất. <span className="support-highlight-inline">Mỗi sự ủng hộ của bạn đều là động lực lớn giúp Valvrareteam ngày càng phát triển!</span>
+                        </p>
+                      </div>
+                      <div className="support-decoration">
+                        <svg width="40" height="20" viewBox="0 0 40 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M2 18C6 10 14 10 20 14C26 18 34 8 38 2" stroke="#ff6b6b" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>

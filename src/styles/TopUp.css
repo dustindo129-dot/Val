@@ -658,489 +658,29 @@
   max-width: 600px;
 }
 
+/* Bank instructions styles - updated to match support message theme */
 .bank-instructions {
-  background-color: #e9ecef;
-  border-radius: 8px;
-  padding: 1rem;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+  border: 2px solid #ff6b6b;
+  border-radius: 12px;
+  padding: 1.5rem;
   margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
 }
 
-.bank-info {
-  background-color: white;
-  border-left: 3px solid #007bff;
-  padding: 1rem;
-  margin: 1rem 0;
-}
-
-.bank-info p {
-  margin: 0.5rem 0;
-}
-
-/* History toggle and transaction history */
-.history-toggle {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
-.history-button {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.history-button:hover:not(:disabled) {
-  background-color: #5a6268;
-}
-
-.history-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.transaction-history {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.transaction-item.status-completed {
-  border-left-color: #28a745;
-}
-
-.transaction-item.status-pending {
-  border-left-color: #ffc107;
-}
-
-.transaction-item.status-failed,
-.transaction-item.status-cancelled {
-  border-left-color: #dc3545;
-}
-
-.transaction-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.transaction-status {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.status-completed .transaction-status {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.status-pending .transaction-status {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.status-failed .transaction-status,
-.status-cancelled .transaction-status {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.transaction-body {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.transaction-amounts {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.transaction-price {
-  font-weight: 600;
-  color: #212529;
-}
-
-.transaction-credits {
-  font-size: 0.9rem;
+.bank-instructions p {
   color: #495057;
-}
-
-.transaction-bonus {
-  margin-left: 0.5rem;
-  color: #28a745;
   font-weight: 500;
-}
-
-.transaction-method {
-  padding: 0.25rem 0.5rem;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  font-size: 0.85rem;
-}
-
-/* Updated styles for matching input and button sizes */
-.top-up-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  max-width: 500px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0rem; /* Removed bottom margin to control spacing with gap */
-}
-
-.form-group label {
-  font-weight: 500;
-  color: #495057;
-  margin-bottom: 0.35rem; /* Consistent spacing below labels */
-  display: block; /* Ensure block display for consistent spacing */
-}
-
-.form-group input, 
-.form-group select {
-  padding: 0.75rem 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  width: 100%;
-  height: 48px; /* Fixed height to match button */
-  box-sizing: border-box;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  z-index: 1; /* Ensure the focus highlight appears above other elements */
-}
-
-.topup-submit-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  margin-top: 0; /* Removed top margin since we're using gap in the parent */
-  width: 100%; /* Full width like the input */
-  box-sizing: border-box;
-}
-
-.topup-submit-button:hover:not(:disabled) {
-  background-color: #0069d9;
-  transform: translateY(-1px);
-}
-
-.topup-submit-button:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.topup-submit-button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.topup-submit-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5);
-}
-
-/* Specific styles for the top-up input and button row */
-.amount-input-row {
-  display: flex;
-  gap: 1rem;
-  width: 100%;
-  align-items: flex-end; /* This will better align the button with the input */
-}
-
-.amount-input-row .form-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.amount-input-row .topup-submit-button {
-  margin-top: 0; /* No need for explicit margin when using align-items: flex-end */
-  width: auto;
-  min-width: 120px;
-  white-space: nowrap;
-  height: 48px; /* Ensure consistent height */
-}
-
-/* Dark mode styles */
-:root.dark-mode .form-group label {
-  color: #e9ecef;
-}
-
-:root.dark-mode .form-group input,
-:root.dark-mode .form-group select {
-  background-color: #343a40;
-  border-color: #495057;
-  color: #e9ecef;
-}
-
-:root.dark-mode .form-group input:focus,
-:root.dark-mode .form-group select:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-}
-
-:root.dark-mode .topup-submit-button {
-  background-color: #0d6efd;
-}
-
-:root.dark-mode .topup-submit-button:hover:not(:disabled) {
-  background-color: #0b5ed7;
-}
-
-:root.dark-mode .topup-submit-button:disabled {
-  background-color: #495057;
-}
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-  .amount-input-row {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .amount-input-row .topup-submit-button {
-    width: 100%;
-    margin-top: 0.5rem; /* Add a little space when stacked */
-  }
-}
-
-/* Section header with filters */
-.section-header {
-  display: none;
-}
-
-.filter-controls {
-  display: none;
-}
-
-.filter-label {
-  display: none;
-}
-
-/* Remove unused bonus display styles */
-.transaction-item.has-bonus {
-  border-left: none;
-}
-
-.transaction-bonus {
-  display: none;
-}
-
-/* Remove dark mode styles for removed elements */
-:root.dark-mode .filter-label {
-  color: inherit;
-}
-
-:root.dark-mode .transaction-item.has-bonus {
-  border-left-color: inherit;
-}
-
-:root.dark-mode .transaction-bonus {
-  background-color: inherit;
-  color: inherit;
-}
-
-/* Amount selection styles */
-.amount-selection {
-  margin-bottom: 2rem;
-  border-bottom: 1px solid #dee2e6;
-  padding-bottom: 1.5rem;
-}
-
-.amount-selection h3 {
   margin-bottom: 1rem;
-  font-size: 1.2rem;
-  color: #495057;
-}
-
-.amount-options {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-.amount-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: white;
-}
-
-.amount-option:hover {
-  border-color: #007bff;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
-  transform: translateY(-2px);
-}
-
-.amount-option input[type="radio"] {
-  margin-top: 0.3rem;
-  transform: scale(1.2);
-}
-
-.amount-option input[type="radio"]:checked + .option-details {
-  font-weight: 500;
-}
-
-.amount-option:has(input[type="radio"]:checked) {
-  border-color: #007bff;
-  background-color: #f8f9ff;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
-}
-
-.option-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-}
-
-.option-price {
-  font-weight: 600;
-  color: #212529;
-}
-
-.option-balance {
-  color: #0d6efd;
-}
-
-.option-note {
-  width: 100%;
-  font-size: 0.9rem;
-  color: #6c757d;
-}
-
-/* Dark mode styles for amount selection */
-:root.dark-mode .amount-selection h3 {
-  color: #f8f9fa;
-}
-
-:root.dark-mode .amount-option {
-  border-color: #495057;
-  background-color: #343a40;
-}
-
-:root.dark-mode .amount-option:hover {
-  background-color: #495057;
-  border-color: #8bb9fe;
-  box-shadow: 0 2px 8px rgba(139, 185, 254, 0.15);
-}
-
-:root.dark-mode .amount-option:has(input[type="radio"]:checked) {
-  border-color: #8bb9fe;
-  background-color: #2c3136;
-  box-shadow: 0 4px 12px rgba(139, 185, 254, 0.2);
-}
-
-:root.dark-mode .option-price {
-  color: #f8f9fa;
-}
-
-:root.dark-mode .option-balance {
-  color: #8bb9fe;
-}
-
-:root.dark-mode .option-note {
-  color: #adb5bd;
-}
-
-/* Responsive styles for amount selection */
-@media (max-width: 768px) {
-  .amount-options {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-  
-  .amount-option {
-    padding: 0.75rem;
-  }
-  
-  .option-details {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .amount-options {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-}
-
-/* QR code and bank transfer info styles */
-.bank-qr-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 1.5rem 0;
-  padding: 1rem;
-  background-color: white;
-  border-radius: 8px;
-}
-
-.bank-qr-code {
-  max-width: 250px;
-  margin-bottom: 1rem;
-}
-
-.qr-button {
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 0.5rem 1.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: block;
-  margin: 1rem auto;
-  min-width: 150px;
-}
-
-.qr-button:hover:not(:disabled) {
-  background-color: #138496;
-}
-
-.qr-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .bank-transfer-info {
-  background-color: white;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+  border: 1px solid #ffb3b3;
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
 }
 
 .info-row {
@@ -1156,51 +696,62 @@
 
 .info-label {
   font-weight: 600;
-  color: #495057;
+  color: #ff6b6b;
   width: 140px;
   margin-right: 1rem;
 }
 
 .info-value {
-  color: #212529;
+  color: #495057;
   flex: 1;
   min-width: 150px;
+  font-weight: 500;
 }
 
 .info-amount {
   font-weight: 700;
-  color: #0d6efd;
+  color: #ff6b6b;
   font-size: 1.2rem;
 }
 
 .copy-button {
-  background: none;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
   border: none;
-  color: #0d6efd;
+  color: white;
   cursor: pointer;
   margin-left: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .copy-button:hover {
-  text-decoration: underline;
+  background: linear-gradient(135deg, #ff5252 0%, #ff6b6b 100%);
+  transform: translateY(-1px);
 }
 
 .copy-button:disabled {
-  color: #6c757d;
+  background: #adb5bd;
   cursor: not-allowed;
+  transform: none;
 }
 
 .transfer-notes {
-  background-color: #fff3cd;
+  background: linear-gradient(135deg, #fff8f8 0%, #ffebeb 100%);
+  border: 2px solid #ffb3b3;
+  border-left: 4px solid #ff6b6b;
   border-radius: 8px;
   padding: 1rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
 }
 
 .note-title {
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: #856404;
+  color: #ff6b6b;
+  font-size: 1.1rem;
 }
 
 .note-list {
@@ -1210,11 +761,23 @@
 
 .note-list li {
   margin-bottom: 0.5rem;
-  color: #856404;
+  color: #495057;
+  line-height: 1.5;
 }
 
 .note-list li:last-child {
   margin-bottom: 0;
+}
+
+.note-list a {
+  color: #ff6b6b;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.note-list a:hover {
+  color: #ff5252;
+  text-decoration: underline;
 }
 
 /* Dark mode styles for bank transfer elements */
@@ -1439,10 +1002,6 @@
 :root.dark-mode .transaction-date,
 :root.dark-mode .transaction-id {
   color: #adb5bd;
-}
-
-:root.dark-mode .transaction-amount {
-  color: #28a745;
 }
 
 .transaction-amount {
@@ -2025,5 +1584,631 @@
   
   .qr-code-container img {
     max-width: 280px;
+  }
+}
+
+/* Amount selection styles */
+.amount-selection {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ffb3b3;
+  padding-bottom: 1.5rem;
+}
+
+.amount-selection h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: #ff6b6b;
+  text-align: center;
+  font-weight: 600;
+}
+
+.amount-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.amount-option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #ffb3b3;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
+  overflow: hidden;
+}
+
+.amount-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b6b, #ff5252);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.amount-option:hover {
+  border-color: #ff6b6b;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+  transform: translateY(-2px);
+}
+
+.amount-option:hover::before {
+  transform: scaleX(1);
+}
+
+.amount-option input[type="radio"] {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  top: 1rem;
+  left: 1rem;
+  transform: scale(1.1);
+  accent-color: #ff6b6b;
+  cursor: pointer;
+}
+
+.amount-option input[type="radio"]:checked + .option-details {
+  font-weight: 500;
+}
+
+.amount-option:has(input[type="radio"]:checked) {
+  border-color: #ff6b6b;
+  background: linear-gradient(135deg, #fff0f0 0%, #ffebeb 100%);
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.25);
+  transform: translateY(-3px);
+}
+
+.amount-option:has(input[type="radio"]:checked)::before {
+  transform: scaleX(1);
+  background: linear-gradient(90deg, #ff8e8e, #ff6b6b);
+}
+
+.option-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-left: 1.5rem;
+  flex: 1;
+}
+
+.option-price {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #ff6b6b;
+  margin-bottom: 0.125rem;
+  width: 100%;
+}
+
+.option-balance {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #28a745;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.option-note {
+  width: 100%;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #495057;
+  font-style: italic;
+  line-height: 1.3;
+  margin-top: 0.125rem;
+}
+
+/* Add subtle animation on load */
+.amount-option {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.amount-option:nth-child(1) { animation-delay: 0.1s; }
+.amount-option:nth-child(2) { animation-delay: 0.2s; }
+.amount-option:nth-child(3) { animation-delay: 0.3s; }
+.amount-option:nth-child(4) { animation-delay: 0.4s; }
+.amount-option:nth-child(5) { animation-delay: 0.5s; }
+.amount-option:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark mode styles for amount selection */
+:root.dark-mode .amount-selection {
+  border-bottom-color: #ff8e8e;
+}
+
+:root.dark-mode .amount-selection h3 {
+  color: #ff8e8e;
+}
+
+:root.dark-mode .amount-option {
+  border-color: #ff8e8e;
+  background: linear-gradient(135deg, #2d1f1f 0%, #3a2525 100%);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+}
+
+:root.dark-mode .amount-option::before {
+  background: linear-gradient(90deg, #ff8e8e, #ff6b6b);
+}
+
+:root.dark-mode .amount-option:hover {
+  border-color: #ff6b6b;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+:root.dark-mode .amount-option:has(input[type="radio"]:checked) {
+  border-color: #ff6b6b;
+  background: linear-gradient(135deg, #3a2525 0%, #2d1f1f 100%);
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+:root.dark-mode .amount-option:has(input[type="radio"]:checked)::before {
+  background: linear-gradient(90deg, #ff6b6b, #ff5252);
+}
+
+:root.dark-mode .option-price {
+  color: #ff8e8e;
+}
+
+:root.dark-mode .option-balance {
+  color: #20c997;
+}
+
+:root.dark-mode .option-note {
+  color: #adb5bd;
+}
+
+/* Responsive styles for amount selection */
+@media (max-width: 768px) {
+  .amount-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .amount-option {
+    padding: 0.875rem;
+  }
+  
+  .amount-option input[type="radio"] {
+    top: 0.875rem;
+    left: 0.875rem;
+  }
+  
+  .option-details {
+    margin-left: 1.25rem;
+  }
+  
+  .option-price {
+    font-size: 0.95rem;
+  }
+  
+  .option-balance {
+    font-size: 0.9rem;
+  }
+  
+  .option-note {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .amount-options {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .amount-option {
+    padding: 0.75rem;
+  }
+  
+  .amount-option input[type="radio"] {
+    top: 0.75rem;
+    left: 0.75rem;
+    transform: scale(1);
+  }
+  
+  .option-details {
+    margin-left: 1rem;
+  }
+  
+  .option-price {
+    font-size: 0.9rem;
+  }
+  
+  .option-balance {
+    font-size: 0.85rem;
+  }
+  
+  .option-note {
+    font-size: 0.7rem;
+  }
+}
+
+/* History toggle and transaction history */
+.history-toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.history-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.history-button:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.history-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.transaction-history {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.transaction-item.status-completed {
+  border-left-color: #28a745;
+}
+
+.transaction-item.status-pending {
+  border-left-color: #ffc107;
+}
+
+.transaction-item.status-failed,
+.transaction-item.status-cancelled {
+  border-left-color: #dc3545;
+}
+
+.transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.transaction-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-completed .transaction-status {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-pending .transaction-status {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-failed .transaction-status,
+.status-cancelled .transaction-status {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.transaction-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transaction-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.transaction-price {
+  font-weight: 600;
+  color: #212529;
+}
+
+.transaction-credits {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.transaction-method {
+  padding: 0.25rem 0.5rem;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.transaction-amount {
+  font-weight: 500;
+  color: #28a745;
+}
+
+/* Bank details container with two columns */
+.bank-details-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.bank-instructions-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.support-message-column {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Support message styling */
+.support-message {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+  border: 2px solid #ff6b6b;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.support-heart {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.1); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+  70% { transform: scale(1); }
+}
+
+.support-title {
+  color: #ff6b6b;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-family: Great Vibes, cursive;
+  letter-spacing: .02em;
+  text-shadow: 0 2px 8px #fbcfe8;
+}
+
+.support-content {
+  text-align: left;
+  line-height: 1.7;
+}
+
+.support-content p {
+  margin-bottom: 1.5rem;
+  color: #4e3b47;
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 2;
+  font-family: "Noto Serif", "Source Serif Pro", Cambria, serif;;
+  font-style: italic;
+}
+
+.support-content p:last-child {
+  margin-bottom: 0;
+}
+
+.support-highlight-inline {
+  background: linear-gradient(90deg, #ff6b6b 0%, #ff8e8e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.support-decoration {
+  margin-top: 1rem;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.support-decoration svg {
+  filter: drop-shadow(0 1px 2px rgba(255, 107, 107, 0.4));
+}
+
+.qr-button {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: block;
+  margin: 1rem auto;
+  min-width: 150px;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+}
+
+.qr-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252 0%, #ff6b6b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.qr-button:disabled {
+  background: #adb5bd;
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Dark mode styles for support message */
+:root.dark-mode .support-message {
+  background: linear-gradient(135deg, #2d1f1f 0%, #3a2525 100%);
+  border-color: #ff6b6b;
+}
+
+:root.dark-mode .support-title {
+  color: #ff8e8e;
+}
+
+:root.dark-mode .support-content p {
+  color: #e9ecef;
+}
+
+:root.dark-mode .support-highlight-inline {
+  background: linear-gradient(90deg, #ff8e8e 0%, #ffb3b3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dark mode styles for updated bank instruction sections */
+:root.dark-mode .bank-instructions {
+  background: linear-gradient(135deg, #2d1f1f 0%, #3a2525 100%);
+  border-color: #ff6b6b;
+}
+
+:root.dark-mode .bank-instructions p {
+  color: #e9ecef;
+}
+
+:root.dark-mode .bank-transfer-info {
+  background: linear-gradient(135deg, #343a40 0%, #2d1f1f 100%);
+  border-color: #ff8e8e;
+}
+
+:root.dark-mode .info-label {
+  color: #ff8e8e;
+}
+
+:root.dark-mode .info-value {
+  color: #e9ecef;
+}
+
+:root.dark-mode .info-amount {
+  color: #ff8e8e;
+}
+
+:root.dark-mode .copy-button {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+}
+
+:root.dark-mode .copy-button:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
+}
+
+:root.dark-mode .copy-button:disabled {
+  background: #495057;
+}
+
+:root.dark-mode .transfer-notes {
+  background: linear-gradient(135deg, #3a2525 0%, #2d1f1f 100%);
+  border-color: #ff8e8e;
+  border-left-color: #ff6b6b;
+}
+
+:root.dark-mode .note-title {
+  color: #ff8e8e;
+}
+
+:root.dark-mode .note-list li {
+  color: #e9ecef;
+}
+
+:root.dark-mode .note-list a {
+  color: #ff8e8e;
+}
+
+:root.dark-mode .note-list a:hover {
+  color: #ff6b6b;
+}
+
+:root.dark-mode .qr-button {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+}
+
+:root.dark-mode .qr-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
+}
+
+/* Responsive styles for bank details container */
+@media (max-width: 992px) {
+  .bank-details-container {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .support-message {
+    padding: 1.25rem;
+  }
+  
+  .support-title {
+    font-size: 1.1rem;
+  }
+  
+  .support-content p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .bank-details-container {
+    gap: 1rem;
+  }
+  
+  .support-message {
+    padding: 1rem;
+  }
+  
+  .support-heart {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .support-title {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .support-content p {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .support-highlight {
+    padding: 0.75rem;
+    margin-top: 0.75rem !important;
   }
 } 
