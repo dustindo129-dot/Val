@@ -845,7 +845,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                         {renderPagination()}
                     </div>
                     {/* Sidebar with hot novels and Facebook plugin */}
-                                        <aside className="sidebar">                        <HotNovels/>                        <FacebookPlugin/>                        <RecentlyRead/>                        <RecentComments/>                    </aside>
+                                        <aside className="sidebar">                        <HotNovels/>                        <RecentlyRead/>                        <FacebookPlugin/>                        <RecentComments/>                    </aside>
                 </div>
             </div>
         </>

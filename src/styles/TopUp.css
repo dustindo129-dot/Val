@@ -980,32 +980,42 @@
 }
 
 .amount-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
 }
 
 .amount-option {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid #dee2e6;
+  padding: 1rem;
+  border: 2px solid #dee2e6;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  background-color: white;
 }
 
 .amount-option:hover {
-  background-color: #f8f9fa;
+  border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .amount-option input[type="radio"] {
   margin-top: 0.3rem;
+  transform: scale(1.2);
 }
 
 .amount-option input[type="radio"]:checked + .option-details {
   font-weight: 500;
+}
+
+.amount-option:has(input[type="radio"]:checked) {
+  border-color: #007bff;
+  background-color: #f8f9ff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
 }
 
 .option-details {
@@ -1036,10 +1046,19 @@
 
 :root.dark-mode .amount-option {
   border-color: #495057;
+  background-color: #343a40;
 }
 
 :root.dark-mode .amount-option:hover {
-  background-color: #343a40;
+  background-color: #495057;
+  border-color: #8bb9fe;
+  box-shadow: 0 2px 8px rgba(139, 185, 254, 0.15);
+}
+
+:root.dark-mode .amount-option:has(input[type="radio"]:checked) {
+  border-color: #8bb9fe;
+  background-color: #2c3136;
+  box-shadow: 0 4px 12px rgba(139, 185, 254, 0.2);
 }
 
 :root.dark-mode .option-price {
@@ -1056,9 +1075,25 @@
 
 /* Responsive styles for amount selection */
 @media (max-width: 768px) {
+  .amount-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .amount-option {
+    padding: 0.75rem;
+  }
+  
   .option-details {
     flex-direction: column;
     gap: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .amount-options {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 }
 
@@ -1908,5 +1943,87 @@
   
   .auth-required-message p {
     font-size: 1rem;
+  }
+}
+
+/* Responsive Media Queries for QR Modal */
+@media (max-width: 576px) {
+  .qr-modal-content {
+    width: 95%;
+    max-width: none;
+    padding: 1.5rem 1rem;
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .qr-modal-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .qr-code-container img {
+    max-width: 200px;
+  }
+  
+  .transfer-info {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .transfer-info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+  
+  .transfer-info-item span:first-child {
+    min-width: auto;
+    margin-bottom: 0.25rem;
+  }
+  
+  .qr-modal-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .qr-modal-cancel,
+  .qr-modal-confirm {
+    width: 100%;
+    padding: 0.875rem;
+  }
+}
+
+@media (max-width: 768px) and (min-width: 577px) {
+  .qr-modal-content {
+    width: 85%;
+    max-width: 450px;
+    padding: 1.75rem 1.5rem;
+  }
+  
+  .qr-code-container img {
+    max-width: 220px;
+  }
+  
+  .transfer-info {
+    padding: 0.875rem;
+  }
+}
+
+@media (max-width: 992px) and (min-width: 769px) {
+  .qr-modal-content {
+    width: 75%;
+    max-width: 480px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .qr-modal-content {
+    max-width: 550px;
+    padding: 2.5rem;
+  }
+  
+  .qr-code-container img {
+    max-width: 280px;
   }
 } 
