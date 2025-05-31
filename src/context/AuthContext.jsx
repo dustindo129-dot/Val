@@ -72,6 +72,31 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Validates JWT token format
+   * @param {string} token - JWT token to validate
+   * @returns {boolean} True if token format is valid
+   */
+  const isValidJWT = (token) => {
+    if (!token || typeof token !== 'string') return false;
+    
+    // JWT should have 3 parts separated by dots
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    // Each part should be base64 encoded (basic check)
+    try {
+      parts.forEach(part => {
+        if (part.length === 0) throw new Error('Empty part');
+        // Basic base64 character check
+        if (!/^[A-Za-z0-9_-]+$/.test(part)) throw new Error('Invalid characters');
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  /**
    * Updates the session expiry time based on user role and rememberMe preference
    * @param {boolean} rememberMe - Whether to use extended session timeout
    * @param {Object} userData - User data containing role information
@@ -128,14 +153,23 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const storedUser = localStorage.getItem('user');
-        if (storedUser && checkSessionValidity()) {
+        const storedToken = localStorage.getItem('token');
+        
+        // Validate token format before proceeding
+        if (storedToken && !isValidJWT(storedToken)) {
+          console.warn('Invalid JWT format detected, clearing authentication');
+          signOut();
+          return;
+        }
+        
+        if (storedUser && storedToken && checkSessionValidity()) {
           const userData = JSON.parse(storedUser);
           
           // Check if displayName is missing and refresh user data if needed
           if (!userData.displayName && userData.username) {
             try {
               const response = await axios.get(`${config.backendUrl}/api/users/${userData.username}/profile`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                headers: { Authorization: `Bearer ${storedToken}` }
               });
               
               const updatedUserData = {

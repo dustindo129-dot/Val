@@ -3,6 +3,39 @@ import config from '../config/config';
 import { queryClient } from '../lib/react-query';
 import hybridCdnService from './bunnyUploadService';
 
+// Helper function to validate JWT token format
+const isValidJWT = (token) => {
+  if (!token || typeof token !== 'string') return false;
+  
+  // JWT should have 3 parts separated by dots
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  
+  // Each part should be base64 encoded (basic check)
+  try {
+    parts.forEach(part => {
+      if (part.length === 0) throw new Error('Empty part');
+      // Basic base64 character check
+      if (!/^[A-Za-z0-9_-]+$/.test(part)) throw new Error('Invalid characters');
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Helper function to get validated token
+const getValidToken = () => {
+  const token = localStorage.getItem('token');
+  if (!isValidJWT(token)) {
+    // Clear invalid token
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return null;
+  }
+  return token;
+};
+
 const api = {
   // Lookup novel ID from slug
   lookupNovelId: async (slug) => {
@@ -73,11 +106,14 @@ const api = {
   checkBookmarkStatus: async (username, novelId) => {
     if (!username || !novelId) return false;
     try {
+      const token = getValidToken();
+      if (!token) return false;
+      
       const response = await axios.get(
         `${config.backendUrl}/api/users/${username}/bookmarks/${novelId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -89,7 +125,7 @@ const api = {
 
   toggleBookmark: async (novelId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getValidToken();
       const user = JSON.parse(localStorage.getItem('user')); // Get user from localStorage
       
       if (!token || !user) {
@@ -176,7 +212,7 @@ const api = {
         throw new Error("Novel ID is required");
       }
       
-      const token = localStorage.getItem('token');
+      const token = getValidToken();
       if (!token) {
         throw new Error("Authentication token missing");
       }
@@ -209,7 +245,7 @@ const api = {
         throw new Error("Novel ID and Module ID are required");
       }
       
-      const token = localStorage.getItem('token');
+      const token = getValidToken();
       if (!token) {
         throw new Error("Authentication token missing");
       }
@@ -528,8 +564,6 @@ const api = {
     }
   },
 
-
-
   fetchNovelContributions: async (novelId) => {
     const response = await axios.get(`${config.backendUrl}/api/novels/${novelId}/contributions`);
     return response.data;
@@ -581,11 +615,16 @@ const api = {
   // Notification related API calls
   getNotifications: async (page = 1, limit = 10) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.get(
         `${config.backendUrl}/api/notifications?page=${page}&limit=${limit}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -598,12 +637,17 @@ const api = {
 
   markNotificationAsRead: async (notificationId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.put(
         `${config.backendUrl}/api/notifications/${notificationId}/read`,
         {},
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -616,12 +660,17 @@ const api = {
 
   markAllNotificationsAsRead: async () => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.put(
         `${config.backendUrl}/api/notifications/read-all`,
         {},
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -634,11 +683,16 @@ const api = {
 
   getUnreadNotificationCount: async () => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        return 0;
+      }
+      
       const response = await axios.get(
         `${config.backendUrl}/api/notifications/unread-count`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
