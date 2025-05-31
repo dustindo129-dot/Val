@@ -2,6 +2,7 @@ import axios from 'axios';
 import config from '../config/config';
 import { queryClient } from '../lib/react-query';
 import hybridCdnService from './bunnyUploadService';
+import { ensureValidToken, refreshToken } from './tokenRefresh';
 
 // Helper function to validate JWT token format
 const isValidJWT = (token) => {
@@ -35,6 +36,139 @@ const getValidToken = () => {
   }
   return token;
 };
+
+// Store for failed requests that need to be retried after token refresh
+let failedQueue = [];
+let isRefreshingToken = false;
+
+// Process queued requests after token refresh
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
+// Add axios request interceptor to automatically add authorization headers
+axios.interceptors.request.use(
+  async (config) => {
+    // Skip token refresh for auth endpoints to prevent infinite loops
+    if (config.url?.includes('/api/auth/')) {
+      const token = getValidToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    }
+
+    // For all other requests, ensure we have a valid token
+    try {
+      const token = await ensureValidToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error('Token refresh failed in request interceptor:', error);
+      // Continue with request without token - let response interceptor handle it
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add axios response interceptor to handle token validation errors and refresh
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Check if error is due to expired/invalid JWT
+    if (error.response?.status === 401 && 
+        (error.response?.data?.message?.includes('malformed') || 
+         error.response?.data?.message?.includes('Invalid or expired token') ||
+         error.response?.data?.message?.includes('jwt expired'))) {
+      
+      // Skip refresh for auth endpoints to prevent infinite loops
+      if (originalRequest.url?.includes('/api/auth/')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+        return Promise.reject(error);
+      }
+
+      // Prevent infinite retry loops
+      if (originalRequest._retry) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      if (isRefreshingToken) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return axios(originalRequest);
+        });
+      }
+
+      isRefreshingToken = true;
+
+      try {
+        console.log('Access token expired, attempting refresh...');
+        const newToken = await refreshToken();
+        
+        if (newToken) {
+          console.log('Token refreshed successfully, retrying original request');
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          processQueue(null, newToken);
+          return axios(originalRequest);
+        } else {
+          // Refresh failed, clear auth data
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+          processQueue(new Error('Token refresh failed'), null);
+          return Promise.reject(error);
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+        processQueue(refreshError, null);
+        return Promise.reject(error);
+      } finally {
+        isRefreshingToken = false;
+      }
+    }
+
+    // For other types of 401 errors, still clear invalid tokens
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 const api = {
   // Lookup novel ID from slug
@@ -149,11 +283,16 @@ const api = {
 
   getBookmarkedChapter: async (novelId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        return { bookmarkedChapter: null };
+      }
+      
       const response = await axios.get(
         `${config.backendUrl}/api/userchapterinteractions/bookmark/${novelId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -166,12 +305,17 @@ const api = {
 
   toggleChapterBookmark: async (chapterId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/bookmark`,
         { chapterId },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -183,6 +327,11 @@ const api = {
 
   reorderChapter: async ({ novelId, moduleId, chapterId, direction }) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.put(
         `${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}/chapters/${chapterId}/reorder?skipUpdateTimestamp=true`,
         {
@@ -190,7 +339,7 @@ const api = {
         },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -283,6 +432,11 @@ const api = {
 
   updateChapterOrder: async ({ novelId, moduleId, chapterId, newOrder }) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       // Try the direct chapter update endpoint
       const response = await axios.put(
         `${config.backendUrl}/api/chapters/${chapterId}`,
@@ -292,7 +446,7 @@ const api = {
         },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -311,7 +465,7 @@ const api = {
           },
           {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           }
@@ -326,11 +480,16 @@ const api = {
 
   deleteChapter: async (chapterId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.delete(
         `${config.backendUrl}/api/chapters/${chapterId}?skipViewTracking=true`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -343,11 +502,16 @@ const api = {
 
   deleteModule: async (novelId, moduleId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.delete(
         `${config.backendUrl}/api/modules/${novelId}/modules/${moduleId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -360,6 +524,11 @@ const api = {
 
   reorderModule: async ({ novelId, moduleId, direction }) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       // Use the correct API endpoint path for module reordering
       const response = await axios.put(
         `${config.backendUrl}/api/modules/${novelId}/modules/reorder?skipUpdateTimestamp=true`,
@@ -369,7 +538,7 @@ const api = {
         },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -382,12 +551,17 @@ const api = {
 
   likeNovel: async (novelId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/usernovelinteractions/like`,
         { novelId },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -399,12 +573,17 @@ const api = {
   
   rateNovel: async (novelId, rating, review) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/usernovelinteractions/rate`,
         { novelId, rating, review },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -416,11 +595,16 @@ const api = {
   
   removeRating: async (novelId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.delete(
         `${config.backendUrl}/api/usernovelinteractions/rate/${novelId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -432,8 +616,8 @@ const api = {
   
   getUserNovelInteraction: async (novelId) => {
     try {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user'));
+      const token = getValidToken();
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
       if (!token || !user) {
         return { liked: false, rating: null, review: null, bookmarked: false };
       }
@@ -452,6 +636,7 @@ const api = {
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
       return { liked: false, rating: null, review: null, bookmarked: false };
     }
@@ -472,12 +657,17 @@ const api = {
   // Report related API calls
   submitReport: async (contentType, contentId, reportType, details, contentTitle, novelId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/reports`,
         { contentType, contentId, reportType, details, contentTitle, novelId },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -491,11 +681,16 @@ const api = {
 
   getReports: async (status = 'pending') => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.get(
         `${config.backendUrl}/api/reports?status=${status}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -508,12 +703,17 @@ const api = {
 
   resolveReport: async (reportId, responseMessage = '') => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.put(
         `${config.backendUrl}/api/reports/${reportId}/resolve`,
         { responseMessage },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -527,11 +727,16 @@ const api = {
 
   deleteReport: async (reportId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.delete(
         `${config.backendUrl}/api/reports/${reportId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -544,7 +749,7 @@ const api = {
 
   getBookmarks: async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getValidToken();
       if (!token) {
         throw new Error("Authentication token missing");
       }
@@ -584,12 +789,17 @@ const api = {
   // Novel contribution methods
   contributeToNovel: async (novelId, amount, note) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/novels/${novelId}/contribute`,
         { amount, note },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -705,11 +915,16 @@ const api = {
 
   deleteAllNotifications: async () => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.delete(
         `${config.backendUrl}/api/notifications/delete-all`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -722,11 +937,16 @@ const api = {
 
   deleteNotification: async (notificationId) => {
     try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.delete(
         `${config.backendUrl}/api/notifications/${notificationId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );

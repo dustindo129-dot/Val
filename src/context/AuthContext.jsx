@@ -9,7 +9,7 @@
  * - Session management with timeout
  * - Login/Signup functionality
  * - Password reset flow
- * - Token management
+ * - Token management with automatic refresh
  * - User activity tracking
  */
 
@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/AuthContext.css';
 import config from '../config/config';
+import { setupAutoRefresh } from '../services/tokenRefresh';
 
 // Create authentication context
 const AuthContext = createContext(null);
@@ -51,6 +52,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Store auto-refresh cleanup function
+  const [autoRefreshCleanup, setAutoRefreshCleanup] = useState(null);
 
   /**
    * Checks if the current session is valid
@@ -146,6 +150,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Sets up automatic token refresh
+   */
+  const setupTokenRefresh = () => {
+    if (autoRefreshCleanup) {
+      autoRefreshCleanup(); // Clean up previous setup
+    }
+    
+    const cleanup = setupAutoRefresh();
+    setAutoRefreshCleanup(() => cleanup);
+  };
+
+  /**
    * Initialize authentication state and set up session management
    */
   useEffect(() => {
@@ -191,6 +207,9 @@ export const AuthProvider = ({ children }) => {
           // Use the stored remember me preference
           const rememberMe = localStorage.getItem('rememberMe') === 'true';
           updateSessionExpiry(rememberMe, userData);
+          
+          // Set up automatic token refresh
+          setupTokenRefresh();
         } else if (storedUser) {
           signOut();
         }
@@ -231,6 +250,11 @@ export const AuthProvider = ({ children }) => {
       activityEvents.forEach(event => {
         document.removeEventListener(event, handleUserActivity);
       });
+      
+      // Clean up auto-refresh if it exists
+      if (autoRefreshCleanup) {
+        autoRefreshCleanup();
+      }
     };
   }, []);
 
@@ -242,12 +266,21 @@ export const AuthProvider = ({ children }) => {
       const rememberMe = localStorage.getItem('rememberMe') === 'true';
       updateSessionExpiry(rememberMe, user);
       setIsAuthenticated(true);
+      
+      // Set up automatic token refresh for authenticated users
+      setupTokenRefresh();
     } else {
       setIsAuthenticated(false);
+      
+      // Clean up auto-refresh when user logs out
+      if (autoRefreshCleanup) {
+        autoRefreshCleanup();
+        setAutoRefreshCleanup(null);
+      }
     }
   }, [user]);
 
-  // Add effect for cross-tab login/logout synchronization
+  // Add effect for cross-tab login/logout synchronization and token refresh events
   useEffect(() => {
     const handleStorageChange = (event) => {
       if (event.key === AUTH_STORAGE_KEY && event.newValue) {
@@ -276,6 +309,21 @@ export const AuthProvider = ({ children }) => {
         // Get rememberMe preference from localStorage
         const rememberMe = localStorage.getItem('rememberMe') === 'true';
         updateSessionExpiry(rememberMe, userData);
+      } else if (event.type === 'auth-token-invalid') {
+        // Handle invalid token detected by axios interceptor
+        signOut(true);
+      } else if (event.type === 'auth-token-refresh-failed') {
+        // Handle token refresh failure
+        console.log('Token refresh failed, logging out user');
+        signOut(true);
+      } else if (event.type === 'auth-token-refreshed') {
+        // Handle successful token refresh
+        const { user: userData } = event.detail;
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+        console.log('Token refreshed successfully');
       }
     };
 
@@ -284,11 +332,17 @@ export const AuthProvider = ({ children }) => {
     // Listen for custom events (same tab)
     window.addEventListener(AUTH_LOGOUT_EVENT, handleCustomEvent);
     window.addEventListener(AUTH_LOGIN_EVENT, handleCustomEvent);
+    window.addEventListener('auth-token-invalid', handleCustomEvent);
+    window.addEventListener('auth-token-refresh-failed', handleCustomEvent);
+    window.addEventListener('auth-token-refreshed', handleCustomEvent);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener(AUTH_LOGOUT_EVENT, handleCustomEvent);
       window.removeEventListener(AUTH_LOGIN_EVENT, handleCustomEvent);
+      window.removeEventListener('auth-token-invalid', handleCustomEvent);
+      window.removeEventListener('auth-token-refresh-failed', handleCustomEvent);
+      window.removeEventListener('auth-token-refreshed', handleCustomEvent);
     };
   }, []);
 
@@ -316,9 +370,15 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
       
-      // Store user data and token
+      // Store user data and tokens
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
+      
+      // Store refresh token if provided
+      if (response.data.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+      }
+      
       updateSessionExpiry(rememberMe, userData);
 
       // Notify other tabs about the login
@@ -358,9 +418,15 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
       
-      // Store user data and token
+      // Store user data and tokens
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
+      
+      // Store refresh token if provided
+      if (response.data.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+      }
+      
       updateSessionExpiry(false, userData);
       
       // Notify other tabs about the login
@@ -383,6 +449,12 @@ export const AuthProvider = ({ children }) => {
    */
   const signOut = async (isSync = false) => {
     try {
+      // Clean up auto-refresh first
+      if (autoRefreshCleanup) {
+        autoRefreshCleanup();
+        setAutoRefreshCleanup(null);
+      }
+      
       // Only try to call the logout API if this is not a synchronized logout
       if (!isSync) {
         try {
@@ -405,9 +477,10 @@ export const AuthProvider = ({ children }) => {
         window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
       }
       
-      // Clear user data and token
+      // Clear user data and tokens
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('sessionExpiry');
       localStorage.removeItem('rememberMe');
       

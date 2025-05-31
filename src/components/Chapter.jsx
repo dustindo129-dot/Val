@@ -9,6 +9,7 @@ import config from '../config/config';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createUniqueSlug, generateLocalizedChapterUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
+import { getValidToken, getAuthHeaders } from '../utils/auth';
 
 // Import components
 import ChapterHeader from './chapter/ChapterHeader';
@@ -305,14 +306,19 @@ const Chapter = ({ novelId, chapterId }) => {
     enabled: !!chapterId
   });
 
-  // Add specific query for user's interaction with this chapter
+  // Fetch user interaction data (likes, ratings, bookmarks)
   const { data: userInteraction } = useQuery({
     queryKey: ['user-chapter-interaction', chapterId, user?.id],
     queryFn: async () => {
       try {
+        const headers = getAuthHeaders();
+        if (!headers.Authorization) {
+          return { liked: false, rating: 0, bookmarked: false };
+        }
+        
         const response = await axios.get(
           `${config.backendUrl}/api/userchapterinteractions/user/${chapterId}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          { headers }
         );
         return response.data;
       } catch (error) {
@@ -364,11 +370,13 @@ const Chapter = ({ novelId, chapterId }) => {
         
         // Make the view count request
         try {
+          const headers = user ? getAuthHeaders() : {};
+          
           const viewResponse = await axios.post(
             `${config.backendUrl}/api/userchapterinteractions/view/${chapterId}`, 
             {}, 
             {
-              headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {},
+              headers,
               signal: controller.signal
             }
           );
@@ -429,6 +437,11 @@ const Chapter = ({ novelId, chapterId }) => {
         
         // Make the recently read tracking request
         try {
+          const headers = getAuthHeaders();
+          if (!headers.Authorization) {
+            return { success: false };
+          }
+          
           const trackingResponse = await axios.post(
             `${config.backendUrl}/api/userchapterinteractions/recently-read`,
             { 
@@ -436,9 +449,7 @@ const Chapter = ({ novelId, chapterId }) => {
               novelId,
               moduleId: chapter?.moduleId
             },
-            {
-              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            }
+            { headers }
           );
           
           // Invalidate recently read cache to show updated data
@@ -554,11 +565,19 @@ const Chapter = ({ novelId, chapterId }) => {
   const { data: comments = [], isLoading: isCommentsLoading } = useQuery({
     queryKey: ['comments', `${novelId}-${chapterId}`],
     queryFn: async () => {
+      const headers = getAuthHeaders();
+      if (!headers.Authorization) {
+        return [];
+      }
+      
       const res = await axios.get(`${config.backendUrl}/api/comments`, {
         params: {
           contentType: 'chapters',
           contentId: `${novelId}-${chapterId}`,
           includeDeleted: false
+        },
+        headers: {
+          'Authorization': `Bearer ${getValidToken()}`
         }
       });
       return res.data;
@@ -863,12 +882,18 @@ const Chapter = ({ novelId, chapterId }) => {
       });
 
       // Make API call to update chapter
+      const headers = getAuthHeaders();
+      if (!headers.Authorization) {
+        setShowLoginModal(true);
+        return;
+      }
+      
       const {data} = await axios.put(
         `${config.backendUrl}/api/chapters/${chapterId}`,
         updateData,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            ...headers,
             'Content-Type': 'application/json' // Ensure proper content type
           }
         }
@@ -902,31 +927,23 @@ const Chapter = ({ novelId, chapterId }) => {
    */
   const handleLike = async () => {
     if (!user) {
-      alert('Vui lòng đăng nhập để thích chương này');
+      setShowLoginModal(true);
       return;
     }
 
-    // Add debouncing
-    const now = Date.now();
-    if (now - lastLikeTime < LIKE_COOLDOWN) {
-      return; // Ignore click if too soon after last click
-    }
-    setLastLikeTime(now);
-
-    // Optimistic update
-    const previousLiked = isLiked;
-    const newLikeCount = isLiked ? likeCount - 1 : likeCount + 1;
-
-    setIsLiked(!isLiked);
-    setLikeCount(newLikeCount);
-
     try {
+      const headers = getAuthHeaders();
+      if (!headers.Authorization) {
+        setShowLoginModal(true);
+        return;
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/like`,
         { chapterId },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${getValidToken()}`
           }
         }
       );
@@ -968,22 +985,23 @@ const Chapter = ({ novelId, chapterId }) => {
    */
   const handleBookmark = async () => {
     if (!user) {
-      alert('Vui lòng đăng nhập để đánh dấu chương này');
+      setShowLoginModal(true);
       return;
     }
 
-    // For logged in users, use API
-    const previousBookmarked = isBookmarked;
-    setIsBookmarked(!isBookmarked);
-
     try {
-      // Make API call to bookmark/unbookmark
+      const headers = getAuthHeaders();
+      if (!headers.Authorization) {
+        setShowLoginModal(true);
+        return;
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/bookmark`,
         { chapterId },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${getValidToken()}`
           }
         }
       );
@@ -1029,6 +1047,11 @@ const Chapter = ({ novelId, chapterId }) => {
   // Add rating mutation
   const rateMutation = useMutation({
     mutationFn: async (rating) => {
+      const headers = getAuthHeaders();
+      if (!headers.Authorization) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/rate`,
         { 
@@ -1036,9 +1059,7 @@ const Chapter = ({ novelId, chapterId }) => {
           rating 
         },
         {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+          headers
         }
       );
       return response.data;
@@ -1200,30 +1221,21 @@ const Chapter = ({ novelId, chapterId }) => {
   // Handle mode change
   const handleModeChange = async (newMode, currentContent) => {
     try {
-      // Get current content if not provided
-      const content = currentContent || (editorRef.current ? editorRef.current.getContent() : chapter.content);
+      const headers = getAuthHeaders();
+      if (!headers.Authorization) {
+        setShowLoginModal(true);
+        return;
+      }
       
-      // Update UI immediately for better perceived performance
-      queryClient.setQueryData(['chapter', chapterId], old => ({
-        ...old,
-        chapter: { 
-          ...old.chapter, 
-          mode: newMode,
-          content: content // Preserve current content
-        }
-      }));
-
-      // Make API call with both mode and content
-      await axios.put(
+      const response = await axios.put(
         `${config.backendUrl}/api/chapters/${chapterId}`,
-        { 
+        {
           mode: newMode,
-          content: content
+          content: currentContent
         },
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${getValidToken()}`
           }
         }
       );

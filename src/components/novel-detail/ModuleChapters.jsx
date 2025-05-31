@@ -251,7 +251,7 @@ const ModuleChapters = memo(({
           })}
         </div>
       ) : (
-        <div className="no-chapters">Không có chương trong tập này.</div>
+        <div className="module-no-chapters">Không có chương trong tập này.</div>
       )}
     </div>
   );

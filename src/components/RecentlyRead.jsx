@@ -16,12 +16,14 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/components/RecentlyRead.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from './LoadingSpinner';
 import { generateChapterUrl, generateLocalizedChapterUrl } from '../utils/slugUtils';
+import { getAuthHeaders } from '../utils/auth';
 
 // Memoized recently read card component for better performance
 const RecentlyReadCard = memo(({ readItem }) => {
@@ -84,13 +86,14 @@ const RecentlyRead = () => {
       if (!user) return [];
       
       try {
+        const headers = getAuthHeaders();
+        if (!headers.Authorization) {
+          return [];
+        }
+        
         const response = await axios.get(
           `${config.backendUrl}/api/userchapterinteractions/recently-read?limit=5&sort=lastReadAt`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
+          { headers }
         );
         
         // Filter and sort the data to ensure proper order

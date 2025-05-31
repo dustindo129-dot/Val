@@ -5,6 +5,9 @@ import config from '../config/config';
 import { Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import LoadingSpinner from './LoadingSpinner';
+import { useAuth } from '../context/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getAuthHeaders } from '../utils/auth';
 
 /**
  * Comment section component for novels
@@ -93,6 +96,8 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   const [likingComments, setLikingComments] = useState(new Set());
   const [sortOrder, setSortOrder] = useState(defaultSort);
 
+  const { data: authUser } = useAuth();
+
   // Check if user is banned
   useEffect(() => {
     const checkBanStatus = async () => {
@@ -112,40 +117,25 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     checkBanStatus();
   }, [user, isAuthenticated]);
 
-  // Fetch comments on component mount
+  // Fetch comments
+  const { data: commentsData = [], isLoading: commentsLoading, error: commentsError, refetch } = useQuery({
+    queryKey: ['comments', `${contentType}-${contentId}`],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/comments`, {
+        params: { contentType, contentId, sort: sortOrder }
+      });
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false
+  });
+
   useEffect(() => {
-    if (!contentId) return;
-    
-    const fetchComments = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`${config.backendUrl}/api/comments?contentType=${contentType}&contentId=${contentId}&sort=${sortOrder}`);
-        
-        // Check if response is ok before trying to parse JSON
-        if (!response.ok) {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Không thể tải bình luận');
-          } else {
-            throw new Error(`Server trả về ${response.status}: ${response.statusText}`);
-          }
-        }
-        
-        const data = await response.json();
-        // Organize comments before setting state
-        setComments(organizeComments(data));
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Lỗi tải bình luận:', err);
-        setError(err.message);
-        setIsLoading(false);
-      }
-    };
-    
-    fetchComments();
-  }, [contentId, contentType, sortOrder]);
-  
+    if (commentsData.length > 0) {
+      setComments(organizeComments(commentsData));
+    }
+  }, [commentsData]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -166,20 +156,17 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     setSubmitting(true);
     
     try {
-      const response = await fetch(`${config.backendUrl}/api/comments/${contentType}/${contentId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ text: sanitizeHTML(newComment) })
-      });
+      const response = await axios.post(
+        `${config.backendUrl}/api/comments`,
+        { text: sanitizeHTML(newComment) },
+        { headers: getAuthHeaders() }
+      );
       
       if (!response.ok) {
         throw new Error('Không thể đăng bình luận');
       }
       
-      const data = await response.json();
+      const data = response.data;
       
       // Add new comment to the list
       setComments(prevComments => [
@@ -226,12 +213,10 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     setDeleting(true);
     
     try {
-      const response = await fetch(`${config.backendUrl}/api/comments/${commentId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await axios.delete(
+        `${config.backendUrl}/api/comments/${commentId}`,
+        { headers: getAuthHeaders() }
+      );
       
       if (!response.ok) {
         throw new Error('Không thể xóa bình luận');
@@ -356,14 +341,11 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       setLikingComments(prev => new Set([...prev, commentId]));
 
       // Send the user ID in the request body to ensure it's available
-      const response = await fetch(`${config.backendUrl}/api/comments/${commentId}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ userId })
-      });
+      const response = await axios.post(
+        `${config.backendUrl}/api/comments/${commentId}/like`,
+        {},
+        { headers: getAuthHeaders() }
+      );
 
       if (!response.ok) {
         // Try to get more detailed error information
@@ -378,7 +360,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      const data = response.data;
 
       // Update comments state to reflect the new like status
       setComments(prevComments => 
@@ -476,14 +458,11 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       setSubmittingReply(true);
       
       try {
-        const response = await fetch(`${config.backendUrl}/api/comments/${comment._id}/replies`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({ text: sanitizeHTML(replyText) })
-        });
+        const response = await axios.post(
+          `${config.backendUrl}/api/comments/${comment._id}/replies`,
+          { text: sanitizeHTML(replyText) },
+          { headers: getAuthHeaders() }
+        );
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -497,58 +476,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         setIsReplying(false);
   
         // Refetch all comments to ensure correct structure
-        const commentsResponse = await fetch(`${config.backendUrl}/api/comments?contentType=${contentType}&contentId=${contentId}&sort=${sortOrder}`);
-        
-        if (commentsResponse.ok) {
-          const commentsData = await commentsResponse.json();
-          // Organize comments before setting state
-          setComments(organizeComments(commentsData));
-        } else {
-          // If refetch fails, apply optimistic update
-          const newReply = {
-            _id: data._id,
-            text: data.text,
-            user: {
-              username: user.username,
-              displayName: user.displayName || user.username,
-              avatar: user.avatar || ''
-            },
-            createdAt: new Date().toISOString(),
-            likes: [],
-            replies: [],
-            parentId: comment._id,
-            isDeleted: false,
-            adminDeleted: false
-          };
-          
-          // Helper function to update comments recursively
-          const updateCommentWithReply = (comments, parentId, newReply) => {
-            return comments.map(commentItem => {
-              // If this is the parent comment, add the reply to it directly
-              if (commentItem._id === parentId) {
-                return {
-                  ...commentItem,
-                  replies: [...(commentItem.replies || []), newReply]
-                };
-              }
-              
-              // If this comment has replies, check them recursively
-              if (commentItem.replies && commentItem.replies.length > 0) {
-                return {
-                  ...commentItem,
-                  replies: updateCommentWithReply(commentItem.replies, parentId, newReply)
-                };
-              }
-              
-              // Otherwise, return the comment unchanged
-              return commentItem;
-            });
-          };
-          
-          // Update comments state using our helper function
-          setComments(prevComments => updateCommentWithReply(prevComments, comment._id, newReply));
-        }
-        
+        refetch();
       } catch (err) {
         console.error('Error posting reply:', err);
         alert(err.message || 'Không thể đăng trả lời. Vui lòng thử lại.');
@@ -687,7 +615,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     setSortOrder(newSortOrder);
   };
 
-  if (isLoading) {
+  if (commentsLoading) {
     return (
       <div className="comments-loading">
         <LoadingSpinner size="medium" text="Đang tải bình luận..." />
@@ -695,8 +623,8 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     );
   }
   
-  if (error) {
-    return <div className="comments-error">Lỗi tải bình luận: {error}</div>;
+  if (commentsError) {
+    return <div className="comments-error">Lỗi tải bình luận: {commentsError.message}</div>;
   }
   
   return (

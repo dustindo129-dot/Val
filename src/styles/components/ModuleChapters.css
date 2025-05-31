@@ -126,4 +126,12 @@
 /* Make chapter items appear faded when they're part of a paid module */
 .module-chapter-item.chapter-mode-paid {
   border-left: 2px solid #3498db;
+}
+
+/* No chapters message styling for module chapters */
+.module-no-chapters {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
 } 
