@@ -18,6 +18,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from './LoadingSpinner';
 
 /**
  * ProtectedRoute Component
@@ -31,9 +32,14 @@ import { useAuth } from '../context/AuthContext';
  */
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Get user authentication state from context
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   // Get current location for redirect
   const location = useLocation();
+  
+  // Show loading spinner while authentication state is being restored
+  if (loading) {
+    return <LoadingSpinner />;
+  }
   
   // Check if user is authenticated and has admin or moderator role
   if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {

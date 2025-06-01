@@ -134,11 +134,6 @@
   gap: 1rem; /* Add space between title and actions */
 }
 
-.novel-list li:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
 /* Novel actions styles */
 .novel-actions {
   display: flex;
@@ -209,13 +204,11 @@
   min-width: 0; /* Enable text truncation */
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .novel-title-link {
-    color: #e0e0e0;
-  }
+.novel-title-link:hover {
+  color: #3498db;
 }
 
+/* Dark mode support */
 .note-editor {
   margin: 1rem 0;
 }
@@ -233,14 +226,13 @@
 
 /* Dark mode support */
 :root.dark-mode .note-editor .tox-tinymce {
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 4px;
-  background: var(--input-bg, #fff);
+  border-color: #4a5568;
+  background: #1a202c;
 }
 
 :root.dark-mode .note-editor .tox-toolbar {
-  background: var(--bg-secondary, #f8f9fa);
-  border-bottom: 1px solid var(--border-color, #ddd) ;
+  background: #2d3748;
+  border-bottom-color: #4a5568;
 }
 
 /* Remove old note-input styles */
@@ -629,24 +621,592 @@
 /* Dark mode support */
 :root.dark-mode .admin-dashboard {
   background-color: #1a1a1a;
+  color: #e2e8f0;
 }
 
+/* Section titles */
+:root.dark-mode .section-title {
+  color: #e2e8f0;
+  border-bottom-color: #4a5568;
+}
+
+/* Novel form dark mode */
+:root.dark-mode .novel-form {
+  background: #2d3748;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .novel-form input,
+:root.dark-mode .novel-form textarea {
+  background: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .novel-form input:focus,
+:root.dark-mode .novel-form textarea:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+}
+
+:root.dark-mode .novel-form button {
+  background: #4299e1;
+}
+
+:root.dark-mode .novel-form button:hover {
+  background: #3182ce;
+}
+
+:root.dark-mode .novel-form .discard-button,
+:root.dark-mode .novel-form .cancel-button {
+  background: #718096;
+}
+
+:root.dark-mode .novel-form .discard-button:hover,
+:root.dark-mode .novel-form .cancel-button:hover {
+  background: #4a5568;
+}
+
+/* Novel list dark mode */
+:root.dark-mode .novel-list {
+  background: #2d3748;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .novel-list li {
+  background: #1a202c;
+  border-color: #4a5568;
+}
+
+/* Novel title links */
+:root.dark-mode .novel-title-link {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .novel-title-link:hover {
+  color: #63b3ed;
+}
+
+/* Novel actions buttons */
+:root.dark-mode .novel-actions button:not(.delete) {
+  background: #4299e1;
+}
+
+:root.dark-mode .novel-actions button:not(.delete):hover {
+  background: #3182ce;
+}
+
+:root.dark-mode .novel-actions .delete {
+  background: #e53e3e;
+}
+
+:root.dark-mode .novel-actions .delete:hover {
+  background: #c53030;
+}
+
+/* Status dropdown */
+:root.dark-mode .status-dropdown {
+  background-color: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .status-dropdown:focus {
+  border-color: #63b3ed;
+}
+
+/* Error messages */
+:root.dark-mode .error {
+  color: #fc8181;
+  background: #2d1b1b;
+  border: 1px solid #e53e3e;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* Success messages */
+:root.dark-mode .success {
+  color: #68d391;
+  background: #1a2e1a;
+  border: 1px solid #38a169;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* Novel balance and budget */
 :root.dark-mode .novel-balance {
-  color: var(--text-secondary-dark, #adb5bd);
+  color: #a0aec0;
 }
 
 :root.dark-mode .budget-display {
-  color: var(--success-color-dark, #2ecc71);
+  color: #68d391;
 }
 
 :root.dark-mode .balance-display {
-  color: var(--text-secondary-dark, #adb5bd);
+  color: #a0aec0;
+}
+
+:root.dark-mode .edit-balance-btn {
+  color: #63b3ed;
+}
+
+:root.dark-mode .edit-balance-btn:hover {
+  color: #4299e1;
 }
 
 :root.dark-mode .balance-edit-input {
-  background: var(--input-bg-dark, #2d3748);
-  border-color: var(--border-color-dark, #4a5568);
-  color: var(--text-color-dark, #e2e8f0);
+  background: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .save-balance-btn {
+  background: #38a169;
+}
+
+:root.dark-mode .save-balance-btn:hover {
+  background: #2f855a;
+}
+
+:root.dark-mode .cancel-balance-btn {
+  background: #718096;
+}
+
+:root.dark-mode .cancel-balance-btn:hover {
+  background: #4a5568;
+}
+
+/* Staff section */
+:root.dark-mode .staff-section {
+  background-color: #2d3748;
+}
+
+:root.dark-mode .staff-header h4 {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .staff-item {
+  background-color: #1a202c;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .staff-item input,
+:root.dark-mode .staff-item select {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .add-staff-btn {
+  background-color: #38a169;
+}
+
+:root.dark-mode .add-staff-btn:hover {
+  background-color: #2f855a;
+}
+
+:root.dark-mode .remove-staff-btn {
+  color: #f56565;
+}
+
+:root.dark-mode .remove-staff-btn:hover {
+  color: #e53e3e;
+}
+
+/* Genres section */
+:root.dark-mode .genres-section input[type="text"] {
+  background-color: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .genre-columns {
+  background: #2d3748;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .genre-column h4 {
+  color: #e2e8f0;
+  border-bottom-color: #4a5568;
+}
+
+:root.dark-mode .genre-checkbox {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .genre-checkbox:hover {
+  background: #4a5568;
+  border-radius: 3px;
+}
+
+/* Illustration upload */
+:root.dark-mode .illustration-upload {
+  border-color: #4a5568;
+  background: #2d3748;
+}
+
+:root.dark-mode .illustration-upload-label {
+  background-color: #4299e1;
+}
+
+:root.dark-mode .illustration-upload-label:hover {
+  background-color: #3182ce;
+}
+
+:root.dark-mode .illustration-upload-label:disabled {
+  background-color: #718096;
+}
+
+/* Note editor TinyMCE */
+:root.dark-mode .note-editor .tox-tinymce {
+  border-color: #4a5568;
+  background: #1a202c;
+}
+
+:root.dark-mode .note-editor .tox-toolbar {
+  background: #2d3748;
+  border-bottom-color: #4a5568;
+}
+
+/* Description editor TinyMCE */
+:root.dark-mode .description-editor .tox-tinymce {
+  border-color: #4a5568;
+  background: #1a202c;
+}
+
+:root.dark-mode .description-editor .tox-toolbar {
+  background: #2d3748;
+  border-bottom-color: #4a5568;
+}
+
+/* Comprehensive TinyMCE Dark Mode Styling */
+:root.dark-mode .tox:not(.tox-tinymce-inline) .tox-editor-header {
+  background-color: #2d3748;
+  border-bottom: 1px solid #4a5568;
+}
+
+:root.dark-mode .tox .tox-toolbar,
+:root.dark-mode .tox .tox-toolbar__overflow,
+:root.dark-mode .tox .tox-toolbar__primary {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .tox .tox-toolbar-overlord {
+  background-color: #2d3748;
+}
+
+/* TinyMCE Buttons */
+:root.dark-mode .tox .tox-tbtn {
+  background-color: #4a5568;
+  color: #e2e8f0;
+  border: 1px solid #718096;
+  border-radius: 3px;
+  margin: 1px;
+}
+
+:root.dark-mode .tox .tox-tbtn:hover {
+  background-color: #63b3ed;
+  color: #1a202c;
+  border-color: #63b3ed;
+}
+
+:root.dark-mode .tox .tox-tbtn--enabled {
+  background-color: #4299e1;
+  color: #ffffff;
+  border-color: #4299e1;
+}
+
+:root.dark-mode .tox .tox-tbtn--enabled:hover {
+  background-color: #3182ce;
+  border-color: #3182ce;
+}
+
+:root.dark-mode .tox .tox-tbtn svg {
+  fill: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-tbtn:hover svg {
+  fill: #1a202c;
+}
+
+:root.dark-mode .tox .tox-tbtn--enabled svg {
+  fill: #ffffff;
+}
+
+/* TinyMCE Edit Area */
+:root.dark-mode .tox .tox-edit-area {
+  background-color: #1a202c;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .tox .tox-edit-area iframe {
+  background-color: #1a202c !important;
+}
+
+/* TinyMCE Content Area */
+:root.dark-mode .tox .tox-editor-container .tox-editor-header {
+  background-color: #2d3748;
+  border-bottom: 1px solid #4a5568;
+}
+
+/* TinyMCE Status Bar */
+:root.dark-mode .tox .tox-statusbar {
+  background-color: #2d3748;
+  border-top: 1px solid #4a5568;
+  color: #e2e8f0;
+  min-height: 32px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+}
+
+:root.dark-mode .tox .tox-statusbar__text-container {
+  color: #e2e8f0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+:root.dark-mode .tox .tox-statusbar__path {
+  color: #a0aec0;
+}
+
+:root.dark-mode .tox .tox-statusbar__wordcount {
+  color: #63b3ed;
+  font-weight: 600;
+  background-color: #4a5568;
+  padding: 1px 4px;
+  border-radius: 2px;
+  border: 1px solid #718096;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* Additional status bar elements */
+:root.dark-mode .tox .tox-statusbar__path-item {
+  color: #a0aec0;
+}
+
+:root.dark-mode .tox .tox-statusbar__path-divider {
+  color: #718096;
+}
+
+/* Status bar resize handle */
+:root.dark-mode .tox .tox-statusbar__resize-handle {
+  color: #718096;
+}
+
+:root.dark-mode .tox .tox-statusbar__resize-handle:hover {
+  color: #e2e8f0;
+}
+
+/* TinyMCE Dropdowns and Menus */
+:root.dark-mode .tox .tox-collection {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .tox .tox-collection__item {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-collection__item:hover {
+  background-color: #4a5568;
+}
+
+:root.dark-mode .tox .tox-collection__item--enabled {
+  background-color: #4299e1;
+  color: #ffffff;
+}
+
+/* TinyMCE Select Boxes */
+:root.dark-mode .tox .tox-selectfield select {
+  background-color: #4a5568;
+  border: 1px solid #718096;
+  color: #e2e8f0;
+  border-radius: 3px;
+}
+
+:root.dark-mode .tox .tox-selectfield select:hover {
+  background-color: #63b3ed;
+  color: #1a202c;
+  border-color: #63b3ed;
+}
+
+:root.dark-mode .tox .tox-listbox {
+  background-color: #4a5568;
+  border: 1px solid #718096;
+  color: #e2e8f0;
+  border-radius: 3px;
+}
+
+:root.dark-mode .tox .tox-listbox:hover {
+  background-color: #63b3ed;
+  color: #1a202c;
+  border-color: #63b3ed;
+}
+
+/* TinyMCE Split Buttons */
+:root.dark-mode .tox .tox-split-button {
+  background-color: #4a5568;
+  border: 1px solid #718096;
+  border-radius: 3px;
+}
+
+:root.dark-mode .tox .tox-split-button:hover {
+  background-color: #63b3ed;
+  border-color: #63b3ed;
+}
+
+:root.dark-mode .tox .tox-split-button__chevron {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-split-button:hover .tox-split-button__chevron {
+  color: #1a202c;
+}
+
+/* TinyMCE Toolbar Separator */
+:root.dark-mode .tox .tox-toolbar__group {
+  border-color: #718096;
+}
+
+/* TinyMCE Icons and Text */
+:root.dark-mode .tox .tox-icon svg {
+  fill: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-tbtn:hover .tox-icon svg {
+  fill: #1a202c;
+}
+
+:root.dark-mode .tox .tox-tbtn--enabled .tox-icon svg {
+  fill: #ffffff;
+}
+
+/* TinyMCE Dialog/Modal */
+:root.dark-mode .tox .tox-dialog {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-dialog__header {
+  background-color: #2d3748;
+  border-bottom-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-dialog__body {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-dialog__footer {
+  background-color: #2d3748;
+  border-top-color: #4a5568;
+}
+
+/* TinyMCE Input Fields in Dialogs */
+:root.dark-mode .tox .tox-textfield {
+  background-color: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-textfield:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+}
+
+/* TinyMCE Tooltip */
+:root.dark-mode .tox .tox-tooltip {
+  background-color: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .tox .tox-tooltip__arrow {
+  border-top-color: #1a202c;
+}
+
+/* TinyMCE Editor Content Styling */
+:root.dark-mode .description-editor,
+:root.dark-mode .note-editor {
+  background-color: #2d3748;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Container styling for better integration */
+:root.dark-mode .description-editor .tox-tinymce,
+:root.dark-mode .note-editor .tox-tinymce {
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Delete confirmation modal */
+:root.dark-mode .delete-confirmation-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+:root.dark-mode .delete-confirmation-modal {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+:root.dark-mode .delete-confirmation-modal h3 {
+  color: #f56565;
+}
+
+:root.dark-mode .delete-confirmation-modal p {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .confirmation-input {
+  background: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .confirmation-input:focus {
+  border-color: #63b3ed;
+  outline: none;
+}
+
+:root.dark-mode .confirm-delete-btn.enabled {
+  background-color: #e53e3e;
+}
+
+:root.dark-mode .confirm-delete-btn.disabled {
+  background-color: #4a5568;
+  color: #a0aec0;
+}
+
+:root.dark-mode .cancel-delete-btn {
+  background-color: #4a5568;
+  color: #e2e8f0;
+  border-color: #718096;
+}
+
+:root.dark-mode .cancel-delete-btn:hover {
+  background-color: #718096;
+}
+
+/* Non-selectable text in confirmation modals */
+.non-selectable-text {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
 }
 
 /* Responsive styles */

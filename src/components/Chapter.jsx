@@ -29,7 +29,7 @@ import LoadingSpinner from './LoadingSpinner';
 // Import utilities 
 import {
   useReadingSettings, useReadingProgress, getSafeHtml,
-  unescapeHtml, countWords, formatDate, debugWordCount
+  unescapeHtml, countWords, countWordsSync, formatDate
 } from './chapter/ChapterUtils';
 
 /**
@@ -619,18 +619,38 @@ const Chapter = ({ novelId, chapterId }) => {
     }
   }, [interactions, chapter]);
 
-  // Effect to calculate word count - always use TinyMCE's algorithm
+  // Effect to calculate word count - prefer stored TinyMCE word count, fallback to calculation
   useEffect(() => {
-    if (chapter && chapter.content) {
-      // If we're in edit mode and have an editor, use TinyMCE's live word count
-      if (isEditing && editorRef.current && editorRef.current.plugins && editorRef.current.plugins.wordcount) {
-        const count = editorRef.current.plugins.wordcount.getCount();
-        setWordCount(count);
-      } else {
-        // Always use TinyMCE's word counting algorithm on the HTML content
-        const count = countWords(chapter.content);
-        setWordCount(count);
-      }
+    if (!chapter || !chapter.content) return;
+
+    // If we're in edit mode and have an editor, use TinyMCE's live word count
+    if (isEditing && editorRef.current && editorRef.current.plugins && editorRef.current.plugins.wordcount) {
+      const count = editorRef.current.plugins.wordcount.getCount();
+      setWordCount(count);
+      return;
+    }
+
+    // Use stored TinyMCE word count if available (preferred)
+    if (typeof chapter.wordCount === 'number' && chapter.wordCount > 0) {
+      setWordCount(chapter.wordCount);
+      return;
+    }
+
+    // Fallback: Calculate word count using TinyMCE directly
+    const wordCountResult = countWords(chapter.content);
+    
+    if (typeof wordCountResult === 'number') {
+      // Synchronous result (fallback algorithm)
+      setWordCount(wordCountResult);
+    } else if (wordCountResult && typeof wordCountResult.then === 'function') {
+      // Asynchronous result (TinyMCE direct method)
+      wordCountResult
+        .then(count => setWordCount(count))
+        .catch(error => {
+          console.error('Error getting TinyMCE word count:', error);
+          // Final fallback to sync algorithm
+          setWordCount(countWordsSync(chapter.content));
+        });
     }
   }, [chapter, isEditing]);
 
@@ -822,6 +842,12 @@ const Chapter = ({ novelId, chapterId }) => {
         raw: true       // Get raw unprocessed HTML
       });
       
+      // Get the current word count from TinyMCE editor
+      let currentWordCount = 0;
+      if (editorRef.current && editorRef.current.plugins && editorRef.current.plugins.wordcount) {
+        currentWordCount = editorRef.current.plugins.wordcount.getCount();
+      }
+      
       // Find the hidden input that contains the editedMode value
       const modeInputs = document.querySelectorAll('input[type="hidden"]');
       let updatedMode = chapter.mode;
@@ -860,7 +886,8 @@ const Chapter = ({ novelId, chapterId }) => {
         content: updatedContent,
         mode: updatedMode,
         footnotes: footnotes,
-        chapterBalance: updatedMode === 'paid' ? updatedChapterBalance : 0
+        chapterBalance: updatedMode === 'paid' ? updatedChapterBalance : 0,
+        wordCount: currentWordCount // Add TinyMCE word count to the update data
       };
 
       // Optimistic UI update
@@ -877,6 +904,7 @@ const Chapter = ({ novelId, chapterId }) => {
           mode: updatedMode,
           footnotes: footnotes,
           chapterBalance: updatedMode === 'paid' ? updatedChapterBalance : 0,
+          wordCount: currentWordCount, // Update local cache with TinyMCE word count
           updatedAt: new Date().toISOString()
         }
       });

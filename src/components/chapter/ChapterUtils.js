@@ -113,6 +113,17 @@ export const unescapeHtml = (html) => {
 };
 
 /**
+ * WORD COUNTING APPROACH:
+ * 
+ * 1. When editing: Use TinyMCE's live word count (editor.plugins.wordcount.getCount())
+ * 2. When viewing: Prefer stored wordCount from database (calculated during save)
+ * 3. Fallback: Use getTinyMCEWordCountDirect() to create temporary TinyMCE instance
+ * 4. Final fallback: Use countWordsWithTinyMCEAlgorithm() (replicates TinyMCE algorithm)
+ * 
+ * This ensures word counts match TinyMCE exactly while being performant.
+ */
+
+/**
  * Counts words using TinyMCE's exact word counting algorithm
  * This replicates TinyMCE's wordcount plugin behavior exactly
  * @param {string} htmlContent - HTML content to count words in
@@ -171,17 +182,78 @@ export const countWordsWithTinyMCEAlgorithm = (htmlContent) => {
 };
 
 /**
- * Counts words using TinyMCE's exact word counting algorithm
+ * Gets word count directly from TinyMCE by creating a temporary editor instance
+ * This ensures the word count matches exactly what TinyMCE would show
+ * @param {string} htmlContent - HTML content to count words in
+ * @returns {Promise<number>} Promise that resolves to the exact TinyMCE word count
+ */
+export const getTinyMCEWordCountDirect = (htmlContent) => {
+  return new Promise((resolve) => {
+    if (!htmlContent || typeof htmlContent !== 'string') {
+      resolve(0);
+      return;
+    }
+
+    // Create a temporary hidden container
+    const tempContainer = document.createElement('div');
+    tempContainer.style.display = 'none';
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    document.body.appendChild(tempContainer);
+
+    // Create a temporary textarea
+    const tempTextarea = document.createElement('textarea');
+    tempContainer.appendChild(tempTextarea);
+
+    // Initialize TinyMCE on the temporary textarea
+    window.tinymce.init({
+      target: tempTextarea,
+      plugins: ['wordcount'],
+      menubar: false,
+      toolbar: false,
+      statusbar: false,
+      height: 100,
+      setup: (editor) => {
+        editor.on('init', () => {
+          // Set the content
+          editor.setContent(htmlContent);
+          
+          // Get the word count
+          setTimeout(() => {
+            let wordCount = 0;
+            if (editor.plugins && editor.plugins.wordcount) {
+              wordCount = editor.plugins.wordcount.getCount();
+            }
+            
+            // Clean up
+            editor.destroy();
+            document.body.removeChild(tempContainer);
+            
+            resolve(wordCount);
+          }, 100);
+        });
+      }
+    });
+  });
+};
+
+/**
+ * Counts words using TinyMCE directly when possible, falls back to algorithm
  * @param {string|object} content - HTML content string or TinyMCE editor instance
- * @returns {number} Word count
+ * @returns {number|Promise<number>} Word count (immediate if editor instance, Promise if HTML string)
  */
 export const countWords = (content) => {
-  // If content is a TinyMCE editor instance, use its word count plugin
+  // If content is a TinyMCE editor instance, use its word count plugin directly
   if (content && typeof content === 'object' && content.plugins && content.plugins.wordcount) {
     return content.plugins.wordcount.getCount();
   }
   
-  // If content is an HTML string, use TinyMCE's exact algorithm
+  // If content is an HTML string and TinyMCE is available, use direct method
+  if (typeof content === 'string' && window.tinymce) {
+    return getTinyMCEWordCountDirect(content);
+  }
+  
+  // Fallback to algorithm-based counting if TinyMCE is not available
   if (typeof content === 'string') {
     return countWordsWithTinyMCEAlgorithm(content);
   }
@@ -190,15 +262,52 @@ export const countWords = (content) => {
 };
 
 /**
- * Gets word count from TinyMCE editor instance
- * @param {object} editor - TinyMCE editor instance
- * @returns {number} Word count from TinyMCE
+ * Synchronous word count using TinyMCE algorithm (for backward compatibility)
+ * @param {string} content - HTML content string
+ * @returns {number} Word count
  */
-export const getTinyMCEWordCount = (editor) => {
-  if (!editor || !editor.plugins || !editor.plugins.wordcount) {
-    return 0;
+export const countWordsSync = (content) => {
+  if (typeof content === 'string') {
+    return countWordsWithTinyMCEAlgorithm(content);
   }
-  return editor.plugins.wordcount.getCount();
+  return 0;
+};
+
+/**
+ * Batch update word counts for chapters using TinyMCE
+ * Useful for migrating existing chapters to have accurate TinyMCE word counts
+ * @param {Array} chapters - Array of chapter objects with content
+ * @returns {Promise<Array>} Promise that resolves to array of chapters with updated word counts
+ */
+export const batchUpdateWordCounts = async (chapters) => {
+  if (!window.tinymce || !Array.isArray(chapters)) {
+    return chapters;
+  }
+
+  const updatedChapters = [];
+  
+  for (const chapter of chapters) {
+    if (chapter.content && typeof chapter.content === 'string') {
+      try {
+        const wordCount = await getTinyMCEWordCountDirect(chapter.content);
+        updatedChapters.push({
+          ...chapter,
+          wordCount: wordCount
+        });
+      } catch (error) {
+        console.warn(`Failed to get word count for chapter ${chapter._id}:`, error);
+        // Fallback to algorithm-based counting
+        updatedChapters.push({
+          ...chapter,
+          wordCount: countWordsSync(chapter.content)
+        });
+      }
+    } else {
+      updatedChapters.push(chapter);
+    }
+  }
+  
+  return updatedChapters;
 };
 
 /**
@@ -239,118 +348,4 @@ export const scrollToTop = () => {
     window.scrollTo({top: 0, behavior: 'smooth'});
     setTimeout(resolve, 500);
   });
-};
-
-/**
- * Debug function to analyze word counting differences
- * @param {string} htmlContent - HTML content to analyze
- * @returns {object} Debug information about word counting
- */
-export const debugWordCount = (htmlContent) => {
-  if (!htmlContent) return { originalCount: 0, steps: [] };
-  
-  const steps = [];
-  
-  // Step 1: Create temp div
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = htmlContent;
-  steps.push({ step: 'HTML parsed', preview: htmlContent.substring(0, 100) + '...' });
-  
-  // Step 2: Extract text using our algorithm
-  const textNodes = [];
-  
-  function extractText(node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent || '';
-      if (text.trim()) {
-        textNodes.push(text);
-      }
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const tagName = node.tagName.toLowerCase();
-      
-      // Skip empty block elements
-      if (['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
-        const textContent = node.textContent || '';
-        const hasOnlyWhitespace = /^\s*$/.test(textContent.replace(/&nbsp;/g, ''));
-        if (hasOnlyWhitespace) {
-          return;
-        }
-      }
-      
-      // Process child nodes
-      for (let child of node.childNodes) {
-        extractText(child);
-        
-        // Add space between block elements
-        if (child.nodeType === Node.ELEMENT_NODE) {
-          const childTag = child.tagName.toLowerCase();
-          if (['p', 'div', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li'].includes(childTag)) {
-            textNodes.push(' ');
-          }
-        }
-      }
-    }
-  }
-  
-  extractText(tempDiv);
-  let text = textNodes.join('');
-  steps.push({ step: 'Text extracted', preview: text.substring(0, 100) + '...', length: text.length });
-  
-  // Step 3: Decode HTML entities
-  const originalText = text;
-  text = text.replace(/&nbsp;/g, ' ')
-             .replace(/&amp;/g, '&')
-             .replace(/&lt;/g, '<')
-             .replace(/&gt;/g, '>')
-             .replace(/&quot;/g, '"')
-             .replace(/&#39;/g, "'")
-             .replace(/&thinsp;/g, ' ')
-             .replace(/&ensp;/g, ' ')
-             .replace(/&emsp;/g, ' ');
-  
-  if (text !== originalText) {
-    steps.push({ step: 'HTML entities decoded', preview: text.substring(0, 100) + '...', length: text.length });
-  }
-  
-  // Step 4: Apply word boundaries
-  const beforeBoundaries = text;
-  const wordBoundaryChars = [
-    '\\s', '\\u00A0', '\\u1680', '\\u2000-\\u200A', '\\u2028', '\\u2029', '\\u202F', '\\u205F', '\\u3000', '\\uFEFF',
-    '—', '–', '\\?', '!', ',', ';', '/', '\\^', '№', '~', '\\+', '\\|', '\\$', '`'
-  ];
-  
-  const wordBoundaryRegex = new RegExp(`[${wordBoundaryChars.join('')}]+`, 'g');
-  text = text.replace(wordBoundaryRegex, ' ');
-  
-  if (text !== beforeBoundaries) {
-    steps.push({ step: 'Word boundaries applied', preview: text.substring(0, 100) + '...', length: text.length });
-  }
-  
-  // Step 5: Handle periods and colons
-  const beforePeriodColon = text;
-  text = text.replace(/\s+\.\s+/g, ' ');
-  text = text.replace(/\s+:\s+/g, ' ');
-  
-  if (text !== beforePeriodColon) {
-    steps.push({ step: 'Periods and colons handled', preview: text.substring(0, 100) + '...', length: text.length });
-  }
-  
-  // Step 6: Normalize whitespace
-  const beforeNormalize = text;
-  text = text.replace(/\s+/g, ' ').trim();
-  
-  if (text !== beforeNormalize) {
-    steps.push({ step: 'Whitespace normalized', preview: text.substring(0, 100) + '...', length: text.length });
-  }
-  
-  // Step 7: Count words
-  const words = text.split(' ').filter(word => word.length > 0);
-  steps.push({ step: 'Words counted', wordCount: words.length, sampleWords: words.slice(0, 10) });
-  
-  return {
-    originalCount: words.length,
-    steps,
-    finalText: text,
-    wordSample: words.slice(0, 20)
-  };
 }; 

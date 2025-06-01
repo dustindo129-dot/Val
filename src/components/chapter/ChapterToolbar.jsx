@@ -31,12 +31,12 @@ const ChapterToolbar = ({
       </div>
 
       <div className="action-toolbar-right">
-        {/* Stats */}
+        {/* Stats - Word count matches TinyMCE's exact counting algorithm */}
         <div className="chapter-stats">
           <span className="chapter-stat-item">
             <FontAwesomeIcon icon={faEye}/> {viewCount} lượt xem
           </span>
-          <span className="chapter-stat-item">
+          <span className="chapter-stat-item" title="Word count calculated using TinyMCE's algorithm">
             <FontAwesomeIcon icon={faFont}/> {wordCount} từ
           </span>
         </div>

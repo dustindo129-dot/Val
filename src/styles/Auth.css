@@ -106,7 +106,8 @@
 }
 
 /* Submit button styles */
-.auth-submit-button {
+.auth-submit-button,
+.submit-button {
   width: 100%;
   padding: 0.75rem;
   background-color: #0099ff;
@@ -119,11 +120,13 @@
 }
 
 /* Submit button hover and disabled states */
-.auth-submit-button:hover:not(:disabled) {
+.auth-submit-button:hover:not(:disabled),
+.submit-button:hover:not(:disabled) {
   background-color: #007acc;
 }
 
-.auth-submit-button:disabled {
+.auth-submit-button:disabled,
+.submit-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
