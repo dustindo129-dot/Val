@@ -76,7 +76,7 @@ const CommentCard = memo(({ comment }) => {
     
     // Use both novel title and chapter title if available
     if (comment.contentTitle && comment.chapterTitle) {
-      linkTitle = `${comment.contentTitle}: ${comment.chapterTitle}`;
+      linkTitle = `${comment.contentTitle} - ${comment.chapterTitle}`;
     } else if (comment.chapterTitle) {
       linkTitle = comment.chapterTitle;
     } else if (comment.contentTitle) {
