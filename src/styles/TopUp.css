@@ -658,14 +658,14 @@
   max-width: 600px;
 }
 
-/* Bank instructions styles - updated to match support message theme */
+/* Bank instructions styles - updated to white theme */
 .bank-instructions {
-  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
-  border: 2px solid #ff6b6b;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 2px solid #dee2e6;
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .bank-instructions p {
@@ -675,12 +675,12 @@
 }
 
 .bank-transfer-info {
-  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
-  border: 1px solid #ffb3b3;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e9ecef;
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .info-row {
@@ -696,7 +696,7 @@
 
 .info-label {
   font-weight: 600;
-  color: #ff6b6b;
+  color: #495057;
   width: 140px;
   margin-right: 1rem;
 }
@@ -710,12 +710,12 @@
 
 .info-amount {
   font-weight: 700;
-  color: #ff6b6b;
+  color: #007bff;
   font-size: 1.2rem;
 }
 
 .copy-button {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
   border: none;
   color: white;
   cursor: pointer;
@@ -728,7 +728,7 @@
 }
 
 .copy-button:hover {
-  background: linear-gradient(135deg, #ff5252 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
   transform: translateY(-1px);
 }
 
@@ -739,18 +739,18 @@
 }
 
 .transfer-notes {
-  background: linear-gradient(135deg, #fff8f8 0%, #ffebeb 100%);
-  border: 2px solid #ffb3b3;
-  border-left: 4px solid #ff6b6b;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  border-left: 4px solid #6c757d;
   border-radius: 8px;
   padding: 1rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .note-title {
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: #ff6b6b;
+  color: #495057;
   font-size: 1.1rem;
 }
 
@@ -770,13 +770,13 @@
 }
 
 .note-list a {
-  color: #ff6b6b;
+  color: #007bff;
   text-decoration: none;
   font-weight: 500;
 }
 
 .note-list a:hover {
-  color: #ff5252;
+  color: #0056b3;
   text-decoration: underline;
 }
 
@@ -790,7 +790,8 @@
 }
 
 :root.dark-mode .bank-instructions {
-  color: #1a1a1a;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+  border-color: #6c757d;
 }
 
 :root.dark-mode .bank-qr-container,
@@ -819,7 +820,9 @@
 }
 
 :root.dark-mode .transfer-notes {
-  background-color: #3a341d;
+  background-color: #3a2525;
+  border-color: #6c757d;
+  border-left-color: #adb5bd;
 }
 
 :root.dark-mode .note-title,
@@ -1587,17 +1590,17 @@
   }
 }
 
-/* Amount selection styles */
+/* Amount selection styles - updated to white theme */
 .amount-selection {
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #ffb3b3;
+  border-bottom: 1px solid #dee2e6;
   padding-bottom: 1.5rem;
 }
 
 .amount-selection h3 {
   margin-bottom: 1rem;
   font-size: 1.1rem;
-  color: #ff6b6b;
+  color: #495057;
   text-align: center;
   font-weight: 600;
 }
@@ -1614,12 +1617,12 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
-  border: 2px solid #ffb3b3;
+  border: 2px solid #dee2e6;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -1630,14 +1633,14 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #ff6b6b, #ff5252);
+  background: linear-gradient(90deg, #6c757d, #495057);
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
 
 .amount-option:hover {
-  border-color: #ff6b6b;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+  border-color: #6c757d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
@@ -1653,7 +1656,7 @@
   top: 1rem;
   left: 1rem;
   transform: scale(1.1);
-  accent-color: #ff6b6b;
+  accent-color: #6c757d;
   cursor: pointer;
 }
 
@@ -1662,15 +1665,15 @@
 }
 
 .amount-option:has(input[type="radio"]:checked) {
-  border-color: #ff6b6b;
-  background: linear-gradient(135deg, #fff0f0 0%, #ffebeb 100%);
-  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.25);
+  border-color: #6c757d;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   transform: translateY(-3px);
 }
 
 .amount-option:has(input[type="radio"]:checked)::before {
   transform: scaleX(1);
-  background: linear-gradient(90deg, #ff8e8e, #ff6b6b);
+  background: linear-gradient(90deg, #495057, #6c757d);
 }
 
 .option-details {
@@ -1682,9 +1685,9 @@
 }
 
 .option-price {
-  font-weight: 600;
-  font-size: 1rem;
-  color: #ff6b6b;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #495057;
   margin-bottom: 0.125rem;
   width: 100%;
 }
@@ -1704,7 +1707,7 @@
   width: 100%;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #495057;
+  color: #6c757d;
   font-style: italic;
   line-height: 1.3;
   margin-top: 0.125rem;
@@ -1733,40 +1736,40 @@
 
 /* Dark mode styles for amount selection */
 :root.dark-mode .amount-selection {
-  border-bottom-color: #ff8e8e;
+  border-bottom-color: #6c757d;
 }
 
 :root.dark-mode .amount-selection h3 {
-  color: #ff8e8e;
+  color: #adb5bd;
 }
 
 :root.dark-mode .amount-option {
-  border-color: #ff8e8e;
-  background: linear-gradient(135deg, #2d1f1f 0%, #3a2525 100%);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+  border-color: #6c757d;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 :root.dark-mode .amount-option::before {
-  background: linear-gradient(90deg, #ff8e8e, #ff6b6b);
+  background: linear-gradient(90deg, #adb5bd, #6c757d);
 }
 
 :root.dark-mode .amount-option:hover {
-  border-color: #ff6b6b;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  border-color: #adb5bd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 :root.dark-mode .amount-option:has(input[type="radio"]:checked) {
-  border-color: #ff6b6b;
-  background: linear-gradient(135deg, #3a2525 0%, #2d1f1f 100%);
-  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+  border-color: #adb5bd;
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 :root.dark-mode .amount-option:has(input[type="radio"]:checked)::before {
-  background: linear-gradient(90deg, #ff6b6b, #ff5252);
+  background: linear-gradient(90deg, #6c757d, #495057);
 }
 
 :root.dark-mode .option-price {
-  color: #ff8e8e;
+  color: #adb5bd;
 }
 
 :root.dark-mode .option-balance {
@@ -1774,7 +1777,7 @@
 }
 
 :root.dark-mode .option-note {
-  color: #adb5bd;
+  color: #6c757d;
 }
 
 /* Responsive styles for amount selection */
@@ -1969,14 +1972,14 @@
   min-width: 0;
 }
 
-/* Support message styling */
+/* Support message styling - updated to white theme */
 .support-message {
-  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
-  border: 2px solid #ff6b6b;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 2px solid #dee2e6;
   border-radius: 12px;
   padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -1995,14 +1998,14 @@
 }
 
 .support-title {
-  color: #ff6b6b;
+  color: #495057;
   font-size: 1.2rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
   text-align: center;
   font-family: Great Vibes, cursive;
   letter-spacing: .02em;
-  text-shadow: 0 2px 8px #fbcfe8;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .support-content {
@@ -2012,11 +2015,11 @@
 
 .support-content p {
   margin-bottom: 1.5rem;
-  color: #4e3b47;
+  color: #495057;
   font-size: 1.05rem;
   font-weight: 400;
   line-height: 2;
-  font-family: "Noto Serif", "Source Serif Pro", Cambria, serif;;
+  font-family: "Noto Serif", "Source Serif Pro", Cambria, serif;
   font-style: italic;
 }
 
@@ -2025,7 +2028,7 @@
 }
 
 .support-highlight-inline {
-  background: linear-gradient(90deg, #ff6b6b 0%, #ff8e8e 100%);
+  background: linear-gradient(90deg, #6c757d 0%, #495057 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2040,11 +2043,11 @@
 }
 
 .support-decoration svg {
-  filter: drop-shadow(0 1px 2px rgba(255, 107, 107, 0.4));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 .qr-button {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -2056,13 +2059,13 @@
   display: block;
   margin: 1rem auto;
   min-width: 150px;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .qr-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ff5252 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .qr-button:disabled {
@@ -2075,12 +2078,13 @@
 
 /* Dark mode styles for support message */
 :root.dark-mode .support-message {
-  background: linear-gradient(135deg, #2d1f1f 0%, #3a2525 100%);
-  border-color: #ff6b6b;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+  border-color: #6c757d;
 }
 
 :root.dark-mode .support-title {
-  color: #ff8e8e;
+  color: #adb5bd;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 :root.dark-mode .support-content p {
@@ -2088,7 +2092,7 @@
 }
 
 :root.dark-mode .support-highlight-inline {
-  background: linear-gradient(90deg, #ff8e8e 0%, #ffb3b3 100%);
+  background: linear-gradient(90deg, #adb5bd 0%, #6c757d 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2096,8 +2100,8 @@
 
 /* Dark mode styles for updated bank instruction sections */
 :root.dark-mode .bank-instructions {
-  background: linear-gradient(135deg, #2d1f1f 0%, #3a2525 100%);
-  border-color: #ff6b6b;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+  border-color: #6c757d;
 }
 
 :root.dark-mode .bank-instructions p {
@@ -2105,12 +2109,12 @@
 }
 
 :root.dark-mode .bank-transfer-info {
-  background: linear-gradient(135deg, #343a40 0%, #2d1f1f 100%);
-  border-color: #ff8e8e;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+  border-color: #6c757d;
 }
 
 :root.dark-mode .info-label {
-  color: #ff8e8e;
+  color: #adb5bd;
 }
 
 :root.dark-mode .info-value {
@@ -2118,15 +2122,15 @@
 }
 
 :root.dark-mode .info-amount {
-  color: #ff8e8e;
+  color: #8bb9fe;
 }
 
 :root.dark-mode .copy-button {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
 }
 
 :root.dark-mode .copy-button:hover {
-  background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
+  background: linear-gradient(135deg, #343a40 0%, #212529 100%);
 }
 
 :root.dark-mode .copy-button:disabled {
@@ -2134,13 +2138,13 @@
 }
 
 :root.dark-mode .transfer-notes {
-  background: linear-gradient(135deg, #3a2525 0%, #2d1f1f 100%);
-  border-color: #ff8e8e;
-  border-left-color: #ff6b6b;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+  border-color: #6c757d;
+  border-left-color: #adb5bd;
 }
 
 :root.dark-mode .note-title {
-  color: #ff8e8e;
+  color: #adb5bd;
 }
 
 :root.dark-mode .note-list li {
@@ -2148,19 +2152,19 @@
 }
 
 :root.dark-mode .note-list a {
-  color: #ff8e8e;
+  color: #8bb9fe;
 }
 
 :root.dark-mode .note-list a:hover {
-  color: #ff6b6b;
+  color: #6ea8fe;
 }
 
 :root.dark-mode .qr-button {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
 }
 
 :root.dark-mode .qr-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
+  background: linear-gradient(135deg, #343a40 0%, #212529 100%);
 }
 
 /* Responsive styles for bank details container */
