@@ -236,48 +236,6 @@ const ChapterDashboard = () => {
   }, []);
 
   /**
-   * Loads chapter data when in edit mode
-   */
-  const fetchChapterData = useCallback(async () => {
-    if (!chapterId) return;
-
-    try {
-      const response = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}`);
-      const chapterData = response.data.chapter;
-
-      setChapterTitle(chapterData.title || '');
-      setChapterContent(chapterData.content || '');
-      setMode(chapterData.mode || 'published');
-      setTranslator(chapterData.translator || '');
-      setEditor(chapterData.editor || '');
-      setProofreader(chapterData.proofreader || '');
-      setChapterBalance(chapterData.chapterBalance || 0);
-
-      // Extract footnotes from content
-      if (chapterData.content) {
-        const extractedFootnoteIds = extractFootnotes(chapterData.content);
-
-        // Merge with existing footnote content if available
-        if (chapterData.footnotes && Array.isArray(chapterData.footnotes)) {
-          const mergedFootnotes = extractedFootnoteIds.map(footnote => {
-            const existingFootnote = chapterData.footnotes.find(f => f.id === footnote.id);
-            return {
-              id: footnote.id,
-              content: existingFootnote ? existingFootnote.content : ''
-            };
-          });
-          setFootnotes(mergedFootnotes);
-        } else {
-          setFootnotes(extractedFootnoteIds);
-        }
-      }
-    } catch (err) {
-      console.error('Lỗi lấy dữ liệu chương:', err);
-      setError('Không thể tải dữ liệu chương. Vui lòng thử lại.');
-    }
-  }, [chapterId, extractFootnotes]);
-
-  /**
    * Fetches novel and module data when component mounts
    */
   useEffect(() => {
@@ -294,14 +252,49 @@ const ChapterDashboard = () => {
         // Store the resolved novel ID in state
         setResolvedNovelId(resolvedNovelId);
 
-        // Then fetch novel data with the resolved ID
-        const novelResponse = await axios.get(`${config.backendUrl}/api/novels/${resolvedNovelId}`);
-        const novelData = novelResponse.data;
-        setNovel(novelData);
+        // Resolve module ID if needed (with memoization to prevent duplicates)
+        let actualModuleId = moduleSlugOrId;
+        const moduleResolutionKey = `module_${moduleSlugOrId}`;
+        
+        if (moduleSlugOrId && !/^[0-9a-fA-F]{24}$/.test(moduleSlugOrId)) {
+          // Check if we've already resolved this module slug in this session
+          const cachedModuleId = sessionStorage.getItem(moduleResolutionKey);
+          
+          if (cachedModuleId && /^[0-9a-fA-F]{24}$/.test(cachedModuleId)) {
+            // Use cached module ID to avoid duplicate API call
+            actualModuleId = cachedModuleId;
+            setResolvedModuleId(actualModuleId);
+          } else {
+            try {
+              const moduleIdResponse = await axios.get(`${config.backendUrl}/api/modules/slug/${moduleSlugOrId}`);
+              actualModuleId = moduleIdResponse.data.id;
+              
+              // Cache the resolved module ID for this session
+              sessionStorage.setItem(moduleResolutionKey, actualModuleId);
+              setResolvedModuleId(actualModuleId);
+            } catch (moduleErr) {
+              console.error('Module resolution error:', moduleErr);
+              setModuleError(true);
+              actualModuleId = null;
+            }
+          }
+        } else if (moduleSlugOrId) {
+          // If it's already a valid MongoDB ID, store it
+          setResolvedModuleId(moduleSlugOrId);
+          actualModuleId = moduleSlugOrId;
+        }
+
+        // Use the new optimized dashboard endpoint that fetches all data in one request
+        const dashboardUrl = `${config.backendUrl}/api/novels/${resolvedNovelId}/dashboard${actualModuleId ? `?moduleId=${actualModuleId}` : ''}`;
+        const dashboardResponse = await axios.get(dashboardUrl);
+        const dashboardData = dashboardResponse.data;
+        
+        // Set novel data
+        setNovel(dashboardData);
 
         // Set default staff from active staff if available
-        if (novelData.novel?.active && !isEditMode) {
-          const { active } = novelData.novel;
+        if (dashboardData.novel?.active && !isEditMode) {
+          const { active } = dashboardData.novel;
           // Set default translator
           if (active.translator?.length > 0) {
             setTranslator(active.translator[0]);
@@ -313,32 +306,55 @@ const ChapterDashboard = () => {
           // Proofreader defaults to none
         }
 
-        // Fetch module data if moduleSlugOrId exists
-        if (moduleSlugOrId) {
-          try {
-            let actualModuleId = moduleSlugOrId;
-            
-            // If moduleSlugOrId looks like a slug (not a 24-char MongoDB ID), resolve it
-            if (!/^[0-9a-fA-F]{24}$/.test(moduleSlugOrId)) {
-              const moduleIdResponse = await axios.get(`${config.backendUrl}/api/modules/slug/${moduleSlugOrId}`);
-              actualModuleId = moduleIdResponse.data.id;
-            }
-            
-            // Store the resolved module ID
-            setResolvedModuleId(actualModuleId);
-            
-            const moduleResponse = await axios.get(`${config.backendUrl}/api/modules/${resolvedNovelId}/modules/${actualModuleId}`);
-            const moduleData = moduleResponse.data;
-            setModule(moduleData);
-          } catch (moduleErr) {
-            console.error('Module fetch error:', moduleErr);
+        // Set module data if available
+        if (dashboardData.selectedModule) {
+          setModule(dashboardData.selectedModule);
+        } else if (actualModuleId) {
+          // Find module from the modules list if selectedModule wasn't populated
+          const targetModule = dashboardData.modules?.find(m => m._id === actualModuleId);
+          if (targetModule) {
+            setModule(targetModule);
+          } else {
             setModuleError(true);
           }
         }
 
-        // Fetch chapter data if in edit mode
-        if (isEditMode) {
-          await fetchChapterData();
+        // Fetch chapter data if in edit mode (call directly instead of via function reference)
+        if (isEditMode && chapterId) {
+          try {
+            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}`);
+            const chapterData = response.data.chapter;
+
+            setChapterTitle(chapterData.title || '');
+            setChapterContent(chapterData.content || '');
+            setMode(chapterData.mode || 'published');
+            setTranslator(chapterData.translator || '');
+            setEditor(chapterData.editor || '');
+            setProofreader(chapterData.proofreader || '');
+            setChapterBalance(chapterData.chapterBalance || 0);
+
+            // Extract footnotes from content
+            if (chapterData.content) {
+              const extractedFootnoteIds = extractFootnotes(chapterData.content);
+
+              // Merge with existing footnote content if available
+              if (chapterData.footnotes && Array.isArray(chapterData.footnotes)) {
+                const mergedFootnotes = extractedFootnoteIds.map(footnote => {
+                  const existingFootnote = chapterData.footnotes.find(f => f.id === footnote.id);
+                  return {
+                    id: footnote.id,
+                    content: existingFootnote ? existingFootnote.content : ''
+                  };
+                });
+                setFootnotes(mergedFootnotes);
+              } else {
+                setFootnotes(extractedFootnoteIds);
+              }
+            }
+          } catch (err) {
+            console.error('Error loading chapter data:', err);
+            setError('Không thể tải dữ liệu chương. Vui lòng thử lại.');
+          }
         }
       } catch (err) {
         console.error('Data fetch error:', err);
@@ -349,7 +365,7 @@ const ChapterDashboard = () => {
     };
 
     fetchData();
-  }, [novelId, moduleSlugOrId, isEditMode, fetchChapterData]);
+  }, [novelId, moduleSlugOrId, isEditMode, chapterId, extractFootnotes]);
 
   /**
    * Handles chapter form submission
@@ -623,7 +639,7 @@ const ChapterDashboard = () => {
           {/* Main details section */}
 
           {/* Status section */}
-          <div className="form-section">
+          <div className="chapter-form-section">
             <div className="chapter-title-status-group">
               <div className="chapter-title-input">
                 <label>Tiêu đề chương:</label>
@@ -672,13 +688,13 @@ const ChapterDashboard = () => {
           </div>
 
           {/* Staff section */}
-          <div className="form-section staff-section">
-            <div className="form-row">
+          <div className="chapter-form-section chapter-staff-section">
+            <div className="chapter-form-row">
               {/* Translator dropdown */}
-              <div className="form-group">
-                <label className="form-label">Dịch giả:</label>
+              <div className="chapter-form-group">
+                <label className="chapter-form-label">Dịch giả:</label>
                 <select
-                    className="staff-dropdown mode-dropdown"
+                    className="chapter-staff-dropdown mode-dropdown"
                     value={translator}
                     onChange={(e) => setTranslator(e.target.value)}
                 >
@@ -692,10 +708,10 @@ const ChapterDashboard = () => {
               </div>
 
               {/* Editor dropdown */}
-              <div className="form-group">
-                <label className="form-label">Biên tập viên:</label>
+              <div className="chapter-form-group">
+                <label className="chapter-form-label">Biên tập viên:</label>
                 <select
-                    className="staff-dropdown mode-dropdown"
+                    className="chapter-staff-dropdown mode-dropdown"
                     value={editor}
                     onChange={(e) => setEditor(e.target.value)}
                 >
@@ -709,10 +725,10 @@ const ChapterDashboard = () => {
               </div>
 
               {/* Proofreader dropdown */}
-              <div className="form-group">
-                <label className="form-label">Người kiểm tra chất lượng:</label>
+              <div className="chapter-form-group">
+                <label className="chapter-form-label">Người kiểm tra chất lượng:</label>
                 <select
-                    className="staff-dropdown mode-dropdown"
+                    className="chapter-staff-dropdown mode-dropdown"
                     value={proofreader}
                     onChange={(e) => setProofreader(e.target.value)}
                 >
@@ -728,7 +744,7 @@ const ChapterDashboard = () => {
           </div>
 
           {/* Chapter content editor */}
-          <div className="form-section">
+          <div className="chapter-form-section">
             <h3 className="form-section-title">Nội dung chương</h3>
 
             <div className="chapter-content-group">
@@ -867,7 +883,7 @@ const ChapterDashboard = () => {
           </div>
 
           {/* Footnotes section */}
-          <div className="form-section footnote-section">
+          <div className="chapter-form-section footnote-section">
             <h3 className="form-section-title">Chú thích</h3>
 
             {footnotes.length > 0 ? (

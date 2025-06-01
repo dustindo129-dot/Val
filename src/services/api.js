@@ -845,6 +845,29 @@ const api = {
     }
   },
 
+  // Optimized combined notifications endpoint (gets notifications + counts in one request)
+  getNotificationsCombined: async (page = 1, limit = 20) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.get(
+        `${config.backendUrl}/api/notifications/combined?page=${page}&limit=${limit}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch combined notifications:', error);
+      throw error;
+    }
+  },
+
   markNotificationAsRead: async (notificationId) => {
     try {
       const token = getValidToken();
