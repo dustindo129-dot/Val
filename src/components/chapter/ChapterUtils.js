@@ -208,6 +208,7 @@ export const getTinyMCEWordCountDirect = (htmlContent) => {
     // Initialize TinyMCE on the temporary textarea
     window.tinymce.init({
       target: tempTextarea,
+      license_key: 'gpl',
       plugins: ['wordcount'],
       menubar: false,
       toolbar: false,
