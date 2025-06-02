@@ -389,6 +389,13 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     const tagListRefs = useRef({});
     const descriptionRefs = useRef({});
 
+    // Redirect /trang/1 to / for SEO purposes (avoid duplicate content)
+    useEffect(() => {
+        if (page === '1' && location.pathname === '/trang/1') {
+            navigate('/', { replace: true });
+        }
+    }, [page, location.pathname, navigate]);
+
     // Determine SEO page type based on current route and filter
     const getSEOPageType = () => {
         const path = location.pathname;
@@ -472,7 +479,11 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     }, [novels, data]);
 
     const handlePageChange = (page) => {
-        navigate(`/trang/${page}`);
+        if (page === 1) {
+            navigate('/');
+        } else {
+            navigate(`/trang/${page}`);
+        }
     };
 
     const renderPagination = () => {
@@ -489,7 +500,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key="1"
-                    to="/trang/1"
+                    to="/"
                     className={`pagination-button ${1 === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -505,7 +516,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key={i}
-                    to={`/trang/${i}`}
+                    to={i === 1 ? "/" : `/trang/${i}`}
                     className={`pagination-button ${i === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -521,7 +532,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key={pagination.totalPages}
-                    to={`/trang/${pagination.totalPages}`}
+                    to={pagination.totalPages === 1 ? "/" : `/trang/${pagination.totalPages}`}
                     className={`pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -533,7 +544,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
         return (
             <div className="pagination">
                 <Link
-                    to={currentPage > 1 ? `/trang/${currentPage - 1}` : '#'}
+                    to={currentPage > 1 ? (currentPage === 2 ? "/" : `/trang/${currentPage - 1}`) : '#'}
                     onClick={(e) => {
                         if (currentPage === 1) e.preventDefault();
                         else window.scrollTo(0, 0);

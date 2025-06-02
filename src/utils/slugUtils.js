@@ -246,10 +246,8 @@ export const generateLocalizedTopUpManagementUrl = () => {
  * @returns {string} Localized novel directory URL
  */
 export const generateLocalizedNovelDirectoryUrl = (page) => {
-  if (page && page > 1) {
-    return `/danh-sach-truyen/trang/${page}`;
-  }
-  return '/danh-sach-truyen';
+  const pageNum = page || 1;
+  return `/danh-sach-truyen/trang/${pageNum}`;
 };
 
 /**
@@ -288,10 +286,8 @@ export const generateLocalizedResetPasswordUrl = (token) => {
  * @returns {string} Localized OLN URL
  */
 export const generateLocalizedOLNUrl = (page) => {
-  if (page && page > 1) {
-    return `/oln/trang/${page}`;
-  }
-  return '/oln';
+  const pageNum = page || 1;
+  return `/oln/trang/${pageNum}`;
 };
 
 /**

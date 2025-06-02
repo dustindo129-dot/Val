@@ -1,5 +1,5 @@
 import { useState, useEffect, memo, useRef } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
@@ -199,6 +199,7 @@ const FacebookPlugin = memo(() => {
 const OLN = () => {
     const navigate = useNavigate();
     const { page } = useParams();
+    const location = useLocation();
     const [expandedDescriptions, setExpandedDescriptions] = useState({});
     const [expandedTags, setExpandedTags] = useState({});
     const [needsToggle, setNeedsToggle] = useState({});
@@ -207,6 +208,13 @@ const OLN = () => {
     const currentPage = parseInt(page) || 1;
     const tagListRefs = useRef({});
     const descriptionRefs = useRef({});
+
+    // Redirect /oln to /oln/trang/1 for consistent pagination
+    useEffect(() => {
+        if (location.pathname === '/oln') {
+            navigate('/oln/trang/1', { replace: true });
+        }
+    }, [location.pathname, navigate]);
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['vietnameseNovels', currentPage, sortOrder],

@@ -235,6 +235,14 @@ const NovelDirectory = () => {
   const tagListRefs = useRef({});
   const descriptionRefs = useRef({});
 
+  // Redirect /danh-sach-truyen to /danh-sach-truyen/trang/1 for consistent pagination
+  useEffect(() => {
+    if (location.pathname === '/danh-sach-truyen') {
+      const searchParams = location.search;
+      navigate(`/danh-sach-truyen/trang/1${searchParams}`, { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
+
   // Parse URL search params for filters
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
