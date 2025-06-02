@@ -84,6 +84,9 @@ const ChapterDashboard = () => {
   // Reference to the editor
   const editorRef = useRef(null);
 
+  // In-memory cache for pending module resolution promises to prevent duplicate API calls
+  const pendingModuleResolutions = useRef(new Map());
+
   // Check if the current module is in paid mode
   const isModulePaid = module?.mode === 'paid';
 
@@ -205,37 +208,6 @@ const ChapterDashboard = () => {
   }, []);
 
   /**
-   * Extracts footnotes from chapter content
-   * @param {string} content - HTML content to extract footnotes from
-   * @returns {Array} - Array of footnote objects
-   */
-  const extractFootnotes = useCallback((content) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-
-    const footnoteMarkers = tempDiv.querySelectorAll('sup.footnote-marker');
-    const extractedFootnotes = [];
-    let maxId = 0;
-
-    footnoteMarkers.forEach(marker => {
-      const id = parseInt(marker.getAttribute('data-footnote'), 10);
-      if (!isNaN(id)) {
-        // The content is stored in the footnotes state, so we extract just the id here
-        extractedFootnotes.push({ id, content: '' });
-        if (id > maxId) maxId = id;
-      }
-    });
-
-    // Sort by ID
-    extractedFootnotes.sort((a, b) => a.id - b.id);
-
-    // Update the next ID
-    setNextFootnoteId(maxId + 1);
-
-    return extractedFootnotes;
-  }, []);
-
-  /**
    * Fetches novel and module data when component mounts
    */
   useEffect(() => {
@@ -252,7 +224,7 @@ const ChapterDashboard = () => {
         // Store the resolved novel ID in state
         setResolvedNovelId(resolvedNovelId);
 
-        // Resolve module ID if needed (with memoization to prevent duplicates)
+        // Resolve module ID if needed (with enhanced deduplication to prevent duplicates)
         let actualModuleId = moduleSlugOrId;
         const moduleResolutionKey = `module_${moduleSlugOrId}`;
         
@@ -265,12 +237,33 @@ const ChapterDashboard = () => {
             actualModuleId = cachedModuleId;
             setResolvedModuleId(actualModuleId);
           } else {
-            try {
-              const moduleIdResponse = await axios.get(`${config.backendUrl}/api/modules/slug/${moduleSlugOrId}`);
-              actualModuleId = moduleIdResponse.data.id;
+            // Check if there's already a pending resolution for this module slug
+            let moduleResolutionPromise = pendingModuleResolutions.current.get(moduleSlugOrId);
+            
+            if (!moduleResolutionPromise) {
+              // Create new resolution promise and cache it
+              moduleResolutionPromise = axios.get(`${config.backendUrl}/api/modules/slug/${moduleSlugOrId}`)
+                .then(response => {
+                  const resolvedId = response.data.id;
+                  // Cache the resolved module ID for this session
+                  sessionStorage.setItem(moduleResolutionKey, resolvedId);
+                  return resolvedId;
+                })
+                .catch(moduleErr => {
+                  console.error('Module resolution error:', moduleErr);
+                  throw moduleErr;
+                })
+                .finally(() => {
+                  // Clean up the pending promise after completion
+                  pendingModuleResolutions.current.delete(moduleSlugOrId);
+                });
               
-              // Cache the resolved module ID for this session
-              sessionStorage.setItem(moduleResolutionKey, actualModuleId);
+              // Store the promise to prevent duplicate requests
+              pendingModuleResolutions.current.set(moduleSlugOrId, moduleResolutionPromise);
+            }
+            
+            try {
+              actualModuleId = await moduleResolutionPromise;
               setResolvedModuleId(actualModuleId);
             } catch (moduleErr) {
               console.error('Module resolution error:', moduleErr);
@@ -333,13 +326,32 @@ const ChapterDashboard = () => {
             setProofreader(chapterData.proofreader || '');
             setChapterBalance(chapterData.chapterBalance || 0);
 
-            // Extract footnotes from content
+            // Extract footnotes from content directly without using the callback
             if (chapterData.content) {
-              const extractedFootnoteIds = extractFootnotes(chapterData.content);
+              // Inline footnote extraction to avoid circular dependency
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = chapterData.content;
+              const footnoteMarkers = tempDiv.querySelectorAll('sup.footnote-marker');
+              const extractedFootnotes = [];
+              let maxId = 0;
+
+              footnoteMarkers.forEach(marker => {
+                const id = parseInt(marker.getAttribute('data-footnote'), 10);
+                if (!isNaN(id)) {
+                  extractedFootnotes.push({ id, content: '' });
+                  if (id > maxId) maxId = id;
+                }
+              });
+
+              // Sort by ID
+              extractedFootnotes.sort((a, b) => a.id - b.id);
+              
+              // Update the next ID
+              setNextFootnoteId(maxId + 1);
 
               // Merge with existing footnote content if available
               if (chapterData.footnotes && Array.isArray(chapterData.footnotes)) {
-                const mergedFootnotes = extractedFootnoteIds.map(footnote => {
+                const mergedFootnotes = extractedFootnotes.map(footnote => {
                   const existingFootnote = chapterData.footnotes.find(f => f.id === footnote.id);
                   return {
                     id: footnote.id,
@@ -348,7 +360,7 @@ const ChapterDashboard = () => {
                 });
                 setFootnotes(mergedFootnotes);
               } else {
-                setFootnotes(extractedFootnoteIds);
+                setFootnotes(extractedFootnotes);
               }
             }
           } catch (err) {
@@ -365,7 +377,15 @@ const ChapterDashboard = () => {
     };
 
     fetchData();
-  }, [novelId, moduleSlugOrId, isEditMode, chapterId, extractFootnotes]);
+  }, [novelId, moduleSlugOrId, isEditMode, chapterId]);
+
+  // Cleanup effect to clear pending promises on unmount
+  useEffect(() => {
+    return () => {
+      // Clear any pending module resolution promises on unmount
+      pendingModuleResolutions.current.clear();
+    };
+  }, []);
 
   /**
    * Handles chapter form submission
