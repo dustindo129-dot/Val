@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { isValidObjectId, extractIdFromSlug, generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
 import api from '../services/api';
+import axios from 'axios';
+import config from '../config/config';
 import LoadingSpinner from './LoadingSpinner';
 
 /**
@@ -34,7 +36,7 @@ const SlugWrapper = ({ component: Component, type }) => {
           if (isValidObjectId(params.novelId)) {
             // It's a MongoDB ID - we should redirect to slug URL
             try {
-              novelData = await api.getNovel(params.novelId);
+              novelData = await api.fetchNovelWithModules(params.novelId, false, false);
               shouldRedirect = true;
               newParams.novelId = params.novelId;
             } catch (err) {
@@ -49,7 +51,7 @@ const SlugWrapper = ({ component: Component, type }) => {
               newParams.novelId = novelId;
               // Fetch novel data for potential chapter redirect
               if (params.chapterId) {
-                novelData = await api.getNovel(novelId);
+                novelData = await api.fetchNovelWithModules(novelId, false, false);
               }
             } catch (err) {
               console.error('Failed to resolve novel slug:', err);
@@ -64,7 +66,8 @@ const SlugWrapper = ({ component: Component, type }) => {
           if (isValidObjectId(params.chapterId)) {
             // It's a MongoDB ID - we should redirect to slug URL
             try {
-              chapterData = await api.getChapter(params.chapterId);
+              const response = await axios.get(`${config.backendUrl}/api/chapters/${params.chapterId}`);
+              chapterData = response.data.chapter;
               shouldRedirect = true;
               newParams.chapterId = params.chapterId;
             } catch (err) {
