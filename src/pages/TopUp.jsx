@@ -30,7 +30,7 @@ const TopUpSEO = () => {
       <meta property="og:title" content="Nạp Lúa - Nạp Tiền Vào Tài Khoản | Valvrareteam" />
       <meta property="og:description" content="Nạp lúa vào tài khoản Valvrareteam để mở chương/tập, đề xuất truyện mới, mở khóa chức năng đặc biệt và hỗ trợ dịch giả/tác giả." />
       <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-      <meta property="og:url" content="https://valvrareteam.net/top-up" />
+      <meta property="og:url" content="https://valvrareteam.net/nap-tien" />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -42,7 +42,7 @@ const TopUpSEO = () => {
       <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
       
       {/* Canonical URL */}
-      <link rel="canonical" href="https://valvrareteam.net/top-up" />
+      <link rel="canonical" href="https://valvrareteam.net/nap-tien" />
     </Helmet>
   );
 };

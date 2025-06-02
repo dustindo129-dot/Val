@@ -5,16 +5,31 @@ Allow: /
 # Allow all important Vietnamese SEO pages
 Allow: /danh-sach-truyen
 Allow: /trang/*
-Allow: /truyen/*
-Allow: /chuong/*
 Allow: /phan-hoi
 Allow: /bang-yeu-cau
-Allow: /nap-them
+Allow: /nap-tien
+Allow: /oln
+Allow: /nguoi-dung/*/trang-ca-nhan
+Allow: /nguoi-dung/*/truyen-danh-dau
 
-# Also allow legacy English URLs for backward compatibility
-Allow: /light-novel-vietsub
-Allow: /page/*
-Allow: /novel/*
+# Allow only slug-based URLs for novels and chapters (anything with dashes or Vietnamese characters)
+Allow: /truyen/*-*
+Allow: /truyen/*-*/chuong/*-*
+
+# Disallow MongoDB ObjectId URLs (24-character hex strings) - block direct ObjectId access
+Disallow: /truyen/6*
+Disallow: /truyen/5*
+Disallow: /truyen/4*
+Disallow: /truyen/3*
+Disallow: /truyen/2*
+Disallow: /truyen/1*
+Disallow: /truyen/0*
+Disallow: /truyen/a*
+Disallow: /truyen/b*
+Disallow: /truyen/c*
+Disallow: /truyen/d*
+Disallow: /truyen/e*
+Disallow: /truyen/f*
 
 # Disallow admin and user-specific pages
 Disallow: /admin
@@ -24,6 +39,7 @@ Disallow: /profile
 Disallow: /api/
 Disallow: /bang-quan-tri
 Disallow: /quan-ly-giao-dich
+Disallow: /nguoi-dung/*/thay-doi-mat-khau
 
 # Disallow common sensitive files and directories
 Disallow: /.env

@@ -30,7 +30,7 @@ import { useNovelStatus } from '../context/NovelStatusContext';
 import { useNovel } from '../context/NovelContext';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import bunnyUploadService from '../services/bunnyUploadService';
-import { generateNovelUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
+import { generateNovelUrl } from '../utils/slugUtils';
 
 /**
  * AdminDashboardSEO Component
@@ -1236,7 +1236,7 @@ const AdminDashboard = () => {
                 <div className="novel-title-section">
                   <div className="novel-info">
                     <Link 
-                      to={generateLocalizedNovelUrl(novel)}
+                      to={generateNovelUrl(novel)}
                       className="novel-title-link"
                     >
                       {novel.title}

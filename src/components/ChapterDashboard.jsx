@@ -33,7 +33,7 @@ import {
 import bunnyUploadService from '../services/bunnyUploadService';
 import hybridCdnService from '../services/bunnyUploadService';
 import LoadingSpinner from './LoadingSpinner';
-import { createUniqueSlug, generateLocalizedNovelUrl } from '../utils/slugUtils';
+import { createUniqueSlug, generateNovelUrl } from '../utils/slugUtils';
 import { translateChapterModuleStatus } from '../utils/statusTranslation';
 
 /**
@@ -565,7 +565,7 @@ const ChapterDashboard = () => {
         // For new chapter, navigate back to novel page after delay
         const novelSlug = createUniqueSlug(novel?.novel?.title, novelId);
         setTimeout(() => {
-          navigate(generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' }), {
+          navigate(generateNovelUrl({ _id: novelId, title: novel?.novel?.title || '' }), {
             replace: true,
             state: {
               from: 'addChapter',
@@ -603,7 +603,7 @@ const ChapterDashboard = () => {
     return (
         <div className="error-message">
           <FontAwesomeIcon icon={faExclamationTriangle} /> Tập không tồn tại.
-          <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="return-link"> Trở lại trang truyện</Link>
+          <Link to={generateNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="return-link"> Trở lại trang truyện</Link>
         </div>
     );
   }
@@ -619,7 +619,7 @@ const ChapterDashboard = () => {
             <h2>{novel?.novel?.title}</h2>
             {module && <div className="module-title">Tập: {module.title}</div>}
           </div>
-          <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="back-to-novel">
+          <Link to={generateNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="back-to-novel">
             <FontAwesomeIcon icon={faArrowLeft} /> Trở lại trang truyện
           </Link>
         </div>
@@ -942,7 +942,7 @@ const ChapterDashboard = () => {
                   </>
               )}
             </button>
-            <Link to={generateLocalizedNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="cancel-btn">
+            <Link to={generateNovelUrl({ _id: novelId, title: novel?.novel?.title || '' })} className="cancel-btn">
               <FontAwesomeIcon icon={faTimes} /> Hủy bỏ
             </Link>
           </div>

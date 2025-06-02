@@ -16,7 +16,7 @@ import '../styles/NovelDirectory.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from './LoadingSpinner';
-import { generateNovelUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
+import { generateNovelUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 // Genre categories for filtering
@@ -196,7 +196,7 @@ const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
 
   return (
       <div className="novel-image-container">
-                    <Link to={generateLocalizedNovelUrl({ _id: novelId, title: alt })} className="novel-image-link">
+                    <Link to={generateNovelUrl({ _id: novelId, title: alt })} className="novel-image-link">
           <div className="novel-image">
             <img
                 src={imgSrc}
@@ -605,7 +605,7 @@ const NovelDirectory = () => {
                         {/* Novel content section */}
                         <div className="novel-content">
                           {/* Novel title */}
-                          <Link to={generateLocalizedNovelUrl(novel)} className="dir-novel-title-link">
+                          <Link to={generateNovelUrl(novel)} className="dir-novel-title-link">
                             <h3 className="dir-novel-title">{novel.title}</h3>
                           </Link>
 

@@ -69,17 +69,17 @@ async function render(pageContext) {
   const queryClient = createSSRQueryClient();
   
   // Prefetch any necessary data here based on URL
-  // For example, if url includes '/novel/' then prefetch novel data
+  // For example, if url includes '/truyen/' then prefetch novel data
   try {
-    if (urlOriginal.includes('/novel/') && !urlOriginal.includes('/chapter/')) {
+    if (urlOriginal.includes('/truyen/') && !urlOriginal.includes('/chuong/')) {
       // Extract novel ID from URL
-      const novelId = urlOriginal.split('/novel/')[1].split('/')[0];
+      const novelId = urlOriginal.split('/truyen/')[1].split('/')[0];
       // Prefetch novel data if ID exists
       if (novelId) {
         // TODO: Add your API fetch logic for novels
         // await queryClient.prefetchQuery(['novel', novelId], () => fetchNovel(novelId));
       }
-    } else if (urlOriginal === '/' || urlOriginal.includes('/page/')) {
+    } else if (urlOriginal === '/' || urlOriginal.includes('/trang/')) {
       // Prefetch homepage data
       // TODO: Add your API fetch logic for homepage
       // await queryClient.prefetchQuery(['novels'], () => fetchNovels());

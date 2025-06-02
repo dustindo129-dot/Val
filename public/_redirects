@@ -1,8 +1,5 @@
 # Legacy URL redirects
 /homepage / 301
-/light-novel-tieng-viet /light-novel-vietsub 301
-/doc-light-novel-vietsub /light-novel-vietsub 301
-/latest-update /light-novel-vietsub 301
 
 # API routes
 /api/* /.netlify/functions/:splat 200

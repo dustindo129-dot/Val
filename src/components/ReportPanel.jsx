@@ -64,17 +64,17 @@ const ReportPanel = ({ user }) => {
         const chapterSlug = createUniqueSlug(report.contentTitle, report.contentId);
         // Use the novelId directly in the URL path for now
         // This will work with the slug lookup system that can handle both slugs and IDs
-        return `/novel/${report.novelId}/chapter/${chapterSlug}`;
+        return `/truyen/${report.novelId}/chuong/${chapterSlug}`;
       } else {
-        // Fallback to direct chapter ID route
-        return `/chapters/${report.contentId}`;
+        // Fallback - no valid Vietnamese route for standalone chapters
+        return '#';
       }
     } else if (report.contentType === 'novel' && report.contentId) {
       if (report.contentTitle) {
         const novelSlug = createUniqueSlug(report.contentTitle, report.contentId);
-        return `/novel/${novelSlug}`;
+        return `/truyen/${novelSlug}`;
       } else {
-        return `/novel/${report.contentId}`;
+        return `/truyen/${report.contentId}`;
       }
     } else {
       return '#'; // Fallback if no valid link can be generated

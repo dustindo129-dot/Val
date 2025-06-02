@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faCog, faSave, faHome, faBookmark } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
-import { createUniqueSlug, generateLocalizedNovelUrl } from '../../utils/slugUtils';
+import { createUniqueSlug, generateNovelUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 
 const ChapterHeader = ({
@@ -29,7 +29,7 @@ const ChapterHeader = ({
   handleBookmark
 }) => {
   const novelSlug = createUniqueSlug(novel?.title, novelId);
-  const localizedNovelUrl = generateLocalizedNovelUrl(novel || { _id: novelId, title: '' });
+  const localizedNovelUrl = generateNovelUrl(novel || { _id: novelId, title: '' });
   
   return (
     <div className="header-nav-container">

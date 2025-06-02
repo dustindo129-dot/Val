@@ -155,7 +155,7 @@ const SecondaryNavbar = () => {
           
           {/* Top-up button - visible to everyone */}
           <Link 
-            to={isAuthenticated ? "/top-up" : "#"} 
+            to={isAuthenticated ? "/nap-tien" : "#"} 
             className="top-up-button"
             onClick={(e) => {
               if (!isAuthenticated) {

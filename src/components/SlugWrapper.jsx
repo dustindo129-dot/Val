@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { isValidObjectId, extractIdFromSlug } from '../utils/slugUtils';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { isValidObjectId, extractIdFromSlug, generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
 import api from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -8,11 +8,12 @@ import LoadingSpinner from './LoadingSpinner';
  * SlugWrapper Component
  * 
  * Handles the conversion between slug-based URLs and ID-based component props
- * Supports both legacy ID URLs and new slug URLs for backward compatibility
+ * Redirects MongoDB ID URLs to slug URLs for better SEO
  */
 const SlugWrapper = ({ component: Component, type }) => {
   const params = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [resolvedParams, setResolvedParams] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,17 +25,32 @@ const SlugWrapper = ({ component: Component, type }) => {
         setError(null);
 
         const newParams = { ...params };
+        let shouldRedirect = false;
+        let novelData = null;
+        let chapterData = null;
 
         // Handle novel ID/slug resolution
         if (params.novelId) {
           if (isValidObjectId(params.novelId)) {
-            // Already a valid MongoDB ID, use as-is
-            newParams.novelId = params.novelId;
+            // It's a MongoDB ID - we should redirect to slug URL
+            try {
+              novelData = await api.getNovel(params.novelId);
+              shouldRedirect = true;
+              newParams.novelId = params.novelId;
+            } catch (err) {
+              console.error('Failed to fetch novel data for redirect:', err);
+              setError('Không tìm thấy truyện');
+              return;
+            }
           } else {
             // It's a slug, resolve to ID
             try {
               const novelId = await api.lookupNovelId(params.novelId);
               newParams.novelId = novelId;
+              // Fetch novel data for potential chapter redirect
+              if (params.chapterId) {
+                novelData = await api.getNovel(novelId);
+              }
             } catch (err) {
               console.error('Failed to resolve novel slug:', err);
               setError('Không tìm thấy truyện');
@@ -46,8 +62,16 @@ const SlugWrapper = ({ component: Component, type }) => {
         // Handle chapter ID/slug resolution
         if (params.chapterId) {
           if (isValidObjectId(params.chapterId)) {
-            // Already a valid MongoDB ID, use as-is
-            newParams.chapterId = params.chapterId;
+            // It's a MongoDB ID - we should redirect to slug URL
+            try {
+              chapterData = await api.getChapter(params.chapterId);
+              shouldRedirect = true;
+              newParams.chapterId = params.chapterId;
+            } catch (err) {
+              console.error('Failed to fetch chapter data for redirect:', err);
+              setError('Không tìm thấy chương');
+              return;
+            }
           } else {
             // It's a slug, resolve to ID
             try {
@@ -61,6 +85,25 @@ const SlugWrapper = ({ component: Component, type }) => {
           }
         }
 
+        // Redirect MongoDB ID URLs to slug URLs for SEO
+        if (shouldRedirect) {
+          let redirectUrl;
+          
+          if (type === 'chapter' && novelData && chapterData) {
+            // Redirect chapter ID URL to slug URL
+            redirectUrl = generateChapterUrl(novelData, chapterData);
+          } else if (type === 'novel' && novelData) {
+            // Redirect novel ID URL to slug URL
+            redirectUrl = generateNovelUrl(novelData);
+          }
+          
+          if (redirectUrl && redirectUrl !== location.pathname) {
+            // Use replace: true for SEO-friendly redirect
+            navigate(redirectUrl + location.search + location.hash, { replace: true });
+            return;
+          }
+        }
+
         setResolvedParams(newParams);
       } catch (err) {
         console.error('Error resolving params:', err);
@@ -71,7 +114,7 @@ const SlugWrapper = ({ component: Component, type }) => {
     };
 
     resolveParams();
-  }, [params.novelId, params.chapterId]);
+  }, [params.novelId, params.chapterId, navigate, location.pathname, location.search, location.hash, type]);
 
   // Show loading state
   if (loading) {

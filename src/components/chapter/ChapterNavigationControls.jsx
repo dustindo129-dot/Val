@@ -6,7 +6,7 @@ import {
   faChevronLeft, faChevronRight, faBars, faLock
 } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ChapterNavigationControls.css';
-import { createUniqueSlug, generateLocalizedChapterUrl } from '../../utils/slugUtils';
+import { createUniqueSlug, generateChapterUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 
 /**
@@ -106,7 +106,7 @@ const ChapterNavigationControls = ({
                 key={chapterItem._id}
                 className={chapterItem._id === chapterId ? 'active' : ''}
               >
-                <Link to={generateLocalizedChapterUrl(
+                <Link to={generateChapterUrl(
                   { _id: novelId, title: novelTitle },
                   chapterItem
                 )}>

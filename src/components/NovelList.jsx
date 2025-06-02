@@ -30,7 +30,7 @@ import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import api from '../utils/apiHelper';
 import LoadingSpinner from './LoadingSpinner';
-import { generateNovelUrl, generateChapterUrl, generateLocalizedNovelUrl, generateLocalizedChapterUrl } from '../utils/slugUtils';
+import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 /**
@@ -73,7 +73,7 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
         {translateStatus(status)}
       </span>
             {firstChapter && (
-                <Link to={generateLocalizedChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
+                <Link to={generateChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
                     &gt;&gt; Chương đầu
                 </Link>
             )}
@@ -393,7 +393,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     const getSEOPageType = () => {
         const path = location.pathname;
         
-        if (path.includes('light-novel-vietsub')) {
+        if (path.includes('truyen-xu-huong')) {
             return 'trending';
         } else if (filter === 'latest') {
             return 'recent';
@@ -472,7 +472,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     }, [novels, data]);
 
     const handlePageChange = (page) => {
-        navigate(`/page/${page}`);
+        navigate(`/trang/${page}`);
     };
 
     const renderPagination = () => {
@@ -489,7 +489,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key="1"
-                    to="/page/1"
+                    to="/trang/1"
                     className={`pagination-button ${1 === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -505,7 +505,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key={i}
-                    to={`/page/${i}`}
+                    to={`/trang/${i}`}
                     className={`pagination-button ${i === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -521,7 +521,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
             pages.push(
                 <Link
                     key={pagination.totalPages}
-                    to={`/page/${pagination.totalPages}`}
+                    to={`/trang/${pagination.totalPages}`}
                     className={`pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -533,7 +533,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
         return (
             <div className="pagination">
                 <Link
-                    to={currentPage > 1 ? `/page/${currentPage - 1}` : '#'}
+                    to={currentPage > 1 ? `/trang/${currentPage - 1}` : '#'}
                     onClick={(e) => {
                         if (currentPage === 1) e.preventDefault();
                         else window.scrollTo(0, 0);
@@ -544,7 +544,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                 </Link>
                 {pages}
                 <Link
-                    to={currentPage < pagination.totalPages ? `/page/${currentPage + 1}` : '#'}
+                    to={currentPage < pagination.totalPages ? `/trang/${currentPage + 1}` : '#'}
                     onClick={(e) => {
                         if (currentPage === pagination.totalPages) e.preventDefault();
                         else window.scrollTo(0, 0);
@@ -697,156 +697,176 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
         };
     };
 
-    if (isLoading) return <div className="loading"><LoadingSpinner size="large" text="Đang tải truyện..." /></div>;    if (error) return <div className="error">{error.message}</div>;    if (!novels || novels.length === 0) return <div className="loading">Không có truyện nào.</div>;
+    if (isLoading) return (
+        <div className="novel-list-wrapper">
+            <div className="loading">
+                <LoadingSpinner size="large" text="Đang tải truyện..." />
+            </div>
+        </div>
+    );
+    
+    if (error) return (
+        <div className="novel-list-wrapper">
+            <div className="error">{error.message}</div>
+        </div>
+    );
+    
+    if (!novels || novels.length === 0) return (
+        <div className="novel-list-wrapper">
+            <div className="loading">Không có truyện nào.</div>
+        </div>
+    );
 
     return (
         <>
             {/* SEO Component for title and meta tags */}
             <NovelListSEO pageType={getSEOPageType()} currentPage={currentPage} />
             
-            <div className="novel-list-container">
-                {/* SEO Header above main content - only on first page */}
-                {currentPage === 1 && <SEOHeader pageType={getSEOPageType()} />}
-                <div className="content-layout">
-                    {/* Main content area */}
-                    <div className="main-content">
-                        <div className="section-headers">
-                            <h2>MỚI CẬP NHẬT</h2>
-                        </div>
-                        {/* Novel grid */}
-                        <div className="novel-grid">
-                            {novels.map(novel => {
-                                // Sort chapters by newest first and get the first three
-                                const sortedChapters = (novel.chapters || [])
-                                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                                    .slice(0, 3);
+            <div className="novel-list-wrapper">
+                <div className="novel-list-container">
+                    {/* SEO Header above main content - only on first page */}
+                    {currentPage === 1 && <SEOHeader pageType={getSEOPageType()} />}
+                    <div className="content-layout">
+                        {/* Main content area */}
+                        <div className="main-content">
+                            <div className="section-headers">
+                                <h2>MỚI CẬP NHẬT</h2>
+                            </div>
+                            {/* Novel grid */}
+                            <div className="novel-grid">
+                                {novels.map(novel => {
+                                    // Sort chapters by newest first and get the first three
+                                    const sortedChapters = (novel.chapters || [])
+                                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                        .slice(0, 3);
 
-                                // Get genres for this novel
-                                const genreTags = getGenreTags(novel);
+                                    // Get genres for this novel
+                                    const genreTags = getGenreTags(novel);
 
-                                // Find the first chapter (lowest chapter number)
-                                const firstChapter = novel.firstChapter ||
-                                    (novel.chapters && novel.chapters.length > 0
-                                        ? novel.chapters.reduce((prev, curr) =>
-                                            (prev.chapterNumber < curr.chapterNumber) ? prev : curr
-                                        )
-                                        : null);
+                                    // Find the first chapter (lowest chapter number)
+                                    const firstChapter = novel.firstChapter ||
+                                        (novel.chapters && novel.chapters.length > 0
+                                            ? novel.chapters.reduce((prev, curr) =>
+                                                (prev.chapterNumber < curr.chapterNumber) ? prev : curr
+                                            )
+                                            : null);
 
-                                return (
-                                    <div key={novel._id} className="novel-card" style={{
-                                        backgroundImage: "var(--novel-card-bg)",
-                                        backgroundSize: "cover",
-                                        backgroundPosition: "center"
-                                    }}>
-                                        {/* Novel header with title and update time */}
-                                        <div className="novel-header">
-                                            <Link to={generateLocalizedNovelUrl(novel)} className="novel-list-title-link">
-                                                <h3 className="novel-title">{novel.title}</h3>
-                                            </Link>
-                                            <div className="update-time">
-                                                <i className="far fa-clock"></i> {getTimeAgo(novel.updatedAt || new Date())}
+                                    return (
+                                        <div key={novel._id} className="novel-card" style={{
+                                            backgroundImage: "var(--novel-card-bg)",
+                                            backgroundSize: "cover",
+                                            backgroundPosition: "center"
+                                        }}>
+                                            {/* Novel header with title and update time */}
+                                            <div className="novel-header">
+                                                <Link to={generateNovelUrl(novel)} className="novel-list-title-link">
+                                                    <h3 className="novel-title">{novel.title}</h3>
+                                                </Link>
+                                                <div className="update-time">
+                                                    <i className="far fa-clock"></i> {getTimeAgo(novel.updatedAt || new Date())}
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {/* Novel main content area */}
-                                        <div className="novel-main">
-                                            {/* Novel cover image with status and first chapter link */}
-                                            <NovelImage
-                                                src={novel.illustration || cdnConfig.defaultImages.novel}
-                                                alt={novel.title}
-                                                status={novel.status}
-                                                novelId={novel._id}
-                                                firstChapter={firstChapter}
-                                            />
+                                            {/* Novel main content area */}
+                                            <div className="novel-main">
+                                                {/* Novel cover image with status and first chapter link */}
+                                                <NovelImage
+                                                    src={novel.illustration || cdnConfig.defaultImages.novel}
+                                                    alt={novel.title}
+                                                    status={novel.status}
+                                                    novelId={novel._id}
+                                                    firstChapter={firstChapter}
+                                                />
 
-                                            {/* Novel info section */}
-                                            <div className="novel-info">
-                                                {/* Genre tags section - Với class needs-toggle động dựa trên state */}
-                                                {genreTags.length > 0 && (
-                                                    <div
-                                                        ref={el => tagListRefs.current[novel._id] = el}
-                                                        className={`tag-list ${expandedTags[novel._id] ? 'expanded' : ''} ${needsToggle[novel._id] ? 'needs-toggle' : ''}`}
-                                                        id={`tag-list-${novel._id}`}
-                                                    >
-                                                        {genreTags.map((genre, index) => (
-                                                            <span key={index} className={`tag ${genre.class}`}>
+                                                {/* Novel info section */}
+                                                <div className="novel-info">
+                                                    {/* Genre tags section - Với class needs-toggle động dựa trên state */}
+                                                    {genreTags.length > 0 && (
+                                                        <div
+                                                            ref={el => tagListRefs.current[novel._id] = el}
+                                                            className={`tag-list ${expandedTags[novel._id] ? 'expanded' : ''} ${needsToggle[novel._id] ? 'needs-toggle' : ''}`}
+                                                            id={`tag-list-${novel._id}`}
+                                                        >
+                                                            {genreTags.map((genre, index) => (
+                                                                <span key={index} className={`tag ${genre.class}`}>
                                 {genre.name}
                               </span>
-                                                        ))}
-                                                        <span
-                                                            className="toggle-tags"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                toggleTags(novel._id);
-                                                            }}
-                                                        >
-                              ...
-                            </span>
-                                                    </div>
-                                                )}
-
-                                                {/* Novel description with height-based overflow check */}
-                                                <div
-                                                    className={`description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
-                                                    ref={el => descriptionRefs.current[novel._id] = el}
-                                                >
-                                                    {(() => {
-                                                        const truncatedResult = truncateHTML(novel.description, 1000);
-                                                        return (
-                                                            <div dangerouslySetInnerHTML={{ 
-                                                                __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html 
-                                                            }} />
-                                                        );
-                                                    })()}
-                                                </div>
-
-                                                {/* Read more button - only show when description is actually truncated */}
-                                                {(() => {
-                                                    const truncatedResult = truncateHTML(novel.description, 1000);
-                                                    return truncatedResult.isTruncated && descriptionNeedsReadMore[novel._id] && (
-                                                        <div className="read-more-container">
-                                                            <a
-                                                                href="#"
-                                                                className="read-more"
+                                                            ))}
+                                                            <span
+                                                                className="toggle-tags"
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    toggleDescription(novel._id);
+                                                                    toggleTags(novel._id);
                                                                 }}
                                                             >
-                                                                {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
-                                                            </a>
+                              ...
+                            </span>
                                                         </div>
-                                                    );
-                                                })()}
+                                                    )}
 
-                                                {/* Latest chapters list */}
-                                                <div className="chapter-list">
-                                                    {sortedChapters.map(chapter => (
-                                                        <div key={chapter._id} className="novel-list-chapter-item">
-                                                            <Link
-                                                                to={generateLocalizedChapterUrl(novel, chapter)}
-                                                                className="novel-list-chapter-title"
-                                                            >
-                                                                {chapter.title}
-                                                            </Link>
-                                                            <span className="novel-list-chapter-date">
+                                                    {/* Novel description with height-based overflow check */}
+                                                    <div
+                                                        className={`description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                                                        ref={el => descriptionRefs.current[novel._id] = el}
+                                                    >
+                                                        {(() => {
+                                                            const truncatedResult = truncateHTML(novel.description, 1000);
+                                                            return (
+                                                                <div dangerouslySetInnerHTML={{ 
+                                                                    __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html 
+                                                                }} />
+                                                            );
+                                                        })()}
+                                                    </div>
+
+                                                    {/* Read more button - only show when description is actually truncated */}
+                                                    {(() => {
+                                                        const truncatedResult = truncateHTML(novel.description, 1000);
+                                                        return truncatedResult.isTruncated && descriptionNeedsReadMore[novel._id] && (
+                                                            <div className="read-more-container">
+                                                                <a
+                                                                    href="#"
+                                                                    className="read-more"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        toggleDescription(novel._id);
+                                                                    }}
+                                                                >
+                                                                    {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
+                                                                </a>
+                                                            </div>
+                                                        );
+                                                    })()}
+
+                                                    {/* Latest chapters list */}
+                                                    <div className="chapter-list">
+                                                        {sortedChapters.map(chapter => (
+                                                            <div key={chapter._id} className="novel-list-chapter-item">
+                                                                <Link
+                                                                    to={generateChapterUrl(novel, chapter)}
+                                                                    className="novel-list-chapter-title"
+                                                                >
+                                                                    {chapter.title}
+                                                                </Link>
+                                                                <span className="novel-list-chapter-date">
                                 {formatDate(chapter.createdAt)}
                               </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
 
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
+                            {/* Pagination controls */}
+                            {renderPagination()}
                         </div>
-                        {/* Pagination controls */}
-                        {renderPagination()}
-                    </div>
-                    {/* Sidebar with hot novels and Facebook plugin */}
+                        {/* Sidebar with hot novels and Facebook plugin */}
                                         <aside className="sidebar">                        <HotNovels/>                        <RecentlyRead/>                        <FacebookPlugin/>                        <RecentComments/>                    </aside>
+                    </div>
                 </div>
             </div>
         </>

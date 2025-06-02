@@ -29,7 +29,7 @@ export const PATH_MAPPINGS = {
   // Other features
   'feedback': 'phan-hoi',
   'market': 'bang-yeu-cau',
-  'top-up': 'nap-them',
+  'top-up': 'nap-tien',
   'topup-management': 'quan-ly-giao-dich',
   'admin-dashboard': 'bang-quan-tri'
 };

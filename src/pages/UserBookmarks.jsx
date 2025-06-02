@@ -24,7 +24,7 @@ import { useBookmarks } from '../context/BookmarkContext';
 import api from '../services/api';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { generateNovelUrl, generateChapterUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
+import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
 
 /**
  * UserBookmarksSEO Component
@@ -53,7 +53,7 @@ const UserBookmarksSEO = ({ user, username, totalBookmarks = 0 }) => {
       <meta property="og:title" content={`Truyện Đã Đánh Dấu - ${displayName} | Valvrareteam`} />
       <meta property="og:description" content={`Xem danh sách truyện đã đánh dấu của ${displayName} tại Valvrareteam.`} />
       <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-      <meta property="og:url" content={`https://valvrareteam.net/user/${username}/bookmarks`} />
+      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${username}/truyen-danh-dau`} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -282,7 +282,7 @@ const UserBookmarks = () => {
         <div className="bookmarks-grid">
           {bookmarks.map(novel => (
             <div key={novel._id} className="bookmark-card">
-                          <Link to={generateLocalizedNovelUrl(novel)} className="title-link">
+                          <Link to={generateNovelUrl(novel)} className="title-link">
                 <h3 className="bookmark-title-header">{novel.title}</h3>
               </Link>
               <div className="bookmark-card-content">

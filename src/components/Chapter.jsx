@@ -8,7 +8,7 @@ import '../styles/components/Chapter.css';
 import config from '../config/config';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { createUniqueSlug, generateLocalizedChapterUrl, generateLocalizedNovelUrl } from '../utils/slugUtils';
+import { createUniqueSlug, generateChapterUrl, generateNovelUrl } from '../utils/slugUtils';
 import { getValidToken, getAuthHeaders } from '../utils/auth';
 
 // Import components
@@ -750,7 +750,7 @@ const Chapter = ({ novelId, chapterId }) => {
             return response.data;
           }
         });
-        navigate(generateLocalizedChapterUrl(
+        navigate(generateChapterUrl(
           { _id: novelId, title: novel.title },
           chapter.prevChapter
         ));
@@ -779,7 +779,7 @@ const Chapter = ({ novelId, chapterId }) => {
             return response.data;
           }
         });
-        navigate(generateLocalizedChapterUrl(
+        navigate(generateChapterUrl(
           { _id: novelId, title: novel.title },
           chapter.nextChapter
         ));
@@ -822,7 +822,7 @@ const Chapter = ({ novelId, chapterId }) => {
       queryClient.invalidateQueries({queryKey: ['novel', novelId]});
 
       // Navigate back to novel page
-      navigate(generateLocalizedNovelUrl({ _id: novelId, title: novel.title }), {replace: true});
+      navigate(generateNovelUrl({ _id: novelId, title: novel.title }), {replace: true});
     } catch (err) {
       console.error('Không thể xóa chương:', err);
       setError('Không thể xóa chương. Vui lòng thử lại.');

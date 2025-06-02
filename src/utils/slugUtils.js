@@ -83,47 +83,23 @@ export const isValidObjectId = (id) => {
 };
 
 /**
- * Generates a novel URL with slug
+ * Generates a novel URL with Vietnamese slug (Primary)
  * @param {Object} novel - Novel object with _id and title
- * @returns {string} Novel URL with slug
+ * @returns {string} Novel URL with Vietnamese slug
  */
 export const generateNovelUrl = (novel) => {
-  if (!novel || !novel._id) return '/';
-  const slug = createUniqueSlug(novel.title, novel._id);
-  return `/novel/${slug}`;
-};
-
-/**
- * Generates a chapter URL with slug
- * @param {Object} novel - Novel object with _id and title
- * @param {Object} chapter - Chapter object with _id and title
- * @returns {string} Chapter URL with slug
- */
-export const generateChapterUrl = (novel, chapter) => {
-  if (!novel || !novel._id || !chapter || !chapter._id) return '/';
-  const novelSlug = createUniqueSlug(novel.title, novel._id);
-  const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
-  return `/novel/${novelSlug}/chapter/${chapterSlug}`;
-};
-
-/**
- * Generates a localized novel URL with Vietnamese path segments
- * @param {Object} novel - Novel object with _id and title
- * @returns {string} Localized novel URL with slug
- */
-export const generateLocalizedNovelUrl = (novel) => {
   if (!novel || !novel._id) return '/';
   const slug = createUniqueSlug(novel.title, novel._id);
   return `/truyen/${slug}`;
 };
 
 /**
- * Generates a localized chapter URL with Vietnamese path segments
+ * Generates a chapter URL with Vietnamese slug (Primary)
  * @param {Object} novel - Novel object with _id and title
  * @param {Object} chapter - Chapter object with _id and title
- * @returns {string} Localized chapter URL with slug
+ * @returns {string} Chapter URL with Vietnamese slug
  */
-export const generateLocalizedChapterUrl = (novel, chapter) => {
+export const generateChapterUrl = (novel, chapter) => {
   if (!novel || !novel._id || !chapter || !chapter._id) return '/';
   const novelSlug = createUniqueSlug(novel.title, novel._id);
   const chapterSlug = createUniqueSlug(chapter.title, chapter._id);
@@ -131,33 +107,84 @@ export const generateLocalizedChapterUrl = (novel, chapter) => {
 };
 
 /**
- * Generates a localized user profile URL
- * @param {string} username - The username
- * @returns {string} Localized user profile URL
+ * @deprecated Use generateNovelUrl instead (now uses Vietnamese paths by default)
+ * Generates a localized novel URL with Vietnamese path segments
+ * @param {Object} novel - Novel object with _id and title
+ * @returns {string} Localized novel URL with slug
  */
-export const generateLocalizedUserProfileUrl = (username) => {
+export const generateLocalizedNovelUrl = (novel) => {
+  return generateNovelUrl(novel);
+};
+
+/**
+ * @deprecated Use generateChapterUrl instead (now uses Vietnamese paths by default)
+ * Generates a localized chapter URL with Vietnamese path segments
+ * @param {Object} novel - Novel object with _id and title
+ * @param {Object} chapter - Chapter object with _id and title
+ * @returns {string} Localized chapter URL with slug
+ */
+export const generateLocalizedChapterUrl = (novel, chapter) => {
+  return generateChapterUrl(novel, chapter);
+};
+
+/**
+ * Generates a user profile URL (Primary)
+ * @param {string} username - The username
+ * @returns {string} User profile URL
+ */
+export const generateUserProfileUrl = (username) => {
   if (!username) return '/';
   return `/nguoi-dung/${username}/trang-ca-nhan`;
 };
 
 /**
- * Generates a localized user bookmarks URL
+ * Generates a user bookmarks URL (Primary)
  * @param {string} username - The username
- * @returns {string} Localized user bookmarks URL
+ * @returns {string} User bookmarks URL
  */
-export const generateLocalizedUserBookmarksUrl = (username) => {
+export const generateUserBookmarksUrl = (username) => {
   if (!username) return '/';
   return `/nguoi-dung/${username}/truyen-danh-dau`;
 };
 
 /**
+ * Generates a user change password URL (Primary)
+ * @param {string} username - The username
+ * @returns {string} User change password URL
+ */
+export const generateUserChangePasswordUrl = (username) => {
+  if (!username) return '/';
+  return `/nguoi-dung/${username}/thay-doi-mat-khau`;
+};
+
+/**
+ * @deprecated Use generateUserProfileUrl instead (now uses Vietnamese paths by default)
+ * Generates a localized user profile URL
+ * @param {string} username - The username
+ * @returns {string} Localized user profile URL
+ */
+export const generateLocalizedUserProfileUrl = (username) => {
+  return generateUserProfileUrl(username);
+};
+
+/**
+ * @deprecated Use generateUserBookmarksUrl instead (now uses Vietnamese paths by default)
+ * Generates a localized user bookmarks URL
+ * @param {string} username - The username
+ * @returns {string} Localized user bookmarks URL
+ */
+export const generateLocalizedUserBookmarksUrl = (username) => {
+  return generateUserBookmarksUrl(username);
+};
+
+/**
+ * @deprecated Use generateUserChangePasswordUrl instead (now uses Vietnamese paths by default)
  * Generates a localized change password URL
  * @param {string} username - The username
  * @returns {string} Localized change password URL
  */
 export const generateLocalizedChangePasswordUrl = (username) => {
-  if (!username) return '/';
-  return `/nguoi-dung/${username}/thay-doi-mat-khau`;
+  return generateUserChangePasswordUrl(username);
 };
 
 /**
@@ -179,6 +206,92 @@ export const generateLocalizedAddChapterUrl = (novel, module) => {
  */
 export const generateLocalizedAdminDashboardUrl = () => {
   return '/bang-quan-tri';
+};
+
+/**
+ * Generates a localized feedback URL
+ * @returns {string} Localized feedback URL
+ */
+export const generateLocalizedFeedbackUrl = () => {
+  return '/phan-hoi';
+};
+
+/**
+ * Generates a localized market URL
+ * @returns {string} Localized market URL
+ */
+export const generateLocalizedMarketUrl = () => {
+  return '/bang-yeu-cau';
+};
+
+/**
+ * Generates a localized top-up URL
+ * @returns {string} Localized top-up URL
+ */
+export const generateLocalizedTopUpUrl = () => {
+  return '/nap-tien';
+};
+
+/**
+ * Generates a localized top-up management URL
+ * @returns {string} Localized top-up management URL
+ */
+export const generateLocalizedTopUpManagementUrl = () => {
+  return '/quan-ly-giao-dich';
+};
+
+/**
+ * Generates a localized novel directory URL
+ * @param {number} page - Optional page number
+ * @returns {string} Localized novel directory URL
+ */
+export const generateLocalizedNovelDirectoryUrl = (page) => {
+  if (page && page > 1) {
+    return `/danh-sach-truyen/trang/${page}`;
+  }
+  return '/danh-sach-truyen';
+};
+
+/**
+ * Generates a localized trending novels URL
+ * @returns {string} Localized trending novels URL
+ */
+export const generateLocalizedTrendingNovelsUrl = () => {
+  return '/truyen-xu-huong';
+};
+
+/**
+ * Generates a localized novel list URL with pagination
+ * @param {number} page - Page number
+ * @returns {string} Localized novel list URL
+ */
+export const generateLocalizedNovelListUrl = (page) => {
+  if (page && page > 1) {
+    return `/trang/${page}`;
+  }
+  return '/';
+};
+
+/**
+ * Generates a localized reset password URL
+ * @param {string} token - Reset password token
+ * @returns {string} Localized reset password URL
+ */
+export const generateLocalizedResetPasswordUrl = (token) => {
+  if (!token) return '/';
+  return `/phuc-hoi-mat-khau/${token}`;
+};
+
+/**
+ * Generates a localized OLN URL with pagination
+ * @param {number} page - Optional page number
+ * @returns {string} Localized OLN URL
+ */
+export const generateLocalizedOLNUrl = (page) => {
+  if (page && page > 1) {
+    return `/oln/trang/${page}`;
+  }
+  return '/oln';
 };
 
 /**

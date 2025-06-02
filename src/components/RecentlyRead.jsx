@@ -22,7 +22,7 @@ import '../styles/components/RecentlyRead.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
 import LoadingSpinner from './LoadingSpinner';
-import { generateChapterUrl, generateLocalizedChapterUrl } from '../utils/slugUtils';
+import { generateChapterUrl } from '../utils/slugUtils';
 import { getAuthHeaders } from '../utils/auth';
 
 // Memoized recently read card component for better performance
@@ -48,7 +48,7 @@ const RecentlyReadCard = memo(({ readItem }) => {
   }
   
   return (
-          <Link to={generateLocalizedChapterUrl(novel, chapter)} className="recently-read-card">
+          <Link to={generateChapterUrl(novel, chapter)} className="recently-read-card">
       <div className="recently-read-cover">
         <img
           className="recently-read-image"

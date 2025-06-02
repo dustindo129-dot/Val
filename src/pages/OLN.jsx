@@ -6,7 +6,7 @@ import axios from 'axios';
 import '../styles/NovelList.css';
 import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { generateNovelUrl, generateChapterUrl, generateLocalizedNovelUrl, generateLocalizedChapterUrl } from '../utils/slugUtils';
+import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 /**
@@ -111,7 +111,7 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
                 {translateStatus(status)}
             </span>
             {firstChapter && (
-                <Link to={generateLocalizedChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
+                <Link to={generateChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
                     &gt;&gt; Chương đầu
                 </Link>
             )}
@@ -302,7 +302,7 @@ const OLN = () => {
     }, [novels, data]);
 
     const handlePageChange = (page) => {
-        navigate(`/oln/page/${page}`);
+        navigate(`/oln/trang/${page}`);
     };
 
     const renderPagination = () => {
@@ -319,7 +319,7 @@ const OLN = () => {
             pages.push(
                 <Link
                     key="1"
-                    to="/oln/page/1"
+                    to="/oln/trang/1"
                     className={`pagination-button ${1 === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -335,7 +335,7 @@ const OLN = () => {
             pages.push(
                 <Link
                     key={i}
-                    to={`/oln/page/${i}`}
+                    to={`/oln/trang/${i}`}
                     className={`pagination-button ${i === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -351,7 +351,7 @@ const OLN = () => {
             pages.push(
                 <Link
                     key={pagination.totalPages}
-                    to={`/oln/page/${pagination.totalPages}`}
+                    to={`/oln/trang/${pagination.totalPages}`}
                     className={`pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
@@ -363,7 +363,7 @@ const OLN = () => {
         return (
             <div className="pagination">
                 <Link
-                    to={currentPage > 1 ? `/oln/page/${currentPage - 1}` : '#'}
+                    to={currentPage > 1 ? `/oln/trang/${currentPage - 1}` : '#'}
                     onClick={(e) => {
                         if (currentPage === 1) e.preventDefault();
                         else window.scrollTo(0, 0);
@@ -374,7 +374,7 @@ const OLN = () => {
                 </Link>
                 {pages}
                 <Link
-                    to={currentPage < pagination.totalPages ? `/oln/page/${currentPage + 1}` : '#'}
+                    to={currentPage < pagination.totalPages ? `/oln/trang/${currentPage + 1}` : '#'}
                     onClick={(e) => {
                         if (currentPage === pagination.totalPages) e.preventDefault();
                         else window.scrollTo(0, 0);
@@ -578,7 +578,7 @@ const OLN = () => {
                                     }}>
                                         {/* Novel header with title and update time */}
                                         <div className="novel-header">
-                                            <Link to={generateLocalizedNovelUrl(novel)} className="novel-list-title-link">
+                                            <Link to={generateNovelUrl(novel)} className="novel-list-title-link">
                                                 <h3 className="novel-title">{novel.title}</h3>
                                             </Link>
                                             <div className="update-time">
@@ -662,7 +662,7 @@ const OLN = () => {
                                                     {sortedChapters.map(chapter => (
                                                         <div key={chapter._id} className="novel-list-chapter-item">
                                                             <Link
-                                                                to={generateLocalizedChapterUrl(novel, chapter)}
+                                                                to={generateChapterUrl(novel, chapter)}
                                                                 className="novel-list-chapter-title"
                                                             >
                                                                 {chapter.title}

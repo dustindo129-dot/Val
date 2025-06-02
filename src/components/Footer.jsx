@@ -16,9 +16,9 @@ const Footer = () => {
   const getSEOPageType = () => {
     const path = location.pathname;
     
-    if (path.includes('light-novel-vietsub')) {
+    if (path.includes('truyen-xu-huong')) {
       return 'trending';
-    } else if (path === '/' || path.includes('page/')) {
+    } else if (path === '/' || path.includes('trang/')) {
       return 'home';
     }
     

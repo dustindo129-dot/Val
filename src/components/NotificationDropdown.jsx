@@ -514,29 +514,29 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         if (notification.data?.contentType && notification.data?.contentId) {
           if (notification.data.contentType === 'chapter' && notification.data.novelId && notification.data.chapterId) {
             const chapterSlug = createUniqueSlug(notification.data.chapterTitle || 'Chapter', notification.data.chapterId);
-            return `/novel/${notification.data.novelId}/chapter/${chapterSlug}`;
+            return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}`;
           } else if (notification.data.contentType === 'novel' && notification.data.contentId) {
-            return `/novel/${notification.data.contentId}`;
+            return `/truyen/${notification.data.contentId}`;
           } else if (notification.data.contentType === 'comment' && notification.data.novelId) {
             // For comment reports, navigate to the novel or chapter if available
             if (notification.data.chapterId) {
               const chapterSlug = createUniqueSlug(notification.data.chapterTitle || 'Chapter', notification.data.chapterId);
-              return `/novel/${notification.data.novelId}/chapter/${chapterSlug}`;
+              return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}`;
             }
-            return `/novel/${notification.data.novelId}`;
+            return `/truyen/${notification.data.novelId}`;
           }
         }
         return '#'; // Fallback if no navigation data
       case 'comment_reply':
         if (notification.data?.chapterId && notification.data?.novelId) {
           const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
-          return `/novel/${notification.data.novelId}/chapter/${chapterSlug}#comment-${notification.data.originalCommentId}`;
+          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}#comment-${notification.data.originalCommentId}`;
         }
         return '#';
       case 'new_chapter':
         if (notification.data?.chapterId && notification.data?.novelId) {
           const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
-          return `/novel/${notification.data.novelId}/chapter/${chapterSlug}`;
+          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}`;
         }
         return '#';
       default:

@@ -32,7 +32,7 @@ import {
   faBookmark 
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
-import { createUniqueSlug, generateLocalizedChapterUrl } from '../../utils/slugUtils';
+import { createUniqueSlug, generateChapterUrl } from '../../utils/slugUtils';
 import { translateStatus, getStatusForCSS } from '../../utils/statusTranslation';
 
 const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
@@ -576,7 +576,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                 <div className="rd-actions-row">
                   {chaptersData?.chapters?.length > 0 ? (
                     <Link 
-                      to={generateLocalizedChapterUrl(
+                      to={generateChapterUrl(
                         { _id: novelId, title: novelData.title },
                         chaptersData.chapters[0]
                       )} 
@@ -595,7 +595,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                   {chaptersData?.chapters?.length > 0 ? (
                     bookmarkData?.bookmarkedChapter ? (
                       <Link 
-                        to={generateLocalizedChapterUrl(
+                        to={generateChapterUrl(
                           { _id: novelId, title: novelData.title },
                           { _id: bookmarkData.bookmarkedChapter.id, title: bookmarkData.bookmarkedChapter.title }
                         )} 
@@ -607,7 +607,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                       </Link>
                     ) : (
                                               <Link 
-                          to={generateLocalizedChapterUrl(
+                          to={generateChapterUrl(
                             { _id: novelId, title: novelData.title },
                             chaptersData.chapters[chaptersData.chapters.length - 1]
                           )} 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createUniqueSlug, generateLocalizedNovelUrl } from '../../utils/slugUtils';
+import { createUniqueSlug, generateNovelUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 
 /**
@@ -84,7 +84,7 @@ const RequestHistory = ({
                 {request.novel && (
                   <div className="history-novel">
                     <span>Truyện: </span>
-                    <Link to={generateLocalizedNovelUrl(request.novel)}>{request.novel.title}</Link>
+                    <Link to={generateNovelUrl(request.novel)}>{request.novel.title}</Link>
                     {request.module && (
                       <span className="module-info">- {request.module.title}</span>
                     )}

@@ -119,6 +119,7 @@ html {
   margin: 0 auto;
   flex: 1 0 auto; /* This ensures the footer stays at the bottom */
   width: 100%;
+  min-height: calc(100vh - 200px); /* Add immediate minimum height to prevent footer flash */
 }
 
 /* App container layout */
@@ -127,6 +128,11 @@ html {
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
+}
+
+/* Add immediate height to prevent footer jumping during initial load */
+body {
+  min-height: 100vh;
 }
 
 /* Mobile responsive styles */

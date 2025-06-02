@@ -188,6 +188,7 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 0;
+    min-height: 60vh;
 }
 
 /* Section headers with decorative elements */
@@ -216,6 +217,7 @@
 /* Novel list container */
 .novel-list-container {
     padding: 0.5rem 0;
+    min-height: 60vh;
 }
 
 .novel-grid {
@@ -614,6 +616,11 @@
     padding: 3rem 0;
     font-size: 1.25rem;
     color: #666;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .error {
@@ -1086,4 +1093,9 @@
     width: 100%;
     margin-bottom: 20px;
   }
+}
+
+/* Novel list specific minimum height to prevent footer jumping */
+.novel-list-wrapper {
+    min-height: calc(100vh - 160px); /* Account for header and footer approximate heights */
 }
