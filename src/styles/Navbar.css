@@ -504,10 +504,6 @@ body {
     max-width: none;
   }
 
-  .title-container {
-    /* Gap no longer needed since beta tag is removed */
-  }
-
   .navbar-user-username {
     font-size: 0.85rem;
   }
