@@ -1,5 +1,7 @@
-# Legacy URL redirects
-/homepage / 301
+# Prevent duplicate content - redirect to preferred URLs
+/trang/1 / 301
+/danh-sach-truyen /danh-sach-truyen/trang/1 301
+/oln /oln/trang/1 301
 
 # API routes
 /api/* /.netlify/functions/:splat 200

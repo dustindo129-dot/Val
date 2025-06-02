@@ -209,13 +209,6 @@ const OLN = () => {
     const tagListRefs = useRef({});
     const descriptionRefs = useRef({});
 
-    // Redirect /oln to /oln/trang/1 for consistent pagination
-    useEffect(() => {
-        if (location.pathname === '/oln') {
-            navigate('/oln/trang/1', { replace: true });
-        }
-    }, [location.pathname, navigate]);
-
     const { data, isLoading, error } = useQuery({
         queryKey: ['vietnameseNovels', currentPage, sortOrder],
         queryFn: async () => {
