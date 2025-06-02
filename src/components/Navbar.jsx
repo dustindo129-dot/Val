@@ -443,8 +443,8 @@ const Navbar = () => {
                     <span className="bookmark-count">{bookmarkedNovels.length}</span>
                   )}
                 </Link>
-                <div className="user-info">
-                  <span className="user-username">{user.displayName || user.username}</span>
+                <div className="navbar-user-info">
+                  <span className="navbar-user-username">{user.displayName || user.username}</span>
                   <div className="user-dropdown-container">
                     <div className="navbar-user-avatar" onClick={toggleDropdown}>
                       <img 

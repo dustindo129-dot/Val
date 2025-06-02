@@ -705,8 +705,9 @@ const TopUpManagement = () => {
                         )}
                       </div>
                       <div className="topup-user-info">
-                        <div className="user-username">{user.displayName || user.username}</div>
-                        <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
+                        <div className="user-display-name">{user.displayName || user.username}</div>
+                        <div className="user-username">@{user.username}</div>
+                        <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0} 🌾</div>
                       </div>
                     </div>
                   ))}
@@ -924,8 +925,9 @@ const TopUpManagement = () => {
                           )}
                         </div>
                         <div className="topup-user-info">
-                          <div className="user-username">{user.displayName || user.username}</div>
-                          <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
+                          <div className="user-display-name">{user.displayName || user.username}</div>
+                          <div className="user-username">@{user.username}</div>
+                          <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0} 🌾</div>
                         </div>
                       </div>
                     ))}
@@ -1117,8 +1119,9 @@ const TopUpManagement = () => {
                                     )}
                                   </div>
                                   <div className="topup-user-info">
-                                    <div className="user-username">{user.displayName || user.username}</div>
-                                    <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0}</div>
+                                    <div className="user-display-name">{user.displayName || user.username}</div>
+                                    <div className="user-username">@{user.username}</div>
+                                    <div className="topup-user-balance">Số dư hiện tại: {user.balance || 0} 🌾</div>
                                   </div>
                                 </div>
                               ))}

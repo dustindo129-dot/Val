@@ -18,7 +18,7 @@
  * - Role-based access control
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
@@ -163,11 +163,13 @@ const AdminDashboard = () => {
     author: '', 
     illustrator: '',
     active: {
+      pj_user: [],
       translator: [],
       editor: [],
       proofreader: []
     },
     inactive: {
+      pj_user: [],
       translator: [],
       editor: [],
       proofreader: []
@@ -185,6 +187,10 @@ const AdminDashboard = () => {
   const [activeStaffItems, setActiveStaffItems] = useState([]);
   const [inactiveStaffItems, setInactiveStaffItems] = useState([]);
   
+  // User search state for active staff
+  const [userSearchResults, setUserSearchResults] = useState({});
+  const [searchingUsers, setSearchingUsers] = useState({});
+  
   const [description, setDescription] = useState('');
   const editorRef = useRef(null);
   const noteEditorRef = useRef(null);
@@ -199,11 +205,14 @@ const AdminDashboard = () => {
     novelToDelete: null
   });
 
+  // Add debounce timeout ref for user search
+  const searchTimeoutRef = useRef(null);
+
   // Fetch novels using React Query
   const { data: novels = [] } = useQuery({
     queryKey: ['novels'],
     queryFn: async () => {
-      const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&t=${Date.now()}`, {
+      const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&skipPopulation=true&t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -283,11 +292,22 @@ const AdminDashboard = () => {
    * @param {string} status - 'active' or 'inactive'
    */
   const addStaffItem = (status) => {
-    const newItem = { id: Date.now(), name: '', role: 'translator' };
-    
     if (status === 'active') {
+      // Active staff items have user search functionality
+      const newItem = { 
+        id: Date.now(), 
+        selectedUser: null, 
+        searchQuery: '',
+        role: 'pj_user' 
+      };
       setActiveStaffItems([...activeStaffItems, newItem]);
     } else {
+      // Inactive staff items are simple name strings
+      const newItem = { 
+        id: Date.now(), 
+        name: '', 
+        role: 'pj_user' 
+      };
       setInactiveStaffItems([...inactiveStaffItems, newItem]);
     }
   };
@@ -309,48 +329,59 @@ const AdminDashboard = () => {
    * Handles changes to a staff item
    * @param {string} status - 'active' or 'inactive'
    * @param {number} id - id of the staff item
-   * @param {string} field - 'name' or 'role'
+   * @param {string} field - field name to update
    * @param {string} value - new value
    */
   const handleStaffItemChange = (status, id, field, value) => {
     if (status === 'active') {
-      setActiveStaffItems(activeStaffItems.map(item => 
-        item.id === id ? { ...item, [field]: value } : item
-      ));
+      if (field === 'searchQuery') {
+        // Handle user search for active staff
+        setActiveStaffItems(activeStaffItems.map(item => 
+          item.id === id ? { ...item, searchQuery: value, selectedUser: null } : item
+        ));
+        // Clear previous timeout
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current);
+        }
+        // Debounce the search call
+        searchTimeoutRef.current = setTimeout(() => {
+          searchUsers(value, id);
+        }, 300); // 300ms debounce delay
+      } else if (field === 'role') {
+        // Handle role change for active staff
+        setActiveStaffItems(activeStaffItems.map(item => 
+          item.id === id ? { ...item, [field]: value } : item
+        ));
+      }
     } else {
+      // Handle inactive staff (simple name/role fields)
       setInactiveStaffItems(inactiveStaffItems.map(item => 
         item.id === id ? { ...item, [field]: value } : item
       ));
     }
   };
 
-  // Convert staff items arrays to the novel staff structure
-  const compileStaffToNovel = () => {
-    const active = {
-      translator: activeStaffItems
-        .filter(item => item.role === 'translator' && item.name.trim())
-        .map(item => item.name.trim()),
-      editor: activeStaffItems
-        .filter(item => item.role === 'editor' && item.name.trim())
-        .map(item => item.name.trim()),
-      proofreader: activeStaffItems
-        .filter(item => item.role === 'proofreader' && item.name.trim())
-        .map(item => item.name.trim())
-    };
-    
-    const inactive = {
-      translator: inactiveStaffItems
-        .filter(item => item.role === 'translator' && item.name.trim())
-        .map(item => item.name.trim()),
-      editor: inactiveStaffItems
-        .filter(item => item.role === 'editor' && item.name.trim())
-        .map(item => item.name.trim()),
-      proofreader: inactiveStaffItems
-        .filter(item => item.role === 'proofreader' && item.name.trim())
-        .map(item => item.name.trim())
-    };
-    
-    return { active, inactive };
+  /**
+   * Fetches user data by ID for active staff initialization
+   * @param {string} userId - User ID to fetch
+   * @returns {Object|null} User object or null if not found
+   */
+  const fetchUserById = async (userId) => {
+    try {
+      const response = await fetch(`${config.backendUrl}/api/users/id/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        return userData;
+      }
+    } catch (error) {
+      console.error('❌ Error fetching user:', error);
+    }
+    return null;
   };
 
   // Initialize staff items from novel data when editing
@@ -360,17 +391,75 @@ const AdminDashboard = () => {
       const activeItems = [];
       const inactiveItems = [];
       
-      // Process active staff
-      ['translator', 'editor', 'proofreader'].forEach(role => {
-        if (editingNovel.active && Array.isArray(editingNovel.active[role])) {
-          editingNovel.active[role].forEach(name => {
-            activeItems.push({ id: Date.now() + Math.random(), name, role });
-          });
-        }
-      });
+      // Helper function to check if a value looks like a MongoDB ObjectId
+      const isObjectId = (str) => {
+        return typeof str === 'string' && /^[0-9a-fA-F]{24}$/.test(str);
+      };
       
-      // Process inactive staff
-      ['translator', 'editor', 'proofreader'].forEach(role => {
+      // Helper function to fetch user data and create active staff item
+      const createActiveStaffItem = async (item, role) => {
+        if (isObjectId(item)) {
+          // This is a User ObjectId - fetch the user data
+          try {
+            const userData = await fetchUserById(item);
+            if (userData) {
+              return { 
+                id: Date.now() + Math.random(), 
+                selectedUser: userData, // Set the actual user data
+                searchQuery: userData.displayName || userData.username, // Show the user's name
+                userId: item, // Store the actual user ID
+                role 
+              };
+            } else {
+              // User not found, show placeholder
+              return { 
+                id: Date.now() + Math.random(), 
+                selectedUser: null,
+                searchQuery: `[User Not Found: ${item}]`,
+                userId: item,
+                role 
+              };
+            }
+          } catch (error) {
+            // On error, show placeholder
+            return { 
+              id: Date.now() + Math.random(), 
+              selectedUser: null,
+              searchQuery: `[Error Loading User: ${item}]`,
+              userId: item,
+              role 
+            };
+          }
+        } else {
+          // This is a text string - treat as regular text input
+          return { 
+            id: Date.now() + Math.random(), 
+            selectedUser: null, // No selected user
+            searchQuery: item, // Use the text as search query
+            role 
+          };
+        }
+      };
+      
+      // Process active staff asynchronously
+      const processActiveStaff = async () => {
+        const activeItemsPromises = [];
+        
+        ['pj_user', 'translator', 'editor', 'proofreader'].forEach(role => {
+          if (editingNovel.active && Array.isArray(editingNovel.active[role])) {
+            editingNovel.active[role].forEach((item) => {
+              activeItemsPromises.push(createActiveStaffItem(item, role));
+            });
+          }
+        });
+        
+        // Wait for all user data to be fetched
+        const resolvedActiveItems = await Promise.all(activeItemsPromises);
+        setActiveStaffItems(resolvedActiveItems);
+      };
+      
+      // Process inactive staff (these are always text strings)
+      ['pj_user', 'translator', 'editor', 'proofreader'].forEach(role => {
         if (editingNovel.inactive && Array.isArray(editingNovel.inactive[role])) {
           editingNovel.inactive[role].forEach(name => {
             inactiveItems.push({ id: Date.now() + Math.random(), name, role });
@@ -378,14 +467,52 @@ const AdminDashboard = () => {
         }
       });
       
-      setActiveStaffItems(activeItems);
+      // Set inactive items immediately
       setInactiveStaffItems(inactiveItems);
+      
+      // Process active staff asynchronously
+      processActiveStaff().catch(error => {
+        // On error, fall back to the old behavior
+        const fallbackActiveItems = [];
+        ['pj_user', 'translator', 'editor', 'proofreader'].forEach(role => {
+          if (editingNovel.active && Array.isArray(editingNovel.active[role])) {
+            editingNovel.active[role].forEach((item) => {
+              if (isObjectId(item)) {
+                fallbackActiveItems.push({ 
+                  id: Date.now() + Math.random(), 
+                  selectedUser: null,
+                  searchQuery: `[Linked User: ${item}]`,
+                  userId: item,
+                  role 
+                });
+              } else {
+                fallbackActiveItems.push({ 
+                  id: Date.now() + Math.random(), 
+                  selectedUser: null,
+                  searchQuery: item,
+                  role 
+                });
+              }
+            });
+          }
+        });
+        setActiveStaffItems(fallbackActiveItems);
+      });
     } else {
       // Clear staff items when not editing
       setActiveStaffItems([]);
       setInactiveStaffItems([]);
     }
   }, [editingNovel?._id]);
+
+  // Cleanup search timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   /**
    * Handles illustration file upload
@@ -432,7 +559,6 @@ const AdminDashboard = () => {
       setError('');
     } catch (err) {
       setError('Không thể tải lên ảnh');
-      console.error('Lỗi tải lên ảnh:', err);
     } finally {
       setLoading(false);
     }
@@ -464,11 +590,13 @@ const AdminDashboard = () => {
         author: editingNovel ? editingNovel.author : newNovel.author,
         illustrator: editingNovel ? editingNovel.illustrator : newNovel.illustrator,
         active: {
+          pj_user: staffData.active.pj_user || [],
           translator: staffData.active.translator || [],
           editor: staffData.active.editor || [],
           proofreader: staffData.active.proofreader || []
         },
         inactive: {
+          pj_user: staffData.inactive.pj_user || [],
           translator: staffData.inactive.translator || [],
           editor: staffData.inactive.editor || [],
           proofreader: staffData.inactive.proofreader || []
@@ -479,6 +607,22 @@ const AdminDashboard = () => {
         illustration: editingNovel ? editingNovel.illustration : newNovel.illustration,
         status: editingNovel ? editingNovel.status : "Ongoing"
       };
+
+      // If editing, check if only non-critical fields were changed to preserve updatedAt timestamp
+      if (editingNovel) {
+        const hasContentUpdate = (
+          novelData.title !== editingNovel.title ||           // Title changed
+          novelData.note !== editingNovel.note ||             // Note changed  
+          novelData.illustration !== editingNovel.illustration || // Illustration changed
+          novelData.status !== editingNovel.status            // Status changed
+        );
+
+        if (!hasContentUpdate) {
+          // Preserve the original updatedAt timestamp for non-content changes
+          novelData.updatedAt = editingNovel.updatedAt;
+          novelData.preserveTimestamp = true; // Flag for backend
+        }
+      }
 
       const response = await fetch(url, {
         method,
@@ -505,7 +649,7 @@ const AdminDashboard = () => {
       
       // Manually fetch fresh data to update the UI immediately
       try {
-        const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&t=${Date.now()}`, {
+        const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&skipPopulation=true&t=${Date.now()}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -545,11 +689,13 @@ const AdminDashboard = () => {
       author: novel.author || '',
       illustrator: novel.illustrator || '',
       active: {
+        pj_user: novel.active?.pj_user || [],
         translator: novel.active?.translator || [],
         editor: novel.active?.editor || [],
         proofreader: novel.active?.proofreader || []
       },
       inactive: {
+        pj_user: novel.inactive?.pj_user || [],
         translator: novel.inactive?.translator || [],
         editor: novel.inactive?.editor || [],
         proofreader: novel.inactive?.proofreader || []
@@ -663,11 +809,13 @@ const AdminDashboard = () => {
       author: '', 
       illustrator: '',
       active: {
+        pj_user: [],
         translator: [],
         editor: [],
         proofreader: []
       },
       inactive: {
+        pj_user: [],
         translator: [],
         editor: [],
         proofreader: []
@@ -682,6 +830,9 @@ const AdminDashboard = () => {
     // Reset staff items
     setActiveStaffItems([]);
     setInactiveStaffItems([]);
+    // Clear user search states
+    setUserSearchResults({});
+    setSearchingUsers({});
     if (editorRef.current) {
       editorRef.current.setContent('');
     }
@@ -703,7 +854,7 @@ const AdminDashboard = () => {
       // Get current cache data
       const previousData = queryClient.getQueryData(['novels']);
       
-      // Create a timestamp for consistent optimistic updates
+      // Create a timestamp for the status update (this should update updatedAt)
       const updatedAt = new Date().toISOString();
       
       // Find the novel in the current data
@@ -722,7 +873,7 @@ const AdminDashboard = () => {
       // Update the status in the context
       updateNovelStatus(id, status);
 
-      // Send request to server with all required fields
+      // Send request to server - status changes should update timestamp
       const response = await fetch(`${config.backendUrl}/api/novels/${id}`, {
         method: 'PUT',
         headers: {
@@ -732,7 +883,9 @@ const AdminDashboard = () => {
         body: JSON.stringify({ 
           ...currentNovel, // Include all existing novel data
           status,
-          updatedAt 
+          updatedAt,
+          // Don't preserve timestamp for status changes - we want it to update
+          preserveTimestamp: false
         })
       });
 
@@ -814,7 +967,7 @@ const AdminDashboard = () => {
       }
 
       // Immediately fetch fresh data
-      const freshDataResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&t=${Date.now()}`, {
+      const freshDataResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&skipPopulation=true&t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -836,6 +989,136 @@ const AdminDashboard = () => {
       console.error('Lỗi cập nhật số dư:', err);
       setError(err.message);
     }
+  };
+
+  /**
+   * Searches for users by username/displayName for active staff assignment
+   * @param {string} query - Search query
+   * @param {number} itemId - Staff item ID for tracking search results
+   */
+  const searchUsers = async (query, itemId) => {
+    if (!query || query.length < 2) {
+      setUserSearchResults(prev => ({ ...prev, [itemId]: [] }));
+      return;
+    }
+
+    setSearchingUsers(prev => ({ ...prev, [itemId]: true }));
+
+    try {
+      const response = await fetch(`${config.backendUrl}/api/users/search?query=${encodeURIComponent(query)}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const users = await response.json();
+        setUserSearchResults(prev => ({ ...prev, [itemId]: users }));
+      } else {
+        setUserSearchResults(prev => ({ ...prev, [itemId]: [] }));
+      }
+    } catch (error) {
+      console.error('User search error:', error);
+      setUserSearchResults(prev => ({ ...prev, [itemId]: [] }));
+    } finally {
+      setSearchingUsers(prev => ({ ...prev, [itemId]: false }));
+    }
+  };
+
+  /**
+   * Selects a user for active staff assignment
+   * @param {number} itemId - Staff item ID
+   * @param {Object} user - Selected user object
+   */
+  const selectUserForActiveStaff = (itemId, user) => {
+    setActiveStaffItems(activeStaffItems.map(item => 
+      item.id === itemId ? { 
+        ...item, 
+        selectedUser: user,
+        searchQuery: user.displayName || user.username
+      } : item
+    ));
+    // Clear search results for this item
+    setUserSearchResults(prev => ({ ...prev, [itemId]: [] }));
+  };
+
+  // Convert staff items arrays to the novel staff structure
+  const compileStaffToNovel = () => {
+    const active = {
+      pj_user: [
+        // User IDs for selected users
+        ...activeStaffItems
+          .filter(item => item.role === 'pj_user' && item.selectedUser)
+          .map(item => item.selectedUser._id),
+        // User IDs for previously linked users (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'pj_user' && !item.selectedUser && item.userId)
+          .map(item => item.userId),
+        // Text names for non-selected entries (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'pj_user' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+          .map(item => item.searchQuery.trim())
+      ],
+      translator: [
+        // User IDs for selected users
+        ...activeStaffItems
+          .filter(item => item.role === 'translator' && item.selectedUser)
+          .map(item => item.selectedUser._id),
+        // User IDs for previously linked users (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'translator' && !item.selectedUser && item.userId)
+          .map(item => item.userId),
+        // Text names for non-selected entries (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'translator' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+          .map(item => item.searchQuery.trim())
+      ],
+      editor: [
+        // User IDs for selected users
+        ...activeStaffItems
+          .filter(item => item.role === 'editor' && item.selectedUser)
+          .map(item => item.selectedUser._id),
+        // User IDs for previously linked users (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'editor' && !item.selectedUser && item.userId)
+          .map(item => item.userId),
+        // Text names for non-selected entries (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'editor' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+          .map(item => item.searchQuery.trim())
+      ],
+      proofreader: [
+        // User IDs for selected users
+        ...activeStaffItems
+          .filter(item => item.role === 'proofreader' && item.selectedUser)
+          .map(item => item.selectedUser._id),
+        // User IDs for previously linked users (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'proofreader' && !item.selectedUser && item.userId)
+          .map(item => item.userId),
+        // Text names for non-selected entries (backward compatibility)
+        ...activeStaffItems
+          .filter(item => item.role === 'proofreader' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+          .map(item => item.searchQuery.trim())
+      ]
+    };
+    
+    const inactive = {
+      pj_user: inactiveStaffItems
+        .filter(item => item.role === 'pj_user' && item.name.trim())
+        .map(item => item.name.trim()),
+      translator: inactiveStaffItems
+        .filter(item => item.role === 'translator' && item.name.trim())
+        .map(item => item.name.trim()),
+      editor: inactiveStaffItems
+        .filter(item => item.role === 'editor' && item.name.trim())
+        .map(item => item.name.trim()),
+      proofreader: inactiveStaffItems
+        .filter(item => item.role === 'proofreader' && item.name.trim())
+        .map(item => item.name.trim())
+    };
+    
+    return { active, inactive };
   };
 
   return (
@@ -904,20 +1187,47 @@ const AdminDashboard = () => {
               
               <div className="staff-items-grid">
                 {activeStaffItems.map((item, index) => (
-                  <div key={item.id} className="staff-item">
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      value={item.name}
-                      onChange={(e) => handleStaffItemChange('active', item.id, 'name', e.target.value)}
-                    />
+                  <div key={item.id} className="staff-item" data-role={item.role}>
+                    <div className="user-search-container">
+                      <input
+                        type="text"
+                        placeholder="Tìm người dùng..."
+                        value={item.searchQuery || ''}
+                        onChange={(e) => handleStaffItemChange('active', item.id, 'searchQuery', e.target.value)}
+                      />
+                      {item.selectedUser && (
+                        <div className="user-selected-indicator">
+                          ✓
+                        </div>
+                      )}
+                      {searchingUsers[item.id] && (
+                        <div className="search-loading">Đang tìm...</div>
+                      )}
+                      {userSearchResults[item.id] && userSearchResults[item.id].length > 0 && (
+                        <div className="user-search-results">
+                          {userSearchResults[item.id].map(user => (
+                            <div 
+                              key={user._id} 
+                              className="user-search-result"
+                              onClick={() => selectUserForActiveStaff(item.id, user)}
+                            >
+                              <div className="user-info">
+                                <span className="admin-user-display-name">{user.displayName || user.username}</span>
+                                <span className="user-username">@{user.username}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <select
                       value={item.role}
                       onChange={(e) => handleStaffItemChange('active', item.id, 'role', e.target.value)}
                     >
+                      <option value="pj_user">Quản lý dự án</option>
                       <option value="translator">Dịch giả</option>
-                      <option value="editor">Biên tập viên</option>
-                      <option value="proofreader">Người kiểm tra chất lượng</option>
+                      <option value="editor">Biên tập</option>
+                      <option value="proofreader">Kiểm tra chất lượng</option>
                     </select>
                     <button 
                       type="button" 
@@ -945,7 +1255,7 @@ const AdminDashboard = () => {
               
               <div className="staff-items-grid">
                 {inactiveStaffItems.map((item, index) => (
-                  <div key={item.id} className="staff-item">
+                  <div key={item.id} className="staff-item" data-role={item.role}>
                     <input
                       type="text"
                       placeholder="Name"
@@ -956,6 +1266,7 @@ const AdminDashboard = () => {
                       value={item.role}
                       onChange={(e) => handleStaffItemChange('inactive', item.id, 'role', e.target.value)}
                     >
+                      <option value="pj_user">Quản lý dự án</option>
                       <option value="translator">Dịch giả</option>
                       <option value="editor">Biên tập viên</option>
                       <option value="proofreader">Người kiểm tra chất lượng</option>

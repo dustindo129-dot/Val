@@ -1284,7 +1284,7 @@ const Chapter = ({ novelId, chapterId }) => {
   // Check if user can edit
   const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
   // Check if user can delete
-  const canDelete = user && user.role === 'admin';
+  const canDelete = user && (user.role === 'admin' || user.role === 'moderator');
 
   // Show loading state with animation
   if (isLoading) {

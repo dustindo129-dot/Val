@@ -294,9 +294,59 @@
   align-items: center;
   gap: 0.5rem;
   background-color: white;
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: 0.75rem;
+  border-radius: 8px;
   border: 1px solid #dee2e6;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.staff-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 8px 8px 0 0;
+  background-color: #6c757d;
+}
+
+/* Role-specific styling */
+.staff-item[data-role="pj_user"]::before {
+  background-color: #e74c3c;
+}
+
+.staff-item[data-role="translator"]::before {
+  background-color: #9b59b6;
+}
+
+.staff-item[data-role="editor"]::before {
+  background-color: #3498db;
+}
+
+.staff-item[data-role="proofreader"]::before {
+  background-color: #f39c12;
+}
+
+.staff-item[data-role="pj_user"]:hover {
+  border-color: #e74c3c;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+}
+
+.staff-item[data-role="translator"]:hover {
+  border-color: #9b59b6;
+  box-shadow: 0 2px 8px rgba(155, 89, 182, 0.2);
+}
+
+.staff-item[data-role="editor"]:hover {
+  border-color: #3498db;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.staff-item[data-role="proofreader"]:hover {
+  border-color: #f39c12;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.2);
 }
 
 .staff-item input {
@@ -304,6 +354,7 @@
   min-width: 0;
   padding: 0.4rem;
   margin: 0;
+  border-radius: 4px;
 }
 
 .staff-item select {
@@ -313,12 +364,30 @@
   border: 1px solid #ced4da;
   border-radius: 4px;
   background-color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Role-specific select styling */
+.staff-item[data-role="pj_user"] select {
+  border-color: #e74c3c;
+}
+
+.staff-item[data-role="translator"] select {
+  border-color: #9b59b6;
+}
+
+.staff-item[data-role="editor"] select {
+  border-color: #3498db;
+}
+
+.staff-item[data-role="proofreader"] select {
+  border-color: #f39c12;
 }
 
 .remove-staff-btn {
   background: none;
   border: none;
-  color: #dc3545;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
@@ -330,10 +399,13 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
 .remove-staff-btn:hover {
-  color: #bd2130;
+  background-color: #dc3545;
+  color: white;
 }
 
 /* Dark mode support */
@@ -353,6 +425,43 @@
   color: #e2e8f0;
 }
 
+/* Dark mode role-specific styling */
+:root.dark-mode .staff-item[data-role="pj_user"]:hover {
+  border-color: #f56565;
+  box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
+}
+
+:root.dark-mode .staff-item[data-role="translator"]:hover {
+  border-color: #b794f6;
+  box-shadow: 0 2px 8px rgba(183, 148, 246, 0.3);
+}
+
+:root.dark-mode .staff-item[data-role="editor"]:hover {
+  border-color: #63b3ed;
+  box-shadow: 0 2px 8px rgba(99, 179, 237, 0.3);
+}
+
+:root.dark-mode .staff-item[data-role="proofreader"]:hover {
+  border-color: #fbb040;
+  box-shadow: 0 2px 8px rgba(251, 176, 64, 0.3);
+}
+
+:root.dark-mode .staff-item[data-role="pj_user"] select {
+  border-color: #f56565;
+}
+
+:root.dark-mode .staff-item[data-role="translator"] select {
+  border-color: #b794f6;
+}
+
+:root.dark-mode .staff-item[data-role="editor"] select {
+  border-color: #63b3ed;
+}
+
+:root.dark-mode .staff-item[data-role="proofreader"] select {
+  border-color: #fbb040;
+}
+
 :root.dark-mode .add-staff-btn {
   background-color: #38a169;
 }
@@ -362,11 +471,11 @@
 }
 
 :root.dark-mode .remove-staff-btn {
-  color: #f56565;
 }
 
 :root.dark-mode .remove-staff-btn:hover {
   color: #e53e3e;
+  background-color: #f56565;
 }
 
 /* Responsive styles */
@@ -808,11 +917,11 @@
 }
 
 :root.dark-mode .remove-staff-btn {
-  color: #f56565;
 }
 
 :root.dark-mode .remove-staff-btn:hover {
   color: #e53e3e;
+  background-color: #f56565;
 }
 
 /* Genres section */
@@ -1305,4 +1414,145 @@
   -moz-user-select: none;
   -ms-user-select: none;
   pointer-events: none;
+}
+
+/* User search functionality for active staff */
+.user-search-container {
+  position: relative;
+  flex: 2;
+  min-width: 0;
+}
+
+.user-search-container input {
+  width: 100%;
+}
+
+.user-selected-indicator {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  background: #28a745;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.search-loading {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+  z-index: 10;
+}
+
+.user-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-search-result {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s;
+}
+
+.user-search-result:hover {
+  background-color: #f8f9fa;
+}
+
+.user-search-result:last-child {
+  border-bottom: none;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-user-display-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.user-username {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.selected-user {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-top: none;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  color: #155724;
+  z-index: 10;
+}
+
+.selected-user span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Dark mode support for user search */
+:root.dark-mode .search-loading {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #a0aec0;
+}
+
+:root.dark-mode .user-search-results {
+  background: #1a202c;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .user-search-result {
+  border-bottom-color: #4a5568;
+}
+
+:root.dark-mode .user-search-result:hover {
+  background-color: #2d3748;
+}
+
+:root.dark-mode .admin-user-display-name {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .user-username {
+  color: #a0aec0;
+}
+
+:root.dark-mode .user-selected-indicator {
+  background: #38a169;
 } 

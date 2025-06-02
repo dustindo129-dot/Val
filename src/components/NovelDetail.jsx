@@ -471,7 +471,7 @@ const NovelDetail = ({ novelId }) => {
 
   // Handler for deleting modules
   const handleDeleteModule = useCallback(async (moduleId) => {
-    if (!user || (user.role !== 'admin')) return;
+    if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return;
     
     if (window.confirm('Bạn có chắc chắn muốn xóa tập này?')) {
       try {
@@ -902,7 +902,7 @@ const NovelDetail = ({ novelId }) => {
   }, [user, novelId, queryClient]);
   
   const handleChapterDelete = useCallback(async (moduleId, chapterId) => {
-    if (!user || user.role !== 'admin') return;
+    if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return;
     
     if (window.confirm('Bạn có chắc chắn muốn xóa chương này? Hành động này không thể hoàn tác.')) {
       try {

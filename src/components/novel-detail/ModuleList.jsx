@@ -78,7 +78,7 @@ const ModuleList = memo(({
   // Check if user can edit
   const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
   // Check if user can delete
-  const canDelete = user && user.role === 'admin';
+  const canDelete = user && (user.role === 'admin' || user.role === 'moderator');
   // Check if user can access paid content
   const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
   

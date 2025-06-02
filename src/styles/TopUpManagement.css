@@ -345,6 +345,19 @@
 
 .user-username {
   font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.user-display-name {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 2px;
+}
+
+.user-username {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 4px;
 }
 
 .topup-user-balance {
@@ -757,4 +770,16 @@
 
 :root.dark-mode .actual-amount .amount-mismatch {
   color: #ef5350;
+}
+
+:root.dark-mode .topup-user-balance {
+  color: #aaa;
+}
+
+:root.dark-mode .user-display-name {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .user-username {
+  color: #a0aec0;
 }
