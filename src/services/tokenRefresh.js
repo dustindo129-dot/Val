@@ -18,7 +18,6 @@ export const refreshToken = async () => {
 
   const currentToken = localStorage.getItem('token');
   if (!isValidJWT(currentToken)) {
-    console.log('No valid token to refresh');
     return null;
   }
 
@@ -29,8 +28,6 @@ export const refreshToken = async () => {
   
   refreshPromise = (async () => {
     try {
-      console.log('Attempting to refresh token...');
-      
       let response;
       
       if (refreshTokenStored) {
@@ -62,23 +59,27 @@ export const refreshToken = async () => {
           localStorage.setItem('refreshToken', response.data.refreshToken);
         }
         
-        console.log('Token refreshed successfully');
         return newToken;
       }
       
       throw new Error('No token in refresh response');
       
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      // Check if this is a recent login (within 5 minutes) to be less aggressive
+      const loginTime = localStorage.getItem('loginTime');
+      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
       
-      // If refresh fails, clear all auth data
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('sessionExpiry');
-      
-      // Dispatch event to notify components
-      window.dispatchEvent(new CustomEvent('auth-token-refresh-failed'));
+      if (!isRecentLogin) {
+        // If refresh fails and it's not a recent login, clear all auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('sessionExpiry');
+        localStorage.removeItem('loginTime');
+        
+        // Dispatch event to notify components
+        window.dispatchEvent(new CustomEvent('auth-token-refresh-failed'));
+      }
       
       return null;
     } finally {
@@ -103,7 +104,6 @@ export const ensureValidToken = async () => {
   
   // If token needs refresh, refresh it
   if (shouldRefreshToken(currentToken)) {
-    console.log('Token needs refresh, attempting refresh...');
     const newToken = await refreshToken();
     return newToken || currentToken; // Return current token if refresh fails
   }

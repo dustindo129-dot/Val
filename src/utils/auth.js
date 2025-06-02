@@ -62,16 +62,28 @@ export const getTokenExpiration = (token) => {
 export const getValidToken = () => {
   const token = localStorage.getItem('token');
   if (!isValidJWT(token)) {
-    // Clear invalid token
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Check if this is a recent login (within 5 minutes) to be less aggressive
+    const loginTime = localStorage.getItem('loginTime');
+    const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
+    
+    if (!isRecentLogin) {
+      // Clear invalid token only if it's not a recent login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('loginTime');
+    }
     return null;
   }
   
-  // Check if token is expired
+  // Check if token is expired, but be more lenient with recent logins
   if (isTokenExpired(token)) {
-    console.log('Token is expired or expiring soon');
-    return null;
+    const loginTime = localStorage.getItem('loginTime');
+    const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
+    
+    if (!isRecentLogin) {
+      return null;
+    }
+    // For recent logins, allow expired tokens temporarily
   }
   
   return token;

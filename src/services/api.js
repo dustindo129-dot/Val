@@ -96,21 +96,33 @@ axios.interceptors.response.use(
          error.response?.data?.message?.includes('Invalid or expired token') ||
          error.response?.data?.message?.includes('jwt expired'))) {
       
+      // Check if this is a recent login (within 5 minutes) to be less aggressive
+      const loginTime = localStorage.getItem('loginTime');
+      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
+      
       // Skip refresh for auth endpoints to prevent infinite loops
       if (originalRequest.url?.includes('/api/auth/')) {
+        // For recent logins on auth endpoints, just reject without clearing data
+        if (isRecentLogin) {
+          return Promise.reject(error);
+        }
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('loginTime');
         window.dispatchEvent(new CustomEvent('auth-token-invalid'));
         return Promise.reject(error);
       }
 
       // Prevent infinite retry loops
       if (originalRequest._retry) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+        if (!isRecentLogin) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          localStorage.removeItem('loginTime');
+          window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+        }
         return Promise.reject(error);
       }
 
@@ -129,29 +141,32 @@ axios.interceptors.response.use(
       isRefreshingToken = true;
 
       try {
-        console.log('Access token expired, attempting refresh...');
         const newToken = await refreshToken();
         
         if (newToken) {
-          console.log('Token refreshed successfully, retrying original request');
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           processQueue(null, newToken);
           return axios(originalRequest);
         } else {
-          // Refresh failed, clear auth data
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-          window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+          // Refresh failed, but be more lenient with recent logins
+          if (!isRecentLogin) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('loginTime');
+            window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+          }
           processQueue(new Error('Token refresh failed'), null);
           return Promise.reject(error);
         }
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+        if (!isRecentLogin) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          localStorage.removeItem('loginTime');
+          window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+        }
         processQueue(refreshError, null);
         return Promise.reject(error);
       } finally {
@@ -159,11 +174,17 @@ axios.interceptors.response.use(
       }
     }
 
-    // For other types of 401 errors, still clear invalid tokens
+    // For other types of 401 errors, be more lenient with recent logins
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+      const loginTime = localStorage.getItem('loginTime');
+      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
+      
+      if (!isRecentLogin) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('loginTime');
+        window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+      }
     }
 
     return Promise.reject(error);

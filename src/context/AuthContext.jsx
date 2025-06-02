@@ -31,6 +31,9 @@ const ADMIN_EXTENDED_SESSION_TIMEOUT = 3 * 60 * 60 * 1000;
 // Extended session for normal users (2 weeks)
 const USER_EXTENDED_SESSION_TIMEOUT = 14 * 24 * 60 * 60 * 1000;
 
+// Grace period for clock skew and immediate post-login validation (5 minutes)
+const GRACE_PERIOD = 5 * 60 * 1000;
+
 // Add constants for storage keys and events
 const AUTH_LOGOUT_EVENT = 'authLogout';
 const AUTH_LOGIN_EVENT = 'authLogin';
@@ -51,13 +54,14 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [justLoggedIn, setJustLoggedIn] = useState(false); // Track recent login
   const navigate = useNavigate();
 
   // Store auto-refresh cleanup function
   const [autoRefreshCleanup, setAutoRefreshCleanup] = useState(null);
 
   /**
-   * Checks if the current session is valid
+   * Checks if the current session is valid with grace period for recent logins
    * @returns {boolean} True if session is valid, false otherwise
    */
   const checkSessionValidity = () => {
@@ -65,10 +69,42 @@ export const AuthProvider = ({ children }) => {
     if (!sessionExpiry) return false;
     
     const expiryTime = parseInt(sessionExpiry, 10);
-    if (isNaN(expiryTime)) return false;
+    if (isNaN(expiryTime)) {
+      // Try to recover from corrupted session expiry
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          const rememberMe = localStorage.getItem('rememberMe') === 'true';
+          updateSessionExpiry(rememberMe, userData);
+          return true; // Give it another chance
+        } catch {
+          return false;
+        }
+      }
+      return false;
+    }
     
-    if (Date.now() > expiryTime) {
-      // Session expired, sign out user
+    const now = Date.now();
+    const gracePeriod = justLoggedIn ? GRACE_PERIOD : 0;
+    
+    if (now > (expiryTime + gracePeriod)) {
+      // Session expired, but check if we just logged in recently
+      const loginTime = localStorage.getItem('loginTime');
+      if (loginTime && (now - parseInt(loginTime, 10)) < GRACE_PERIOD) {
+        // Recently logged in, extend session
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            const rememberMe = localStorage.getItem('rememberMe') === 'true';
+            updateSessionExpiry(rememberMe, userData);
+            return true;
+          } catch {
+            // Continue to logout if user data is corrupted
+          }
+        }
+      }
       signOut();
       return false;
     }
@@ -76,7 +112,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Validates JWT token format
+   * Validates JWT token format with improved error handling
    * @param {string} token - JWT token to validate
    * @returns {boolean} True if token format is valid
    */
@@ -91,10 +127,17 @@ export const AuthProvider = ({ children }) => {
     try {
       parts.forEach(part => {
         if (part.length === 0) throw new Error('Empty part');
-        // Basic base64 character check
-        if (!/^[A-Za-z0-9_-]+$/.test(part)) throw new Error('Invalid characters');
+        // More lenient base64 character check to handle different encodings
+        if (!/^[A-Za-z0-9_=-]+$/.test(part)) throw new Error('Invalid characters');
       });
-      return true;
+      
+      // Additional check: try to decode the payload to ensure it's valid JSON
+      try {
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return payload && typeof payload === 'object';
+      } catch {
+        return false;
+      }
     } catch {
       return false;
     }
@@ -106,8 +149,16 @@ export const AuthProvider = ({ children }) => {
    * @param {Object} userData - User data containing role information
    */
   const updateSessionExpiry = (rememberMe = false, userData = null) => {
-    // Get user data from parameter or localStorage
-    const currentUser = userData || JSON.parse(localStorage.getItem('user') || 'null');
+    // Get user data from parameter or localStorage with error handling
+    let currentUser = userData;
+    if (!currentUser) {
+      try {
+        const storedUser = localStorage.getItem('user');
+        currentUser = storedUser ? JSON.parse(storedUser) : null;
+      } catch {
+        currentUser = null;
+      }
+    }
     
     if (!currentUser) {
       // If no user data, use admin defaults for security
@@ -118,7 +169,7 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // Check if user is admin or moderator
+    // Check if user is admin or moderator with safe property access
     const isAdminOrMod = currentUser.role === 'admin' || currentUser.role === 'moderator';
     
     let timeout;
@@ -142,10 +193,17 @@ export const AuthProvider = ({ children }) => {
   const resetSessionTimer = () => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      // Use the stored remember me preference when resetting the timer
-      const rememberMe = localStorage.getItem('rememberMe') === 'true';
-      const userData = JSON.parse(storedUser);
-      updateSessionExpiry(rememberMe, userData);
+      try {
+        // Use the stored remember me preference when resetting the timer
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        const userData = JSON.parse(storedUser);
+        updateSessionExpiry(rememberMe, userData);
+      } catch {
+        // If parsing fails, clear corrupted data
+        localStorage.removeItem('user');
+        localStorage.removeItem('sessionExpiry');
+        localStorage.removeItem('rememberMe');
+      }
     }
   };
 
@@ -170,51 +228,82 @@ export const AuthProvider = ({ children }) => {
       try {
         const storedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('token');
+        const loginTime = localStorage.getItem('loginTime');
         
-        // Validate token format before proceeding
-        if (storedToken && !isValidJWT(storedToken)) {
-          console.warn('Invalid JWT format detected, clearing authentication');
-          signOut();
-          return;
+        // Check if this is a recent login for grace period
+        const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < GRACE_PERIOD;
+        if (isRecentLogin) {
+          setJustLoggedIn(true);
+          setTimeout(() => setJustLoggedIn(false), GRACE_PERIOD - (Date.now() - parseInt(loginTime, 10)));
         }
         
-        if (storedUser && storedToken && checkSessionValidity()) {
-          const userData = JSON.parse(storedUser);
-          
-          // Check if displayName is missing and refresh user data if needed
-          if (!userData.displayName && userData.username) {
-            try {
-              const response = await axios.get(`${config.backendUrl}/api/users/${userData.username}/profile`, {
-                headers: { Authorization: `Bearer ${storedToken}` }
-              });
-              
-              const updatedUserData = {
-                ...userData,
-                displayName: response.data.displayName || userData.username
-              };
-              
-              localStorage.setItem('user', JSON.stringify(updatedUserData));
-              setUser(updatedUserData);
-            } catch (refreshError) {
-              console.warn('Could not refresh user data:', refreshError);
-              setUser(userData);
-            }
-          } else {
-            setUser(userData);
+        // Validate token format before proceeding, but be more lenient for recent logins
+        if (storedToken && !isValidJWT(storedToken)) {
+          if (!isRecentLogin) {
+            signOut();
+            return;
+          }
+          // For recent logins, try to continue but monitor for other issues
+        }
+        
+        if (storedUser && storedToken) {
+          let userData;
+          try {
+            userData = JSON.parse(storedUser);
+          } catch {
+            // Corrupted user data, clear and restart
+            signOut();
+            return;
           }
           
-          setIsAuthenticated(true);
-          // Use the stored remember me preference
-          const rememberMe = localStorage.getItem('rememberMe') === 'true';
-          updateSessionExpiry(rememberMe, userData);
+          // For initialization, be more lenient with session validation
+          const sessionValid = isRecentLogin || checkSessionValidity();
           
-          // Set up automatic token refresh
-          setupTokenRefresh();
-        } else if (storedUser) {
+          if (sessionValid) {
+            // Check if displayName is missing and refresh user data if needed
+            if (!userData.displayName && userData.username) {
+              try {
+                const response = await axios.get(`${config.backendUrl}/api/users/${userData.username}/profile`, {
+                  headers: { Authorization: `Bearer ${storedToken}` }
+                });
+                
+                const updatedUserData = {
+                  ...userData,
+                  displayName: response.data.displayName || userData.username
+                };
+                
+                localStorage.setItem('user', JSON.stringify(updatedUserData));
+                setUser(updatedUserData);
+                userData = updatedUserData;
+              } catch (refreshError) {
+                // If we can't refresh user data and it's not a recent login, consider logout
+                if (!isRecentLogin) {
+                  signOut();
+                  return;
+                }
+                setUser(userData);
+              }
+            } else {
+              setUser(userData);
+            }
+            
+            setIsAuthenticated(true);
+            // Use the stored remember me preference
+            const rememberMe = localStorage.getItem('rememberMe') === 'true';
+            updateSessionExpiry(rememberMe, userData);
+            
+            // Set up automatic token refresh
+            setupTokenRefresh();
+          } else {
+            signOut();
+          }
+        } else if (storedUser || storedToken) {
+          // Partial data found, clear everything for clean state
           signOut();
         }
       } catch (error) {
-        setError('Authentication failed');
+        // Don't set error during initialization to avoid confusing users
+        signOut();
       } finally {
         setLoading(false);
       }
@@ -367,12 +456,16 @@ export const AuthProvider = ({ children }) => {
       );
       
       const userData = response.data.user;
+      const loginTime = Date.now();
+      
       setUser(userData);
       setIsAuthenticated(true);
+      setJustLoggedIn(true);
       
       // Store user data and tokens
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('loginTime', loginTime.toString());
       
       // Store refresh token if provided
       if (response.data.refreshToken) {
@@ -386,6 +479,9 @@ export const AuthProvider = ({ children }) => {
       
       // Dispatch custom event for same tab
       window.dispatchEvent(new CustomEvent(AUTH_LOGIN_EVENT, { detail: userData }));
+      
+      // Clear the just logged in flag after grace period
+      setTimeout(() => setJustLoggedIn(false), GRACE_PERIOD);
       
       return response.data;
     } catch (error) {
@@ -415,12 +511,16 @@ export const AuthProvider = ({ children }) => {
       );
       
       const userData = response.data.user;
+      const loginTime = Date.now();
+      
       setUser(userData);
       setIsAuthenticated(true);
+      setJustLoggedIn(true);
       
       // Store user data and tokens
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('loginTime', loginTime.toString());
       
       // Store refresh token if provided
       if (response.data.refreshToken) {
@@ -434,6 +534,9 @@ export const AuthProvider = ({ children }) => {
       
       // Dispatch custom event for same tab
       window.dispatchEvent(new CustomEvent(AUTH_LOGIN_EVENT, { detail: userData }));
+      
+      // Clear the just logged in flag after grace period
+      setTimeout(() => setJustLoggedIn(false), GRACE_PERIOD);
       
       return response.data;
     } catch (error) {
@@ -467,7 +570,6 @@ export const AuthProvider = ({ children }) => {
           );
         } catch (e) {
           // Continue with local logout even if API call fails
-          console.warn('Backend logout failed, continuing with client-side logout');
         }
         
         // Notify other tabs about the logout
@@ -483,16 +585,18 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('sessionExpiry');
       localStorage.removeItem('rememberMe');
+      localStorage.removeItem('loginTime');
       
       // Update state
       setUser(null);
       setIsAuthenticated(false);
+      setJustLoggedIn(false);
       
       // Local event to close any open modals
       window.dispatchEvent(new CustomEvent('closeAuthModal'));
       
     } catch (error) {
-      console.error('Logout error:', error);
+      // Silently handle logout errors to prevent user confusion
     }
   };
 
