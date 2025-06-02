@@ -592,7 +592,7 @@ const NovelDirectory = () => {
                   const genreTags = getGenreTags(novel);
 
                   return (
-                      <div key={novel._id} className="novel-card">
+                      <div key={novel._id} className="novel-card directory">
                         {/* Novel cover image with status and update time */}
                         <NovelImage
                             src={novel.illustration || cdnConfig.defaultImageUrl}
@@ -603,7 +603,7 @@ const NovelDirectory = () => {
                         />
 
                         {/* Novel content section */}
-                        <div className="novel-content">
+                        <div className="novel-content directory">
                           {/* Novel title */}
                           <Link to={generateNovelUrl(novel)} className="dir-novel-title-link">
                             <h3 className="dir-novel-title">{novel.title}</h3>

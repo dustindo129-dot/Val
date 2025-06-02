@@ -105,6 +105,13 @@ const SecondaryNavbar = () => {
    * @returns {string} 'active' class if path matches, empty string otherwise
    */
   const isActive = (path) => {
+    // For paginated routes, check if the current path starts with the base path
+    if (path === '/danh-sach-truyen') {
+      return location.pathname.startsWith('/danh-sach-truyen') ? 'active' : '';
+    }
+    if (path === '/oln') {
+      return location.pathname.startsWith('/oln') ? 'active' : '';
+    }
     return location.pathname === path ? 'active' : '';
   };
 
@@ -122,10 +129,10 @@ const SecondaryNavbar = () => {
             <Link to="/" className={`nav-link ${isActive('/')}`} onClick={() => setIsMenuOpen(false)}>
               Trang chủ
             </Link>
-            <Link to="/danh-sach-truyen" className={`nav-link ${isActive('/danh-sach-truyen')}`} onClick={() => setIsMenuOpen(false)}>
+            <Link to="/danh-sach-truyen/trang/1" className={`nav-link ${isActive('/danh-sach-truyen')}`} onClick={() => setIsMenuOpen(false)}>
               Danh sách truyện
             </Link>
-            <Link to="/oln" className={`nav-link ${isActive('/oln')}`} onClick={() => setIsMenuOpen(false)}>
+            <Link to="/oln/trang/1" className={`nav-link ${isActive('/oln')}`} onClick={() => setIsMenuOpen(false)}>
               Truyện sáng tác
             </Link>
             <Link to="/phan-hoi" className={`nav-link ${isActive('/phan-hoi')}`} onClick={() => setIsMenuOpen(false)}>

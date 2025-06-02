@@ -163,6 +163,7 @@
   overflow: hidden;
   position: relative;
   transition: max-height 0.3s ease;
+  margin: 0.5rem 0;
 }
 
 .directory .dir-tag-list.expanded {

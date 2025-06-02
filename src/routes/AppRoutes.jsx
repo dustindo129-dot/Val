@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -36,7 +36,7 @@ function AppRoutes() {
         {/* Vietnamese-Only Routes */}
         <Route path="/" element={<LazyRoute><NovelList /></LazyRoute>} />
         <Route path="/trang/:page" element={<LazyRoute><NovelList /></LazyRoute>} />
-        <Route path="/danh-sach-truyen" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
+        <Route path="/danh-sach-truyen" element={<Navigate to="/danh-sach-truyen/trang/1" replace />} />
         <Route path="/danh-sach-truyen/trang/:page" element={<LazyRoute><NovelDirectory /></LazyRoute>} />
         <Route path="/truyen/:novelId" element={<LazyRoute><SlugWrapper component={NovelDetail} type="novel" /></LazyRoute>} />
         <Route path="/truyen/:novelId/chuong/:chapterId" element={<LazyRoute><SlugWrapper component={Chapter} type="chapter" /></LazyRoute>} />
@@ -57,7 +57,7 @@ function AppRoutes() {
         <Route path="/nguoi-dung/:username/thay-doi-mat-khau" element={<LazyRoute><ChangePassword /></LazyRoute>} />
         
         {/* OLN (Original Light Novel) Routes */}
-        <Route path="/oln" element={<LazyRoute><OLN /></LazyRoute>} />
+        <Route path="/oln" element={<Navigate to="/oln/trang/1" replace />} />
         <Route path="/oln/trang/:page" element={<LazyRoute><OLN /></LazyRoute>} />
       </Routes>
     </LocalizedRoute>
