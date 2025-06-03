@@ -23,7 +23,7 @@ import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 const genreCategories = {
   'Định Dạng và Nguồn Gốc': [
     'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
-    'Web Novel', 'One shot'
+    'Web Novel', 'One shot', 'Fanfiction'
   ],
   'Đối Tượng': [
     'Seinen', 'Shounen', 'Josei', 'Shoujo'
@@ -399,7 +399,7 @@ const NovelDirectory = () => {
                 type: 'format-origin',
                 class: className
             };
-        } else if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One shot') {
+        } else if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One shot' || genre === 'Fanfiction') {
             return {
                 name: genre,
                 type: 'mature',

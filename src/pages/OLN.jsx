@@ -451,7 +451,7 @@ const OLN = () => {
                     type: 'format-origin',
                     class: className
                 };
-            } else if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One shot') {
+            } else if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One shot' || genre === 'Fanfiction') {
                 return {
                     name: genre,
                     type: 'mature',
