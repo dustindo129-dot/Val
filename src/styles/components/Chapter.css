@@ -1855,3 +1855,22 @@
     min-width: 60px;
   }
 }
+
+/* Dark mode support for restricted content */
+:root.dark-mode .restricted-content-message {
+  background-color: #1a1a1a;
+  color: #000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .protected-content h3,
+:root.dark-mode .draft-content h3,
+:root.dark-mode .paid-content h3 {
+  color: #000;
+}
+
+:root.dark-mode .protected-content p,
+:root.dark-mode .draft-content p,
+:root.dark-mode .paid-content p {
+  color: #d1d5db;
+}
