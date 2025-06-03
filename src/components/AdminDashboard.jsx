@@ -130,6 +130,22 @@ const AdminDashboard = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Clear cache when user changes (logout/login with different user)
+  const previousUserRef = useRef(null);
+  useEffect(() => {
+    // Only clear cache if user actually changed (not on initial load)
+    const currentUserKey = user ? `${user.id}_${user.role}` : null;
+    const previousUserKey = previousUserRef.current ? `${previousUserRef.current.id}_${previousUserRef.current.role}` : null;
+    
+    if (previousUserRef.current !== null && currentUserKey !== previousUserKey) {
+      // Clear all novels cache when user actually changes
+      console.log('User changed, clearing novels cache');
+      queryClient.removeQueries({ queryKey: ['novels'] });
+    }
+    
+    previousUserRef.current = user;
+  }, [user?.id, user?.role, queryClient]);
+
   // Genre categories and options
   const genreCategories = {
     'Thể Loại Chính': [
@@ -211,7 +227,7 @@ const AdminDashboard = () => {
 
   // Fetch novels using React Query
   const { data: novels = [], isLoading: novelsLoading } = useQuery({
-    queryKey: ['novels'],
+    queryKey: ['novels', user?.id, user?.role], // Include user info in cache key
     queryFn: async () => {
       const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&skipPopulation=true&t=${Date.now()}`, {
         headers: {
@@ -226,10 +242,12 @@ const AdminDashboard = () => {
       const data = await response.json();
       return Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
     },
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    cacheTime: 60000, // Cache for 1 minute
-    refetchOnMount: true, // Only refetch on mount if data is stale
-    refetchOnWindowFocus: false // Don't refetch on window focus
+    enabled: !!user, // Only fetch when user is available
+    staleTime: 60000, // Consider data fresh for 1 minute
+    cacheTime: 300000, // Cache for 5 minutes
+    refetchOnMount: false, // Don't refetch on mount if data exists
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnReconnect: false // Don't refetch on reconnect
   });
 
   // Sort novels by updatedAt timestamp (most recent first)
@@ -663,7 +681,7 @@ const AdminDashboard = () => {
       
       // Force clear and refetch to ensure UI is in sync
       // We use remove and refetch instead of invalidate to ensure fresh data
-      queryClient.removeQueries(['novels']);
+      queryClient.removeQueries(['novels', user?.id, user?.role]);
       
       // Manually fetch fresh data to update the UI immediately
       try {
@@ -678,7 +696,7 @@ const AdminDashboard = () => {
           const novelsList = Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
           
           // Update cache with fresh data that includes the new novel
-          queryClient.setQueryData(['novels'], novelsList);
+          queryClient.setQueryData(['novels', user?.id, user?.role], novelsList);
         }
       } catch (fetchError) {
         console.error('Error fetching latest novels:', fetchError);
@@ -776,7 +794,7 @@ const AdminDashboard = () => {
     
     try {
       // Get current cache data
-      const previousData = queryClient.getQueryData(['novels']) || [];
+      const previousData = queryClient.getQueryData(['novels', user?.id, user?.role]) || [];
       
       // Create updated list without the deleted novel
       const updatedNovels = Array.isArray(previousData) 
@@ -784,7 +802,7 @@ const AdminDashboard = () => {
         : [];
       
       // Immediately update the cache
-      queryClient.setQueryData(['novels'], updatedNovels);
+      queryClient.setQueryData(['novels', user?.id, user?.role], updatedNovels);
       
       // Perform the actual deletion
       const response = await fetch(`${config.backendUrl}/api/novels/${id}`, {
@@ -796,7 +814,7 @@ const AdminDashboard = () => {
 
       if (!response.ok) {
         // Revert cache if deletion failed
-        queryClient.setQueryData(['novels'], previousData);
+        queryClient.setQueryData(['novels', user?.id, user?.role], previousData);
         throw new Error('Failed to delete novel');
       }
 
@@ -804,7 +822,7 @@ const AdminDashboard = () => {
       queryClient.removeQueries(['novel', id]);
       
       // Lock in our updated novels list - this is the key to making the deletion stick
-      queryClient.setQueryData(['novels'], updatedNovels);
+      queryClient.setQueryData(['novels', user?.id, user?.role], updatedNovels);
       
       setError('');
       // Close the modal
@@ -870,7 +888,7 @@ const AdminDashboard = () => {
     
     try {
       // Get current cache data
-      const previousData = queryClient.getQueryData(['novels']);
+      const previousData = queryClient.getQueryData(['novels', user?.id, user?.role]);
       
       // Create a timestamp for the status update (this should update updatedAt)
       const updatedAt = new Date().toISOString();
@@ -882,7 +900,7 @@ const AdminDashboard = () => {
       }
       
       // Optimistically update the cache
-      queryClient.setQueryData(['novels'], old => 
+      queryClient.setQueryData(['novels', user?.id, user?.role], old => 
         Array.isArray(old) 
           ? old.map(novel => novel._id === id ? { ...novel, status, updatedAt } : novel)
           : []
@@ -909,7 +927,7 @@ const AdminDashboard = () => {
 
       if (!response.ok) {
         // If update failed, revert the cache to previous state
-        queryClient.setQueryData(['novels'], previousData);
+        queryClient.setQueryData(['novels', user?.id, user?.role], previousData);
         const errorData = await response.json();
         throw new Error(errorData.message || 'Không thể cập nhật trạng thái truyện');
       }
@@ -918,19 +936,19 @@ const AdminDashboard = () => {
       const updatedNovel = await response.json();
       
       // Update cache with complete novel data
-      queryClient.setQueryData(['novels'], old => 
+      queryClient.setQueryData(['novels', user?.id, user?.role], old => 
         Array.isArray(old) 
           ? old.map(novel => novel._id === id ? { ...novel, ...updatedNovel } : novel)
           : []
       );
 
       // Also invalidate novel list and hot novels queries to ensure they're updated
-      queryClient.invalidateQueries({ queryKey: ['novels'] });
+      queryClient.invalidateQueries({ queryKey: ['novels', user?.id, user?.role] });
       queryClient.invalidateQueries({ queryKey: ['hotNovels'] });
 
     } catch (err) {
       // Revert cache on error
-      queryClient.setQueryData(['novels'], previousData);
+      queryClient.setQueryData(['novels', user?.id, user?.role], previousData);
 
       console.error('Error updating status:', err);
       setError(err.message);
@@ -994,11 +1012,11 @@ const AdminDashboard = () => {
       if (freshDataResponse.ok) {
         const freshData = await freshDataResponse.json();
         const freshNovels = Array.isArray(freshData.novels) ? freshData.novels : (Array.isArray(freshData) ? freshData : []);
-        queryClient.setQueryData(['novels'], freshNovels);
+        queryClient.setQueryData(['novels', user?.id, user?.role], freshNovels);
       }
       
       // Force invalidation of the queries to ensure fresh data on next render
-      queryClient.invalidateQueries(['novels']);
+      queryClient.invalidateQueries(['novels', user?.id, user?.role]);
 
       // Exit edit mode
       setEditingBalanceId(null);

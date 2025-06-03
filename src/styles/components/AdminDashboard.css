@@ -449,9 +449,6 @@
   background-color: #2f855a;
 }
 
-:root.dark-mode .remove-staff-btn {
-}
-
 :root.dark-mode .remove-staff-btn:hover {
   color: #e53e3e;
   background-color: #f56565;
