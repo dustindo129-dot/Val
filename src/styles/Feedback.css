@@ -91,4 +91,274 @@
   border-radius: 8px;
   text-align: center;
   margin: 2rem 0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .feedback-container {
+    margin: 1rem auto;
+    padding: 0 0.5rem;
+  }
+
+  .feedback-panel {
+    padding: 3rem 1rem 1.5rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .feedback-title {
+    left: 1rem;
+  }
+
+  .feedback-title h1 {
+    font-size: 2rem;
+  }
+
+  .content-display {
+    padding: 0.75rem;
+    font-size: 14px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .comments-section {
+    margin-top: 1rem;
+    overflow: hidden;
+  }
+
+  .comments-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .feedback-container {
+    margin: 0.5rem auto;
+    padding: 0 0.25rem;
+  }
+
+  .feedback-panel {
+    padding: 2.5rem 0.75rem 1rem 0.75rem;
+    border-radius: 4px;
+  }
+
+  .feedback-title {
+    left: 0.75rem;
+  }
+
+  .feedback-title h1 {
+    font-size: 1.75rem;
+  }
+
+  .content-display {
+    padding: 0.5rem;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .comments-section {
+    margin-top: 0.75rem;
+  }
+
+  .comments-title {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .loading-spinner {
+    min-height: 200px;
+  }
+
+  .loading-spinner p {
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+  }
+
+  .error-message {
+    padding: 0.75rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+}
+
+/* Comment-specific responsive styles */
+@media (max-width: 768px) {
+  .comments-section * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Ensure comment content doesn't overflow */
+  .comments-section .comment-content,
+  .comments-section .comment-text,
+  .comments-section .comment-body {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
+  }
+
+  /* Handle long URLs in comments */
+  .comments-section a {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+
+  /* Ensure comment containers are responsive */
+  .comments-section .comment,
+  .comments-section .comment-item,
+  .comments-section .comment-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Handle comment form responsiveness */
+  .comments-section .comment-form,
+  .comments-section .comment-input,
+  .comments-section textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Comment Threading System - Better hierarchy and indentation */
+.comments-section {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Original/Root comments - full width */
+.comments-section .comment-thread,
+.comments-section .comment-item:not(.reply),
+.comments-section .comment:not(.reply) {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-bottom: 1rem;
+}
+
+/* First level replies - slight indentation, reduced width */
+.comments-section .comment-replies .comment-item:first-child,
+.comments-section .reply-level-1,
+.comments-section .comment-item.reply:not(.reply-level-2):not(.reply-level-3) {
+  margin-left: 1.5rem;
+  max-width: calc(100% - 1.5rem);
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+/* Second level replies - more indentation, further reduced width */
+.comments-section .reply-level-2,
+.comments-section .comment-replies .comment-replies .comment-item {
+  margin-left: 2.5rem;
+  max-width: calc(100% - 2.5rem);
+  margin-bottom: 0.5rem;
+}
+
+/* Third level and deeper replies - maximum indentation */
+.comments-section .reply-level-3,
+.comments-section .comment-replies .comment-replies .comment-replies .comment-item {
+  margin-left: 3.5rem;
+  max-width: calc(100% - 3.5rem);
+  margin-bottom: 0.5rem;
+}
+
+/* Generic reply selector fallback */
+.comments-section .comment-item[style*="margin-left"] {
+  box-sizing: border-box;
+}
+
+/* Reply indicators and visual hierarchy */
+.comments-section .comment-item.reply::before,
+.comments-section .reply-level-1::before,
+.comments-section .reply-level-2::before,
+.comments-section .reply-level-3::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e5e7eb;
+  opacity: 0.6;
+}
+
+/* Dark mode reply indicators */
+:root.dark-mode .comments-section .comment-item.reply::before,
+:root.dark-mode .comments-section .reply-level-1::before,
+:root.dark-mode .comments-section .reply-level-2::before,
+:root.dark-mode .comments-section .reply-level-3::before {
+  background-color: #4b5563;
+}
+
+/* Mobile-specific comment threading adjustments */
+@media (max-width: 768px) {
+  /* Reduce indentation on mobile for better space usage */
+  .comments-section .reply-level-1,
+  .comments-section .comment-replies .comment-item:first-child {
+    margin-left: 1rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .comments-section .reply-level-2 {
+    margin-left: 1.75rem;
+    max-width: calc(100% - 1.75rem);
+  }
+
+  .comments-section .reply-level-3 {
+    margin-left: 2.5rem;
+    max-width: calc(100% - 2.5rem);
+  }
+
+  /* Adjust reply indicators for mobile */
+  .comments-section .comment-item.reply::before,
+  .comments-section .reply-level-1::before,
+  .comments-section .reply-level-2::before,
+  .comments-section .reply-level-3::before {
+    left: -0.75rem;
+    width: 1px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Further reduce indentation on very small screens */
+  .comments-section .reply-level-1,
+  .comments-section .comment-replies .comment-item:first-child {
+    margin-left: 0.75rem;
+    max-width: calc(100% - 0.75rem);
+  }
+
+  .comments-section .reply-level-2 {
+    margin-left: 1.25rem;
+    max-width: calc(100% - 1.25rem);
+  }
+
+  .comments-section .reply-level-3 {
+    margin-left: 1.75rem;
+    max-width: calc(100% - 1.75rem);
+  }
+
+  /* Minimal reply indicators for very small screens */
+  .comments-section .comment-item.reply::before,
+  .comments-section .reply-level-1::before,
+  .comments-section .reply-level-2::before,
+  .comments-section .reply-level-3::before {
+    left: -0.5rem;
+    width: 1px;
+  }
+}
+
+/* Ensure comment content respects the new width constraints */
+.comments-section .comment-content,
+.comments-section .comment-text,
+.comments-section .comment-body,
+.comments-section .comment-form {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 } 

@@ -654,6 +654,20 @@ const TopUpManagement = () => {
     return amount >= 0 ? 'amount-positive' : 'amount-negative';
   };
 
+  // Get transaction status display text in Vietnamese
+  const getTransactionStatusText = (status) => {
+    const statusMap = {
+      'completed': 'Thành công',
+      'successful': 'Thành công',
+      'pending': 'Đang xử lý',
+      'failed': 'Thất bại',
+      'cancelled': 'Đã hủy',
+      'processing': 'Đang xử lý',
+      'rejected': 'Bị từ chối'
+    };
+    return statusMap[status.toLowerCase()] || status;
+  };
+
   // Add handler for recent transactions pagination
   const handleRecentPageChange = (page) => {
     setRecentCurrentPage(page);
@@ -1319,7 +1333,7 @@ const TopUpManagement = () => {
                           </>
                         )}
                         <div className={`transaction-status ${transaction.status.toLowerCase()}`}>
-                          {transaction.status}
+                          {getTransactionStatusText(transaction.status)}
                         </div>
                       </div>
                       <div className="transaction-admin">

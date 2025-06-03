@@ -32,6 +32,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import bunnyUploadService from '../services/bunnyUploadService';
 import { generateNovelUrl } from '../utils/slugUtils';
 import LoadingSpinner from './LoadingSpinner';
+import { FixedSizeList as List } from 'react-window';
 
 /**
  * AdminDashboardSEO Component
@@ -115,6 +116,124 @@ const DeleteConfirmationModal = ({ novel, onConfirm, onCancel }) => {
     </div>
   );
 };
+
+/**
+ * VirtualNovelItem Component
+ * 
+ * Individual novel item component for virtual scrolling.
+ * Renders a single novel with all its actions and controls.
+ */
+const VirtualNovelItem = React.memo(({ 
+  index, 
+  style, 
+  data: { 
+    novels, 
+    user,
+    canEditNovels,
+    canDeleteNovels,
+    canEditBalances,
+    handleEdit,
+    handleDelete,
+    handleStatusChange,
+    editingBalanceId,
+    balanceValue,
+    setBalanceValue,
+    handleEditBalance,
+    cancelEditBalance,
+    saveBalanceChange
+  }
+}) => {
+  const novel = novels[index];
+  
+  if (!novel) return null;
+
+  return (
+    <div style={style}>
+      <li className="virtual-novel-item">
+        <div className="novel-title-section">
+          <div className="novel-info">
+            <Link 
+              to={generateNovelUrl(novel)}
+              className="novel-title-link"
+            >
+              {novel.title}
+            </Link>
+            <div className="novel-balance">
+              <div className="balance-info">
+                <div className="budget-display">
+                  Kho lúa: {novel.novelBudget || 0} 🌾
+                </div>
+                <div className="balance-display">
+                  {editingBalanceId === novel._id ? (
+                    <div className="balance-edit-container">
+                      <span>Số dư truyện: </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={balanceValue}
+                        onChange={(e) => setBalanceValue(e.target.value)}
+                        className="balance-edit-input"
+                      />
+                      <div className="balance-edit-actions">
+                        <button 
+                          onClick={() => saveBalanceChange(novel._id)}
+                          className="save-balance-btn"
+                        >
+                          Lưu
+                        </button>
+                        <button 
+                          onClick={cancelEditBalance}
+                          className="cancel-balance-btn"
+                        >
+                          Hủy bỏ
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      Số dư truyện: {novel.novelBalance || 0} 🌾
+                      {canEditBalances && (
+                        <button
+                          onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
+                          className="edit-balance-btn"
+                        >
+                          Chỉnh sửa
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="novel-actions">
+          <select
+            className="status-dropdown"
+            value={novel.status || 'Ongoing'}
+            onChange={(e) => handleStatusChange(novel._id, e.target.value)}
+          >
+            <option value="Ongoing">Đang tiến hành</option>
+            <option value="Completed">Đã hoàn thành</option>
+            <option value="Hiatus">Tạm ngưng</option>
+          </select>
+          {canEditNovels && (
+            <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
+          )}
+          {canDeleteNovels && (
+            <button 
+              className="delete"
+              onClick={() => handleDelete(novel)}
+            >Xóa</button>
+          )}
+        </div>
+      </li>
+    </div>
+  );
+});
+
+VirtualNovelItem.displayName = 'VirtualNovelItem';
 
 /**
  * AdminDashboard Component
@@ -228,6 +347,36 @@ const AdminDashboard = () => {
   // Add refs for search containers to handle outside clicks
   const searchContainerRefs = useRef({});
 
+  // Add state for sort control
+  const [sortType, setSortType] = useState('updated'); // 'updated' or 'balance'
+
+  // Add ref for virtual list container height calculation
+  const novelListContainerRef = useRef(null);
+  const [virtualListHeight, setVirtualListHeight] = useState(600);
+  const [itemSize, setItemSize] = useState(120);
+
+  // Add effect to calculate virtual list height and item size dynamically
+  useEffect(() => {
+    const calculateDimensions = () => {
+      if (novelListContainerRef.current) {
+        const containerHeight = window.innerHeight - 300; // Account for header, form, etc.
+        const maxHeight = Math.max(400, Math.min(800, containerHeight));
+        setVirtualListHeight(maxHeight);
+        
+        // Adjust item size based on screen width
+        const isMobile = window.innerWidth <= 768;
+        setItemSize(isMobile ? 160 : 120); // Taller items on mobile for stacked layout
+      }
+    };
+
+    calculateDimensions();
+    window.addEventListener('resize', calculateDimensions);
+    
+    return () => {
+      window.removeEventListener('resize', calculateDimensions);
+    };
+  }, []);
+
   // Add effect to handle clicking outside search results
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -280,20 +429,24 @@ const AdminDashboard = () => {
     refetchOnReconnect: false // Don't refetch on reconnect
   });
 
-  // Sort novels by updatedAt timestamp (most recent first)
+  // Sort novels by selected criteria
   const sortedNovels = useMemo(() => {
     if (!novels || novels.length === 0) return [];
     
-    // No need for client-side filtering anymore - server handles role-based filtering
     return novels.sort((a, b) => {
-      // Get the timestamp for each novel
-      const timestampA = new Date(a.updatedAt || a.createdAt).getTime();
-      const timestampB = new Date(b.updatedAt || b.createdAt).getTime();
-      
-      // Sort descending (newest first)
-      return timestampB - timestampA;
+      if (sortType === 'balance') {
+        // Sort by novelBalance in descending order (highest first)
+        const balanceA = a.novelBalance || 0;
+        const balanceB = b.novelBalance || 0;
+        return balanceB - balanceA;
+      } else {
+        // Sort by updatedAt timestamp (most recent first) - default behavior
+        const timestampA = new Date(a.updatedAt || a.createdAt).getTime();
+        const timestampB = new Date(b.updatedAt || b.createdAt).getTime();
+        return timestampB - timestampA;
+      }
     });
-  }, [novels]);
+  }, [novels, sortType]);
 
   // Check if user can perform admin operations
   const canEditNovels = user && (user.role === 'admin' || user.role === 'moderator' || user.role === 'pj_user');
@@ -1644,96 +1797,53 @@ const AdminDashboard = () => {
 
         {/* Novel List Section */}
         <div className="novel-list">
-          <h3 className="section-title">Danh sách truyện</h3>
+          <div className="novel-list-header">
+            <h3 className="section-title">
+              Danh sách truyện {sortedNovels.length > 0 && `(${sortedNovels.length})`}
+            </h3>
+            <div className="sort-control">
+              <label htmlFor="sort-select">Sắp xếp theo:</label>
+              <select
+                id="sort-select"
+                value={sortType}
+                onChange={(e) => setSortType(e.target.value)}
+                className="sort-dropdown"
+              >
+                <option value="updated">Mới cập nhật</option>
+                <option value="balance">Số dư nhiều nhất</option>
+              </select>
+            </div>
+          </div>
           {novelsLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
               <LoadingSpinner size="medium" text="Đang tải danh sách truyện..." />
             </div>
           ) : (
-            <ul>
-              {sortedNovels.map(novel => (
-                <li key={novel._id}>
-                  <div className="novel-title-section">
-                    <div className="novel-info">
-                      <Link 
-                        to={generateNovelUrl(novel)}
-                        className="novel-title-link"
-                      >
-                        {novel.title}
-                      </Link>
-                      <div className="novel-balance">
-                        <div className="balance-info">
-                          <div className="budget-display">
-                            Kho lúa: {novel.novelBudget || 0} 🌾
-                          </div>
-                          <div className="balance-display">
-                            {editingBalanceId === novel._id ? (
-                              <div className="balance-edit-container">
-                                <span>Số dư truyện: </span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="1"
-                                  value={balanceValue}
-                                  onChange={(e) => setBalanceValue(e.target.value)}
-                                  className="balance-edit-input"
-                                />
-                                <div className="balance-edit-actions">
-                                  <button 
-                                    onClick={() => saveBalanceChange(novel._id)}
-                                    className="save-balance-btn"
-                                  >
-                                    Lưu
-                                  </button>
-                                  <button 
-                                    onClick={cancelEditBalance}
-                                    className="cancel-balance-btn"
-                                  >
-                                    Hủy bỏ
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                Số dư truyện: {novel.novelBalance || 0} 🌾
-                                {canEditBalances && (
-                                  <button
-                                    onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
-                                    className="edit-balance-btn"
-                                  >
-                                    Chỉnh sửa
-                                  </button>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="novel-actions">
-                    <select
-                      className="status-dropdown"
-                      value={novel.status || 'Ongoing'}
-                      onChange={(e) => handleStatusChange(novel._id, e.target.value)}
-                    >
-                      <option value="Ongoing">Đang tiến hành</option>
-                      <option value="Completed">Đã hoàn thành</option>
-                      <option value="Hiatus">Tạm ngưng</option>
-                    </select>
-                    {canEditNovels && (
-                      <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
-                    )}
-                    {canDeleteNovels && (
-                      <button 
-                        className="delete"
-                        onClick={() => handleDelete(novel)}
-                      >Xóa</button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <List
+              height={virtualListHeight}
+              itemCount={sortedNovels.length}
+              itemSize={itemSize}
+              width="100%"
+              itemData={{
+                novels: sortedNovels,
+                user,
+                canEditNovels,
+                canDeleteNovels,
+                canEditBalances,
+                handleEdit,
+                handleDelete,
+                handleStatusChange,
+                editingBalanceId,
+                balanceValue,
+                setBalanceValue,
+                handleEditBalance,
+                cancelEditBalance,
+                saveBalanceChange
+              }}
+              ref={novelListContainerRef}
+            >
+              {VirtualNovelItem}
+            </List>
           )}
         </div>
       </div>

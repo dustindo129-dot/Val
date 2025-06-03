@@ -113,6 +113,76 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.novel-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.novel-list-header .section-title {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.sort-control label {
+  font-size: 0.9rem;
+  color: var(--text-color, #2c3e50);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sort-dropdown {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  background-color: var(--input-bg, #fff);
+  color: var(--text-color, #2c3e50);
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.sort-dropdown:focus {
+  outline: none;
+  border-color: var(--primary-color, #3498db);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* Virtual scrolling container */
+.novel-list .react-window-list {
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  background: var(--bg-color, #fff);
+}
+
+/* Virtual novel item */
+.virtual-novel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #dee2e6);
+  transition: all 0.2s;
+  min-width: 0;
+  gap: 1rem;
+  margin: 0.5rem;
+  list-style: none;
+  height: calc(100% - 1rem);
+  box-sizing: border-box;
+}
+
 .novel-list ul {
   list-style: none;
   padding: 0;
@@ -478,6 +548,49 @@
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
   }
+
+  /* Responsive styles for novel list header */
+  .novel-list-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .sort-control {
+    justify-content: flex-end;
+  }
+
+  .sort-dropdown {
+    min-width: auto;
+    width: 100%;
+    max-width: 200px;
+  }
+
+  /* Virtual scrolling responsive */
+  .virtual-novel-item {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    min-height: 140px;
+    padding: 0.75rem;
+  }
+
+  .virtual-novel-item .novel-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .virtual-novel-item .novel-title-section {
+    width: 100%;
+  }
+
+  .virtual-novel-item .novel-actions button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
 }
 
 /* Genres section styles */
@@ -563,6 +676,22 @@
 
 :root.dark-mode .genre-checkbox {
   color: var(--text-color, #e0e0e0);
+}
+
+/* Dark mode support for sort control */
+:root.dark-mode .sort-control label {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .sort-dropdown {
+  background-color: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .sort-dropdown:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.2);
 }
 
 /* Illustration upload styles */
@@ -759,6 +888,17 @@
 }
 
 :root.dark-mode .novel-list li {
+  background: #1a202c;
+  border-color: #4a5568;
+}
+
+/* Virtual scrolling dark mode */
+:root.dark-mode .novel-list .react-window-list {
+  border-color: #4a5568;
+  background: #2d3748;
+}
+
+:root.dark-mode .virtual-novel-item {
   background: #1a202c;
   border-color: #4a5568;
 }
