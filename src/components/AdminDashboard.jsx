@@ -682,17 +682,13 @@ const AdminDashboard = () => {
         status: editingNovel ? editingNovel.status : "Ongoing"
       };
 
-      // If editing, check if only non-critical fields were changed to preserve updatedAt timestamp
+      // If editing, preserve timestamp for all changes except status changes
       if (editingNovel) {
-        const hasContentUpdate = (
-          novelData.title !== editingNovel.title ||           // Title changed
-          novelData.note !== editingNovel.note ||             // Note changed  
-          novelData.illustration !== editingNovel.illustration || // Illustration changed
-          novelData.status !== editingNovel.status            // Status changed
-        );
+        const hasStatusChange = novelData.status !== editingNovel.status;
 
-        if (!hasContentUpdate) {
-          // Preserve the original updatedAt timestamp for non-content changes
+        if (!hasStatusChange) {
+          // Preserve the original updatedAt timestamp for all non-status changes
+          // This includes title, note, illustration, and staff changes
           novelData.updatedAt = editingNovel.updatedAt;
           novelData.preserveTimestamp = true; // Flag for backend
         }

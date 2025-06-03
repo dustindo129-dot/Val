@@ -1324,9 +1324,9 @@ const TopUpManagement = () => {
                       </div>
                       <div className="transaction-admin">
                         {transaction.adminId ? 
-                          `Đã xử lý bởi: ${transaction.adminId.username}` : 
+                          `Đã xử lý bởi: ${transaction.adminId.displayName || transaction.adminId.username}` : 
                           transaction.transactionType === 'admin' ? 
-                            `Đã xử lý bởi: ${transaction.admin.username}` : 
+                            `Đã xử lý bởi: ${transaction.admin.displayName || transaction.admin.username}` : 
                             'Tự động xử lý'}
                       </div>
                       {transaction.notes && (
