@@ -12,7 +12,14 @@ const ChapterNavigation = ({
   user // Add user prop to check permissions
 }) => {
   // Check if user can access paid content
-  const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
+  const canAccessPaidContent = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' ||
+    (user.role === 'pj_user' && chapter?.novel && (
+      chapter.novel.active?.pj_user?.includes(user.id) || 
+      chapter.novel.active?.pj_user?.includes(user.username)
+    ))
+  );
   
   // Check if next chapter is paid content
   const isNextChapterPaid = chapter?.nextChapter?.mode === 'paid';

@@ -243,6 +243,12 @@ const ChapterContent = ({
   }, []);
 
   const handleModeChange = (value) => {
+    // Prevent pj_user from changing paid mode
+    if (userRole === 'pj_user' && (originalMode === 'paid' || value === 'paid')) {
+      setModeError('Bạn không có quyền thay đổi chế độ trả phí. Chỉ admin mới có thể thay đổi.');
+      return;
+    }
+    
     // Validate that paid chapters cannot be set in paid modules
     if (value === 'paid' && isModulePaid) {
       setModeError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
@@ -354,6 +360,7 @@ const ChapterContent = ({
               value={editedMode}
               onChange={(e) => handleModeChange(e.target.value)}
               className="mode-dropdown"
+              disabled={userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid')}
             >
               <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất cả)</option>
               <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
@@ -364,6 +371,13 @@ const ChapterContent = ({
                 </option>
               )}
             </select>
+            
+            {/* Show info message for pj_user when they can't change paid mode */}
+            {userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid') && (
+              <div className="mode-info" style={{ color: '#666', fontSize: '12px', marginTop: '5px' }}>
+                Bạn không thể thay đổi chế độ trả phí. Chỉ admin mới có thể thay đổi.
+              </div>
+            )}
             
             {modeError && (
               <div className="mode-error" style={{ color: 'red', fontSize: '14px', marginTop: '5px' }}>
@@ -381,6 +395,16 @@ const ChapterContent = ({
                   onChange={(e) => setEditedChapterBalance(e.target.value)}
                   placeholder="Nhập số lúa chương (tối thiểu 1)"
                 />
+              </div>
+            )}
+            
+            {/* Show balance info for pj_user but don't allow editing */}
+            {editedMode === 'paid' && userRole === 'pj_user' && originalChapterBalance > 0 && (
+              <div className="chapter-balance-info">
+                <label>Số lúa chương hiện tại:</label>
+                <div style={{ padding: '8px', backgroundColor: '#f5f5f5', borderRadius: '4px', color: '#666' }}>
+                  {originalChapterBalance} 🌾 (Chỉ admin mới có thể thay đổi)
+                </div>
               </div>
             )}
           </div>

@@ -26,7 +26,15 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, children }) => {
       case 'draft':
         return user?.role === 'admin' || user?.role === 'moderator'; // Draft accessible to admin and moderator
       case 'paid':
-        return user && (user.role === 'admin' || user.role === 'moderator'); // Paid content only accessible to admin/moderator
+        // Allow admin, moderator, and pj_user for their assigned novels
+        return user && (
+          user.role === 'admin' || 
+          user.role === 'moderator' ||
+          (user.role === 'pj_user' && chapter.novel && (
+            chapter.novel.active?.pj_user?.includes(user.id) || 
+            chapter.novel.active?.pj_user?.includes(user.username)
+          ))
+        );
       default:
         return true;
     }
@@ -35,14 +43,35 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, children }) => {
   // Check if user has access to paid module content
   const canAccessPaidModule = (moduleData, user) => {
     if (!moduleData || moduleData.mode !== 'paid') return true; // Not a paid module
-    return user && (user.role === 'admin' || user.role === 'moderator'); // Paid modules only accessible to admin/moderator
+    // Allow admin, moderator, and pj_user for their assigned novels
+    return user && (
+      user.role === 'admin' || 
+      user.role === 'moderator' ||
+      (user.role === 'pj_user' && moduleData.novel && (
+        moduleData.novel.active?.pj_user?.includes(user.id) || 
+        moduleData.novel.active?.pj_user?.includes(user.username)
+      ))
+    );
   };
 
   const hasChapterAccess = canAccessChapterContent(chapter, user);
   const hasModuleAccess = canAccessPaidModule(moduleData, user);
 
   // Check if user can access paid content
-  const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
+  const canAccessPaidContent = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' ||
+    (user.role === 'pj_user' && (
+      (chapter?.novel && (
+        chapter.novel.active?.pj_user?.includes(user.id) || 
+        chapter.novel.active?.pj_user?.includes(user.username)
+      )) ||
+      (moduleData?.novel && (
+        moduleData.novel.active?.pj_user?.includes(user.id) || 
+        moduleData.novel.active?.pj_user?.includes(user.username)
+      ))
+    ))
+  );
   
   // Check if this chapter is in paid mode
   const isPaidChapter = chapter?.mode === 'paid';

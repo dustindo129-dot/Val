@@ -90,7 +90,14 @@ const ModuleList = memo(({
   const canDelete = user && (user.role === 'admin' || user.role === 'moderator');
   
   // Check if user can access paid content (admin only)
-  const canAccessPaidContent = user && (user.role === 'admin');
+  const canAccessPaidContent = user && (
+    user.role === 'admin' ||
+    user.role === 'moderator' ||
+    (user.role === 'pj_user' && (
+      novel?.active?.pj_user?.includes(user.id) || 
+      novel?.active?.pj_user?.includes(user.username)
+    ))
+  );
   
 
 

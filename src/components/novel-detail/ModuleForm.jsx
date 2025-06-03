@@ -122,7 +122,7 @@ const ModuleForm = memo(({
           </div>
         )}
         
-        {/* Module Balance Input - Only shows when mode is paid */}
+        {/* Module Balance Input - Only shows when mode is paid and user is admin */}
         {isAdmin && mode === 'paid' && (
           <div className="form-group" style={{margin: '10px 0'}}>
             <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>
@@ -141,6 +141,21 @@ const ModuleForm = memo(({
                 borderRadius: '4px'
               }}
             />
+          </div>
+        )}
+        
+        {/* Show module info for pj_user when module is paid */}
+        {!isAdmin && user?.role === 'pj_user' && mode === 'paid' && (
+          <div className="form-group" style={{margin: '10px 0'}}>
+            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Chế độ tập hiện tại:</label>
+            <div style={{
+              padding: '8px',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '4px',
+              color: '#666'
+            }}>
+              {translateChapterModuleStatus('PAID')} - {moduleBalance} 🌾 (Chỉ admin mới có thể thay đổi)
+            </div>
           </div>
         )}
         
