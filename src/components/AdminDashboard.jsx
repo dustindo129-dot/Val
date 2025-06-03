@@ -225,6 +225,36 @@ const AdminDashboard = () => {
   // Add debounce timeout ref for user search
   const searchTimeoutRef = useRef(null);
 
+  // Add refs for search containers to handle outside clicks
+  const searchContainerRefs = useRef({});
+
+  // Add effect to handle clicking outside search results
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check each search container
+      Object.entries(searchContainerRefs.current).forEach(([itemId, ref]) => {
+        if (ref && !ref.contains(event.target)) {
+          // Click was outside this search container, clear its results
+          setUserSearchResults(prev => {
+            const newResults = { ...prev };
+            if (newResults[itemId] && newResults[itemId].length > 0) {
+              newResults[itemId] = [];
+            }
+            return newResults;
+          });
+        }
+      });
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Fetch novels using React Query
   const { data: novels = [], isLoading: novelsLoading } = useQuery({
     queryKey: ['novels', user?.id, user?.role], // Include user info in cache key
@@ -395,6 +425,14 @@ const AdminDashboard = () => {
         item.id === id ? { ...item, [field]: value } : item
       ));
     }
+  };
+
+  /**
+   * Clears search results for a specific staff item
+   * @param {number} itemId - Staff item ID
+   */
+  const clearSearchResults = (itemId) => {
+    setUserSearchResults(prev => ({ ...prev, [itemId]: [] }));
   };
 
   /**
@@ -1235,7 +1273,16 @@ const AdminDashboard = () => {
                 <div className="staff-items-grid">
                   {activeStaffItems.map((item, index) => (
                     <div key={item.id} className="staff-item" data-role={item.role}>
-                      <div className="user-search-container">
+                      <div 
+                        className="user-search-container"
+                        ref={(ref) => {
+                          if (ref) {
+                            searchContainerRefs.current[item.id] = ref;
+                          } else {
+                            delete searchContainerRefs.current[item.id];
+                          }
+                        }}
+                      >
                         <input
                           type="text"
                           placeholder="Tìm người dùng..."
@@ -1265,6 +1312,9 @@ const AdminDashboard = () => {
                                 </div>
                               </div>
                             ))}
+                            <div className="search-help-text">
+                              Nhấp bên ngoài để đóng hoặc nhập tên trực tiếp nếu người này chưa có tài khoản
+                            </div>
                           </div>
                         )}
                       </div>

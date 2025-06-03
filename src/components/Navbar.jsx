@@ -17,7 +17,7 @@
  * - Active link highlighting
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBookmarks } from '../context/BookmarkContext';
@@ -64,6 +64,30 @@ const Navbar = () => {
   
   // Add state for notification dropdown
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+
+  // Add ref for search container to handle outside clicks
+  const searchContainerRef = useRef(null);
+
+  // Add effect to handle clicking outside search results
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        // Click was outside search container, clear search results
+        setSearchResults([]);
+        setError("");
+      }
+    };
+
+    // Only add listener if there are search results or error to dismiss
+    if (searchResults.length > 0 || error) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [searchResults, error]);
 
   // Fetch unread notification count (no polling, only initial load and manual refetch)
   const { data: unreadCount = 0, refetch: refetchUnreadCount } = useQuery({
@@ -208,6 +232,7 @@ const Navbar = () => {
     navigate(localizedUrl);
     setSearchQuery("");
     setSearchResults([]);
+    setError("");
   };
 
   /**
@@ -339,7 +364,7 @@ const Navbar = () => {
           </Link>
           
           {/* Search section */}
-          <div className="search-container">
+          <div className="search-container" ref={searchContainerRef}>
             <form onSubmit={handleSubmit} className="search-form">
               <div className="search-input-container">
                 <input
@@ -356,6 +381,7 @@ const Navbar = () => {
                   onClick={() => {
                     setSearchQuery("");
                     setSearchResults([]);
+                    setError("");
                   }}
                 >
                   ×
