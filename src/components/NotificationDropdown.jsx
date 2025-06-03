@@ -64,10 +64,11 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       
       return response;
     },
-    enabled: !!user && page > 0 && page > lastFetchedPage, // Only fetch if page is greater than last fetched
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    enabled: !!user && page > 0 && page > lastFetchedPage && isOpen, // Only fetch when dropdown is open
+    staleTime: 1000 * 60 * 2, // 2 minutes - don't refetch if data is less than 2 minutes old
+    cacheTime: 1000 * 60 * 10, // 10 minutes - keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch when reconnecting
     keepPreviousData: false,
   });
 

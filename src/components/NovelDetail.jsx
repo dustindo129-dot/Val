@@ -787,18 +787,8 @@ const NovelDetail = ({ novelId }) => {
   
   // Check if we're coming from chapter creation and need to refetch
   useEffect(() => {
-    const handleRefresh = async () => {
-      if (location.state?.from === 'addChapter' && location.state?.shouldRefetch) {
-        // Force a full refetch that bypasses the cache completely
-        await queryClient.invalidateQueries(['novel', novelId], { refetchType: 'all' });
-        await refetch(); 
-        
-        // Only clear the state after refetch completes
-        navigate(location.pathname, { replace: true, state: {} });
-      }
-    };
-    
-    handleRefresh();
+    // This effect is no longer needed since we simplified the navigation
+    // The regular query invalidation will handle data freshness
   }, [location, refetch, navigate, queryClient, novelId]);
   
   // Check if novel has chapters
@@ -833,7 +823,10 @@ const NovelDetail = ({ novelId }) => {
       return api.getUserNovelInteraction(novelId);
     },
     enabled: !!user?.username && !!novelId,
-    staleTime: 1000 * 60 * 5 // 5 minutes
+    staleTime: 1000 * 60 * 3, // 3 minutes - don't refetch if data is less than 3 minutes old
+    cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache for 15 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false // Don't refetch when reconnecting
   });
   
   // Toggle comments section
@@ -967,9 +960,9 @@ const NovelDetail = ({ novelId }) => {
 
   // Set up SSE connection for real-time updates
   useEffect(() => {
-    const handleUpdate = async () => {
-      await queryClient.invalidateQueries(['novel', novelId]);
-      await queryClient.refetchQueries(['novel', novelId]); // Force immediate refetch
+    const handleUpdate = () => {
+      // Simple invalidation without forced refetch
+      queryClient.invalidateQueries(['novel', novelId]);
     };
 
     const handleStatusChange = (data) => {
@@ -986,7 +979,10 @@ const NovelDetail = ({ novelId }) => {
     };
 
     const handleNewChapter = (data) => {
-      queryClient.invalidateQueries(['novel', novelId]);
+      // Only invalidate if it's for this novel
+      if (data.novelId === novelId) {
+        queryClient.invalidateQueries(['novel', novelId]);
+      }
     };
 
     // Add event listeners

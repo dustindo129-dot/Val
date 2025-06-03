@@ -94,9 +94,11 @@ const Navbar = () => {
     queryKey: ['unreadNotificationCount'],
     queryFn: () => api.getUnreadNotificationCount(),
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    refetchOnWindowFocus: false, // Disable refetch on window focus since we use SSE
+    staleTime: 1000 * 60 * 2, // 2 minutes - don't refetch if data is less than 2 minutes old
+    cacheTime: 1000 * 60 * 10, // 10 minutes - keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch when reconnecting
+    refetchInterval: false // Disable automatic refetching
   });
 
   // Set up SSE listeners for real-time unread count updates

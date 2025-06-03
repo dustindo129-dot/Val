@@ -487,8 +487,19 @@ const ChapterDashboard = () => {
         chapterBalance: mode === 'paid' ? parseInt(chapterBalance) || 0 : 0
       };
 
-      // Cancel any outgoing refetches for the novel
-      await queryClient.cancelQueries({ queryKey: ['novel', novelId] });
+      // Simplified cache invalidation - avoid overlapping operations
+      if (isEditMode) {
+        // For edit mode, just invalidate the specific novel query
+        queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      } else {
+        // For new chapter, invalidate multiple cache keys to ensure fresh data
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['novel', novelId] }),
+          queryClient.invalidateQueries({ queryKey: ['novel', resolvedNovelId || novelId] }),
+          queryClient.invalidateQueries({ queryKey: ['modules', novelId] }),
+          queryClient.invalidateQueries({ queryKey: ['modules', resolvedNovelId || novelId] })
+        ]);
+      }
 
       // Get current novel data for optimistic update
       const currentNovelData = queryClient.getQueryData(['novel', novelId]);
@@ -565,33 +576,15 @@ const ChapterDashboard = () => {
         setSuccess('Chương đã được tạo thành công!');
       }
 
-      // More aggressively invalidate ALL related queries
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['novel', novelId] }),
-        queryClient.invalidateQueries({ queryKey: ['modules', novelId] }),
-        queryClient.invalidateQueries({ queryKey: ['chapters'] }),
-        // Remove any stale data
-        queryClient.removeQueries({ queryKey: ['novel', novelId], exact: false, stale: true })
-      ]);
-
-      // Force complete cache reset for this novel
-      queryClient.resetQueries({ queryKey: ['novel', novelId] });
-
       // For edit mode, clear success message after timeout and stay on page
       if (isEditMode) {
         setTimeout(() => setSuccess(''), 3000);
         setSaving(false);
       } else {
-        // For new chapter, navigate back to novel page after delay
-        const novelSlug = createUniqueSlug(novel?.novel?.title, novelId);
+        // For new chapter, navigate back without aggressive refetch state
         setTimeout(() => {
           navigate(generateNovelUrl({ _id: novelId, title: novel?.novel?.title || '' }), {
-            replace: true,
-            state: {
-              from: 'addChapter',
-              shouldRefetch: true,
-              timestamp: Date.now()
-            }
+            replace: true
           });
         }, 1500);
       }
@@ -610,8 +603,8 @@ const ChapterDashboard = () => {
     return <div className="error">Không có quyền truy cập. Chỉ dành cho admin, moderator và project user.</div>;
   }
 
-  // For pj_user, check if they manage this novel
-  if (user?.role === 'pj_user' && !(
+  // For pj_user, check if they manage this novel - but only after data has loaded
+  if (user?.role === 'pj_user' && !loading && novel && !(
     novel?.novel?.active?.pj_user?.includes(user.id) || 
     novel?.novel?.active?.pj_user?.includes(user.username)
   )) {

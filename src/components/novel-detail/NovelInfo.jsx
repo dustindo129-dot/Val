@@ -62,7 +62,10 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     queryKey: ['novel-stats', novelId],
     queryFn: () => api.getNovelStats(novelId),
     enabled: !!novelId,
-    staleTime: 1000 * 60 * 5 // 5 minutes
+    staleTime: 1000 * 60 * 3, // 3 minutes - don't refetch if data is less than 3 minutes old
+    cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache for 15 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false // Don't refetch when reconnecting
   });
   
   // Query for bookmarked chapter
@@ -70,7 +73,10 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     queryKey: ['bookmarked-chapter', novelId, user?.id],
     queryFn: () => api.getBookmarkedChapter(novelId),
     enabled: !!novelId && !!user,
-    staleTime: 1000 * 60 * 5 // 5 minutes
+    staleTime: 1000 * 60 * 3, // 3 minutes - don't refetch if data is less than 3 minutes old
+    cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache for 15 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false // Don't refetch when reconnecting
   });
   
   // Fallback ID mechanism - use a ref to keep track of a valid ID
