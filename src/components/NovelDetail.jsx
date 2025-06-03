@@ -471,6 +471,7 @@ const NovelDetail = ({ novelId }) => {
 
   // Handler for deleting modules
   const handleDeleteModule = useCallback(async (moduleId) => {
+    // Only admin and moderator can delete modules (not pj_user)
     if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return;
     
     if (window.confirm('Bạn có chắc chắn muốn xóa tập này?')) {
@@ -487,11 +488,22 @@ const NovelDetail = ({ novelId }) => {
 
   // Handler for module reordering
   const handleModuleReorder = useCallback(async (moduleId, direction) => {
-    if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return;
+    // Check if user has permission (admin, moderator, or pj_user managing this novel)
+    if (!user) return;
+    
+    // Get current data for permission check and optimistic update
+    const currentData = queryClient.getQueryData(['novel', novelId]);
+    
+    const canReorderModules = user.role === 'admin' || 
+                             user.role === 'moderator' || 
+                             (user.role === 'pj_user' && (
+                               currentData?.novel?.active?.pj_user?.includes(user.id) || 
+                               currentData?.novel?.active?.pj_user?.includes(user.username)
+                             ));
+    
+    if (!canReorderModules) return;
     
     try {
-      // Get current data for optimistic update
-      const currentData = queryClient.getQueryData(['novel', novelId]);
       const previousData = currentData ? JSON.parse(JSON.stringify(currentData)) : null;
       
       // Create a deep copy of the modules with their chapters
@@ -592,30 +604,19 @@ const NovelDetail = ({ novelId }) => {
                 modules: finalModules,
                 updatedAt: new Date().toISOString()
               });
-            } else {
-              // If response has no modules, use the already updated modules
-              // but still force a background refresh for consistency
-              queryClient.invalidateQueries({ 
-                queryKey: ['novel', novelId],
-                refetchType: 'inactive'  // Background refresh only
-              });
             }
-          } catch (error) {
-            // On error, revert to previous state
-            if (previousData) {
-              queryClient.setQueryData(['novel', novelId], previousData);
-            }
-            throw error;
+          } catch (serverError) {
+            // If server fails, revert to previous state
+            queryClient.setQueryData(['novel', novelId], previousData);
+            console.error('Module reorder failed on server:', serverError);
+            throw serverError;
           }
         }
       }
     } catch (error) {
-      console.error('Failed to reorder module:', error);
-      // Force a refetch to ensure we're in sync with server
-      await queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
-      await queryClient.refetchQueries({ queryKey: ['novel', novelId], type: 'active' });
+      console.error('Module reorder error:', error);
     }
-  }, [user, novelId, queryClient, api]);
+  }, [user, novelId, queryClient]);
 
   // Handler for toggling the module form
   const handleModuleFormToggle = useCallback(() => {
@@ -842,11 +843,22 @@ const NovelDetail = ({ novelId }) => {
 
   // Add handler functions for chapters
   const handleChapterReorder = useCallback(async (moduleId, chapterId, direction) => {
-    if (!user || user.role !== 'admin') return;
+    // Check if user has permission (admin, moderator, or pj_user managing this novel)
+    if (!user) return;
+    
+    // Get current data for permission check and optimistic update
+    const currentData = queryClient.getQueryData(['novel', novelId]);
+    
+    const canReorderChapters = user.role === 'admin' || 
+                              user.role === 'moderator' || 
+                              (user.role === 'pj_user' && (
+                                currentData?.novel?.active?.pj_user?.includes(user.id) || 
+                                currentData?.novel?.active?.pj_user?.includes(user.username)
+                              ));
+    
+    if (!canReorderChapters) return;
     
     try {
-      // Get current data for optimistic update
-      const currentData = queryClient.getQueryData(['novel', novelId]);
       const previousData = currentData ? JSON.parse(JSON.stringify(currentData)) : null;
       
       if (currentData?.modules) {
@@ -895,13 +907,14 @@ const NovelDetail = ({ novelId }) => {
         }
       }
     } catch (error) {
-      console.error('Không thể di chuyển chương:', error);
+      console.error('Chapter reorder error:', error);
       // Force a refetch to ensure we're in sync with server
       queryClient.invalidateQueries(['novel', novelId]);
     }
   }, [user, novelId, queryClient]);
   
-  const handleChapterDelete = useCallback(async (moduleId, chapterId) => {
+  const handleChapterDelete = useCallback(async (chapterId) => {
+    // Only admin and moderator can delete chapters (not pj_user)
     if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return;
     
     if (window.confirm('Bạn có chắc chắn muốn xóa chương này? Hành động này không thể hoàn tác.')) {
@@ -1020,7 +1033,12 @@ const NovelDetail = ({ novelId }) => {
           <div className="chapter-list-container">
             <div className="chapters-header">
               <h2>Danh Sách Chương</h2>
-              {(user?.role === 'admin' || user?.role === 'moderator') && (
+              {/* Add module button - restricted to admin/moderator/assigned pj_user */}
+              {(user?.role === 'admin' || user?.role === 'moderator' || 
+                (user?.role === 'pj_user' && (
+                  data.novel.active?.pj_user?.includes(user.id) || 
+                  data.novel.active?.pj_user?.includes(user.username)
+                ))) && (
                 <button 
                   className="add-module-btn"
                   onClick={handleModuleFormToggle}
@@ -1046,6 +1064,7 @@ const NovelDetail = ({ novelId }) => {
                     handleModuleCoverUpload={handleModuleCoverUpload} 
                     handleModuleFormToggle={handleModuleFormToggle}
                     editingModule={editingModule} 
+                    user={user}
                   />
                 </Suspense>
               </div>
@@ -1062,6 +1081,7 @@ const NovelDetail = ({ novelId }) => {
                   handleModuleCoverUpload={handleModuleCoverUpload} 
                   handleModuleFormToggle={handleModuleFormToggle}
                   editingModule={null} 
+                  user={user}
                 />
               </Suspense>
             )}
@@ -1072,6 +1092,7 @@ const NovelDetail = ({ novelId }) => {
                   modules={data.modules}
                   novelId={novelId}
                   novelTitle={data.novel.title}
+                  novel={data.novel}
                   user={user}
                   handleModuleReorder={handleModuleReorder}
                   handleModuleDelete={handleDeleteModule}

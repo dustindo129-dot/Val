@@ -606,8 +606,16 @@ const ChapterDashboard = () => {
   };
 
   // Check if user has admin privileges
-  if (user?.role !== 'admin' && user?.role !== 'moderator') {
-    return <div className="error">Không có quyền truy cập. Chỉ dành cho admin và moderator.</div>;
+  if (user?.role !== 'admin' && user?.role !== 'moderator' && user?.role !== 'pj_user') {
+    return <div className="error">Không có quyền truy cập. Chỉ dành cho admin, moderator và project user.</div>;
+  }
+
+  // For pj_user, check if they manage this novel
+  if (user?.role === 'pj_user' && !(
+    novel?.novel?.active?.pj_user?.includes(user.id) || 
+    novel?.novel?.active?.pj_user?.includes(user.username)
+  )) {
+    return <div className="error">Bạn không có quyền quản lý truyện này.</div>;
   }
 
   // Show loading state

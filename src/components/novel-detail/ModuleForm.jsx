@@ -102,7 +102,7 @@ const ModuleForm = memo(({
           />
         </div>
         
-        {/* Module Mode Selection */}
+        {/* Module Mode Selection - Only published and paid for modules */}
         {isAdmin && (
           <div className="form-group" style={{margin: '10px 0'}}>
             <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Chế độ tập:</label>
@@ -116,7 +116,7 @@ const ModuleForm = memo(({
                 borderRadius: '4px'
               }}
             >
-              <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho mọi người)</option>
+              <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho tất cả)</option>
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
             </select>
           </div>

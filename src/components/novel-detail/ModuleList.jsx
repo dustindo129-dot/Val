@@ -61,6 +61,7 @@ const ModuleList = memo(({
   modules,
   novelId,
   novelTitle,
+  novel,
   user,
   handleModuleReorder,
   handleModuleDelete,
@@ -75,12 +76,21 @@ const ModuleList = memo(({
     moduleToDelete: null
   });
 
-  // Check if user can edit
-  const canEdit = user && (user.role === 'admin' || user.role === 'moderator');
-  // Check if user can delete
+  // Check if user can edit (admin, moderator, or pj_user managing this novel)
+  const canEdit = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' || 
+    (user.role === 'pj_user' && (
+      novel?.active?.pj_user?.includes(user.id) || 
+      novel?.active?.pj_user?.includes(user.username)
+    ))
+  );
+  
+  // Check if user can delete (only admin and moderator, not pj_user)
   const canDelete = user && (user.role === 'admin' || user.role === 'moderator');
-  // Check if user can access paid content
-  const canAccessPaidContent = user && (user.role === 'admin' || user.role === 'moderator');
+  
+  // Check if user can access paid content (admin only)
+  const canAccessPaidContent = user && (user.role === 'admin');
   
 
 
@@ -255,6 +265,7 @@ const ModuleList = memo(({
                     novelId={novelId}
                     novelTitle={novelTitle}
                     moduleId={module._id}
+                    novel={novel}
                     user={user}
                     canEdit={canEdit}
                     canDelete={canDelete}

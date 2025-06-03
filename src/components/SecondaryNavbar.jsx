@@ -142,8 +142,8 @@ const SecondaryNavbar = () => {
             <Link to="/bang-yeu-cau" className={`nav-link ${isActive('/bang-yeu-cau')}`} onClick={() => setIsMenuOpen(false)}>
               Bảng yêu cầu
             </Link>
-            {/* Admin and Moderator dashboard link */}
-            {(user?.role === 'admin' || user?.role === 'moderator') && (
+            {/* Admin, Moderator and Project User dashboard link */}
+            {(user?.role === 'admin' || user?.role === 'moderator' || user?.role === 'pj_user') && (
               <Link to="/bang-quan-tri" className={`nav-link ${isActive('/bang-quan-tri')}`} onClick={() => setIsMenuOpen(false)}>
                 Bảng quản trị
               </Link>

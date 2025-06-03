@@ -260,6 +260,16 @@
   font-size: 1.1rem;
 }
 
+.staff-edit-note {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
 .add-staff-btn {
   background-color: #28a745;
   color: white;
@@ -413,6 +423,12 @@
   background-color: #2d3748;
 }
 
+:root.dark-mode .staff-edit-note {
+  background-color: #2d3748;
+  border-color: #d69e2e;
+  color: #fbd38d;
+}
+
 :root.dark-mode .staff-item {
   background-color: #1a202c;
   border-color: #4a5568;
@@ -423,43 +439,6 @@
   background-color: #2d3748;
   border-color: #4a5568;
   color: #e2e8f0;
-}
-
-/* Dark mode role-specific styling */
-:root.dark-mode .staff-item[data-role="pj_user"]:hover {
-  border-color: #f56565;
-  box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
-}
-
-:root.dark-mode .staff-item[data-role="translator"]:hover {
-  border-color: #b794f6;
-  box-shadow: 0 2px 8px rgba(183, 148, 246, 0.3);
-}
-
-:root.dark-mode .staff-item[data-role="editor"]:hover {
-  border-color: #63b3ed;
-  box-shadow: 0 2px 8px rgba(99, 179, 237, 0.3);
-}
-
-:root.dark-mode .staff-item[data-role="proofreader"]:hover {
-  border-color: #fbb040;
-  box-shadow: 0 2px 8px rgba(251, 176, 64, 0.3);
-}
-
-:root.dark-mode .staff-item[data-role="pj_user"] select {
-  border-color: #f56565;
-}
-
-:root.dark-mode .staff-item[data-role="translator"] select {
-  border-color: #b794f6;
-}
-
-:root.dark-mode .staff-item[data-role="editor"] select {
-  border-color: #63b3ed;
-}
-
-:root.dark-mode .staff-item[data-role="proofreader"] select {
-  border-color: #fbb040;
 }
 
 :root.dark-mode .add-staff-btn {
@@ -888,40 +867,8 @@
 }
 
 /* Staff section */
-:root.dark-mode .staff-section {
-  background-color: #2d3748;
-}
-
 :root.dark-mode .staff-header h4 {
   color: #e2e8f0;
-}
-
-:root.dark-mode .staff-item {
-  background-color: #1a202c;
-  border-color: #4a5568;
-}
-
-:root.dark-mode .staff-item input,
-:root.dark-mode .staff-item select {
-  background-color: #2d3748;
-  border-color: #4a5568;
-  color: #e2e8f0;
-}
-
-:root.dark-mode .add-staff-btn {
-  background-color: #38a169;
-}
-
-:root.dark-mode .add-staff-btn:hover {
-  background-color: #2f855a;
-}
-
-:root.dark-mode .remove-staff-btn {
-}
-
-:root.dark-mode .remove-staff-btn:hover {
-  color: #e53e3e;
-  background-color: #f56565;
 }
 
 /* Genres section */

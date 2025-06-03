@@ -56,7 +56,8 @@ const ModuleChapters = memo(({
   handleChapterReorder, 
   handleChapterDelete,
   isPaidModule,
-  canAccessPaidContent
+  canAccessPaidContent,
+  novel
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -77,8 +78,12 @@ const ModuleChapters = memo(({
 
   // Function to determine if a chapter should be visible based on its mode
   const isChapterVisible = (chapter) => {
-    // Admin and moderators see all chapters
-    if (user?.role === 'admin' || user?.role === 'moderator') {
+    // Admin and moderators see all chapters, pj_user sees all chapters for their novels
+    if (user?.role === 'admin' || user?.role === 'moderator' || 
+        (user?.role === 'pj_user' && (
+          novel?.active?.pj_user?.includes(user.id) || 
+          novel?.active?.pj_user?.includes(user.username)
+        ))) {
       return true;
     }
     
@@ -92,7 +97,7 @@ const ModuleChapters = memo(({
     }
     
     if (chapter.mode === 'draft') {
-      return false; // Draft is only visible to admin/moderator (handled above)
+      return false; // Draft is only visible to admin/moderator/assigned pj_user (handled above)
     }
     
     return false; // Not visible for other modes
@@ -100,8 +105,12 @@ const ModuleChapters = memo(({
 
   // Check if a chapter is accessible (not just visible)
   const canAccessChapter = (chapter) => {
-    // Admin and moderators can access all chapters
-    if (user?.role === 'admin' || user?.role === 'moderator') {
+    // Admin and moderators can access all chapters, pj_user can access chapters for their novels
+    if (user?.role === 'admin' || user?.role === 'moderator' ||
+        (user?.role === 'pj_user' && (
+          novel?.active?.pj_user?.includes(user.id) || 
+          novel?.active?.pj_user?.includes(user.username)
+        ))) {
       return true;
     }
     
@@ -118,6 +127,23 @@ const ModuleChapters = memo(({
     // Other modes (paid, draft, etc.) are not accessible to regular users
     return false;
   };
+
+  // Check if user can edit content for this novel
+  const canEditContent = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' || 
+    (user?.role === 'pj_user' && (
+      novel?.active?.pj_user?.includes(user.id) || 
+      novel?.active?.pj_user?.includes(user.username)
+    ))
+  );
+  
+  // Check if user can delete content for this novel
+  const canDeleteContent = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator'
+    // pj_user should NOT be able to delete chapters
+  );
 
   return (
     <div className="module-chapters">
@@ -183,7 +209,7 @@ const ModuleChapters = memo(({
                   )}
                 </div>
                 
-                {canEdit && (
+                {canEditContent && (
                   <div className="chapter-actions" key={`chapter-actions-${chapterId}`}>
                     <button
                       className={`reorder-btn ${index === 0 ? 'disabled' : ''}`}
@@ -227,7 +253,7 @@ const ModuleChapters = memo(({
                         <path key={`path-down-${chapterId}`} d="M6 9l6 6 6-6"/>
                       </svg>
                     </button>
-                    {canDelete && (
+                    {canDeleteContent && (
                       <button
                         className="delete-chapter-btn"
                         onClick={() => handleChapterDelete(moduleId, chapterId)}

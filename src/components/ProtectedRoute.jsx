@@ -41,9 +41,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <LoadingSpinner />;
   }
   
-  // Check if user is authenticated and has admin or moderator role
-  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
-    // Redirect to home page if not admin or moderator, preserving attempted location
+  // Check if user is authenticated and has admin, moderator, or pj_user role
+  if (!user || (user.role !== 'admin' && user.role !== 'moderator' && user.role !== 'pj_user')) {
+    // Redirect to home page if not admin, moderator, or pj_user, preserving attempted location
     return <Navigate to="/" replace state={{ from: location }} />;
   }
 

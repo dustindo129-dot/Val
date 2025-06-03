@@ -31,6 +31,7 @@ import { useNovel } from '../context/NovelContext';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import bunnyUploadService from '../services/bunnyUploadService';
 import { generateNovelUrl } from '../utils/slugUtils';
+import LoadingSpinner from './LoadingSpinner';
 
 /**
  * AdminDashboardSEO Component
@@ -209,7 +210,7 @@ const AdminDashboard = () => {
   const searchTimeoutRef = useRef(null);
 
   // Fetch novels using React Query
-  const { data: novels = [] } = useQuery({
+  const { data: novels = [], isLoading: novelsLoading } = useQuery({
     queryKey: ['novels'],
     queryFn: async () => {
       const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&skipPopulation=true&t=${Date.now()}`, {
@@ -235,7 +236,8 @@ const AdminDashboard = () => {
   const sortedNovels = useMemo(() => {
     if (!novels || novels.length === 0) return [];
     
-    return [...novels].sort((a, b) => {
+    // No need for client-side filtering anymore - server handles role-based filtering
+    return novels.sort((a, b) => {
       // Get the timestamp for each novel
       const timestampA = new Date(a.updatedAt || a.createdAt).getTime();
       const timestampB = new Date(b.updatedAt || b.createdAt).getTime();
@@ -244,6 +246,13 @@ const AdminDashboard = () => {
       return timestampB - timestampA;
     });
   }, [novels]);
+
+  // Check if user can perform admin operations
+  const canEditNovels = user && (user.role === 'admin' || user.role === 'moderator' || user.role === 'pj_user');
+  const canDeleteNovels = user && (user.role === 'admin');
+  const canEditBalances = user && (user.role === 'admin');
+  const canCreateNovels = user && (user.role === 'admin' || user.role === 'moderator');
+  const canEditStaff = user && (user.role === 'admin' || user.role === 'moderator');
 
   /**
    * Handles input changes in the novel form
@@ -292,6 +301,9 @@ const AdminDashboard = () => {
    * @param {string} status - 'active' or 'inactive'
    */
   const addStaffItem = (status) => {
+    // Prevent pj_user from adding staff
+    if (user?.role === 'pj_user') return;
+    
     if (status === 'active') {
       // Active staff items have user search functionality
       const newItem = { 
@@ -318,6 +330,9 @@ const AdminDashboard = () => {
    * @param {number} id - id of the staff item to remove
    */
   const removeStaffItem = (status, id) => {
+    // Prevent pj_user from removing staff
+    if (user?.role === 'pj_user') return;
+    
     if (status === 'active') {
       setActiveStaffItems(activeStaffItems.filter(item => item.id !== id));
     } else {
@@ -333,6 +348,9 @@ const AdminDashboard = () => {
    * @param {string} value - new value
    */
   const handleStaffItemChange = (status, id, field, value) => {
+    // Prevent pj_user from modifying staff
+    if (user?.role === 'pj_user') return;
+    
     if (status === 'active') {
       if (field === 'searchQuery') {
         // Handle user search for active staff
@@ -1139,492 +1157,520 @@ const AdminDashboard = () => {
       <div className="dashboard-grid">
         {/* Novel Form Section */}
         <div className="novel-form">
-          <h3 className="section-title">{editingNovel ? 'Chỉnh sửa truyện' : 'Thêm truyện mới'}</h3>
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="title"
-              placeholder="Tiêu đề"
-              value={editingNovel ? editingNovel.title : newNovel.title}
-              onChange={handleInputChange}
-              required
-            />
-            <input
-              type="text"
-              name="alternativeTitles"
-              placeholder="Tiêu đề khác"
-              value={editingNovel ? editingNovel.alternativeTitles || '' : newNovel.alternativeTitles}
-              onChange={handleInputChange}
-            />
-            <input
-              type="text"
-              name="author"
-              placeholder="Tác giả"
-              value={editingNovel ? editingNovel.author : newNovel.author}
-              onChange={handleInputChange}
-              required
-            />
-            <input
-              type="text"
-              name="illustrator"
-              placeholder="Họa sĩ"
-              value={editingNovel ? editingNovel.illustrator : newNovel.illustrator}
-              onChange={handleInputChange}
-            />
-            
-            {/* Staff Section - Active */}
-            <div className="staff-section">
-              <div className="staff-header">
-                <h4>Nhân sự hoạt động</h4>
-                <button 
-                  type="button" 
-                  className="add-staff-btn" 
-                  onClick={() => addStaffItem('active')}
-                >
-                  +
-                </button>
-              </div>
-              
-              <div className="staff-items-grid">
-                {activeStaffItems.map((item, index) => (
-                  <div key={item.id} className="staff-item" data-role={item.role}>
-                    <div className="user-search-container">
-                      <input
-                        type="text"
-                        placeholder="Tìm người dùng..."
-                        value={item.searchQuery || ''}
-                        onChange={(e) => handleStaffItemChange('active', item.id, 'searchQuery', e.target.value)}
-                      />
-                      {item.selectedUser && (
-                        <div className="user-selected-indicator">
-                          ✓
-                        </div>
-                      )}
-                      {searchingUsers[item.id] && (
-                        <div className="search-loading">Đang tìm...</div>
-                      )}
-                      {userSearchResults[item.id] && userSearchResults[item.id].length > 0 && (
-                        <div className="user-search-results">
-                          {userSearchResults[item.id].map(user => (
-                            <div 
-                              key={user._id} 
-                              className="user-search-result"
-                              onClick={() => selectUserForActiveStaff(item.id, user)}
-                            >
-                              <div className="user-info">
-                                <span className="admin-user-display-name">{user.displayName || user.username}</span>
-                                <span className="user-username">@{user.username}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <select
-                      value={item.role}
-                      onChange={(e) => handleStaffItemChange('active', item.id, 'role', e.target.value)}
-                    >
-                      <option value="pj_user">Quản lý dự án</option>
-                      <option value="translator">Dịch giả</option>
-                      <option value="editor">Biên tập</option>
-                      <option value="proofreader">Kiểm tra chất lượng</option>
-                    </select>
-                    <button 
-                      type="button" 
-                      className="remove-staff-btn" 
-                      onClick={() => removeStaffItem('active', item.id)}
-                      aria-label="Remove staff member"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Staff Section - Inactive */}
-              <div className="staff-header">
-                <h4>Nhân sự không hoạt động</h4>
-                <button 
-                  type="button" 
-                  className="add-staff-btn" 
-                  onClick={() => addStaffItem('inactive')}
-                >
-                  +
-                </button>
-              </div>
-              
-              <div className="staff-items-grid">
-                {inactiveStaffItems.map((item, index) => (
-                  <div key={item.id} className="staff-item" data-role={item.role}>
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      value={item.name}
-                      onChange={(e) => handleStaffItemChange('inactive', item.id, 'name', e.target.value)}
-                    />
-                    <select
-                      value={item.role}
-                      onChange={(e) => handleStaffItemChange('inactive', item.id, 'role', e.target.value)}
-                    >
-                      <option value="pj_user">Quản lý dự án</option>
-                      <option value="translator">Dịch giả</option>
-                      <option value="editor">Biên tập viên</option>
-                      <option value="proofreader">Người kiểm tra chất lượng</option>
-                    </select>
-                    <button 
-                      type="button" 
-                      className="remove-staff-btn" 
-                      onClick={() => removeStaffItem('inactive', item.id)}
-                      aria-label="Remove staff member"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Genres Section */}
-            <div className="genres-section">
+          <h3 className="section-title">
+            {editingNovel ? 'Chỉnh sửa truyện' : (canCreateNovels ? 'Thêm truyện mới' : 'Quản lý truyện')}
+          </h3>
+          {(editingNovel || canCreateNovels) && (
+            <form onSubmit={handleSubmit}>
               <input
                 type="text"
-                name="genres"
-                placeholder="Thể loại đã chọn"
-                value={(editingNovel ? editingNovel.genres : newNovel.genres)?.join('; ') || ''}
-                readOnly
+                name="title"
+                placeholder="Tiêu đề"
+                value={editingNovel ? editingNovel.title : newNovel.title}
+                onChange={handleInputChange}
+                required
               />
-              <div className="genre-columns">
-                {Object.entries(genreCategories).map(([category, genres]) => (
-                  <div key={category} className="genre-column">
-                    <h4>{category}</h4>
-                    {genres.map(genre => (
-                      <label key={genre} className="genre-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={(editingNovel ? editingNovel.genres : newNovel.genres)?.includes(genre) || false}
-                          onChange={() => handleGenreChange(genre)}
-                        />
-                        {genre}
-                      </label>
-                    ))}
+              <input
+                type="text"
+                name="alternativeTitles"
+                placeholder="Tiêu đề khác"
+                value={editingNovel ? editingNovel.alternativeTitles || '' : newNovel.alternativeTitles}
+                onChange={handleInputChange}
+              />
+              <input
+                type="text"
+                name="author"
+                placeholder="Tác giả"
+                value={editingNovel ? editingNovel.author : newNovel.author}
+                onChange={handleInputChange}
+                required
+              />
+              <input
+                type="text"
+                name="illustrator"
+                placeholder="Họa sĩ"
+                value={editingNovel ? editingNovel.illustrator : newNovel.illustrator}
+                onChange={handleInputChange}
+              />
+              
+              {/* Staff Section - Active */}
+              <div className="staff-section">
+                <div className="staff-header">
+                  <h4>Nhân sự hoạt động</h4>
+                  {canEditStaff && (
+                    <button 
+                      type="button" 
+                      className="add-staff-btn" 
+                      onClick={() => addStaffItem('active')}
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+                
+                {!canEditStaff && (
+                  <div className="staff-edit-note">
+                    <em>Liên hệ admin/mod hoặc fanpage để chỉnh sửa mục nhân sự</em>
                   </div>
-                ))}
+                )}
+                
+                <div className="staff-items-grid">
+                  {activeStaffItems.map((item, index) => (
+                    <div key={item.id} className="staff-item" data-role={item.role}>
+                      <div className="user-search-container">
+                        <input
+                          type="text"
+                          placeholder="Tìm người dùng..."
+                          value={item.searchQuery || ''}
+                          onChange={(e) => handleStaffItemChange('active', item.id, 'searchQuery', e.target.value)}
+                          disabled={!canEditStaff}
+                        />
+                        {item.selectedUser && (
+                          <div className="user-selected-indicator">
+                            ✓
+                          </div>
+                        )}
+                        {searchingUsers[item.id] && (
+                          <div className="search-loading">Đang tìm...</div>
+                        )}
+                        {userSearchResults[item.id] && userSearchResults[item.id].length > 0 && canEditStaff && (
+                          <div className="user-search-results">
+                            {userSearchResults[item.id].map(user => (
+                              <div 
+                                key={user._id} 
+                                className="user-search-result"
+                                onClick={() => selectUserForActiveStaff(item.id, user)}
+                              >
+                                <div className="user-info">
+                                  <span className="admin-user-display-name">{user.displayName || user.username}</span>
+                                  <span className="user-username">@{user.username}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <select
+                        value={item.role}
+                        onChange={(e) => handleStaffItemChange('active', item.id, 'role', e.target.value)}
+                        disabled={!canEditStaff}
+                      >
+                        <option value="pj_user">Quản lý dự án</option>
+                        <option value="translator">Dịch giả</option>
+                        <option value="editor">Biên tập</option>
+                        <option value="proofreader">Kiểm tra chất lượng</option>
+                      </select>
+                      {canEditStaff && (
+                        <button 
+                          type="button" 
+                          className="remove-staff-btn" 
+                          onClick={() => removeStaffItem('active', item.id)}
+                          aria-label="Remove staff member"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Staff Section - Inactive */}
+                <div className="staff-header">
+                  <h4>Nhân sự không hoạt động</h4>
+                  {canEditStaff && (
+                    <button 
+                      type="button" 
+                      className="add-staff-btn" 
+                      onClick={() => addStaffItem('inactive')}
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+                
+                <div className="staff-items-grid">
+                  {inactiveStaffItems.map((item, index) => (
+                    <div key={item.id} className="staff-item" data-role={item.role}>
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        value={item.name}
+                        onChange={(e) => handleStaffItemChange('inactive', item.id, 'name', e.target.value)}
+                        disabled={!canEditStaff}
+                      />
+                      <select
+                        value={item.role}
+                        onChange={(e) => handleStaffItemChange('inactive', item.id, 'role', e.target.value)}
+                        disabled={!canEditStaff}
+                      >
+                        <option value="pj_user">Quản lý dự án</option>
+                        <option value="translator">Dịch giả</option>
+                        <option value="editor">Biên tập viên</option>
+                        <option value="proofreader">Người kiểm tra chất lượng</option>
+                      </select>
+                      {canEditStaff && (
+                        <button 
+                          type="button" 
+                          className="remove-staff-btn" 
+                          onClick={() => removeStaffItem('inactive', item.id)}
+                          aria-label="Remove staff member"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Description Editor */}
-            <div className="description-editor">
-              <Editor
-                onInit={(evt, editor) => editorRef.current = editor}
-                initialValue={editingNovel ? editingNovel.description : newNovel.description}
-                scriptLoading={{ async: true, load: "domainBased" }}
-                init={{
-                  script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
-                  license_key: 'gpl',
-                  height: 300,
-                  menubar: false,
-                  plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
-                    'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                  ],
-                  toolbar: 'undo redo | formatselect | ' +
-                    'bold italic underline strikethrough | ' +
-                    'alignleft aligncenter alignright alignjustify | ' +
-                    'bullist numlist outdent indent | ' +
-                    'link | code preview | removeformat | help',
-                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-                  skin: 'oxide',
-                  content_css: 'default',
-                  placeholder: 'Viết mô tả truyện... (tối đa 1000 từ)',
-                  statusbar: false,
-                  resize: false,
-                  branding: false,
-                  promotion: false,
-                  wordcount_countcharacters: true,
-                  wordcount_countwords: true,
-                  wordcount_countspaces: false,
-                  wordcount_alwaysshown: true,
-                  max_words: 1000,
-                  setup: function(editor) {
-                    editor.on('KeyUp', function(e) {
-                      const wordCount = editor.plugins.wordcount.getCount();
-                      if (wordCount > 1000) {
-                        const content = editor.getContent();
-                        const words = content.split(/\s+/);
-                        editor.setContent(words.slice(0, 1000).join(' '));
-                      }
-                    });
-                  },
-                  paste_preprocess: function(plugin, args) {
-                    const wrapper = document.createElement('div');
-                    wrapper.innerHTML = args.content;
-
-                    // First remove all Word-specific tags and junk
-                    wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
-                    
-                    // Remove empty and problematic spans
-                    wrapper.querySelectorAll('span').forEach(span => {
-                      if (!span.textContent.trim()) {
-                        span.remove(); // Remove empty spans
-                      } else {
-                        // Replace nested spans with their content
-                        const text = document.createTextNode(span.textContent);
-                        span.replaceWith(text);
-                      }
-                    });
-                    
-                    // Strip unnecessary div wrappers that might cause layout issues
-                    wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
-                      if (div.children.length === 0 || div.textContent.trim() === '') {
-                        div.remove();
-                      } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
-                        // Unwrap divs that just contain a single paragraph
-                        div.replaceWith(div.children[0]);
-                      }
-                    });
-
-                    // Clean up section breaks and format as proper breaks
-                    args.content = wrapper.innerHTML
-                      .replace(/<!--Section Break-->/g, '<br clear="all">')
-                      .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
-                      // Replace multiple consecutive breaks with a single one
-                      .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
-                  },
-                  paste_postprocess: function(plugin, args) {
-                    // Additional cleanup after paste
-                    args.node.querySelectorAll('span').forEach(span => {
-                      span.style.display = 'inline';
-                      span.style.wordBreak = 'normal';
-                      span.style.whiteSpace = 'normal';
-                    });
-                  },
-                  images_upload_handler: (blobInfo) => {
-                    return new Promise((resolve, reject) => {
-                      const file = blobInfo.blob();
-                      
-                      // Use bunny CDN service
-                      bunnyUploadService.uploadFile(file, 'illustrations')
-                        .then(url => {
-                          resolve(url);
-                        })
-                        .catch(error => {
-                          console.error('Image upload error:', error);
-                          reject('Image upload failed');
-                        });
-                    });
-                  },
-                  images_upload_base_path: '/',
-                  automatic_uploads: true
-                }}
-              />
-            </div>
-
-            {/* Note Editor */}
-            <div className="note-editor">
-              <Editor
-                onInit={(evt, editor) => noteEditorRef.current = editor}
-                initialValue={editingNovel ? editingNovel.note : newNovel.note}
-                scriptLoading={{ async: true, load: "domainBased" }}
-                init={{
-                  script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
-                  license_key: 'gpl',
-                  height: 200,
-                  menubar: false,
-                  plugins: [
-                    'advlist', 'autolink', 'lists', 'link', 'charmap',
-                    'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                  ],
-                  toolbar: 'undo redo | formatselect | ' +
-                    'bold italic underline | ' +
-                    'bullist numlist | ' +
-                    'link | code preview | removeformat | help',
-                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-                  skin: 'oxide',
-                  content_css: 'default',
-                  placeholder: 'Viết ghi chú của bạn ở đây...',
-                  statusbar: true,
-                  resize: false,
-                  branding: false,
-                  promotion: false,
-                  wordcount_countcharacters: true,
-                  wordcount_countwords: true,
-                  wordcount_countspaces: false,
-                  wordcount_alwaysshown: true,
-                  paste_data_images: true,
-                  paste_as_text: false,
-                  smart_paste: true,
-                  paste_preprocess: function(plugin, args) {
-                    const wrapper = document.createElement('div');
-                    wrapper.innerHTML = args.content;
-
-                    // First remove all Word-specific tags and junk
-                    wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
-                    
-                    // Remove empty and problematic spans
-                    wrapper.querySelectorAll('span').forEach(span => {
-                      if (!span.textContent.trim()) {
-                        span.remove(); // Remove empty spans
-                      } else {
-                        // Replace nested spans with their content
-                        const text = document.createTextNode(span.textContent);
-                        span.replaceWith(text);
-                      }
-                    });
-                    
-                    // Strip unnecessary div wrappers that might cause layout issues
-                    wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
-                      if (div.children.length === 0 || div.textContent.trim() === '') {
-                        div.remove();
-                      } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
-                        // Unwrap divs that just contain a single paragraph
-                        div.replaceWith(div.children[0]);
-                      }
-                    });
-
-                    // Clean up section breaks and format as proper breaks
-                    args.content = wrapper.innerHTML
-                      .replace(/<!--Section Break-->/g, '<br clear="all">')
-                      .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
-                      // Replace multiple consecutive breaks with a single one
-                      .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
-                  },
-                  paste_postprocess: function(plugin, args) {
-                    // Additional cleanup after paste
-                    args.node.querySelectorAll('span').forEach(span => {
-                      span.style.display = 'inline';
-                      span.style.wordBreak = 'normal';
-                      span.style.whiteSpace = 'normal';
-                    });
-                  }
-                }}
-              />
-            </div>
-
-            <div className="illustration-upload">
-              {(editingNovel?.illustration || newNovel.illustration) && (
-                <img
-                  src={editingNovel ? editingNovel.illustration : newNovel.illustration}
-                  alt="Illustration preview"
-                  className="illustration-preview"
-                />
-              )}
-              <label className="illustration-upload-label">
+              
+              {/* Genres Section */}
+              <div className="genres-section">
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleIllustrationUpload}
-                  disabled={loading}
-                  style={{ display: 'none' }}
+                  type="text"
+                  name="genres"
+                  placeholder="Thể loại đã chọn"
+                  value={(editingNovel ? editingNovel.genres : newNovel.genres)?.join('; ') || ''}
+                  readOnly
                 />
-                {loading ? 'Đang tải...' : 'Tải ảnh bìa'}
-              </label>
-            </div>
-            <div className="form-buttons">
-              <button type="submit" disabled={loading}>
-                {loading ? 'Đang xử lý...' : (editingNovel ? 'Cập nhật truyện' : 'Thêm truyện')}
-              </button>
-              {editingNovel ? (
-                <button type="button" onClick={resetForm} className="cancel-button">
-                  Hủy bỏ
+                <div className="genre-columns">
+                  {Object.entries(genreCategories).map(([category, genres]) => (
+                    <div key={category} className="genre-column">
+                      <h4>{category}</h4>
+                      {genres.map(genre => (
+                        <label key={genre} className="genre-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={(editingNovel ? editingNovel.genres : newNovel.genres)?.includes(genre) || false}
+                            onChange={() => handleGenreChange(genre)}
+                          />
+                          {genre}
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Description Editor */}
+              <div className="description-editor">
+                <Editor
+                  onInit={(evt, editor) => editorRef.current = editor}
+                  initialValue={editingNovel ? editingNovel.description : newNovel.description}
+                  scriptLoading={{ async: true, load: "domainBased" }}
+                  init={{
+                    script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
+                    license_key: 'gpl',
+                    height: 300,
+                    menubar: false,
+                    plugins: [
+                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+                      'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                    ],
+                    toolbar: 'undo redo | formatselect | ' +
+                      'bold italic underline strikethrough | ' +
+                      'alignleft aligncenter alignright alignjustify | ' +
+                      'bullist numlist outdent indent | ' +
+                      'link | code preview | removeformat | help',
+                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                    skin: 'oxide',
+                    content_css: 'default',
+                    placeholder: 'Viết mô tả truyện... (tối đa 1000 từ)',
+                    statusbar: false,
+                    resize: false,
+                    branding: false,
+                    promotion: false,
+                    wordcount_countcharacters: true,
+                    wordcount_countwords: true,
+                    wordcount_countspaces: false,
+                    wordcount_alwaysshown: true,
+                    max_words: 1000,
+                    setup: function(editor) {
+                      editor.on('KeyUp', function(e) {
+                        const wordCount = editor.plugins.wordcount.getCount();
+                        if (wordCount > 1000) {
+                          const content = editor.getContent();
+                          const words = content.split(/\s+/);
+                          editor.setContent(words.slice(0, 1000).join(' '));
+                        }
+                      });
+                    },
+                    paste_preprocess: function(plugin, args) {
+                      const wrapper = document.createElement('div');
+                      wrapper.innerHTML = args.content;
+
+                      // First remove all Word-specific tags and junk
+                      wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
+                      
+                      // Remove empty and problematic spans
+                      wrapper.querySelectorAll('span').forEach(span => {
+                        if (!span.textContent.trim()) {
+                          span.remove(); // Remove empty spans
+                        } else {
+                          // Replace nested spans with their content
+                          const text = document.createTextNode(span.textContent);
+                          span.replaceWith(text);
+                        }
+                      });
+                      
+                      // Strip unnecessary div wrappers that might cause layout issues
+                      wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
+                        if (div.children.length === 0 || div.textContent.trim() === '') {
+                          div.remove();
+                        } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
+                          // Unwrap divs that just contain a single paragraph
+                          div.replaceWith(div.children[0]);
+                        }
+                      });
+
+                      // Clean up section breaks and format as proper breaks
+                      args.content = wrapper.innerHTML
+                        .replace(/<!--Section Break-->/g, '<br clear="all">')
+                        .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
+                        // Replace multiple consecutive breaks with a single one
+                        .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
+                    },
+                    paste_postprocess: function(plugin, args) {
+                      // Additional cleanup after paste
+                      args.node.querySelectorAll('span').forEach(span => {
+                        span.style.display = 'inline';
+                        span.style.wordBreak = 'normal';
+                        span.style.whiteSpace = 'normal';
+                      });
+                    },
+                    images_upload_handler: (blobInfo) => {
+                      return new Promise((resolve, reject) => {
+                        const file = blobInfo.blob();
+                        
+                        // Use bunny CDN service
+                        bunnyUploadService.uploadFile(file, 'illustrations')
+                          .then(url => {
+                            resolve(url);
+                          })
+                          .catch(error => {
+                            console.error('Image upload error:', error);
+                            reject('Image upload failed');
+                          });
+                      });
+                    },
+                    images_upload_base_path: '/',
+                    automatic_uploads: true
+                  }}
+                />
+              </div>
+
+              {/* Note Editor */}
+              <div className="note-editor">
+                <Editor
+                  onInit={(evt, editor) => noteEditorRef.current = editor}
+                  initialValue={editingNovel ? editingNovel.note : newNovel.note}
+                  scriptLoading={{ async: true, load: "domainBased" }}
+                  init={{
+                    script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
+                    license_key: 'gpl',
+                    height: 200,
+                    menubar: false,
+                    plugins: [
+                      'advlist', 'autolink', 'lists', 'link', 'charmap',
+                      'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                    ],
+                    toolbar: 'undo redo | formatselect | ' +
+                      'bold italic underline | ' +
+                      'bullist numlist | ' +
+                      'link | code preview | removeformat | help',
+                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                    skin: 'oxide',
+                    content_css: 'default',
+                    placeholder: 'Viết ghi chú của bạn ở đây...',
+                    statusbar: true,
+                    resize: false,
+                    branding: false,
+                    promotion: false,
+                    wordcount_countcharacters: true,
+                    wordcount_countwords: true,
+                    wordcount_countspaces: false,
+                    wordcount_alwaysshown: true,
+                    paste_data_images: true,
+                    paste_as_text: false,
+                    smart_paste: true,
+                    paste_preprocess: function(plugin, args) {
+                      const wrapper = document.createElement('div');
+                      wrapper.innerHTML = args.content;
+
+                      // First remove all Word-specific tags and junk
+                      wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
+                      
+                      // Remove empty and problematic spans
+                      wrapper.querySelectorAll('span').forEach(span => {
+                        if (!span.textContent.trim()) {
+                          span.remove(); // Remove empty spans
+                        } else {
+                          // Replace nested spans with their content
+                          const text = document.createTextNode(span.textContent);
+                          span.replaceWith(text);
+                        }
+                      });
+                      
+                      // Strip unnecessary div wrappers that might cause layout issues
+                      wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
+                        if (div.children.length === 0 || div.textContent.trim() === '') {
+                          div.remove();
+                        } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
+                          // Unwrap divs that just contain a single paragraph
+                          div.replaceWith(div.children[0]);
+                        }
+                      });
+
+                      // Clean up section breaks and format as proper breaks
+                      args.content = wrapper.innerHTML
+                        .replace(/<!--Section Break-->/g, '<br clear="all">')
+                        .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
+                        // Replace multiple consecutive breaks with a single one
+                        .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
+                    },
+                    paste_postprocess: function(plugin, args) {
+                      // Additional cleanup after paste
+                      args.node.querySelectorAll('span').forEach(span => {
+                        span.style.display = 'inline';
+                        span.style.wordBreak = 'normal';
+                        span.style.whiteSpace = 'normal';
+                      });
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="illustration-upload">
+                {(editingNovel?.illustration || newNovel.illustration) && (
+                  <img
+                    src={editingNovel ? editingNovel.illustration : newNovel.illustration}
+                    alt="Illustration preview"
+                    className="illustration-preview"
+                  />
+                )}
+                <label className="illustration-upload-label">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleIllustrationUpload}
+                    disabled={loading}
+                    style={{ display: 'none' }}
+                  />
+                  {loading ? 'Đang tải...' : 'Tải ảnh bìa'}
+                </label>
+              </div>
+              <div className="form-buttons">
+                <button type="submit" disabled={loading}>
+                  {loading ? 'Đang xử lý...' : (editingNovel ? 'Cập nhật truyện' : 'Thêm truyện')}
                 </button>
-              ) : (
-                <button type="button" onClick={resetForm} className="discard-button">
-                  Hủy bỏ bản nháp
-                </button>
-              )}
-            </div>
-          </form>
+                {editingNovel ? (
+                  <button type="button" onClick={resetForm} className="cancel-button">
+                    Hủy bỏ
+                  </button>
+                ) : (
+                  <button type="button" onClick={resetForm} className="discard-button">
+                    Hủy bỏ bản nháp
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Novel List Section */}
         <div className="novel-list">
           <h3 className="section-title">Danh sách truyện</h3>
-          <ul>
-            {sortedNovels.map(novel => (
-              <li key={novel._id}>
-                <div className="novel-title-section">
-                  <div className="novel-info">
-                    <Link 
-                      to={generateNovelUrl(novel)}
-                      className="novel-title-link"
-                    >
-                      {novel.title}
-                    </Link>
-                    <div className="novel-balance">
-                      <div className="balance-info">
-                        <div className="budget-display">
-                          Kho lúa: {novel.novelBudget || 0} 🌾
-                        </div>
-                        <div className="balance-display">
-                          {editingBalanceId === novel._id ? (
-                            <div className="balance-edit-container">
-                              <span>Số dư truyện: </span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={balanceValue}
-                                onChange={(e) => setBalanceValue(e.target.value)}
-                                className="balance-edit-input"
-                              />
-                              <div className="balance-edit-actions">
-                                <button 
-                                  onClick={() => saveBalanceChange(novel._id)}
-                                  className="save-balance-btn"
-                                >
-                                  Lưu
-                                </button>
-                                <button 
-                                  onClick={cancelEditBalance}
-                                  className="cancel-balance-btn"
-                                >
-                                  Hủy bỏ
-                                </button>
+          {novelsLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+              <LoadingSpinner size="medium" text="Đang tải danh sách truyện..." />
+            </div>
+          ) : (
+            <ul>
+              {sortedNovels.map(novel => (
+                <li key={novel._id}>
+                  <div className="novel-title-section">
+                    <div className="novel-info">
+                      <Link 
+                        to={generateNovelUrl(novel)}
+                        className="novel-title-link"
+                      >
+                        {novel.title}
+                      </Link>
+                      <div className="novel-balance">
+                        <div className="balance-info">
+                          <div className="budget-display">
+                            Kho lúa: {novel.novelBudget || 0} 🌾
+                          </div>
+                          <div className="balance-display">
+                            {editingBalanceId === novel._id ? (
+                              <div className="balance-edit-container">
+                                <span>Số dư truyện: </span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  value={balanceValue}
+                                  onChange={(e) => setBalanceValue(e.target.value)}
+                                  className="balance-edit-input"
+                                />
+                                <div className="balance-edit-actions">
+                                  <button 
+                                    onClick={() => saveBalanceChange(novel._id)}
+                                    className="save-balance-btn"
+                                  >
+                                    Lưu
+                                  </button>
+                                  <button 
+                                    onClick={cancelEditBalance}
+                                    className="cancel-balance-btn"
+                                  >
+                                    Hủy bỏ
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <>
-                              Số dư truyện: {novel.novelBalance || 0} 🌾
-                              {user?.role === 'admin' && (
-                                <button
-                                  onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
-                                  className="edit-balance-btn"
-                                >
-                                  Chỉnh sửa
-                                </button>
-                              )}
-                            </>
-                          )}
+                            ) : (
+                              <>
+                                Số dư truyện: {novel.novelBalance || 0} 🌾
+                                {canEditBalances && (
+                                  <button
+                                    onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
+                                    className="edit-balance-btn"
+                                  >
+                                    Chỉnh sửa
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="novel-actions">
-                  <select
-                    className="status-dropdown"
-                    value={novel.status || 'Ongoing'}
-                    onChange={(e) => handleStatusChange(novel._id, e.target.value)}
-                  >
-                    <option value="Ongoing">Đang tiến hành</option>
-                    <option value="Completed">Đã hoàn thành</option>
-                    <option value="Hiatus">Tạm ngưng</option>
-                  </select>
-                  {(user?.role === 'admin' || user?.role === 'moderator') && (
-                    <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
-                  )}
-                  {user?.role === 'admin' && (
-                    <button 
-                      className="delete"
-                      onClick={() => handleDelete(novel)}
-                    >Xóa</button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                  <div className="novel-actions">
+                    <select
+                      className="status-dropdown"
+                      value={novel.status || 'Ongoing'}
+                      onChange={(e) => handleStatusChange(novel._id, e.target.value)}
+                    >
+                      <option value="Ongoing">Đang tiến hành</option>
+                      <option value="Completed">Đã hoàn thành</option>
+                      <option value="Hiatus">Tạm ngưng</option>
+                    </select>
+                    {canEditNovels && (
+                      <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
+                    )}
+                    {canDeleteNovels && (
+                      <button 
+                        className="delete"
+                        onClick={() => handleDelete(novel)}
+                      >Xóa</button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>
