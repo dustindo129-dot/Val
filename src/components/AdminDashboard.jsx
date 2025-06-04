@@ -449,11 +449,11 @@ const AdminDashboard = () => {
   }, [novels, sortType]);
 
   // Check if user can perform admin operations
-  const canEditNovels = user && (user.role === 'admin' || user.role === 'moderator' || user.role === 'pj_user');
+  const canEditNovels = user && (user.role === 'admin' || user.role === 'moderator' || user.role === 'pj_user'); // pj_users can edit novel content but not staff
   const canDeleteNovels = user && (user.role === 'admin');
   const canEditBalances = user && (user.role === 'admin');
-  const canCreateNovels = user && (user.role === 'admin' || user.role === 'moderator');
-  const canEditStaff = user && (user.role === 'admin' || user.role === 'moderator');
+  const canCreateNovels = user && (user.role === 'admin' || user.role === 'moderator'); // Only admin/mod can create (involves staff assignment)
+  const canEditStaff = user && (user.role === 'admin' || user.role === 'moderator'); // Only admin/mod can modify staff assignments
 
   /**
    * Handles input changes in the novel form
