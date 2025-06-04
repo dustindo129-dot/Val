@@ -1664,12 +1664,6 @@
   min-height: 200px;
 }
 
-/* Virtual novel item wrapper - for react-window List items */
-.virtual-item-wrapper {
-  /* This div receives the style prop from react-window for positioning */
-  /* No additional styles needed here as react-window handles positioning */
-}
-
 /* Paste processing styles for TinyMCE - these handle inline editing styles */
 .tinymce-inline-span {
   display: inline;
