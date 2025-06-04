@@ -1,30 +1,35 @@
 /**
- * UserBookmarks.css
- * 
+ * UserBookmarks.css - Updated with namespace prefix
+ *
  * Styles for the UserBookmarks component that displays a user's bookmarked novels.
  * Features:
  * - Grid layout with 3 items per row
- * - Hover effects
+ * - Horizontal card layout with cover image and content
  * - Dark theme support
  * - Mobile responsiveness
+ * - Namespace prefix: 'ub-' (user-bookmarks)
  */
 
 /* Main container for the bookmarks page */
-.bookmarks-container {
-  padding: 2rem;
-  max-width: 1200px;
+.ub-bookmarks-container {
+  max-width: 1400px;
   margin: 0 auto;
-  background: var(--bg-color, #fff);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem 0;
+  background: var(--bg-color, #f5f5f5);
 }
 
-/* Unique section header for bookmarks page */
-.bookmarks-section-header {
-  margin-bottom: 1.5rem;
+/* Header section containing title and sort controls */
+.ub-bookmarks-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0 1rem;
 }
 
-.bookmarks-section-header h2 {
+/* Header title styling with decorative elements */
+.ub-bookmarks-header h2 {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
@@ -33,312 +38,468 @@
   background-size: 100% 2px;
   background-position: 0 100%;
   background-repeat: no-repeat;
-  color: #333;
+  color: var(--text-color, #333);
+  padding: 0 0.5rem;
 }
 
-.bookmarks-section-header h2::after {
+.ub-bookmarks-header h2::after {
   content: " ᐁ";
   color: #FF6B6B;
 }
 
-/* Empty state message container */
-.no-bookmarks {
-  text-align: center;
-  padding: 3rem;
-  background: var(--bg-secondary);
-  border-radius: 8px;
+/* Sort control styles */
+.ub-sort-controls {
+  display: flex;
+  align-items: center;
+  background: #fafafa;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color, #e0e0e0);
 }
 
-/* Empty state message text */
-.no-bookmarks p {
-  margin-bottom: 1rem;
-  color: var(--text-secondary);
+.ub-sort-label {
+  font-weight: 600;
+  margin-right: 10px;
+  color: var(--text-color, #333);
 }
 
-/* Grid container for bookmarks */
-.bookmarks-grid {
+.ub-sort-select {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 28px 6px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ub-sort-select:focus {
+  outline: none;
+  border-color: #009fdf;
+  box-shadow: 0 0 0 2px rgba(0, 159, 223, 0.25);
+}
+
+/* Grid container for bookmarks - 3 cards per row */
+.ub-bookmarks-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1rem;
+  padding: 0 1rem;
 }
 
-/* Individual bookmark card */
-.bookmark-card {
-  position: relative;
+/* Individual bookmark card - Horizontal layout */
+.ub-bookmark-card {
+  display: flex;
+  background: #fafafa;
+  border: 1px solid var(--border-color, #e0e0e0);
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 100%;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 220px; /* Fixed height */
+}
+
+/* Left side - Cover image container */
+.ub-cover-container {
+  width: 33%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.ub-bookmark-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Update time positioned at bottom of cover */
+.ub-update-time {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px 0;
+}
+
+.ub-update-time i {
+  font-size: 12px;
+  margin-right: 5px;
+}
+
+/* Right side - Content container */
+.ub-card-content {
+  width: 67%;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background-color: #f9f9f9;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Title link styling */
-.title-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* Bookmark title header */
-.bookmark-card .bookmark-title-header {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  padding: 10px 15px;
-  background-color: #2c3e50;
-  color: white;
   position: relative;
-  display: block;
-  width: 100%;
-  margin: 0;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding-left: 27px;
 }
 
-.bookmark-card .bookmark-title-header::before {
+/* Novel header with title */
+.ub-bookmark-header {
+  padding: 8px 6px;
+  background-color: var(--title-bg, #2c3e50);
+  position: relative;
+}
+
+.ub-bookmark-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.ub-bookmark-title::before {
   content: '';
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
+  display: inline-block;
   width: 4px;
   height: 16px;
   background-color: #f39c12;
+  margin-right: 8px;
 }
 
-/* Bookmark card content container */
-.bookmark-card-content {
-  display: flex;
-  padding: 1rem;
-  height: 100%;
-}
-
-/* Cover image styling */
-.bookmark-cover {
-  width: 100px;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Bookmark info container */
-.bookmark-info {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  padding: 0 0 0 1rem;
-  min-width: 0;
-}
-
-/* Novel title text */
-.bookmark-title {
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin: 0 0 0.75rem 0;
+.ub-bookmark-title-link {
+  text-decoration: none;
+  color: white;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-/* Bookmark details container */
-.bookmark-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Reading status badges */
-.bookmark-reading-status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.bookmark-status-label {
-  display: inline-flex;
-  align-items: flex-start;
-  flex-direction: column;
-  background-color: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  margin-right: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.bookmark-status-value {
-  color: #e74c3c;
-  margin-top: 2px;
-  font-weight: 500;
-  word-break: break-word;
   line-height: 1.3;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
-/* Unbookmark chapter button */
-.unbookmark-chapter-btn {
-  background-color: rgba(220, 53, 69, 0.1);
-  border: none;
-  color: #dc3545;
-  font-size: 16px;
+/* Novel info content */
+.ub-bookmark-info {
+  flex: 1;
+  padding: 12px;
+  padding-right: 50px; /* Space for remove button */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chapter list */
+.ub-chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ub-chapter-row {
+  display: flex;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line-color, #eaeaea);
+  padding-bottom: 6px;
+}
+
+.ub-chapter-row:last-child {
+  border-bottom: none;
+}
+
+.ub-chapter-label {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.ub-chapter-link {
+  color: var(--bookmark-color, #e74c3c);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.ub-new-chapter-link {
+  color: var(--new-chapter-color, #2980b9);
+  font-weight: 600;
+}
+
+.ub-chapter-link:hover {
+  text-decoration: underline;
+}
+
+/* Chapter content - single line with label and chapter name */
+.ub-chapter-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.ub-chapter-content .ub-chapter-label {
+  color: #333;
+  font-weight: 500;
+}
+
+.ub-chapter-content .ub-chapter-link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: inherit;
+  display: inline;
+  overflow: visible;
+  text-overflow: unset;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  line-height: inherit;
+  flex: none;
+}
+
+.ub-chapter-content .ub-chapter-link.ub-new-chapter-link {
+  color: var(--new-chapter-color, #2980b9);
+  font-weight: 600;
+}
+
+.ub-chapter-content .ub-chapter-link:hover {
+  text-decoration: underline;
+}
+
+/* Chapter with bookmark - inline X button */
+.ub-bookmarked-chapter {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  overflow: hidden;
+}
+
+.ub-bookmarked-chapter-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.ub-bookmarked-chapter-content .ub-chapter-label {
+  color: #333;
+  font-weight: 500;
+}
+
+.ub-bookmarked-chapter-content .ub-chapter-link {
+  color: var(--bookmark-color, #e74c3c);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline;
+}
+
+.ub-bookmarked-chapter-content .ub-chapter-link:hover {
+  text-decoration: underline;
+}
+
+.ub-remove-chapter-x {
+  color: #e74c3c;
   font-weight: bold;
   cursor: pointer;
-  padding: 0;
-  margin-left: 8px;
+  margin-left: 6px;
+  font-size: 16px;
+  padding: 2px 6px;
   border-radius: 50%;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 30px;
-  height: 30px;
+  background: rgba(231, 76, 60, 0.1);
   line-height: 1;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 1px;
 }
 
-.unbookmark-chapter-btn:hover {
-  background-color: #dc3545;
-  color: white;
+.ub-remove-chapter-x:hover:not(.ub-disabled) {
+  color: #c0392b;
+  background: rgba(231, 76, 60, 0.2);
   transform: scale(1.1);
 }
 
-.bookmark-remove-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #e74c3c;
-  color: white;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  font-size: 10px;
-  margin-left: 4px;
-  cursor: pointer;
+.ub-remove-chapter-x.ub-disabled {
+  color: #999;
+  cursor: not-allowed;
+  background: rgba(153, 153, 153, 0.1);
 }
 
-/* Chapter count text */
-.bookmark-chapters {
-  font-size: 0.9rem;
-  color: #555;
-  padding: 4px 0;
-}
-
-/* Latest chapter text */
-.bookmark-latest-chapter {
-  font-size: 0.85rem;
-  color: #666;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  padding: 4px 0;
-  text-decoration: none;
-}
-
-/* Latest chapter link styling */
-a.bookmark-latest-chapter {
-  color: #2573ce;
-  transition: color 0.2s;
-}
-
-a.bookmark-latest-chapter:hover {
-  color: #FF6B6B;
-  text-decoration: none;
-}
-
-/* Remove bookmark button - trash icon */
-.remove-bookmark {
-  position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
+/* Remove bookmark button */
+.ub-remove-bookmark {
   background: none;
   border: none;
-  padding: 0.5rem;
-  cursor: pointer;
-  color: white;
-  background-color: #e74c3c;
-  border-radius: 50%;
+  color: #ffffff;
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s, background-color 0.2s;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: #e74c3c;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  z-index: 100;
 }
 
-.remove-bookmark:hover {
+.ub-remove-bookmark:hover {
   background-color: #c0392b;
   transform: scale(1.1);
+  box-shadow: 0 3px 7px rgba(0,0,0,0.4);
 }
 
-.remove-bookmark svg {
+.ub-remove-bookmark svg {
   width: 18px;
   height: 18px;
 }
 
-/* Browse novels button */
-.browse-novels-btn {
+/* Confirmation modal */
+.ub-confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.ub-confirm-modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.ub-confirm-modal h3 {
+  color: #e53935;
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+}
+
+.ub-confirm-modal p {
+  margin-bottom: 20px;
+  line-height: 1.5;
+  color: var(--text-color, #333);
+}
+
+.ub-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ub-confirm-btn,
+.ub-cancel-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.ub-confirm-btn {
+  background-color: #e53935;
+  color: white;
+}
+
+.ub-confirm-btn:hover {
+  background-color: #c62828;
+}
+
+.ub-cancel-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.ub-cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Empty state */
+.ub-no-bookmarks {
+  text-align: center;
+  padding: 3rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  grid-column: 1 / -1;
+  margin: 0 1rem;
+}
+
+.ub-no-bookmarks p {
+  margin-bottom: 1rem;
+  color: var(--text-secondary, #666);
+}
+
+.ub-browse-novels-btn {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: var(--primary-color);
+  background: var(--primary-color, #FF6B6B);
   color: white;
   text-decoration: none;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
-.browse-novels-btn:hover {
-  background: var(--primary-hover);
+.ub-browse-novels-btn:hover {
+  background: var(--primary-hover, #ff5252);
+  transform: translateY(-2px);
 }
 
-/* Loading state */
-.loading {
+/* Loading and error states */
+.ub-loading {
   text-align: center;
   padding: 2rem;
+  grid-column: 1 / -1;
+  margin: 0 1rem;
 }
 
-.loading-spinner {
-  border: 3px solid var(--border-color);
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Error state */
-.error {
+.ub-error {
   text-align: center;
   padding: 2rem;
   color: var(--error-color, #dc3545);
+  grid-column: 1 / -1;
+  margin: 0 1rem;
 }
 
-.retry-btn {
+.ub-retry-btn {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--primary-color);
+  background: var(--primary-color, #FF6B6B);
   color: white;
   border: none;
   border-radius: 4px;
@@ -346,178 +507,207 @@ a.bookmark-latest-chapter:hover {
   transition: background-color 0.2s;
 }
 
-.retry-btn:hover {
-  background: var(--primary-hover);
+.ub-retry-btn:hover {
+  background: var(--primary-hover, #ff5252);
 }
 
 /* Dark theme support */
 :root.dark-mode {
-  .bookmark-card {
-    background-color: #2d3748;
-    border-color: #4a5568;
-  }
-
-  .bookmark-card .bookmark-title-header {
-    background-color: #1a212c;
-  }
-
-  .bookmark-status-label {
-    background-color: #2d3748;
-    color: #e2e8f0;
-  }
-
-  .unbookmark-chapter-btn {
-    background-color: rgba(229, 62, 62, 0.15);
-    color: #e53e3e;
-  }
-
-  .unbookmark-chapter-btn:hover {
-    background-color: #e53e3e;
-    color: white;
-  }
-
-  .bookmark-title {
-    color: #e2e8f0;
-  }
-
-  .bookmark-chapters, 
-  .bookmark-latest-chapter {
-    color: #cbd5e0;
-  }
-  
-  a.bookmark-latest-chapter {
-    color: #63b3ed;
-  }
-  
-  a.bookmark-latest-chapter:hover {
-    color: #FF6B6B;
-  }
-
-  .remove-bookmark {
-    color: white;
-    background-color: #e53e3e;
-  }
-
-  .remove-bookmark:hover {
-    background-color: #c53030;
-  }
-
-  .bookmark-cover {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-  
+.ub-bookmarks-container {
+  background: #121212;
 }
 
-/* Tablet responsive styles */
-@media (max-width: 992px) {
-  .bookmarks-grid {
+.ub-sort-controls {
+  background: #1a1a1a;
+  border-color: #333;
+}
+
+.ub-sort-label {
+  color: #e0e0e0;
+}
+
+.ub-sort-select {
+  background-color: #333;
+  color: #e0e0e0;
+  border-color: #555;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+.ub-bookmark-card {
+  background: #1a1a1a;
+  border-color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ub-bookmark-header {
+  background-color: #1a212c;
+}
+
+.ub-chapter-row {
+  border-bottom-color: #333;
+}
+
+.ub-chapter-label {
+  color: #aaa;
+}
+
+.ub-chapter-content .ub-chapter-label,
+.ub-bookmarked-chapter-content .ub-chapter-label {
+  color: #aaa;
+}
+
+.ub-chapter-content .ub-chapter-link.ub-new-chapter-link {
+  color: #3498db;
+}
+
+.ub-bookmarked-chapter-content .ub-chapter-link {
+  color: #ff5252;
+}
+
+.ub-remove-chapter-x.ub-disabled {
+  color: #666;
+  background: rgba(102, 102, 102, 0.1);
+}
+
+.ub-remove-bookmark {
+  background-color: #ff5252;
+}
+
+.ub-remove-bookmark:hover {
+  background-color: #ff0000;
+}
+
+.ub-confirm-modal {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+.ub-confirm-modal h3 {
+  color: #f56565;
+}
+
+.ub-confirm-modal p {
+  color: #e2e8f0;
+}
+
+.ub-cancel-btn {
+  background-color: #4a5568;
+  color: #e2e8f0;
+  border-color: #718096;
+}
+
+.ub-cancel-btn:hover {
+  background-color: #718096;
+}
+
+.ub-no-bookmarks {
+  background: #1a1a1a;
+}
+
+.ub-no-bookmarks p {
+  color: #aaa;
+}
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  .ub-bookmarks-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Mobile responsive styles */
 @media (max-width: 768px) {
-  .bookmarks-container {
-    margin: 1rem;
-    padding: 1rem;
+  .ub-bookmarks-container {
+    padding: 1rem 0;
   }
-  
-  .bookmarks-grid {
+
+  .ub-bookmarks-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 1rem;
+  }
+
+  .ub-sort-controls {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .ub-bookmarks-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    padding: 0 1rem;
   }
 
-  .bookmark-card-content {
-    padding: 0.75rem;
+  .ub-bookmark-card {
+    height: auto;
+    min-height: 180px;
   }
 
-  .bookmark-cover {
-    width: 70px;
-    height: 100px;
+  .ub-chapter-label {
+    min-width: 60px;
+    font-size: 12px;
   }
 
-  .bookmark-title {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .bookmark-info {
-    padding-left: 0.75rem;
-  }
-  
-  .bookmark-chapters,
-  .bookmark-latest-chapter {
-    font-size: 0.8rem;
+  .ub-chapter-link {
+    font-size: 12px;
   }
 }
 
 @media (max-width: 576px) {
-  .bookmarks-container {
-    margin: 0.5rem;
-    padding: 0.5rem;
-  }
-  
-  .bookmark-card-content {
-    padding: 0.5rem;
+  .ub-bookmark-card {
+    flex-direction: row;
+    height: auto;
+    min-height: 120px;
   }
 
-  .bookmark-card .bookmark-title-header {
+  .ub-cover-container {
+    width: 80px;
+    height: 120px;
+    flex-shrink: 0;
+  }
+
+  .ub-update-time {
+    font-size: 10px;
+    padding: 2px 4px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ub-update-time i {
+    font-size: 10px;
+    margin-right: 2px;
+  }
+
+  .ub-card-content {
+    width: calc(100% - 80px);
+    flex: 1;
+  }
+
+  .ub-bookmark-info {
+    padding-right: 40px; /* Smaller space for mobile remove button */
+  }
+
+  .ub-bookmark-title {
     font-size: 14px;
   }
-  
-  .bookmark-cover {
-    width: 60px;
-    height: 85px;
+
+  .ub-chapter-label {
+    min-width: 50px;
+    font-size: 11px;
   }
-  
-  .bookmark-title {
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
+
+  .ub-chapter-link {
+    font-size: 11px;
   }
-  
-  .bookmark-info {
-    padding-left: 0.5rem;
-  }
-  
-  .bookmark-chapters,
-  .bookmark-latest-chapter {
-    font-size: 0.75rem;
-  }
-  
-  .remove-bookmark {
-    padding: 0.3rem;
+
+  .ub-remove-bookmark {
     width: 32px;
     height: 32px;
   }
-  
-  .remove-bookmark svg {
+
+  .ub-remove-bookmark svg {
     width: 14px;
     height: 14px;
   }
-}
-
-.bookmark-status {
-  display: inline-block;
-  font-size: 0.8rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 4px;
-  margin-bottom: 0.25rem;
-  background-color: #f0f0f0;
-  color: #666;
-  align-self: flex-start;
-}
-
-.bookmark-status[data-status="Completed"] {
-  background-color: rgba(52, 152, 219, 0.2);
-  color: #3498db;
-}
-
-.bookmark-status[data-status="Ongoing"] {
-  background-color: rgba(46, 204, 113, 0.2);
-  color: #2ecc71;
-}
-
-.bookmark-status[data-status="Hiatus"] {
-  background-color: rgba(231, 76, 60, 0.2);
-  color: #e74c3c;
 } 

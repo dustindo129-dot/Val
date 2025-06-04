@@ -768,7 +768,7 @@ const api = {
     }
   },
 
-  getBookmarks: async () => {
+  getBookmarks: async (abortSignal = null) => {
     try {
       const token = getValidToken();
       if (!token) {
@@ -780,11 +780,16 @@ const api = {
         {
           headers: {
             'Authorization': `Bearer ${token}`
-          }
+          },
+          ...(abortSignal && { signal: abortSignal })
         }
       );
       return response.data;
     } catch (error) {
+      // Don't log errors for aborted requests
+      if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+        throw error; // Re-throw abort errors to be handled by caller
+      }
       console.error('Failed to fetch bookmarks:', error);
       return [];
     }
