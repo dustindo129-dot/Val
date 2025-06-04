@@ -668,3 +668,371 @@
 .comment-like-icon .fa-thumbs-up.liked {
   color: #007bff;
 }
+
+/* Chapter comments section styles */
+.novel-comments-section {
+  margin: 1.5rem 0;
+}
+
+.comments-toggle-btn {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.comments-toggle-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.comments-toggle-btn .fa-icon {
+  margin-right: 8px;
+}
+
+/* Dark mode support for chapter comments */
+:root.dark-mode .comments-toggle-btn {
+  background-color: #4299e1;
+}
+
+:root.dark-mode .comments-toggle-btn:hover {
+  background-color: #3182ce;
+}
+
+/* Responsive styles for tablets */
+@media (max-width: 768px) {
+  .comments-section {
+    margin: 1.5rem 0;
+    padding: 1rem;
+  }
+
+  .comments-title {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .comment-form {
+    margin-bottom: 1.5rem;
+  }
+
+  .comment-input {
+    min-height: 80px;
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .comment-submit-btn {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .comment-item {
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+  }
+
+  .comment-avatar img,
+  .default-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .default-avatar {
+    font-size: 1.1rem;
+  }
+
+  .comment-actions {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .like-button,
+  .reply-button,
+  .delete-button {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .reply-form {
+    margin-left: 2rem;
+    padding: 0.75rem;
+  }
+
+  .reply-input {
+    min-height: 70px;
+    padding: 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .reply-actions {
+    gap: 0.4rem;
+  }
+
+  .reply-submit-btn,
+  .reply-cancel-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .replies-list {
+    margin-left: 2rem;
+    gap: 0.75rem;
+  }
+
+  .replies-list .replies-list {
+    margin-left: 1.5rem;
+  }
+
+  .sort-controls {
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .sort-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .comments-toggle-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Responsive styles for small mobile devices */
+@media (max-width: 576px) {
+  .comments-section {
+    margin: 1rem 0;
+    padding: 0.75rem;
+  }
+
+  .comments-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .comment-form {
+    margin-bottom: 1rem;
+  }
+
+  .comment-input {
+    min-height: 70px;
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .comment-submit-btn {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .login-to-comment {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .comment-item {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .comment-avatar {
+    align-self: flex-start;
+  }
+
+  .comment-avatar img,
+  .default-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .default-avatar {
+    font-size: 1rem;
+  }
+
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .comment-user-info {
+    gap: 0.4rem;
+  }
+
+  .comment-username {
+    font-size: 0.9rem;
+  }
+
+  .comment-time {
+    font-size: 0.8rem;
+  }
+
+  .comment-text {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .comment-actions {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .like-button,
+  .reply-button,
+  .delete-button {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    min-height: 32px;
+  }
+
+  .like-button {
+    min-width: 70px;
+  }
+
+  .like-count {
+    font-size: 0.8rem;
+  }
+
+  .block-btn {
+    padding: 2px;
+    font-size: 0.9rem;
+  }
+
+  .reply-form {
+    margin-top: 0.75rem;
+    margin-left: 1rem;
+    padding: 0.6rem;
+  }
+
+  .reply-input {
+    min-height: 60px;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .reply-actions {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .reply-submit-btn,
+  .reply-cancel-btn {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+
+  .replies-list {
+    margin-top: 0.75rem;
+    margin-left: 1rem;
+    gap: 0.5rem;
+  }
+
+  .replies-list .replies-list {
+    margin-left: 1rem;
+  }
+
+  .reply-avatar img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .reply-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .reply-username {
+    font-size: 0.85rem;
+  }
+
+  .reply-time {
+    font-size: 0.75rem;
+  }
+
+  .reply-text {
+    font-size: 0.85rem;
+  }
+
+  .sort-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .sort-controls span {
+    font-size: 0.85rem;
+  }
+
+  .sort-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    min-width: 80px;
+  }
+
+  .no-comments {
+    padding: 1.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .comments-loading, 
+  .comments-error {
+    padding: 1.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .comments-toggle-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .block-confirm-content {
+    padding: 1.5rem;
+    width: 95%;
+  }
+
+  .block-confirm-content p {
+    font-size: 0.9rem;
+  }
+
+  .block-confirm-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .block-confirm-actions button {
+    width: 100%;
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  /* Better touch targets for small screens */
+  .comment-actions button {
+    min-height: 32px;
+    min-width: 60px;
+  }
+
+  .sort-controls button {
+    min-height: 32px;
+  }
+}

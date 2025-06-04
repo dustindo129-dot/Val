@@ -25,12 +25,12 @@ const ChapterCommentsSection = ({
       >
         {isCommentsOpen ? (
           <>
-            <FontAwesomeIcon icon={faLock} style={{marginRight: '8px'}}/>
+            <FontAwesomeIcon icon={faLock} className="fa-icon"/>
             Ẩn bình luận
           </>
         ) : (
           <>
-            <FontAwesomeIcon icon={faComment} style={{marginRight: '8px'}}/>
+            <FontAwesomeIcon icon={faComment} className="fa-icon"/>
             Hiển thị bình luận
           </>
         )}

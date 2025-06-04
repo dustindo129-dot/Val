@@ -363,9 +363,17 @@ const AdminDashboard = () => {
         const maxHeight = Math.max(400, Math.min(800, containerHeight));
         setVirtualListHeight(maxHeight);
         
-        // Adjust item size based on screen width
+        // Adjust item size based on screen width to match CSS
         const isMobile = window.innerWidth <= 768;
-        setItemSize(isMobile ? 160 : 120); // Taller items on mobile for stacked layout
+        const isVerySmallMobile = window.innerWidth <= 576;
+        
+        if (isVerySmallMobile) {
+          setItemSize(240); // Match our 220px min-height + margins and padding
+        } else if (isMobile) {
+          setItemSize(160); // Tablet mobile size
+        } else {
+          setItemSize(120); // Desktop size
+        }
       }
     };
 
@@ -1650,9 +1658,7 @@ const AdminDashboard = () => {
                     paste_postprocess: function(plugin, args) {
                       // Additional cleanup after paste
                       args.node.querySelectorAll('span').forEach(span => {
-                        span.style.display = 'inline';
-                        span.style.wordBreak = 'normal';
-                        span.style.whiteSpace = 'normal';
+                        span.className = 'tinymce-inline-span';
                       });
                     },
                     images_upload_handler: (blobInfo) => {
@@ -1749,9 +1755,7 @@ const AdminDashboard = () => {
                     paste_postprocess: function(plugin, args) {
                       // Additional cleanup after paste
                       args.node.querySelectorAll('span').forEach(span => {
-                        span.style.display = 'inline';
-                        span.style.wordBreak = 'normal';
-                        span.style.whiteSpace = 'normal';
+                        span.className = 'tinymce-inline-span';
                       });
                     }
                   }}
@@ -1772,7 +1776,7 @@ const AdminDashboard = () => {
                     accept="image/*"
                     onChange={handleIllustrationUpload}
                     disabled={loading}
-                    style={{ display: 'none' }}
+                    className="hidden-file-input"
                   />
                   {loading ? 'Đang tải...' : 'Tải ảnh bìa'}
                 </label>
@@ -1815,7 +1819,7 @@ const AdminDashboard = () => {
             </div>
           </div>
           {novelsLoading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+            <div className="novel-list-loading-container">
               <LoadingSpinner size="medium" text="Đang tải danh sách truyện..." />
             </div>
           ) : (
