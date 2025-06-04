@@ -78,6 +78,10 @@ const TopUpManagement = () => {
   const [matchBalance, setMatchBalance] = useState('');
   const [processingMatch, setProcessingMatch] = useState(false);
   
+  // New state variables for dismissed/processed transaction history
+  const [dismissedTransactions, setDismissedTransactions] = useState([]);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  
   // New state variables for pending requests
   const [pendingRequests, setPendingRequests] = useState([]);
   const [pendingLoading, setPendingLoading] = useState(true);
@@ -473,6 +477,29 @@ const TopUpManagement = () => {
     setMatchBalance('');
   };
 
+  // Handle dismissing an unmatched transaction
+  const handleDismissTransaction = (transactionId) => {
+    if (!confirm('Bạn có chắc chắn muốn hủy giao dịch này? Hành động này sẽ loại bỏ giao dịch khỏi danh sách chưa khớp.')) {
+      return;
+    }
+    
+    // Find the transaction to dismiss
+    const transactionToDismiss = unmatchedTransactions.find(tx => tx.transactionId === transactionId);
+    if (transactionToDismiss) {
+      // Add to dismissed history with timestamp and status
+      const dismissedTransaction = {
+        ...transactionToDismiss,
+        dismissedAt: new Date().toISOString(),
+        status: 'dismissed',
+        statusText: 'Đã hủy bởi admin'
+      };
+      setDismissedTransactions(prev => [dismissedTransaction, ...prev]);
+    }
+    
+    // Remove the transaction from the unmatched list
+    setUnmatchedTransactions(unmatchedTransactions.filter(tx => tx.transactionId !== transactionId));
+  };
+
   // Process matched transaction
   const processMatchedTransaction = async (transactionId) => {
     if (!selectedMatchUser) {
@@ -504,6 +531,20 @@ const TopUpManagement = () => {
 
       // Remove processed transaction from unmatched list
       setUnmatchedTransactions(unmatchedTransactions.filter(tx => tx.transactionId !== transactionId));
+      
+      // Add to history as matched transaction
+      const matchedTransaction = unmatchedTransactions.find(tx => tx.transactionId === transactionId);
+      if (matchedTransaction) {
+        const processedTransaction = {
+          ...matchedTransaction,
+          processedAt: new Date().toISOString(),
+          status: 'matched',
+          statusText: `Đã khớp với ${selectedMatchUser.username} (${matchBalance} lúa)`,
+          matchedUser: selectedMatchUser.username,
+          matchedAmount: Number(matchBalance)
+        };
+        setDismissedTransactions(prev => [processedTransaction, ...prev]);
+      }
       
       // Reset form
       setMatchingTransactionId(null);
@@ -671,6 +712,11 @@ const TopUpManagement = () => {
   // Add handler for recent transactions pagination
   const handleRecentPageChange = (page) => {
     setRecentCurrentPage(page);
+  };
+
+  // Toggle transaction history visibility
+  const toggleTransactionHistory = () => {
+    setShowTransactionHistory(!showTransactionHistory);
   };
 
   // If not admin, don't render the component
@@ -1058,13 +1104,21 @@ const TopUpManagement = () => {
         <section className="top-up-section unmatched-section">
           <div className="transaction-header-container">
             <h2>Giao dịch chưa khớp</h2>
-            <button 
-              className="refresh-button"
-              onClick={fetchUnmatchedTransactions}
-              disabled={unmatchedLoading}
-            >
-              {unmatchedLoading ? 'Đang tải lại...' : 'Tải lại giao dịch'}
-            </button>
+            <div className="unmatched-section-buttons">
+              <button 
+                className="refresh-button"
+                onClick={fetchUnmatchedTransactions}
+                disabled={unmatchedLoading}
+              >
+                {unmatchedLoading ? 'Đang tải lại...' : 'Tải lại giao dịch'}
+              </button>
+              <button 
+                className="history-toggle-button"
+                onClick={toggleTransactionHistory}
+              >
+                {showTransactionHistory ? 'Ẩn lịch sử' : 'Lịch sử giao dịch chưa khớp'}
+              </button>
+            </div>
           </div>
           {unmatchedLoading ? (
             <p>Đang tải giao dịch chưa khớp...</p>
@@ -1180,10 +1234,67 @@ const TopUpManagement = () => {
                       >
                         Khớp với người dùng
                       </button>
+                      <button 
+                        className="dismiss-transaction-button"
+                        onClick={() => handleDismissTransaction(transaction.transactionId)}
+                      >
+                        Hủy giao dịch
+                      </button>
                     </div>
                   )}
                 </div>
               ))}
+            </div>
+          )}
+          
+          {/* Transaction History Section */}
+          {showTransactionHistory && (
+            <div className="transaction-history-section">
+              <h3>Lịch sử giao dịch đã xử lý</h3>
+              {dismissedTransactions.length === 0 ? (
+                <p className="no-history">Chưa có giao dịch nào được xử lý</p>
+              ) : (
+                <div className="history-transactions-list">
+                  {dismissedTransactions.map((transaction) => (
+                    <div key={`${transaction.transactionId}-${transaction.status}`} className="history-transaction-item">
+                      <div className="transaction-header">
+                        <div className="transaction-user">
+                          <span className="username">Giao dịch đã xử lý</span>
+                          <span className="transaction-id">ID: {transaction.transactionId}</span>
+                        </div>
+                        <span className="transaction-date">
+                          {formatDate(transaction.dismissedAt || transaction.processedAt)}
+                        </span>
+                      </div>
+                      <div className="transaction-details">
+                        <div className="transaction-method">
+                          Ngân hàng: {transaction.bankName || 'Không xác định'}
+                        </div>
+                        <div className="transaction-amount">
+                          Số tiền: {formatPrice(transaction.amount)}
+                        </div>
+                        <div className="transaction-reference">
+                          Mã tham chiếu: <span className="transfer-content">{transaction.extractedContent}</span>
+                        </div>
+                        <div className={`transaction-status ${transaction.status}`}>
+                          {transaction.statusText}
+                        </div>
+                        {transaction.matchedUser && (
+                          <div className="matched-info">
+                            Đã khớp với: {transaction.matchedUser} | Số lúa: {transaction.matchedAmount}
+                          </div>
+                        )}
+                      </div>
+                      {transaction.description && (
+                        <div className="transaction-description">
+                          <span className="description-label">Nội dung chuyển khoản:</span>
+                          <div className="description-text">{transaction.description}</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>

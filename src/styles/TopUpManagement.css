@@ -439,6 +439,12 @@
   border-left: 4px solid #ff9800;
 }
 
+.transaction-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .match-transaction-form {
   margin-top: 10px;
   padding: 10px;
@@ -515,6 +521,21 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.dismiss-transaction-button {
+  padding: 10px;
+  font-size: 14px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.dismiss-transaction-button:hover {
+  background-color: #d32f2f;
 }
 
 .transfer-content {
@@ -735,6 +756,14 @@
 
 :root.dark-mode .cancel-match-button {
   background-color: #9e9e9e;
+}
+
+:root.dark-mode .dismiss-transaction-button {
+  background-color: #f44336;
+}
+
+:root.dark-mode .dismiss-transaction-button:hover {
+  background-color: #d32f2f;
 }
 
 :root.dark-mode .transfer-content {
@@ -1100,6 +1129,11 @@
     gap: 12px;
   }
 
+  .transaction-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .match-user-control {
     min-width: auto;
   }
@@ -1122,6 +1156,10 @@
     width: 100%;
   }
 
+  .dismiss-transaction-button {
+    width: 100%;
+  }
+
   /* Pagination mobile layout */
   .pagination {
     flex-wrap: wrap;
@@ -1137,6 +1175,11 @@
     width: 100%;
     text-align: center;
     margin: 5px 0;
+  }
+
+  .unmatched-section-buttons {
+    flex-direction: column;
+    gap: 10px;
   }
 }
 
@@ -1192,6 +1235,11 @@
   .decline-button,
   .match-button,
   .cancel-match-button {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .dismiss-transaction-button {
     padding: 10px;
     font-size: 14px;
   }
@@ -1294,4 +1342,132 @@
     max-width: 100vw;
     box-sizing: border-box;
   }
+}
+
+.unmatched-section-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.history-toggle-button {
+  padding: 10px;
+  font-size: 14px;
+  background-color: #2196f3;
+  color: white;
+  border: 1px solid #2196f3;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.history-toggle-button:hover {
+  background-color: #1976d2;
+}
+
+/* Transaction History Section */
+.transaction-history-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.transaction-history-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+}
+
+.no-history {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+.history-transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-transaction-item {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: #ffffff;
+}
+
+.history-transaction-item .transaction-status.dismissed {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.history-transaction-item .transaction-status.matched {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.matched-info {
+  font-size: 13px;
+  color: #2e7d32;
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+:root.dark-mode .transfer-content {
+  color: #ffb74d;
+}
+
+:root.dark-mode .history-toggle-button {
+  background-color: #2196f3;
+  border-color: #2196f3;
+}
+
+:root.dark-mode .history-toggle-button:hover {
+  background-color: #1976d2;
+}
+
+:root.dark-mode .transaction-history-section {
+  background-color: #1a1a1a;
+  border-color: #404040;
+}
+
+:root.dark-mode .transaction-history-section h3 {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .no-history {
+  color: #aaa;
+}
+
+:root.dark-mode .history-transaction-item {
+  background-color: #2a2a2a;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .history-transaction-item .transaction-status.dismissed {
+  background-color: rgba(198, 40, 40, 0.2);
+  color: #ef5350;
+}
+
+:root.dark-mode .history-transaction-item .transaction-status.matched {
+  background-color: rgba(46, 125, 50, 0.2);
+  color: #66bb6a;
+}
+
+:root.dark-mode .matched-info {
+  color: #66bb6a;
 }
