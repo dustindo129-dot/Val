@@ -350,6 +350,9 @@ const AdminDashboard = () => {
   // Add state for sort control
   const [sortType, setSortType] = useState('updated'); // 'updated' or 'balance'
 
+  // Add state for search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Add ref for virtual list container height calculation
   const novelListContainerRef = useRef(null);
   const [virtualListHeight, setVirtualListHeight] = useState(600);
@@ -370,7 +373,7 @@ const AdminDashboard = () => {
         if (isVerySmallMobile) {
           setItemSize(240); // Match our 220px min-height + margins and padding
         } else if (isMobile) {
-          setItemSize(160); // Tablet mobile size
+          setItemSize(200); // Updated for tablets to match 180px min-height + margins and padding
         } else {
           setItemSize(120); // Desktop size
         }
@@ -437,11 +440,38 @@ const AdminDashboard = () => {
     refetchOnReconnect: false // Don't refetch on reconnect
   });
 
-  // Sort novels by selected criteria
+  // Sort and filter novels by selected criteria and search query
   const sortedNovels = useMemo(() => {
     if (!novels || novels.length === 0) return [];
     
-    return novels.sort((a, b) => {
+    // First filter by search query
+    let filteredNovels = novels;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filteredNovels = novels.filter(novel => {
+        // Search in title
+        const titleMatch = novel.title?.toLowerCase().includes(query);
+        
+        // Search in alternative titles (handle array)
+        let altTitlesMatch = false;
+        if (novel.alternativeTitles) {
+          if (Array.isArray(novel.alternativeTitles)) {
+            // If it's an array, search through each alternative title
+            altTitlesMatch = novel.alternativeTitles.some(altTitle => 
+              altTitle?.toLowerCase().includes(query)
+            );
+          } else if (typeof novel.alternativeTitles === 'string') {
+            // If it's a string, search directly
+            altTitlesMatch = novel.alternativeTitles.toLowerCase().includes(query);
+          }
+        }
+        
+        return titleMatch || altTitlesMatch;
+      });
+    }
+    
+    // Then sort the filtered results
+    return filteredNovels.sort((a, b) => {
       if (sortType === 'balance') {
         // Sort by novelBalance in descending order (highest first)
         const balanceA = a.novelBalance || 0;
@@ -454,7 +484,7 @@ const AdminDashboard = () => {
         return timestampB - timestampA;
       }
     });
-  }, [novels, sortType]);
+  }, [novels, sortType, searchQuery]);
 
   // Check if user can perform admin operations
   const canEditNovels = user && (user.role === 'admin' || user.role === 'moderator' || user.role === 'pj_user'); // pj_users can edit novel content but not staff
@@ -1352,6 +1382,26 @@ const AdminDashboard = () => {
     return { active, inactive };
   };
 
+  // Add a function to handle sorting
+  const handleSortChange = (newSortOrder) => {
+    setSortType(newSortOrder);
+  };
+
+  /**
+   * Handles search input changes with debouncing
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event
+   */
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  /**
+   * Clears the search query
+   */
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   return (
     <div className="admin-dashboard">
       <AdminDashboardSEO />
@@ -1810,7 +1860,7 @@ const AdminDashboard = () => {
               <select
                 id="sort-select"
                 value={sortType}
-                onChange={(e) => setSortType(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="sort-dropdown"
               >
                 <option value="updated">Mới cập nhật</option>
@@ -1818,6 +1868,35 @@ const AdminDashboard = () => {
               </select>
             </div>
           </div>
+
+          {/* Search Bar */}
+          <div className="novel-search-container">
+            <input
+              type="text"
+              className="novel-search-input"
+              placeholder="Tìm kiếm theo tên truyện hoặc tiêu đề khác..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+            <button
+              className="search-clear-btn"
+              onClick={clearSearch}
+              disabled={!searchQuery.trim()}
+            >
+              Xóa tìm kiếm
+            </button>
+          </div>
+
+          {/* Search Results Info */}
+          {searchQuery.trim() && (
+            <div className="search-results-info">
+              {sortedNovels.length === 0 
+                ? `Không tìm thấy kết quả nào cho "${searchQuery}"`
+                : `Tìm thấy ${sortedNovels.length} kết quả cho "${searchQuery}"`
+              }
+            </div>
+          )}
+
           {novelsLoading ? (
             <div className="novel-list-loading-container">
               <LoadingSpinner size="medium" text="Đang tải danh sách truyện..." />

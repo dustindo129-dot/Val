@@ -165,24 +165,6 @@
   background: var(--bg-color, #fff);
 }
 
-/* Virtual novel item */
-.virtual-novel-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #dee2e6);
-  transition: all 0.2s;
-  min-width: 0;
-  gap: 1rem;
-  margin: 0.5rem;
-  list-style: none;
-  height: calc(100% - 1rem);
-  box-sizing: border-box;
-}
-
 .novel-list ul {
   list-style: none;
   padding: 0;
@@ -565,34 +547,6 @@
   .sort-dropdown {
     max-width: 200px;
   }
-
-  /* Virtual scrolling responsive */
-  .virtual-novel-item {
-    flex-direction: column;
-    align-items: stretch;
-    height: auto;
-    min-height: 220px; /* Increased from 180px for better spacing and visual appeal */
-    padding: 0.75rem; /* Increased padding for better spacing */
-    gap: 0.75rem;
-    margin: 0.25rem;
-  }
-
-  .virtual-novel-item .novel-actions {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 0.5rem;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .virtual-novel-item .novel-title-section {
-    width: 100%;
-  }
-
-  .virtual-novel-item .novel-actions button {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-  }
 }
 
 /* Additional responsive styles for small mobile devices */
@@ -609,183 +563,30 @@
     padding: 1rem;
   }
 
-  /* Enhanced virtual novel item styles for small screens */
-  .virtual-novel-item {
+  /* Search bar mobile responsive */
+  .novel-search-container {
     flex-direction: column;
     align-items: stretch;
-    height: auto;
-    min-height: 220px; /* Increased from 180px for better spacing and visual appeal */
-    padding: 0.75rem; /* Increased padding for better spacing */
-    gap: 0.75rem;
-    margin: 0.25rem;
-  }
-
-  .virtual-novel-item .novel-title-section {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
-  .virtual-novel-item .novel-info {
-    display: flex;
-    flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
-  .virtual-novel-item .novel-title-link {
-    font-size: 1rem; /* Increased from 0.9rem for better readability */
-    line-height: 1.4; /* Improved line height */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    word-break: break-word; /* Allow long words to break */
-  }
-
-  .virtual-novel-item .novel-balance {
-    font-size: 0.8rem; /* Increased from 0.75rem */
-  }
-
-  .virtual-novel-item .balance-info {
-    display: flex;
-    flex-direction: column; /* Stack vertically on very small screens */
-    gap: 0.5rem; /* Reduced gap */
-  }
-
-  .virtual-novel-item .budget-display,
-  .virtual-novel-item .balance-display {
-    font-size: 0.8rem; /* Increased from 0.75rem */
-    white-space: nowrap;
-  }
-
-  .virtual-novel-item .novel-actions {
+  .novel-search-input {
+    min-width: 0;
     width: 100%;
-    justify-content: space-between; /* Distribute buttons evenly */
-    margin-top: 0.75rem; /* Increased margin */
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
   }
 
-  .virtual-novel-item .novel-actions button {
-    padding: 0.5rem 0.75rem; /* Increased padding for better touch targets */
-    font-size: 0.85rem; /* Increased from 0.8rem */
-    flex: 0 0 auto;
-    min-width: fit-content;
-    min-height: 36px; /* Ensure minimum touch target size */
+  .search-clear-btn {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.85rem;
   }
 
-  .virtual-novel-item .status-dropdown {
-    font-size: 0.85rem; /* Increased from 0.8rem */
-    padding: 0.5rem; /* Increased padding */
-    min-width: 130px; /* Increased from 120px */
-    min-height: 36px; /* Ensure minimum touch target size */
-    flex: 1 1 auto; /* Allow it to grow */
-    max-width: 100%; /* But not exceed container */
-  }
-
-  .virtual-novel-item .edit-balance-btn {
-    font-size: 0.75rem; /* Increased from 0.7rem */
-    padding: 0.35rem 0.6rem; /* Increased padding */
-    min-height: 32px; /* Minimum touch target */
-  }
-
-  /* Ensure delete button is always visible */
-  .virtual-novel-item .novel-actions .delete {
-    background: var(--danger-color, #e74c3c);
-    color: white;
-    font-weight: 600;
-    min-width: 60px; /* Ensure minimum width */
+  .search-results-info {
+    font-size: 0.85rem;
     text-align: center;
-  }
-
-  /* Balance editing on small screens */
-  .virtual-novel-item .balance-edit-container {
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  .virtual-novel-item .balance-edit-input {
-    font-size: 0.85rem; /* Increased from 0.8rem */
-    padding: 0.5rem; /* Increased padding */
-    width: 100%;
-    max-width: 150px; /* Increased from 120px */
-    min-height: 36px; /* Touch target */
-  }
-
-  .virtual-novel-item .balance-edit-actions {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-start;
-  }
-
-  .virtual-novel-item .save-balance-btn,
-  .virtual-novel-item .cancel-balance-btn {
-    font-size: 0.8rem; /* Increased from 0.75rem */
-    padding: 0.4rem 0.8rem; /* Increased padding */
-    min-height: 36px; /* Touch target */
-  }
-
-  /* Novel list header adjustments */
-  .novel-list-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-  }
-
-  .novel-list-header .section-title {
-    font-size: 1.25rem;
-  }
-
-  .sort-control {
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .sort-control label {
-    font-size: 0.85rem;
-  }
-
-  .sort-dropdown {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.6rem;
-    min-width: 130px;
-    max-width: none;
-  }
-
-  /* Additional fixes for very small screens (around 372px) */
-  .virtual-novel-item .novel-actions {
-    display: grid;
-    grid-template-columns: 1fr auto auto; /* Status dropdown takes remaining space, buttons fixed */
-    gap: 0.5rem;
-    align-items: center;
-    width: 100%;
-  }
-
-  /* Ensure buttons don't shrink below minimum size */
-  .virtual-novel-item .novel-actions button:not(.status-dropdown) {
-    flex: 0 0 auto;
-    white-space: nowrap;
-  }
-
-  /* Make the status dropdown the flexible element */
-  .virtual-novel-item .status-dropdown {
-    grid-column: 1;
-    min-width: 0; /* Allow it to shrink if needed */
-    width: 100%;
-  }
-
-  /* Edit button */
-  .virtual-novel-item .novel-actions button:not(.delete):not(.status-dropdown) {
-    grid-column: 2;
-  }
-
-  /* Delete button - ensure it's always visible */
-  .virtual-novel-item .novel-actions .delete {
-    grid-column: 3;
-    background: var(--danger-color, #e74c3c) !important;
-    color: white !important;
   }
 }
 
@@ -1092,11 +893,6 @@
 :root.dark-mode .novel-list .react-window-list {
   border-color: #4a5568;
   background: #2d3748;
-}
-
-:root.dark-mode .virtual-novel-item {
-  background: #1a202c;
-  border-color: #4a5568;
 }
 
 /* Novel title links */
@@ -1879,4 +1675,110 @@
   display: inline;
   word-break: normal;
   white-space: normal;
+}
+
+/* Search bar styles */
+.novel-search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.novel-search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  background-color: var(--input-bg, #fff);
+  color: var(--text-color, #2c3e50);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.novel-search-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #3498db);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.novel-search-input::placeholder {
+  color: var(--text-secondary, #6c757d);
+  font-style: italic;
+}
+
+.search-clear-btn {
+  padding: 0.6rem 1rem;
+  background-color: var(--secondary-color, #95a5a6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.search-clear-btn:hover {
+  background-color: var(--secondary-dark, #7f8c8d);
+  transform: translateY(-1px);
+}
+
+.search-clear-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.search-results-info {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #6c757d);
+  font-style: italic;
+}
+
+/* Dark mode support for search bar */
+:root.dark-mode .novel-search-input {
+  background-color: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .novel-search-input:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+}
+
+:root.dark-mode .novel-search-input::placeholder {
+  color: #a0aec0;
+}
+
+:root.dark-mode .search-clear-btn {
+  background-color: #718096;
+}
+
+:root.dark-mode .search-clear-btn:hover {
+  background-color: #4a5568;
+}
+
+:root.dark-mode .search-results-info {
+  color: #a0aec0;
+}
+
+/* Search bar responsive */
+.novel-search-container {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.novel-search-input {
+  min-width: 0;
+  width: 100%;
+}
+
+.search-clear-btn {
+  align-self: flex-end;
+  min-width: 100px;
 } 
