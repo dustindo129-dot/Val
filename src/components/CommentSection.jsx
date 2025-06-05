@@ -157,14 +157,10 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     
     try {
       const response = await axios.post(
-        `${config.backendUrl}/api/comments`,
+        `${config.backendUrl}/api/comments/${contentType}/${contentId}`,
         { text: sanitizeHTML(newComment) },
         { headers: getAuthHeaders() }
       );
-      
-      if (!response.ok) {
-        throw new Error('Không thể đăng bình luận');
-      }
       
       const data = response.data;
       
@@ -217,10 +213,6 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         `${config.backendUrl}/api/comments/${commentId}`,
         { headers: getAuthHeaders() }
       );
-      
-      if (!response.ok) {
-        throw new Error('Không thể xóa bình luận');
-      }
       
       // Update the comments list based on whether it's a reply or main comment
       setComments(prevComments => {
@@ -347,19 +339,6 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         { headers: getAuthHeaders() }
       );
 
-      if (!response.ok) {
-        // Try to get more detailed error information
-        let errorMessage = 'Không thể thích bình luận';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-          console.error('Error details:', errorData);
-        } catch (parseError) {
-          console.error('Could not parse error response:', parseError);
-        }
-        throw new Error(errorMessage);
-      }
-
       const data = response.data;
 
       // Update comments state to reflect the new like status
@@ -464,12 +443,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           { headers: getAuthHeaders() }
         );
         
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Không thể đăng trả lời');
-        }
-        
-        const data = await response.json();
+        const data = response.data;
         
         // Clear the reply form immediately
         setReplyText('');
