@@ -529,7 +529,8 @@ const NovelDirectory = () => {
 
     // Format word count
     const formatWordCount = (wordCount) => {
-        if (!wordCount) return 'Chưa có thông tin';
+        if (wordCount === undefined || wordCount === null) return 'Chưa có thông tin';
+        if (wordCount === 0) return '0 từ';
 
         if (wordCount >= 1000000) {
             return `${(wordCount / 1000000).toFixed(1)}M từ`;
