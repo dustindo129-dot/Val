@@ -94,6 +94,59 @@ export async function onBeforeRender(pageContext) {
     console.error(`Error in onBeforeRender for chapter ${chapterSlug}:`, error);
   }
   
+  // Generate comprehensive meta data for SEO
+  const currentUrl = `https://valvrareteam.net/truyen/${novelSlug}/chuong/${chapterSlug}`;
+  const siteName = 'Valvrareteam';
+  
+  // Generate keywords for SEO
+  const generateKeywords = (novelTitle, chapterTitle) => {
+    const baseKeywords = ['light novel', 'tiếng việt', 'valvrareteam', 'vietsub', 'truyện dịch'];
+    
+    if (novelTitle) {
+      baseKeywords.push(
+        novelTitle.toLowerCase(),
+        `${novelTitle.toLowerCase()} vietsub`,
+        `${novelTitle.toLowerCase()} valvrareteam`,
+        `đọc ${novelTitle.toLowerCase()}`,
+        `truyện ${novelTitle.toLowerCase()}`
+      );
+    }
+    
+    if (chapterTitle) {
+      baseKeywords.push(
+        chapterTitle.toLowerCase(),
+        `${chapterTitle.toLowerCase()} ${novelTitle?.toLowerCase() || ''}`.trim()
+      );
+    }
+    
+    return baseKeywords.join(', ');
+  };
+  
+  // Generate structured data (JSON-LD)
+  const generateStructuredData = (novel, chapter, url) => {
+    if (!novel || !chapter) return null;
+    
+    return {
+      "@context": "https://schema.org",
+      "@type": "Chapter",
+      "name": chapter.title,
+      "description": pageDescription,
+      "url": url,
+      "isPartOf": {
+        "@type": "Book",
+        "name": novel.title,
+        "url": `https://valvrareteam.net/truyen/${novelSlug}`
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": "https://valvrareteam.net"
+      },
+      "inLanguage": "vi-VN",
+      "genre": "Light Novel"
+    };
+  };
+  
   return {
     pageContext: {
       pageProps: {
@@ -104,7 +157,91 @@ export async function onBeforeRender(pageContext) {
       },
       documentProps: {
         title: pageTitle,
-        description: pageDescription
+        description: pageDescription,
+        // Additional meta tags for SEO
+        meta: [
+          // Keywords
+          {
+            name: 'keywords',
+            content: generateKeywords(novel?.title, chapter?.title)
+          },
+          // Robots
+          {
+            name: 'robots',
+            content: 'index, follow, max-image-preview:large'
+          },
+          // Author
+          {
+            name: 'author',
+            content: siteName
+          },
+          // Open Graph tags
+          {
+            property: 'og:title',
+            content: pageTitle
+          },
+          {
+            property: 'og:description',
+            content: pageDescription
+          },
+          {
+            property: 'og:type',
+            content: 'article'
+          },
+          {
+            property: 'og:url',
+            content: currentUrl
+          },
+          {
+            property: 'og:site_name',
+            content: siteName
+          },
+          {
+            property: 'og:locale',
+            content: 'vi_VN'
+          },
+          // Article specific Open Graph
+          {
+            property: 'article:section',
+            content: 'Light Novel'
+          },
+          {
+            property: 'article:tag',
+            content: 'light novel, vietsub, tiếng việt'
+          },
+          // Twitter Card tags
+          {
+            name: 'twitter:card',
+            content: 'summary_large_image'
+          },
+          {
+            name: 'twitter:title',
+            content: pageTitle
+          },
+          {
+            name: 'twitter:description',
+            content: pageDescription
+          },
+          // Additional SEO meta
+          {
+            name: 'language',
+            content: 'Vietnamese'
+          },
+          {
+            name: 'coverage',  
+            content: 'Worldwide'
+          },
+          {
+            name: 'distribution',
+            content: 'Global'
+          },
+          {
+            name: 'rating',
+            content: 'General'
+          }
+        ],
+        // Structured data
+        structuredData: generateStructuredData(novel, chapter, currentUrl)
       }
     }
   };
