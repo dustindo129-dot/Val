@@ -763,11 +763,15 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                                             : null);
 
                                     return (
-                                        <div key={novel._id} className="novel-card" style={{
+                                        <div key={novel._id} className="novel-card" 
+                                        /* Temporarily commented out background image - can be restored later
+                                        style={{
                                             backgroundImage: "var(--novel-card-bg)",
                                             backgroundSize: "cover",
                                             backgroundPosition: "center"
-                                        }}>
+                                        }}
+                                        */
+                                        >
                                             {/* Novel header with title and update time */}
                                             <div className="novel-header">
                                                 <Link to={generateNovelUrl(novel)} className="novel-list-title-link">

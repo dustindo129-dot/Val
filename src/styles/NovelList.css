@@ -73,6 +73,7 @@
 }
 
 /* Add CSS variables for light/dark mode backgrounds at the top of the file */
+/* Temporarily commented out background images - can be restored later
 :root {
   --novel-card-bg: url('https://Valvrareteam.b-cdn.net/Untitled%20design%20(4).png');
 }
@@ -80,12 +81,13 @@
 .dark-mode {
   --novel-card-bg: url('https://Valvrareteam.b-cdn.net/Untitled%20design%20(5).png');
 }
+*/
 
 /* Common novel card styles */
 .novel-card {
   display: flex;
   gap: 1.25rem;
-  background: #fafafa;
+  background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
