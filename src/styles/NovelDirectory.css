@@ -339,6 +339,7 @@
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
   transition: all 0.3s ease;
   max-height: 73px;
@@ -347,6 +348,7 @@
 
 .nd-directory .nd-novel-description.nd-expanded {
   -webkit-line-clamp: unset;
+  line-clamp: unset;
   max-height: 500px;
 }
 
@@ -723,6 +725,7 @@
 
   .nd-directory .nd-novel-description {
     -webkit-line-clamp: 4;
+    line-clamp: 4;
     max-height: 78px;
   }
 
