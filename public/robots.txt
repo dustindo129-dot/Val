@@ -12,7 +12,7 @@ Allow: /oln
 Allow: /nguoi-dung/*/trang-ca-nhan
 Allow: /nguoi-dung/*/truyen-danh-dau
 
-# Allow only slug-based URLs for novels and chapters (anything with dashes or Vietnamese characters)
+# Allow Vietnamese slug-based URLs for novels and chapters
 Allow: /truyen/*-*
 Allow: /truyen/*-*/chuong/*-*
 
