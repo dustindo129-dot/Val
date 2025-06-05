@@ -58,6 +58,8 @@ jobs:
           git config --local user.name "GitHub Action"
           git add public/sitemap.xml
           git commit -m "🤖 Auto-update sitemap - $(date +'%Y-%m-%d %H:%M UTC')"
+          # Pull latest changes and rebase our commit on top
+          git pull --rebase origin master
           git push
       
       # Log completion
