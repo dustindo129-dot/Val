@@ -13,11 +13,6 @@
   transition: all 0.3s ease;
 }
 
-.loading-spinner-gif:hover {
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.15));
-  transform: scale(1.02);
-}
-
 .loading-text {
   margin-top: 1rem;
   font-size: 0.875rem;
@@ -29,10 +24,6 @@
 /* Dark mode support */
 :root.dark-mode .loading-spinner-gif {
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
-}
-
-:root.dark-mode .loading-spinner-gif:hover {
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.4));
 }
 
 :root.dark-mode .loading-text {
