@@ -20,8 +20,8 @@
 import {useState, useEffect, memo, useRef} from 'react';
 import {Link, useNavigate, useParams, useLocation} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
-import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
+import { useSEO } from '../context/SEOContext';
 import HotNovels from './HotNovels';
 import RecentlyRead from './RecentlyRead';
 import RecentComments from './RecentComments';
@@ -215,156 +215,7 @@ const FacebookPlugin = memo(() => {
     );
 });
 
-/**
- * NovelListSEO Component
- * 
- * Provides SEO optimization for the novel list/homepage including:
- * - Dynamic title based on page type and current page
- * - Meta description
- * - Keywords
- * - Open Graph tags
- */
-const NovelListSEO = ({ pageType = 'home', currentPage = 1 }) => {
-  // Generate SEO-optimized title based on page type and current page
-  const generateSEOTitle = () => {
-    let baseTitle = '';
-    
-    switch (pageType) {
-      case 'trending':
-        baseTitle = 'Light Novel Vietsub Trending - Truyện Hot Nhất';
-        break;
-      case 'popular':
-        baseTitle = 'Light Novel Tiếng Việt Phổ Biến - Top Truyện Hay';
-        break;
-      case 'recent':
-        baseTitle = 'Đọc Light Novel Vietsub Mới Nhất - Cập Nhật Hàng Ngày';
-        break;
-      default:
-        baseTitle = 'Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất';
-        break;
-    }
-    
-    // Add page number if not on first page
-    if (currentPage > 1) {
-      baseTitle += ` - Trang ${currentPage}`;
-    }
-    
-    return baseTitle;
-  };
 
-  // Generate SEO description
-  const generateSEODescription = () => {
-    switch (pageType) {
-      case 'trending':
-        return 'Khám phá những bộ Light Novel vietsub đang được yêu thích nhất tại Valvrareteam. Đọc Light Novel tiếng Việt chất lượng cao, cập nhật nhanh.';
-      case 'popular':
-        return 'Tuyển tập Light Novel tiếng Việt được độc giả đánh giá cao nhất. Đọc Light Novel vietsub miễn phí tại Valvrareteam.';
-      case 'recent':
-        return 'Light Novel vietsub mới cập nhật hàng ngày. Đọc ngay không bỏ lỡ những chương mới nhất tại Valvrareteam.';
-      default:
-        return 'Thư viện Light Novel vietsub lớn nhất Việt Nam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh, dịch chất lượng cao. Hàng nghìn bộ Light Novel hay đang chờ bạn khám phá!';
-    }
-  };
-
-  // Generate keywords
-  const generateKeywords = () => {
-    const baseKeywords = [
-      'light novel vietsub',
-      'light novel tiếng việt',
-      'đọc light novel vietsub',
-      'light novel việt nam',
-      'truyện light novel',
-      'ln vietsub',
-      'light novel online',
-      'đọc ln online',
-      'light novel dịch việt',
-      'novel tiếng việt',
-      'valvrareteam'
-    ];
-    
-    switch (pageType) {
-      case 'trending':
-        baseKeywords.push('light novel hot', 'light novel trending', 'light novel phổ biến');
-        break;
-      case 'popular':
-        baseKeywords.push('light novel hay nhất', 'top light novel', 'light novel đánh giá cao');
-        break;
-      case 'recent':
-        baseKeywords.push('light novel mới', 'light novel cập nhật', 'light novel mới nhất');
-        break;
-    }
-    
-    return baseKeywords.join(', ');
-  };
-
-  return (
-    <Helmet>
-      {/* Basic meta tags */}
-      <title>{generateSEOTitle()}</title>
-      <meta name="description" content={generateSEODescription()} />
-      <meta name="keywords" content={generateKeywords()} />
-      
-      {/* Language and charset */}
-      <meta httpEquiv="Content-Language" content="vi-VN" />
-      <meta name="language" content="Vietnamese" />
-      
-      {/* Open Graph meta tags */}
-      <meta property="og:title" content={generateSEOTitle()} />
-      <meta property="og:description" content={generateSEODescription()} />
-      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-      <meta property="og:url" content="https://valvrareteam.net" />
-      <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="Valvrareteam" />
-      <meta property="og:locale" content="vi_VN" />
-      
-      {/* Twitter Card meta tags */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={generateSEOTitle()} />
-      <meta name="twitter:description" content={generateSEODescription()} />
-      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-      
-      {/* Canonical URL */}
-      <link rel="canonical" href={currentPage > 1 ? `https://valvrareteam.net/trang/${currentPage}` : "https://valvrareteam.net"} />
-    </Helmet>
-  );
-};
-
-// Small SEO Header Component for top placement
-const SEOHeader = ({ pageType = 'home' }) => {
-  const getHeaderContent = () => {
-    switch (pageType) {
-      case 'trending':
-        return {
-          h1: 'Light Novel Vietsub Trending - Truyện Hot Nhất',
-          subtitle: 'Khám phá những bộ Light Novel vietsub đang được yêu thích nhất'
-        };
-      case 'popular':
-        return {
-          h1: 'Light Novel Tiếng Việt Phổ Biến - Top Truyện Hay',
-          subtitle: 'Tuyển tập Light Novel tiếng Việt được độc giả đánh giá cao nhất'
-        };
-      case 'recent':
-        return {
-          h1: 'Đọc Light Novel Vietsub Mới Nhất - Cập Nhật Hàng Ngày',
-          subtitle: 'Light Novel vietsub mới cập nhật, đọc ngay không bỏ lỡ'
-        };
-      default:
-        return {
-          h1: 'Đọc Light Novel Vietsub Miễn Phí - Light Novel Tiếng Việt Hay Nhất',
-          subtitle: 'Thư viện Light Novel tiếng Việt tại Việt Nam, cập nhật nhanh, dịch chất lượng'
-        };
-    }
-  };
-
-  const { h1, subtitle } = getHeaderContent();
-
-  return (
-    <div className="seo-header">
-      <h1 className="seo-header-h1">{h1}</h1>
-      <p className="seo-header-subtitle">{subtitle}</p>
-    </div>
-  );
-};
 
 /**
  * NovelList Component
@@ -380,7 +231,10 @@ const SEOHeader = ({ pageType = 'home' }) => {
  * - Date formatting
  */
 
-const NovelList = ({ filter }) => {    const navigate = useNavigate();    const {page} = useParams();    const location = useLocation();
+const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
+    const navigate = useNavigate();
+    const {page} = useParams();
+    const location = useLocation();
     const [expandedDescriptions, setExpandedDescriptions] = useState({});
     const [expandedTags, setExpandedTags] = useState({});
     const [needsToggle, setNeedsToggle] = useState({});
@@ -388,6 +242,7 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     const currentPage = parseInt(page) || 1;
     const tagListRefs = useRef({});
     const descriptionRefs = useRef({});
+    const { setSEOFooterHTML } = useSEO();
 
     // Redirect /trang/1 to / for SEO purposes (avoid duplicate content)
     useEffect(() => {
@@ -396,22 +251,20 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
         }
     }, [page, location.pathname, navigate]);
 
-    // Determine SEO page type based on current route and filter
-    const getSEOPageType = () => {
-        const path = location.pathname;
-        
-        if (path.includes('truyen-xu-huong')) {
-            return 'trending';
-        } else if (filter === 'latest') {
-            return 'recent';
-        } else if (filter === 'trending') {
-            return 'trending';
-        } else if (filter === 'popular') {
-            return 'popular';
+    // Set SEO footer HTML when component mounts (for homepage and bots only)
+    useEffect(() => {
+        if (currentPage === 1 && seoFooterHTML) {
+            setSEOFooterHTML(seoFooterHTML);
+        } else {
+            setSEOFooterHTML(null);
         }
-        
-        return 'home';
-    };
+        return () => {
+            // Clean up when component unmounts
+            setSEOFooterHTML(null);
+        };
+    }, [seoFooterHTML, currentPage, setSEOFooterHTML]);
+
+
 
     const {data, isLoading, error} = useQuery({
         queryKey: ['novels', currentPage],
@@ -729,15 +582,13 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
     );
 
     return (
-        <>
-            {/* SEO Component for title and meta tags */}
-            <NovelListSEO pageType={getSEOPageType()} currentPage={currentPage} />
-            
-            <div className="novel-list-wrapper">
-                <div className="novel-list-container">
-                    {/* SEO Header above main content - only on first page */}
-                    {currentPage === 1 && <SEOHeader pageType={getSEOPageType()} />}
-                    <div className="content-layout">
+        <div className="novel-list-wrapper">
+                        <div className="novel-list-container">
+                {/* SEO Header - rendered for bots */}
+                {currentPage === 1 && seoHeaderHTML && (
+                    <div dangerouslySetInnerHTML={{ __html: seoHeaderHTML }} />
+                )}
+                <div className="content-layout">
                         {/* Main content area */}
                         <div className="main-content">
                             <div className="section-headers">
@@ -880,11 +731,15 @@ const NovelList = ({ filter }) => {    const navigate = useNavigate();    const 
                             {renderPagination()}
                         </div>
                         {/* Sidebar with hot novels and Facebook plugin */}
-                                        <aside className="sidebar">                        <HotNovels/>                        <RecentlyRead/>                        <FacebookPlugin/>                        <RecentComments/>                    </aside>
+                        <aside className="sidebar">
+                            <HotNovels/>
+                            <RecentlyRead/>
+                            <FacebookPlugin/>
+                            <RecentComments/>
+                        </aside>
                     </div>
                 </div>
             </div>
-        </>
     );
 };
 

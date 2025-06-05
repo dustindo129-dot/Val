@@ -7,10 +7,12 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import SEOContent from './SEOContent';
+import { useSEO } from '../context/SEOContext';
 import '../styles/Footer.css';
 
 const Footer = () => {
   const location = useLocation();
+  const { seoFooterHTML } = useSEO();
 
   // Determine SEO page type based on current route
   const getSEOPageType = () => {
@@ -29,8 +31,12 @@ const Footer = () => {
 
   return (
     <footer className="footer">
-      {/* SEO Content in Footer */}
-      {seoPageType && <SEOContent page={seoPageType} />}
+      {/* SEO Content in Footer - server-side only for bots */}
+      {seoFooterHTML && location.pathname === '/' && typeof window === 'undefined' ? (
+        <div dangerouslySetInnerHTML={{ __html: seoFooterHTML }} />
+      ) : (
+        seoPageType && seoPageType !== 'home' && <SEOContent page={seoPageType} />
+      )}
       
       <div className="footer-content">
         <p>Copyright © 2025 Valvrareteam</p>

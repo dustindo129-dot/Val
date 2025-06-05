@@ -99,12 +99,79 @@ export async function onBeforeRender(pageContext) {
     };
   };
   
+  // Generate SEO header HTML for server-side rendering
+  const generateSEOHeaderHTML = () => {
+    return `
+      <div class="seo-header">
+        <h1 class="seo-header-h1">Đọc Light Novel Vietsub Miễn Phí - Light Novel Tiếng Việt Hay Nhất</h1>
+        <p class="seo-header-subtitle">Thư viện Light Novel tiếng Việt lớn nhất Việt Nam, cập nhật nhanh, dịch chất lượng cao</p>
+        <div class="seo-content">
+          <p class="seo-description">
+            Khám phá thế giới Light Novel Việt Nam với hàng nghìn bộ truyện được dịch chất lượng cao. 
+            Từ những tác phẩm kinh điển như Sword Art Online, Re:Zero, Overlord đến những bộ truyện mới nhất, 
+            tất cả đều được cập nhật thường xuyên và hoàn toàn miễn phí.
+          </p>
+          <div class="seo-features">
+            <div class="feature-item">
+              <h3>🔄 Cập Nhật Hàng Ngày</h3>
+              <p>Các chương mới được đăng tải liên tục, đảm bảo bạn không bỏ lỡ bất kỳ nội dung nào.</p>
+            </div>
+            <div class="feature-item">
+              <h3>📚 Thư Viện Đa Dạng</h3>
+              <p>Từ Light Novel Nhật Bản, Trung Quốc, Hàn Quốc đến Web Novel gốc Việt Nam.</p>
+            </div>
+            <div class="feature-item">
+              <h3>💯 Chất Lượng Dịch</h3>
+              <p>Đội ngũ dịch giả chuyên nghiệp, đảm bảo nội dung chuẩn xác và dễ hiểu.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  // Generate SEO footer content for server-side rendering
+  const generateSEOFooterHTML = () => {
+    return `
+      <div class="seo-content">
+        <div class="seo-section">
+          <h2 class="seo-h2">Tại Sao Chọn Valvrareteam?</h2>
+          <p class="seo-description">
+            Valvrareteam là điểm đến hàng đầu cho những người yêu thích Light Novel tại Việt Nam. 
+            Với hơn 1000+ bộ truyện đa dạng từ Nhật Bản, Trung Quốc, Hàn Quốc và cả Web Novel gốc Việt Nam, 
+            chúng tôi cam kết mang đến trải nghiệm đọc truyện tuyệt vời nhất.
+          </p>
+        </div>
+        
+        <div class="seo-section">
+          <h2 class="seo-h2">Thể Loại Light Novel Phong Phú</h2>
+          <p class="seo-description">
+            Khám phá đa dạng thể loại từ Fantasy, Romance, Action, Comedy đến Isekai, Slice of Life. 
+            Mỗi thể loại đều có những tác phẩm chất lượng cao được lựa chọn kỹ càng và dịch chuẩn xác.
+          </p>
+        </div>
+        
+        <div class="seo-popular">
+          <h2>Light Novel Nổi Bật</h2>
+          <p>
+            Một số tác phẩm được yêu thích nhất tại Valvrareteam bao gồm các series nổi tiếng như 
+            Sword Art Online với thế giới ảo đầy mạo hiểm, Re:Zero kể về cuộc sống trong thế giới khác, 
+            và Overlord với câu chuyện về một game thủ trở thành Overlord trong game. 
+            Ngoài ra còn có hàng trăm tác phẩm khác đang chờ bạn khám phá.
+          </p>
+        </div>
+      </div>
+    `;
+  };
+
   return {
     pageContext: {
       pageProps: {
         preloadedNovels: novels,
         preloadedPage: 1, // This is always page 1
-        preloadedTotalPages: totalPages
+        preloadedTotalPages: totalPages,
+        seoHeaderHTML: pageContext.isBot ? generateSEOHeaderHTML() : null,
+        seoFooterHTML: pageContext.isBot ? generateSEOFooterHTML() : null
       },
       documentProps: {
         title: pageTitle,

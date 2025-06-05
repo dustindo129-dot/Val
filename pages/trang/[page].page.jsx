@@ -29,12 +29,25 @@ export async function onBeforeRender(pageContext) {
     console.error(`Error pre-fetching novels for homepage page ${pageNum}:`, error);
   }
   
+  // Generate SEO header HTML for server-side rendering (only for page 1)
+  const generateSEOHeaderHTML = () => {
+    if (pageNum !== 1) return null;
+    
+    return `
+      <div class="seo-header">
+        <h1 class="seo-header-h1">Đọc Light Novel Vietsub Miễn Phí - Light Novel Tiếng Việt Hay Nhất</h1>
+        <p class="seo-header-subtitle">Thư viện Light Novel tiếng Việt lớn nhất Việt Nam, cập nhật nhanh, dịch chất lượng cao</p>
+      </div>
+    `;
+  };
+
   return {
     pageContext: {
       pageProps: {
         preloadedNovels: novels,
         preloadedPage: pageNum,
-        preloadedTotalPages: totalPages
+        preloadedTotalPages: totalPages,
+        seoHeaderHTML: pageContext.isBot ? generateSEOHeaderHTML() : null
       },
       documentProps: {
         title: pageTitle,

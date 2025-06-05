@@ -6,6 +6,7 @@ import { BookmarkProvider } from './context/BookmarkContext';
 import { NovelStatusProvider } from './context/NovelStatusContext';
 import { NovelProvider } from './context/NovelContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { SEOProvider } from './context/SEOContext';
 import { initGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
@@ -35,10 +36,11 @@ const App = () => {
   return (
     <HelmetProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <NovelProvider>
-            <NovelStatusProvider>
-              <BookmarkProvider>
+        <SEOProvider>
+          <AuthProvider>
+            <NovelProvider>
+              <NovelStatusProvider>
+                <BookmarkProvider>
                 <div className="app">
                   <StructuredData type="website" />
                   <div 
@@ -57,10 +59,11 @@ const App = () => {
                   {/* Global ScrollToTop button that appears on all pages */}
                   <ScrollToTop threshold={300} />
                 </div>
-              </BookmarkProvider>
-            </NovelStatusProvider>
-          </NovelProvider>
-        </AuthProvider>
+                </BookmarkProvider>
+              </NovelStatusProvider>
+            </NovelProvider>
+          </AuthProvider>
+        </SEOProvider>
       </ThemeProvider>
     </HelmetProvider>
   );
