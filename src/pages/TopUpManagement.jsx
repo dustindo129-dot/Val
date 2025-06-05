@@ -284,12 +284,36 @@ const TopUpManagement = () => {
     }
   };
 
+  // Fetch dismissed transactions history
+  const fetchDismissedTransactions = async () => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/topup/dismissed-transactions`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Format the dismissed transactions for display
+      const formattedDismissed = response.data.map(tx => ({
+        ...tx,
+        statusText: tx.status === 'dismissed' 
+          ? `Đã hủy bởi ${tx.dismissedBy?.displayName || tx.dismissedBy?.username || 'admin'}` 
+          : 'Đã khớp thành công',
+        processedAt: tx.dismissedAt || tx.updatedAt
+      }));
+      
+      setDismissedTransactions(formattedDismissed);
+    } catch (err) {
+      console.error('Failed to fetch dismissed transactions:', err);
+    }
+  };
+
   // Initial data fetch
   useEffect(() => {
     if (user?.role === 'admin') {
       fetchTransactions();
       fetchPendingRequests();
       fetchUnmatchedTransactions();
+      fetchDismissedTransactions();
       // Remove default fetch of all transactions
       // fetchUserTransactions();
     }
@@ -478,26 +502,29 @@ const TopUpManagement = () => {
   };
 
   // Handle dismissing an unmatched transaction
-  const handleDismissTransaction = (transactionId) => {
+  const handleDismissTransaction = async (transactionId) => {
     if (!confirm('Bạn có chắc chắn muốn hủy giao dịch này? Hành động này sẽ loại bỏ giao dịch khỏi danh sách chưa khớp.')) {
       return;
     }
     
-    // Find the transaction to dismiss
-    const transactionToDismiss = unmatchedTransactions.find(tx => tx.transactionId === transactionId);
-    if (transactionToDismiss) {
-      // Add to dismissed history with timestamp and status
-      const dismissedTransaction = {
-        ...transactionToDismiss,
-        dismissedAt: new Date().toISOString(),
-        status: 'dismissed',
-        statusText: 'Đã hủy bởi admin'
-      };
-      setDismissedTransactions(prev => [dismissedTransaction, ...prev]);
+    try {
+             const response = await axios.post(
+         `${config.backendUrl}/api/topup/dismiss-unmatched/${transactionId}`,
+         {},
+         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+       );
+      
+             // Remove the transaction from the unmatched list
+       setUnmatchedTransactions(unmatchedTransactions.filter(tx => tx.transactionId !== transactionId));
+       
+       // Refresh dismissed transactions history
+       fetchDismissedTransactions();
+       
+       alert('Giao dịch đã được hủy thành công');
+    } catch (err) {
+      console.error('Failed to dismiss transaction:', err);
+      alert('Không thể hủy giao dịch. Vui lòng thử lại.');
     }
-    
-    // Remove the transaction from the unmatched list
-    setUnmatchedTransactions(unmatchedTransactions.filter(tx => tx.transactionId !== transactionId));
   };
 
   // Process matched transaction
@@ -532,19 +559,8 @@ const TopUpManagement = () => {
       // Remove processed transaction from unmatched list
       setUnmatchedTransactions(unmatchedTransactions.filter(tx => tx.transactionId !== transactionId));
       
-      // Add to history as matched transaction
-      const matchedTransaction = unmatchedTransactions.find(tx => tx.transactionId === transactionId);
-      if (matchedTransaction) {
-        const processedTransaction = {
-          ...matchedTransaction,
-          processedAt: new Date().toISOString(),
-          status: 'matched',
-          statusText: `Đã khớp với ${selectedMatchUser.username} (${matchBalance} lúa)`,
-          matchedUser: selectedMatchUser.username,
-          matchedAmount: Number(matchBalance)
-        };
-        setDismissedTransactions(prev => [processedTransaction, ...prev]);
-      }
+      // Refresh dismissed transactions history to show the newly matched transaction
+      fetchDismissedTransactions();
       
       // Reset form
       setMatchingTransactionId(null);
@@ -1107,7 +1123,10 @@ const TopUpManagement = () => {
             <div className="unmatched-section-buttons">
               <button 
                 className="refresh-button"
-                onClick={fetchUnmatchedTransactions}
+                onClick={() => {
+                  fetchUnmatchedTransactions();
+                  fetchDismissedTransactions();
+                }}
                 disabled={unmatchedLoading}
               >
                 {unmatchedLoading ? 'Đang tải lại...' : 'Tải lại giao dịch'}
@@ -1279,11 +1298,7 @@ const TopUpManagement = () => {
                         <div className={`transaction-status ${transaction.status}`}>
                           {transaction.statusText}
                         </div>
-                        {transaction.matchedUser && (
-                          <div className="matched-info">
-                            Đã khớp với: {transaction.matchedUser} | Số lúa: {transaction.matchedAmount}
-                          </div>
-                        )}
+
                       </div>
                       {transaction.description && (
                         <div className="transaction-description">
