@@ -173,7 +173,17 @@
   gap: 1rem;
 }
 
-.novel-list li {
+/* Virtual list item container */
+.virtual-list-item {
+  padding: 0.5rem;
+  box-sizing: border-box;
+  /* Ensure minimum height for different screen sizes */
+  min-height: 120px; /* Desktop default */
+}
+
+/* Common styles for both regular and virtual novel list items */
+.novel-list li,
+.novel-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -184,6 +194,10 @@
   transition: all 0.2s;
   min-width: 0; /* Enable flex shrinking */
   gap: 1rem; /* Add space between title and actions */
+  list-style: none;
+  box-sizing: border-box;
+  /* Ensure consistent height calculation */
+  min-height: 80px; /* Base minimum height */
 }
 
 /* Novel actions styles */
@@ -512,9 +526,15 @@
     padding: 1rem;
   }
 
-  .novel-list li {
+  .virtual-list-item {
+    min-height: 200px; /* Increased for tablet/mobile layout */
+  }
+
+  .novel-list li,
+  .novel-list-item {
     flex-direction: column;
     align-items: stretch;
+    min-height: 160px; /* Ensure enough height for vertical layout */
   }
 
   .novel-actions {
@@ -561,6 +581,16 @@
 
   .novel-list {
     padding: 1rem;
+  }
+
+  .virtual-list-item {
+    min-height: 240px; /* Increased for very small screens */
+  }
+
+  .novel-list li,
+  .novel-list-item {
+    min-height: 200px; /* More height needed for very small screens */
+    padding: 0.75rem; /* Slightly reduced padding to fit content */
   }
 
   /* Search bar mobile responsive */
@@ -884,7 +914,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-:root.dark-mode .novel-list li {
+:root.dark-mode .novel-list li,
+:root.dark-mode .novel-list-item {
   background: #1a202c;
   border-color: #4a5568;
 }

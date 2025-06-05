@@ -18,7 +18,7 @@
  * - Role-based access control
  */
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
@@ -148,8 +148,8 @@ const VirtualNovelItem = React.memo(({
   if (!novel) return null;
 
   return (
-    <div style={style}>
-      <li className="virtual-novel-item">
+    <div style={style} className="virtual-list-item">
+      <li className="novel-list-item">
         <div className="novel-title-section">
           <div className="novel-info">
             <Link 
@@ -356,35 +356,41 @@ const AdminDashboard = () => {
   // Add ref for virtual list container height calculation
   const novelListContainerRef = useRef(null);
   const [virtualListHeight, setVirtualListHeight] = useState(600);
-  const [itemSize, setItemSize] = useState(120);
+  const [itemSize, setItemSize] = useState(240); // Start with mobile-safe size
+  const [dimensionsReady, setDimensionsReady] = useState(false);
 
   // Add effect to calculate virtual list height and item size dynamically
-  useEffect(() => {
+  useLayoutEffect(() => {
     const calculateDimensions = () => {
       if (novelListContainerRef.current) {
         const containerHeight = window.innerHeight - 300; // Account for header, form, etc.
         const maxHeight = Math.max(400, Math.min(800, containerHeight));
         setVirtualListHeight(maxHeight);
         
-        // Adjust item size based on screen width to match CSS
-        const isMobile = window.innerWidth <= 768;
-        const isVerySmallMobile = window.innerWidth <= 576;
+        // Adjust item size based on screen width to match CSS min-heights
+        const width = window.innerWidth;
+        const isVerySmallMobile = width <= 576;
+        const isMobile = width <= 768;
         
         if (isVerySmallMobile) {
-          setItemSize(240); // Match our 220px min-height + margins and padding
+          setItemSize(240); // Match CSS: .virtual-list-item min-height: 240px
         } else if (isMobile) {
-          setItemSize(200); // Updated for tablets to match 180px min-height + margins and padding
+          setItemSize(200); // Match CSS: .virtual-list-item min-height: 200px
         } else {
-          setItemSize(120); // Desktop size
+          setItemSize(120); // Match CSS: .virtual-list-item min-height: 120px
         }
       }
     };
 
+    // Calculate immediately and add a small delay to ensure CSS is loaded
     calculateDimensions();
+    const timeoutId = setTimeout(calculateDimensions, 100);
+    
     window.addEventListener('resize', calculateDimensions);
     
     return () => {
       window.removeEventListener('resize', calculateDimensions);
+      clearTimeout(timeoutId);
     };
   }, []);
 
