@@ -498,7 +498,9 @@ const NovelDetail = ({ novelId }) => {
                              user.role === 'moderator' || 
                              (user.role === 'pj_user' && (
                                currentData?.novel?.active?.pj_user?.includes(user.id) || 
-                               currentData?.novel?.active?.pj_user?.includes(user.username)
+                               currentData?.novel?.active?.pj_user?.includes(user._id) ||
+                               currentData?.novel?.active?.pj_user?.includes(user.username) ||
+                               currentData?.novel?.active?.pj_user?.includes(user.displayName)
                              ));
     
     if (!canReorderModules) return;
@@ -846,7 +848,9 @@ const NovelDetail = ({ novelId }) => {
                               user.role === 'moderator' || 
                               (user.role === 'pj_user' && (
                                 currentData?.novel?.active?.pj_user?.includes(user.id) || 
-                                currentData?.novel?.active?.pj_user?.includes(user.username)
+                                currentData?.novel?.active?.pj_user?.includes(user._id) ||
+                                currentData?.novel?.active?.pj_user?.includes(user.username) ||
+                                currentData?.novel?.active?.pj_user?.includes(user.displayName)
                               ));
     
     if (!canReorderChapters) return;
@@ -1030,11 +1034,19 @@ const NovelDetail = ({ novelId }) => {
             <div className="chapters-header">
               <h2>Danh Sách Chương</h2>
               {/* Add module button - restricted to admin/moderator/assigned pj_user */}
-              {(user?.role === 'admin' || user?.role === 'moderator' || 
-                (user?.role === 'pj_user' && (
-                  data.novel.active?.pj_user?.includes(user.id) || 
-                  data.novel.active?.pj_user?.includes(user.username)
-                ))) && (
+              {(() => {
+                const canAddModule = user?.role === 'admin' || user?.role === 'moderator' || 
+                  (user?.role === 'pj_user' && (
+                    data.novel.active?.pj_user?.includes(user.id) || 
+                    data.novel.active?.pj_user?.includes(user._id) ||
+                    data.novel.active?.pj_user?.includes(user.username) ||
+                    data.novel.active?.pj_user?.includes(user.displayName)
+                  ));
+
+
+
+                return canAddModule;
+              })() && (
                 <button 
                   className="add-module-btn"
                   onClick={handleModuleFormToggle}

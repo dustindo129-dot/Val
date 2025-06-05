@@ -82,9 +82,13 @@ const ModuleList = memo(({
     user.role === 'moderator' || 
     (user.role === 'pj_user' && (
       novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user.username)
+      novel?.active?.pj_user?.includes(user._id) ||
+      novel?.active?.pj_user?.includes(user.username) ||
+      novel?.active?.pj_user?.includes(user.displayName)
     ))
   );
+
+
   
   // Check if user can delete (only admin and moderator, not pj_user)
   const canDelete = user && (user.role === 'admin' || user.role === 'moderator');
@@ -95,7 +99,9 @@ const ModuleList = memo(({
     user.role === 'moderator' ||
     (user.role === 'pj_user' && (
       novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user.username)
+      novel?.active?.pj_user?.includes(user._id) ||
+      novel?.active?.pj_user?.includes(user.username) ||
+      novel?.active?.pj_user?.includes(user.displayName)
     ))
   );
   

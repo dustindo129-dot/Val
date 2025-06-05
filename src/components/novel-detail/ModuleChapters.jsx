@@ -109,7 +109,9 @@ const ModuleChapters = memo(({
     if (user?.role === 'admin' || user?.role === 'moderator' ||
         (user?.role === 'pj_user' && (
           novel?.active?.pj_user?.includes(user.id) || 
-          novel?.active?.pj_user?.includes(user.username)
+          novel?.active?.pj_user?.includes(user._id) ||
+          novel?.active?.pj_user?.includes(user.username) ||
+          novel?.active?.pj_user?.includes(user.displayName)
         ))) {
       return true;
     }
@@ -134,9 +136,13 @@ const ModuleChapters = memo(({
     user.role === 'moderator' || 
     (user?.role === 'pj_user' && (
       novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user.username)
+      novel?.active?.pj_user?.includes(user._id) ||
+      novel?.active?.pj_user?.includes(user.username) ||
+      novel?.active?.pj_user?.includes(user.displayName)
     ))
   );
+
+
   
   // Check if user can delete content for this novel
   const canDeleteContent = user && (
