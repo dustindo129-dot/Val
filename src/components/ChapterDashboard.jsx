@@ -606,7 +606,9 @@ const ChapterDashboard = () => {
   // For pj_user, check if they manage this novel - but only after data has loaded
   if (user?.role === 'pj_user' && !loading && novel && !(
     novel?.novel?.active?.pj_user?.includes(user.id) || 
-    novel?.novel?.active?.pj_user?.includes(user.username)
+    novel?.novel?.active?.pj_user?.includes(user._id) ||
+    novel?.novel?.active?.pj_user?.includes(user.username) ||
+    novel?.novel?.active?.pj_user?.includes(user.displayName)
   )) {
     return <div className="error">Bạn không có quyền quản lý truyện này.</div>;
   }
