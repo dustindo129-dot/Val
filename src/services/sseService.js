@@ -57,11 +57,15 @@ class SSEService {
 
   handleVisibilityChange() {
     if (document.hidden) {
-      // Page is hidden, reduce reconnection frequency
-      return;
+      // Page is hidden, stop any pending reconnections to save resources
+      console.log(`Tab ${this.tabId} hidden, clearing reconnect timeout`);
+      this.clearReconnectTimeout();
     } else {
-      // Page is visible again, check connection
-      if (!this.isConnected && !this.isManuallyDisconnected) {
+      // Page is visible again, check connection and reconnect if needed
+      console.log(`Tab ${this.tabId} visible again, checking connection`);
+      if (!this.isConnected && !this.isManuallyDisconnected && this.listeners.size > 0) {
+        // Reset attempts when tab becomes visible again
+        this.reconnectAttempts = Math.max(0, this.reconnectAttempts - 2);
         this.scheduleReconnect(2000);
       }
     }
@@ -91,10 +95,18 @@ class SSEService {
     
     // Don't reconnect if manually disconnected or offline
     if (this.isManuallyDisconnected || !navigator.onLine) {
+      console.log(`Skipping reconnect for tab ${this.tabId}: manually disconnected or offline`);
+      return;
+    }
+    
+    // Don't reconnect if page is hidden (background tab)
+    if (document.hidden) {
+      console.log(`Skipping reconnect for tab ${this.tabId}: tab is hidden`);
       return;
     }
     
     const delay = customDelay || this.getReconnectDelay();
+    console.log(`Scheduling reconnect for tab ${this.tabId} in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
     
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
@@ -103,6 +115,7 @@ class SSEService {
         this.disconnect();
         this.connect();
       } else {
+        console.log(`Max reconnect attempts reached for tab ${this.tabId}`);
         this.clearReconnectTimeout();
       }
     }, delay);
@@ -122,6 +135,7 @@ class SSEService {
         this.isConnected = true;
         this.reconnectAttempts = 0; // Reset on successful connection
         this.clearReconnectTimeout();
+        console.log(`SSE connected for tab ${this.tabId}`);
       };
 
       this.eventSource.onerror = (error) => {
@@ -130,9 +144,18 @@ class SSEService {
         // Only attempt reconnection if the connection is actually broken
         // ReadyState 2 means CLOSED, which requires reconnection
         if (this.eventSource?.readyState === EventSource.CLOSED) {
+          console.log(`SSE connection closed for tab ${this.tabId}, scheduling reconnect`);
           this.scheduleReconnect();
         } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
           // Don't schedule another reconnect if still trying to connect
+          console.log(`SSE still connecting for tab ${this.tabId}, waiting...`);
+        } else {
+          // Handle other error states more gracefully
+          console.log(`SSE error for tab ${this.tabId}, state: ${this.eventSource?.readyState}`);
+          // Only reconnect if we're not in a connecting state
+          if (this.eventSource?.readyState !== EventSource.CONNECTING) {
+            this.scheduleReconnect();
+          }
         }
       };
 
@@ -141,6 +164,7 @@ class SSEService {
           const data = JSON.parse(event.data);
           if (data.clientId) {
             this.clientId = data.clientId;
+            console.log(`SSE client ID assigned: ${data.clientId} for tab ${this.tabId}`);
           }
         } catch (error) {
           console.error('Error processing initial message:', error);
@@ -173,8 +197,10 @@ class SSEService {
     this.isManuallyDisconnected = manual;
     
     if (this.eventSource) {
+      // Clean up event source properly
       this.eventSource.close();
       this.eventSource = null;
+      console.log(`SSE disconnected for tab ${this.tabId} (manual: ${manual})`);
     }
     this.isConnected = false;
     this.clearReconnectTimeout();
