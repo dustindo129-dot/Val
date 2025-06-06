@@ -356,35 +356,50 @@ const AdminDashboard = () => {
   // Add ref for virtual list container height calculation
   const novelListContainerRef = useRef(null);
   const [virtualListHeight, setVirtualListHeight] = useState(600);
-  const [itemSize, setItemSize] = useState(240); // Start with mobile-safe size
+  // Initialize with proper size based on current screen width
+  const getInitialItemSize = () => {
+    const width = window.innerWidth;
+    if (width <= 576) return 180; // Very small mobile
+    if (width <= 768) return 150; // Mobile/tablet
+    return 120; // Desktop
+  };
+  const [itemSize, setItemSize] = useState(getInitialItemSize);
   const [dimensionsReady, setDimensionsReady] = useState(false);
 
   // Add effect to calculate virtual list height and item size dynamically
   useLayoutEffect(() => {
     const calculateDimensions = () => {
-      if (novelListContainerRef.current) {
-        const containerHeight = window.innerHeight - 300; // Account for header, form, etc.
-        const maxHeight = Math.max(400, Math.min(800, containerHeight));
-        setVirtualListHeight(maxHeight);
-        
-        // Adjust item size based on screen width to match CSS min-heights
-        const width = window.innerWidth;
-        const isVerySmallMobile = width <= 576;
-        const isMobile = width <= 768;
-        
-        if (isVerySmallMobile) {
-          setItemSize(240); // Match CSS: .virtual-list-item min-height: 240px
-        } else if (isMobile) {
-          setItemSize(200); // Match CSS: .virtual-list-item min-height: 200px
-        } else {
-          setItemSize(120); // Match CSS: .virtual-list-item min-height: 120px
-        }
+      const containerHeight = window.innerHeight - 300; // Account for header, form, etc.
+      const maxHeight = Math.max(400, Math.min(800, containerHeight));
+      setVirtualListHeight(maxHeight);
+      
+      // Adjust item size based on screen width to match CSS min-heights
+      const width = window.innerWidth;
+      const isVerySmallMobile = width <= 576;
+      const isMobile = width <= 768;
+      
+      let newItemSize;
+      if (isVerySmallMobile) {
+        newItemSize = 180; // Match CSS: .virtual-list-item min-height: 180px
+      } else if (isMobile) {
+        newItemSize = 150; // Match CSS: .virtual-list-item min-height: 150px
+      } else {
+        newItemSize = 120; // Match CSS: .virtual-list-item min-height: 120px
+      }
+      
+      setItemSize(newItemSize);
+      
+      // Mark dimensions as ready after first calculation
+      if (!dimensionsReady) {
+        setDimensionsReady(true);
       }
     };
 
     // Calculate immediately and add a small delay to ensure CSS is loaded
     calculateDimensions();
-    const timeoutId = setTimeout(calculateDimensions, 100);
+    const timeoutId = setTimeout(() => {
+      calculateDimensions();
+    }, 100);
     
     window.addEventListener('resize', calculateDimensions);
     
@@ -392,7 +407,7 @@ const AdminDashboard = () => {
       window.removeEventListener('resize', calculateDimensions);
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [dimensionsReady]);
 
   // Add effect to handle clicking outside search results
   useEffect(() => {
@@ -1903,7 +1918,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {novelsLoading ? (
+          {novelsLoading || !dimensionsReady ? (
             <div className="novel-list-loading-container">
               <LoadingSpinner size="medium" text="Đang tải danh sách truyện..." />
             </div>

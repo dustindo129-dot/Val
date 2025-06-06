@@ -179,6 +179,7 @@
   box-sizing: border-box;
   /* Ensure minimum height for different screen sizes */
   min-height: 120px; /* Desktop default */
+  transition: min-height 0.2s ease;
 }
 
 /* Common styles for both regular and virtual novel list items */
@@ -527,14 +528,14 @@
   }
 
   .virtual-list-item {
-    min-height: 200px; /* Increased for tablet/mobile layout */
+    min-height: 150px; /* Reduced for more compact tablet layout */
   }
 
   .novel-list li,
   .novel-list-item {
     flex-direction: column;
     align-items: stretch;
-    min-height: 160px; /* Ensure enough height for vertical layout */
+    min-height: 120px; /* Reduced for more compact vertical layout */
   }
 
   .novel-actions {
@@ -584,12 +585,12 @@
   }
 
   .virtual-list-item {
-    min-height: 240px; /* Increased for very small screens */
+    min-height: 180px; /* Reduced for more compact very small screens */
   }
 
   .novel-list li,
   .novel-list-item {
-    min-height: 200px; /* More height needed for very small screens */
+    min-height: 150px; /* Reduced height for very small screens */
     padding: 0.75rem; /* Slightly reduced padding to fit content */
   }
 
