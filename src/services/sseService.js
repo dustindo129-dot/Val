@@ -13,6 +13,13 @@ class SSEService {
     this.maxReconnectDelay = 30000; // Max 30 seconds
     this.isManuallyDisconnected = false;
     
+    // Circuit breaker for rapid reconnections
+    this.recentConnections = [];
+    this.circuitBreakerThreshold = 3; // Max 3 connections in a time window
+    this.circuitBreakerWindow = 10000; // 10 seconds window
+    this.circuitBreakerCooldown = 30000; // 30 seconds cooldown
+    this.isCircuitBreakerOpen = false;
+    
     // Use sessionStorage to persist tab ID across refreshes
     this.tabId = this.getOrCreateTabId();
     
@@ -95,6 +102,40 @@ class SSEService {
     }
   }
 
+  // Check if circuit breaker should be triggered
+  checkCircuitBreaker() {
+    const now = Date.now();
+    
+    // Clean old entries outside the window
+    this.recentConnections = this.recentConnections.filter(
+      timestamp => now - timestamp < this.circuitBreakerWindow
+    );
+    
+    // Check if we've exceeded the threshold
+    if (this.recentConnections.length >= this.circuitBreakerThreshold) {
+      if (!this.isCircuitBreakerOpen) {
+        console.log(`Circuit breaker OPEN for tab ${this.tabId}: ${this.recentConnections.length} connections in ${this.circuitBreakerWindow}ms`);
+        this.isCircuitBreakerOpen = true;
+        
+        // Set a timeout to close the circuit breaker
+        setTimeout(() => {
+          console.log(`Circuit breaker CLOSED for tab ${this.tabId} after cooldown`);
+          this.isCircuitBreakerOpen = false;
+          this.recentConnections = [];
+          this.reconnectAttempts = 0; // Reset attempts when circuit breaker closes
+        }, this.circuitBreakerCooldown);
+      }
+      return true;
+    }
+    
+    return false;
+  }
+
+  // Record a connection attempt
+  recordConnectionAttempt() {
+    this.recentConnections.push(Date.now());
+  }
+
   scheduleReconnect(customDelay = null) {
     this.clearReconnectTimeout();
     
@@ -107,6 +148,12 @@ class SSEService {
     // Don't reconnect if page is hidden (background tab)
     if (document.hidden) {
       console.log(`Skipping reconnect for tab ${this.tabId}: tab is hidden`);
+      return;
+    }
+
+    // Don't reconnect if circuit breaker is open
+    if (this.isCircuitBreakerOpen) {
+      console.log(`Skipping reconnect for tab ${this.tabId}: circuit breaker is open`);
       return;
     }
     
@@ -138,6 +185,15 @@ class SSEService {
       console.log(`Tab ${this.tabId} already connecting, waiting...`);
       return;
     }
+
+    // Check circuit breaker
+    if (this.checkCircuitBreaker()) {
+      console.log(`Circuit breaker is OPEN for tab ${this.tabId}, blocking connection attempt`);
+      return;
+    }
+
+    // Record this connection attempt
+    this.recordConnectionAttempt();
 
     try {
       // Add a unique query parameter to force a new connection for each tab
@@ -210,16 +266,30 @@ class SSEService {
           this.isManuallyDisconnected = true;
           this.clearReconnectTimeout();
           
-          // Wait a bit then allow reconnections again
+          // Reset reconnection attempts to prevent immediate reconnection
+          this.reconnectAttempts = 0;
+          
+          // Open circuit breaker to prevent rapid reconnections
+          this.isCircuitBreakerOpen = true;
+          
+          // Wait longer before allowing reconnections again
+          const delayTime = 15000; // 15 seconds instead of 5
           setTimeout(() => {
-            console.log(`Re-enabling connections for tab ${this.tabId} after duplicate cleanup`);
+            console.log(`Re-enabling connections for tab ${this.tabId} after duplicate cleanup (${delayTime}ms delay)`);
             this.isManuallyDisconnected = false;
+            this.isCircuitBreakerOpen = false;
+            this.recentConnections = []; // Clear recent connections
             
             // Only reconnect if we still have listeners and tab is visible
             if (this.listeners.size > 0 && !document.hidden) {
-              this.connect();
+              // Use a longer delay for the actual reconnection
+              setTimeout(() => {
+                if (!this.eventSource && !this.isManuallyDisconnected) {
+                  this.connect();
+                }
+              }, 2000); // Additional 2 second delay
             }
-          }, 5000); // Wait 5 seconds before allowing reconnection
+          }, delayTime);
         } catch (error) {
           console.error('Error processing duplicate_connection event:', error);
         }
