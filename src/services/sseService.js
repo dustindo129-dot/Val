@@ -80,7 +80,12 @@ class SSEService {
     
     // Add jitter (±25% random variation) to prevent thundering herd
     const jitter = delay * 0.25 * (Math.random() - 0.5);
-    return Math.max(1000, delay + jitter);
+    
+    // Add extra delay if there have been multiple recent reconnection attempts
+    // This helps prevent bulk reconnection storms
+    const extraDelay = this.reconnectAttempts > 3 ? (this.reconnectAttempts - 3) * 2000 : 0;
+    
+    return Math.max(1000, delay + jitter + extraDelay);
   }
 
   clearReconnectTimeout() {
@@ -124,6 +129,13 @@ class SSEService {
   connect() {
     // Don't connect if manually disconnected or already connecting/connected
     if (this.isManuallyDisconnected || this.eventSource) {
+      console.log(`Skipping connect for tab ${this.tabId}: manually disconnected (${this.isManuallyDisconnected}) or already has eventSource (${!!this.eventSource})`);
+      return;
+    }
+
+    // Extra safety check - if we have an eventSource that's still connecting, wait
+    if (this.eventSource && this.eventSource.readyState === EventSource.CONNECTING) {
+      console.log(`Tab ${this.tabId} already connecting, waiting...`);
       return;
     }
 
@@ -185,6 +197,32 @@ class SSEService {
             }
           });
         });
+      });
+
+      // Handle duplicate connection detection
+      this.eventSource.addEventListener('duplicate_connection', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log(`Duplicate connection detected for tab ${this.tabId}:`, data);
+          
+          // This connection is being closed by the server as it's a duplicate
+          // Don't try to reconnect immediately to avoid creating another duplicate
+          this.isManuallyDisconnected = true;
+          this.clearReconnectTimeout();
+          
+          // Wait a bit then allow reconnections again
+          setTimeout(() => {
+            console.log(`Re-enabling connections for tab ${this.tabId} after duplicate cleanup`);
+            this.isManuallyDisconnected = false;
+            
+            // Only reconnect if we still have listeners and tab is visible
+            if (this.listeners.size > 0 && !document.hidden) {
+              this.connect();
+            }
+          }, 5000); // Wait 5 seconds before allowing reconnection
+        } catch (error) {
+          console.error('Error processing duplicate_connection event:', error);
+        }
       });
     } catch (error) {
       console.error(`Error setting up SSE connection for tab ${this.tabId}:`, error);
