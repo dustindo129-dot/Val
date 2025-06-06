@@ -7,9 +7,21 @@ class SSEService {
     this.isConnected = false;
     this.reconnectTimeout = null;
     this.clientId = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 10;
+    this.baseReconnectDelay = 1000; // Start with 1 second
+    this.maxReconnectDelay = 30000; // Max 30 seconds
+    this.isManuallyDisconnected = false;
     
     // Use sessionStorage to persist tab ID across refreshes
     this.tabId = this.getOrCreateTabId();
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => this.handleOnline());
+    window.addEventListener('offline', () => this.handleOffline());
+    
+    // Listen for page visibility changes
+    document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
   }
 
   // Get existing tab ID from sessionStorage or create a new one
@@ -32,8 +44,73 @@ class SSEService {
     return tabId;
   }
 
+  handleOnline() {
+    if (!this.isConnected && !this.isManuallyDisconnected) {
+      this.reconnectAttempts = 0; // Reset attempts when coming back online
+      this.scheduleReconnect(1000); // Reconnect quickly when online
+    }
+  }
+
+  handleOffline() {
+    this.clearReconnectTimeout();
+  }
+
+  handleVisibilityChange() {
+    if (document.hidden) {
+      // Page is hidden, reduce reconnection frequency
+      return;
+    } else {
+      // Page is visible again, check connection
+      if (!this.isConnected && !this.isManuallyDisconnected) {
+        this.scheduleReconnect(2000);
+      }
+    }
+  }
+
+  getReconnectDelay() {
+    // Exponential backoff with jitter
+    const delay = Math.min(
+      this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts),
+      this.maxReconnectDelay
+    );
+    
+    // Add jitter (±25% random variation) to prevent thundering herd
+    const jitter = delay * 0.25 * (Math.random() - 0.5);
+    return Math.max(1000, delay + jitter);
+  }
+
+  clearReconnectTimeout() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+  }
+
+  scheduleReconnect(customDelay = null) {
+    this.clearReconnectTimeout();
+    
+    // Don't reconnect if manually disconnected or offline
+    if (this.isManuallyDisconnected || !navigator.onLine) {
+      return;
+    }
+    
+    const delay = customDelay || this.getReconnectDelay();
+    
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectAttempts++;
+      
+      if (this.reconnectAttempts <= this.maxReconnectAttempts) {
+        this.disconnect();
+        this.connect();
+      } else {
+        this.clearReconnectTimeout();
+      }
+    }, delay);
+  }
+
   connect() {
-    if (this.eventSource) {
+    // Don't connect if manually disconnected or already connecting/connected
+    if (this.isManuallyDisconnected || this.eventSource) {
       return;
     }
 
@@ -43,27 +120,23 @@ class SSEService {
       
       this.eventSource.onopen = () => {
         this.isConnected = true;
-        if (this.reconnectTimeout) {
-          clearTimeout(this.reconnectTimeout);
-          this.reconnectTimeout = null;
-        }
+        this.reconnectAttempts = 0; // Reset on successful connection
+        this.clearReconnectTimeout();
       };
 
       this.eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
         this.isConnected = false;
         
-        // Try to reconnect after a delay
-        if (!this.reconnectTimeout) {
-          this.reconnectTimeout = setTimeout(() => {
-            this.disconnect();
-            this.connect();
-          }, 5000);
+        // Only attempt reconnection if the connection is actually broken
+        // ReadyState 2 means CLOSED, which requires reconnection
+        if (this.eventSource?.readyState === EventSource.CLOSED) {
+          this.scheduleReconnect();
+        } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
+          // Don't schedule another reconnect if still trying to connect
         }
       };
 
-      // Listen for the initial connection message to get client ID
-      this.eventSource.addEventListener('message', (event) => {
+      this.eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           if (data.clientId) {
@@ -72,7 +145,7 @@ class SSEService {
         } catch (error) {
           console.error('Error processing initial message:', error);
         }
-      });
+      };
 
       // Set up default event listeners
       const events = ['update', 'novel_status_changed', 'novel_deleted', 'refresh', 'new_novel', 'new_chapter', 'new_notification', 'notification_read', 'notifications_cleared'];
@@ -92,19 +165,31 @@ class SSEService {
     } catch (error) {
       console.error(`Error setting up SSE connection for tab ${this.tabId}:`, error);
       this.isConnected = false;
+      this.scheduleReconnect();
     }
   }
 
-  disconnect() {
+  disconnect(manual = false) {
+    this.isManuallyDisconnected = manual;
+    
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
     }
     this.isConnected = false;
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
+    this.clearReconnectTimeout();
+    
+    if (manual) {
+      this.reconnectAttempts = 0; // Reset attempts on manual disconnect
     }
+  }
+
+  // Method to manually reconnect (resets attempt counter)
+  forceReconnect() {
+    this.isManuallyDisconnected = false;
+    this.reconnectAttempts = 0;
+    this.disconnect();
+    this.connect();
   }
 
   addEventListener(eventName, callback) {
@@ -113,8 +198,8 @@ class SSEService {
     }
     this.listeners.get(eventName).add(callback);
 
-    // Connect if not already connected
-    if (!this.isConnected) {
+    // Connect if not already connected and not manually disconnected
+    if (!this.isConnected && !this.isManuallyDisconnected) {
       this.connect();
     }
   }
@@ -128,9 +213,9 @@ class SSEService {
       }
     }
 
-    // If no more listeners, disconnect
+    // If no more listeners, disconnect manually (stop reconnection attempts)
     if (this.listeners.size === 0) {
-      this.disconnect();
+      this.disconnect(true);
     }
   }
 }
