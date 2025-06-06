@@ -114,12 +114,13 @@ class SSEService {
     // Check if we've exceeded the threshold
     if (this.recentConnections.length >= this.circuitBreakerThreshold) {
       if (!this.isCircuitBreakerOpen) {
-        console.log(`Circuit breaker OPEN for tab ${this.tabId}: ${this.recentConnections.length} connections in ${this.circuitBreakerWindow}ms`);
+        console.log(`🔥 Circuit breaker OPEN for tab ${this.tabId}: ${this.recentConnections.length} connections in ${this.circuitBreakerWindow}ms`);
+        console.log(`🔥 Recent connection timestamps:`, this.recentConnections);
         this.isCircuitBreakerOpen = true;
         
         // Set a timeout to close the circuit breaker
         setTimeout(() => {
-          console.log(`Circuit breaker CLOSED for tab ${this.tabId} after cooldown`);
+          console.log(`❄️ Circuit breaker CLOSED for tab ${this.tabId} after ${this.circuitBreakerCooldown}ms cooldown`);
           this.isCircuitBreakerOpen = false;
           this.recentConnections = [];
           this.reconnectAttempts = 0; // Reset attempts when circuit breaker closes
@@ -188,12 +189,13 @@ class SSEService {
 
     // Check circuit breaker
     if (this.checkCircuitBreaker()) {
-      console.log(`Circuit breaker is OPEN for tab ${this.tabId}, blocking connection attempt`);
+      console.log(`🛑 Circuit breaker is OPEN for tab ${this.tabId}, blocking connection attempt`);
       return;
     }
 
     // Record this connection attempt
     this.recordConnectionAttempt();
+    console.log(`📡 Recording connection attempt for tab ${this.tabId} (${this.recentConnections.length} recent connections)`);
 
     try {
       // Add a unique query parameter to force a new connection for each tab
@@ -259,7 +261,9 @@ class SSEService {
       this.eventSource.addEventListener('duplicate_connection', (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log(`Duplicate connection detected for tab ${this.tabId}:`, data);
+          console.log(`🔴 DUPLICATE CONNECTION DETECTED for tab ${this.tabId}:`, data);
+          console.log(`🔴 Current eventSource state:`, this.eventSource?.readyState);
+          console.log(`🔴 Current connection state - isConnected: ${this.isConnected}, isManuallyDisconnected: ${this.isManuallyDisconnected}`);
           
           // This connection is being closed by the server as it's a duplicate
           // Don't try to reconnect immediately to avoid creating another duplicate
@@ -271,27 +275,36 @@ class SSEService {
           
           // Open circuit breaker to prevent rapid reconnections
           this.isCircuitBreakerOpen = true;
+          console.log(`🔴 Circuit breaker OPENED for tab ${this.tabId} due to duplicate connection`);
           
           // Wait longer before allowing reconnections again
-          const delayTime = 15000; // 15 seconds instead of 5
+          const delayTime = 20000; // Increased to 20 seconds
+          console.log(`🔴 Setting ${delayTime}ms delay before re-enabling connections for tab ${this.tabId}`);
+          
           setTimeout(() => {
-            console.log(`Re-enabling connections for tab ${this.tabId} after duplicate cleanup (${delayTime}ms delay)`);
+            console.log(`🟢 Re-enabling connections for tab ${this.tabId} after duplicate cleanup (${delayTime}ms delay)`);
             this.isManuallyDisconnected = false;
             this.isCircuitBreakerOpen = false;
             this.recentConnections = []; // Clear recent connections
             
             // Only reconnect if we still have listeners and tab is visible
             if (this.listeners.size > 0 && !document.hidden) {
+              console.log(`🟢 Tab ${this.tabId} will attempt reconnection in 3 seconds...`);
               // Use a longer delay for the actual reconnection
               setTimeout(() => {
                 if (!this.eventSource && !this.isManuallyDisconnected) {
+                  console.log(`🟢 Tab ${this.tabId} attempting reconnection now`);
                   this.connect();
+                } else {
+                  console.log(`🟢 Tab ${this.tabId} skipping reconnection - eventSource exists: ${!!this.eventSource}, manually disconnected: ${this.isManuallyDisconnected}`);
                 }
-              }, 2000); // Additional 2 second delay
+              }, 3000); // Additional 3 second delay
+            } else {
+              console.log(`🟢 Tab ${this.tabId} skipping reconnection - no listeners (${this.listeners.size}) or tab hidden (${document.hidden})`);
             }
           }, delayTime);
         } catch (error) {
-          console.error('Error processing duplicate_connection event:', error);
+          console.error('🔴 Error processing duplicate_connection event:', error);
         }
       });
     } catch (error) {
