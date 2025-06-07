@@ -21,6 +21,7 @@ import {useState, useEffect, memo, useRef} from 'react';
 import {Link, useNavigate, useParams, useLocation} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 import { useSEO } from '../context/SEOContext';
 import HotNovels from './HotNovels';
 import RecentlyRead from './RecentlyRead';
@@ -216,6 +217,85 @@ const FacebookPlugin = memo(() => {
 });
 
 
+
+/**
+ * NovelListSEO Component
+ *
+ * Provides SEO optimization for the NovelList/Homepage including:
+ * - Dynamic title based on current page
+ * - Meta description
+ * - Keywords
+ * - Open Graph tags
+ */
+const NovelListSEO = ({ currentPage = 1 }) => {
+  const generateSEOTitle = () => {
+    let baseTitle = 'Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất';
+    
+    if (currentPage > 1) {
+      baseTitle = `Valvrareteam - Trang ${currentPage} | Light Novel Tiếng Việt`;
+    }
+    
+    return baseTitle;
+  };
+
+  const generateSEODescription = () => {
+    if (currentPage === 1) {
+      return 'Thư viện Light Novel vietsub lớn nhất Việt Nam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh, dịch chất lượng cao. Hàng nghìn Light Novel hay đang chờ bạn khám phá!';
+    }
+    return `Danh sách Light Novel vietsub trang ${currentPage} tại Valvrareteam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh chóng.`;
+  };
+
+  const generateKeywords = () => {
+    const baseKeywords = [
+      'light novel vietsub',
+      'light novel tiếng việt', 
+      'đọc light novel vietsub',
+      'light novel việt nam',
+      'truyện light novel',
+      'ln vietsub',
+      'light novel online',
+      'đọc ln online',
+      'light novel dịch việt',
+      'novel tiếng việt',
+      'valvrareteam',
+      'light novel hay',
+      'light novel mới',
+      'light novel full vietsub'
+    ];
+    
+    if (currentPage > 1) {
+      baseKeywords.push(`trang ${currentPage}`);
+    }
+    
+    return baseKeywords.join(', ');
+  };
+
+  return (
+    <Helmet>
+      <title>{generateSEOTitle()}</title>
+      <meta name="description" content={generateSEODescription()} />
+      <meta name="keywords" content={generateKeywords()} />
+      
+      {/* Open Graph tags */}
+      <meta property="og:title" content={generateSEOTitle()} />
+      <meta property="og:description" content={generateSEODescription()} />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content={currentPage === 1 ? "https://valvrareteam.net" : `https://valvrareteam.net/trang/${currentPage}`} />
+      <meta property="og:site_name" content="Valvrareteam" />
+      <meta property="og:locale" content="vi_VN" />
+      
+      {/* Twitter Card tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={generateSEOTitle()} />
+      <meta name="twitter:description" content={generateSEODescription()} />
+      
+      {/* Additional SEO meta */}
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+      <meta name="author" content="Valvrareteam" />
+      <meta name="language" content="Vietnamese" />
+    </Helmet>
+  );
+};
 
 /**
  * NovelList Component
@@ -583,7 +663,8 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
 
     return (
         <div className="novel-list-wrapper">
-                        <div className="novel-list-container">
+            <NovelListSEO currentPage={currentPage} />
+            <div className="novel-list-container">
                 {/* SEO Header - rendered for bots */}
                 {currentPage === 1 && seoHeaderHTML && (
                     <div dangerouslySetInnerHTML={{ __html: seoHeaderHTML }} />

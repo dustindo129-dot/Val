@@ -51,7 +51,7 @@ async function render(pageContext) {
             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet" />
             <!-- Preload TinyMCE -->
             <script src="/tinymce/js/tinymce/tinymce.min.js"></script>
-            <title>Valvrareteam</title>
+            <title>Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất</title>
           </head>
           <body>
             <div id="root"></div>
@@ -129,7 +129,7 @@ async function render(pageContext) {
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet" />
         <!-- Preload TinyMCE -->
         <script src="/tinymce/js/tinymce/tinymce.min.js"></script>
-        <title>Valvrareteam</title>
+        <title>Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất</title>
       </head>
       <body>
         <div id="root">${dangerouslySkipEscape(appHtml)}</div>
