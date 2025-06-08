@@ -18,6 +18,11 @@ export async function onBeforeRender(pageContext) {
     ? 'Kho tàng light novel tiếng Việt chất lượng cao. Cập nhật nhanh, đọc dễ dàng, trải nghiệm tốt nhất cho fan light novel!'
     : `Trang ${pageNum} - Khám phá thêm nhiều light novel tiếng Việt chất lượng cao tại Valvrareteam.`;
   
+  // Generate canonical URL
+  const canonicalUrl = pageNum === 1 
+    ? 'https://valvrareteam.net' 
+    : `https://valvrareteam.net/trang/${pageNum}`;
+  
   try {
     if (pageContext.isBot || process.env.NODE_ENV === 'production') {
       // Fetch novels for the specific page
@@ -51,7 +56,13 @@ export async function onBeforeRender(pageContext) {
       },
       documentProps: {
         title: pageTitle,
-        description: pageDescription
+        description: pageDescription,
+        link: [
+          {
+            rel: 'canonical',
+            href: canonicalUrl
+          }
+        ]
       }
     }
   };

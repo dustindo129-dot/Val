@@ -14,6 +14,11 @@ export async function onBeforeRender(pageContext) {
   let pageTitle = `OLN - Original Light Novel - Trang ${pageNum} - Valvrareteam`;
   let pageDescription = 'Khám phá những tác phẩm Original Light Novel (OLN) độc đáo và sáng tạo. Thưởng thức câu chuyện gốc từ tác giả Việt Nam.';
   
+  // Generate canonical URL
+  const canonicalUrl = pageNum === 1 
+    ? 'https://valvrareteam.net/oln'
+    : `https://valvrareteam.net/oln/trang/${pageNum}`;
+  
   try {
     if (pageContext.isBot || process.env.NODE_ENV === 'production') {
       // Fetch OLN novels for the specific page
@@ -38,7 +43,13 @@ export async function onBeforeRender(pageContext) {
       },
       documentProps: {
         title: pageTitle,
-        description: pageDescription
+        description: pageDescription,
+        link: [
+          {
+            rel: 'canonical',
+            href: canonicalUrl
+          }
+        ]
       }
     }
   };

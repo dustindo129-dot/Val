@@ -244,6 +244,13 @@ export async function onBeforeRender(pageContext) {
             content: 'General'
           }
         ],
+        // Canonical URL
+        link: [
+          {
+            rel: 'canonical',
+            href: currentUrl
+          }
+        ],
         // Structured data
         structuredData: generateStructuredData(novel, currentUrl)
       }

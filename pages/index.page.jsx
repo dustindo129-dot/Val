@@ -276,6 +276,13 @@ export async function onBeforeRender(pageContext) {
             content: 'width=device-width, initial-scale=1.0'
           }
         ],
+        // Canonical URL
+        link: [
+          {
+            rel: 'canonical',
+            href: 'https://valvrareteam.net'
+          }
+        ],
         // Structured data
         structuredData: generateStructuredData(novels, currentUrl)
       }

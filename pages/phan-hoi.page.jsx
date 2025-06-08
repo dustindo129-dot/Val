@@ -9,7 +9,13 @@ export async function onBeforeRender(pageContext) {
       pageProps: {},
       documentProps: {
         title: 'Phản Hồi - Valvrareteam',
-        description: 'Gửi phản hồi, góp ý và báo lỗi cho Valvrareteam. Chúng tôi luôn lắng nghe ý kiến của bạn để cải thiện dịch vụ tốt hơn.'
+        description: 'Gửi phản hồi, góp ý và báo lỗi cho Valvrareteam. Chúng tôi luôn lắng nghe ý kiến của bạn để cải thiện dịch vụ tốt hơn.',
+        link: [
+          {
+            rel: 'canonical',
+            href: 'https://valvrareteam.net/phan-hoi'
+          }
+        ]
       }
     }
   };

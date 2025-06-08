@@ -9,7 +9,13 @@ export async function onBeforeRender(pageContext) {
       pageProps: {},
       documentProps: {
         title: 'Nạp Tiền - Valvrareteam',
-        description: 'Nạp tiền vào tài khoản Valvrareteam để hỗ trợ dự án dịch thuật và truy cập các tính năng premium. Dễ dàng và bảo mật.'
+        description: 'Nạp tiền vào tài khoản Valvrareteam để hỗ trợ dự án dịch thuật và truy cập các tính năng premium. Dễ dàng và bảo mật.',
+        link: [
+          {
+            rel: 'canonical',
+            href: 'https://valvrareteam.net/nap-tien'
+          }
+        ]
       }
     }
   };

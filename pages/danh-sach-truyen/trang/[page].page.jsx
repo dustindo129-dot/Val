@@ -14,6 +14,11 @@ export async function onBeforeRender(pageContext) {
   let pageTitle = `Danh Sách Truyện - Trang ${pageNum} - Valvrareteam`;
   let pageDescription = 'Khám phá kho tàng light novel tiếng Việt chất lượng cao tại Valvrareteam. Cập nhật nhanh, đọc dễ dàng, trải nghiệm tốt nhất.';
   
+  // Generate canonical URL
+  const canonicalUrl = pageNum === 1 
+    ? 'https://valvrareteam.net/danh-sach-truyen'
+    : `https://valvrareteam.net/danh-sach-truyen/trang/${pageNum}`;
+  
   try {
     if (pageContext.isBot || process.env.NODE_ENV === 'production') {
       // Fetch novels for the specific page
@@ -38,7 +43,13 @@ export async function onBeforeRender(pageContext) {
       },
       documentProps: {
         title: pageTitle,
-        description: pageDescription
+        description: pageDescription,
+        link: [
+          {
+            rel: 'canonical',
+            href: canonicalUrl
+          }
+        ]
       }
     }
   };
