@@ -451,13 +451,14 @@ const ChapterContent = ({
                   'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                   'searchreplace', 'visualblocks', 'code', 'fullscreen',
                   'insertdatetime', 'media', 'table', 'help', 'wordcount',
-                  'preview'
+                  'preview', 'contextmenu'
                 ],
                 toolbar: 'undo redo | formatselect | ' +
                   'bold italic underline strikethrough | ' +
                   'alignleft aligncenter alignright alignjustify | ' +
                   'bullist numlist outdent indent | ' +
                   'link image footnote | code preview | wordcount | removeformat | help',
+                contextmenu: 'cut copy paste | link image | inserttable | cell row column deletetable',
                 content_style: `
                   body { font-family:Helvetica,Arial,sans-serif; font-size:14px }
                   .footnote-marker { color: #0066cc; cursor: pointer; }

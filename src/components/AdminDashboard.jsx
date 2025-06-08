@@ -1661,13 +1661,14 @@ const AdminDashboard = () => {
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                       'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      'insertdatetime', 'media', 'table', 'help', 'wordcount', 'contextmenu'
                     ],
                     toolbar: 'undo redo | formatselect | ' +
                       'bold italic underline strikethrough | ' +
                       'alignleft aligncenter alignright alignjustify | ' +
                       'bullist numlist outdent indent | ' +
                       'link | code preview | removeformat | help',
+                    contextmenu: 'cut copy paste | link | removeformat',
                     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                     skin: 'oxide',
                     content_css: 'default',
@@ -1767,12 +1768,13 @@ const AdminDashboard = () => {
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'charmap',
                       'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      'insertdatetime', 'media', 'table', 'help', 'wordcount', 'contextmenu'
                     ],
                     toolbar: 'undo redo | formatselect | ' +
                       'bold italic underline | ' +
                       'bullist numlist | ' +
                       'link | code preview | removeformat | help',
+                    contextmenu: 'cut copy paste | link | removeformat',
                     content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                     skin: 'oxide',
                     content_css: 'default',

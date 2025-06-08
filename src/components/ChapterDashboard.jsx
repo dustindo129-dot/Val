@@ -790,13 +790,14 @@ const ChapterDashboard = () => {
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                         'searchreplace', 'visualblocks', 'code', 'fullscreen',
                         'insertdatetime', 'media', 'table', 'help', 'wordcount',
-                        'preview'
+                        'preview', 'contextmenu'
                       ],
                       toolbar: 'undo redo | formatselect | ' +
                           'bold italic underline strikethrough | ' +
                           'alignleft aligncenter alignright alignjustify | ' +
                           'bullist numlist outdent indent | ' +
                           'link image | code preview | removeformat | help',
+                      contextmenu: 'cut copy paste | link image | removeformat',
                       content_style: `
                     body { font-family:Helvetica,Arial,Georgia,sans-serif; font-size:16px; line-height:1.6; }
                     sup.footnote-marker { color: #e74c3c; font-weight: bold; cursor: pointer; }
