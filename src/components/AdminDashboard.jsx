@@ -288,7 +288,7 @@ const AdminDashboard = () => {
     ],
     'Định Dạng và Nguồn gốc': [
       'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
-      'Web Novel', 'One shot', 'Fanfiction'
+      'Web Novel', 'One shot', 'Fanfiction', 'AI-assisted'
     ]
   };
 

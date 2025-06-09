@@ -23,7 +23,7 @@ import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 const genreCategories = {
     'Định Dạng và Nguồn Gốc': [
         'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
-        'Web Novel', 'One shot', 'Fanfiction'
+        'Web Novel', 'One shot', 'Fanfiction', 'AI-assisted'
     ],
     'Đối Tượng': [
         'Seinen', 'Shounen', 'Josei', 'Shoujo'

@@ -492,7 +492,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                             {(() => {
                               // Sort genres using the new logic
                               const sortedGenres = (novelData.genres || []).map(genre => {
-                                if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One Shot' || genre === 'Fanfiction') {
+                                if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One Shot' || genre === 'Fanfiction' || genre === 'AI-assisted') {
                                     return {
                                         name: genre,
                                         type: 'mature',

@@ -24,7 +24,11 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, children }) => {
       case 'protected':
         return isAuthenticated; // Protected requires user to be logged in
       case 'draft':
-        return user?.role === 'admin' || user?.role === 'moderator'; // Draft accessible to admin and moderator
+        return user?.role === 'admin' || user?.role === 'moderator' ||
+          (user?.role === 'pj_user' && chapter.novel && (
+            chapter.novel.active?.pj_user?.includes(user.id) || 
+            chapter.novel.active?.pj_user?.includes(user.username)
+          )); // Draft accessible to admin, moderator, and assigned pj_user
       case 'paid':
         // Allow admin, moderator, and pj_user for their assigned novels
         return user && (
