@@ -1119,16 +1119,14 @@ const NovelDetail = ({ novelId }) => {
 
           {/* Comments section - Auto-loads after delay */}
           {autoLoadComments && (
-            <div className="comments-section">
-              <Suspense fallback={<LoadingSpinner />}>
-                <CommentSection 
-                  contentId={novelId}
-                  contentType="novels"
-                  user={user}
-                  isAuthenticated={!!user}
-                />
-              </Suspense>
-            </div>
+            <Suspense fallback={<LoadingSpinner />}>
+              <CommentSection 
+                contentId={novelId}
+                contentType="novels"
+                user={user}
+                isAuthenticated={!!user}
+              />
+            </Suspense>
           )}
 
           {/* Rating Modal */}

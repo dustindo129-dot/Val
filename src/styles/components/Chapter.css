@@ -748,55 +748,9 @@
   font-size: 0.95rem;
 }
 
-/* Comments Section */
-.novel-comments-section {
-  margin-top: 40px;
-  padding: 20px;
-  background-color: var(--card-bg);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Comments toggle button styles */
-.comments-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 30px auto;
-  padding: 12px 24px;
-  background-color: #1e3a8a;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.comments-toggle-btn:hover {
-  background-color: #1e40af;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-}
-
-.comments-toggle-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-}
-
 /* Dark mode support for comments */
 :root.dark-mode .novel-comments-section {
   background-color: #1a1a1a;
-}
-
-:root.dark-mode .comments-toggle-btn {
-  background-color: #3b82f6;
-}
-
-:root.dark-mode .comments-toggle-btn:hover {
-  background-color: #2563eb;
 }
 
 /* Fixed Reading Controls */

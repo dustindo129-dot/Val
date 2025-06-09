@@ -669,43 +669,7 @@
   color: #007bff;
 }
 
-/* Chapter comments section styles */
-.novel-comments-section {
-  margin: 1.5rem 0;
-}
 
-.comments-toggle-btn {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1.25rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 1rem;
-}
-
-.comments-toggle-btn:hover {
-  background-color: #0056b3;
-  transform: translateY(-1px);
-}
-
-.comments-toggle-btn .fa-icon {
-  margin-right: 8px;
-}
-
-/* Dark mode support for chapter comments */
-:root.dark-mode .comments-toggle-btn {
-  background-color: #4299e1;
-}
-
-:root.dark-mode .comments-toggle-btn:hover {
-  background-color: #3182ce;
-}
 
 /* Responsive styles for tablets */
 @media (max-width: 768px) {
@@ -802,10 +766,7 @@
     font-size: 0.85rem;
   }
 
-  .comments-toggle-btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
-  }
+
 }
 
 /* Responsive styles for small mobile devices */
@@ -999,12 +960,7 @@
     font-size: 0.9rem;
   }
 
-  .comments-toggle-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-  }
+
 
   .block-confirm-content {
     padding: 1.5rem;
