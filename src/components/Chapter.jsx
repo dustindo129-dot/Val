@@ -22,7 +22,7 @@ import ChapterSocialShare from './chapter/ChapterSocialShare';
 import ChapterNavigationControls from './chapter/ChapterNavigationControls';
 import ChapterCommentsSection from './chapter/ChapterCommentsSection';
 import ChapterAccessGuard from './chapter/ChapterAccessGuard';
-import { SettingsModal, RatingModal, ReportModal } from './chapter/ChapterModals';
+import { SettingsModal, ReportModal } from './chapter/ChapterModals';
 import ScrollToTop from './ScrollToTop';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -239,16 +239,12 @@ const Chapter = ({ novelId, chapterId }) => {
 
   // Modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showRatingModal, setShowRatingModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   // Interaction state
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [currentRating, setCurrentRating] = useState(0);
-  const [ratingCount, setRatingCount] = useState(0);
-  const [averageRating, setAverageRating] = useState(0);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [viewCount, setViewCount] = useState(0);
   const [wordCount, setWordCount] = useState(0);
 
@@ -306,14 +302,14 @@ const Chapter = ({ novelId, chapterId }) => {
     enabled: !!chapterId
   });
 
-  // Fetch user interaction data (likes, ratings, bookmarks)
+  // Fetch user interaction data (likes, bookmarks)
   const { data: userInteraction } = useQuery({
     queryKey: ['user-chapter-interaction', chapterId, user?.id],
     queryFn: async () => {
       try {
         const headers = getAuthHeaders();
         if (!headers.Authorization) {
-          return { liked: false, rating: 0, bookmarked: false };
+          return { liked: false, bookmarked: false };
         }
         
         const response = await axios.get(
@@ -323,16 +319,13 @@ const Chapter = ({ novelId, chapterId }) => {
         return response.data;
       } catch (error) {
         console.error('Error fetching user chapter interaction:', error);
-        return { liked: false, rating: 0, bookmarked: false };
+        return { liked: false, bookmarked: false };
       }
     },
     enabled: !!chapterId && !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
     onSuccess: (data) => {
       if (data) {
-        if (typeof data.rating === 'number') {
-          setCurrentRating(data.rating);
-        }
         setIsLiked(data.liked || false);
         setIsBookmarked(data.bookmarked || false);
       }
@@ -484,11 +477,8 @@ const Chapter = ({ novelId, chapterId }) => {
   // Extract interaction data from the consolidated endpoint
   const interactions = chapterData?.interactions || {
     totalLikes: 0,
-    totalRatings: 0,
-    averageRating: '0.0',
     userInteraction: {
       liked: false,
-      rating: null,
       bookmarked: false
     }
   };
@@ -595,9 +585,6 @@ const Chapter = ({ novelId, chapterId }) => {
   useEffect(() => {
     if (userInteraction) {
       // Set interaction states directly from the user interaction data
-      if (typeof userInteraction.rating === 'number') {
-        setCurrentRating(userInteraction.rating);
-      }
       setIsLiked(userInteraction.liked || false);
       setIsBookmarked(userInteraction.bookmarked || false);
     }
@@ -607,14 +594,10 @@ const Chapter = ({ novelId, chapterId }) => {
   useEffect(() => {
     if (interactions) {
       setLikeCount(interactions.totalLikes || 0);
-      setRatingCount(interactions.totalRatings || 0);
-      setAverageRating(interactions.averageRating || 0);
       setViewCount(chapter?.views || 0);
     } else {
       // Default to 0 if no interaction data is available
       setLikeCount(0);
-      setRatingCount(0);
-      setAverageRating(0);
       setViewCount(chapter?.views || 0);
     }
   }, [interactions, chapter]);
@@ -698,7 +681,7 @@ const Chapter = ({ novelId, chapterId }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Only use keyboard navigation if not in edit mode or modal
-      if (isEditing || showSettingsModal || showRatingModal || showReportModal) {
+      if (isEditing || showSettingsModal || showReportModal) {
         return;
       }
 
@@ -715,7 +698,7 @@ const Chapter = ({ novelId, chapterId }) => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [chapter, isNavigating, isEditing, showSettingsModal, showRatingModal, showReportModal]);
+  }, [chapter, isNavigating, isEditing, showSettingsModal, showReportModal]);
 
   // Effect to handle click outside of the chapter dropdown
   useEffect(() => {
@@ -1072,150 +1055,6 @@ const Chapter = ({ novelId, chapterId }) => {
     }
   };
 
-  // Add rating mutation
-  const rateMutation = useMutation({
-    mutationFn: async (rating) => {
-      const headers = getAuthHeaders();
-      if (!headers.Authorization) {
-        throw new Error('Authentication required');
-      }
-      
-      const response = await axios.post(
-        `${config.backendUrl}/api/userchapterinteractions/rate`,
-        { 
-          chapterId,
-          rating 
-        },
-        {
-          headers
-        }
-      );
-      return response.data;
-    },
-    onMutate: async (newRating) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries(['chapter', chapterId]);
-      await queryClient.cancelQueries(['user-chapter-interaction', chapterId, user?.id]);
-
-      // Snapshot the previous values
-      const previousData = queryClient.getQueryData(['chapter', chapterId]);
-      const previousInteraction = queryClient.getQueryData(['user-chapter-interaction', chapterId, user?.id]);
-
-      // Calculate new average rating
-      const oldRating = previousInteraction?.rating || 0;
-      const totalRatings = previousData?.interactions?.totalRatings || 0;
-      const currentAvgRating = parseFloat(previousData?.interactions?.averageRating || '0');
-
-      let newTotalRatings = totalRatings;
-      let newAvgRating = currentAvgRating;
-
-      if (oldRating === 0) {
-        // Adding new rating
-        newTotalRatings++;
-        newAvgRating = ((currentAvgRating * totalRatings) + newRating) / newTotalRatings;
-      } else {
-        // Updating existing rating
-        newAvgRating = ((currentAvgRating * totalRatings) - oldRating + newRating) / totalRatings;
-      }
-
-      // Optimistically update chapter data cache
-      queryClient.setQueryData(['chapter', chapterId], old => ({
-        ...old,
-        interactions: {
-          ...old.interactions,
-          totalRatings: newTotalRatings,
-          averageRating: newAvgRating.toFixed(1),
-          userInteraction: {
-            ...old.interactions.userInteraction,
-            rating: newRating
-          }
-        }
-      }));
-
-      // Optimistically update user interaction cache
-      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
-        ...(old || {}),
-        rating: newRating
-      }));
-
-      return { previousData, previousInteraction };
-    },
-    onError: (err, variables, context) => {
-      // Reset to previous values on error
-      if (context?.previousData) {
-        queryClient.setQueryData(['chapter', chapterId], context.previousData);
-      }
-      if (context?.previousInteraction) {
-        queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], context.previousInteraction);
-      }
-      console.error('Failed to update rating:', err);
-    },
-    onSuccess: (response) => {
-      // Update with actual server data
-      queryClient.setQueryData(['chapter', chapterId], old => {
-        if (!old) return old;
-        return {
-          ...old,
-          interactions: {
-            ...old.interactions,
-            totalRatings: response.totalRatings || old?.interactions?.totalRatings || 0,
-            averageRating: response.averageRating || old?.interactions?.averageRating || '0.0',
-            userInteraction: {
-              ...old.interactions.userInteraction,
-              rating: response.rating
-            }
-          }
-        };
-      });
-
-      // Update user interaction cache with the new rating
-      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
-        ...(old || {}),
-        rating: response.rating
-      }));
-
-      // Set local state
-      setCurrentRating(response.rating);
-      
-      // Invalidate related queries to ensure consistency
-      queryClient.invalidateQueries(['chapter', chapterId]);
-      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
-
-      // Make sure to close the modal
-      setShowRatingModal(false);
-    }
-  });
-
-  /**
-   * Handles submitting a rating for the chapter
-   */
-  const handleSubmitRating = async (newRating) => {
-    if (!user) {
-      alert('Vui lòng đăng nhập để đánh giá chương này');
-      setShowRatingModal(false);
-      return;
-    }
-
-    // Use the rating passed from the modal or fallback to currentRating
-    const ratingToSubmit = typeof newRating === 'number' ? newRating : currentRating;
-    
-    if (ratingToSubmit === 0) {
-      alert('Vui lòng chọn đánh giá');
-      return;
-    }
-
-    try {
-      // Submit the rating through the mutation
-      await rateMutation.mutateAsync(ratingToSubmit);
-      
-      // Explicitly close the modal
-      setShowRatingModal(false);
-    } catch (error) {
-      console.error('Không thể đánh giá chương:', error);
-      alert('Không thể gửi đánh giá. Vui lòng thử lại.');
-    }
-  };
-
   /**
    * Handles sharing the chapter on social media
    * @param {string} platform - Social media platform to share on
@@ -1244,41 +1083,6 @@ const Chapter = ({ novelId, chapterId }) => {
     }
 
     window.open(shareUrl, 'ShareWindow', 'height=450, width=550, toolbar=0, menubar=0');
-  };
-
-  // Handle mode change
-  const handleModeChange = async (newMode, currentContent) => {
-    try {
-      const headers = getAuthHeaders();
-      if (!headers.Authorization) {
-        setShowLoginModal(true);
-        return;
-      }
-      
-      const response = await axios.put(
-        `${config.backendUrl}/api/chapters/${chapterId}`,
-        {
-          mode: newMode,
-          content: currentContent
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${getValidToken()}`
-          }
-        }
-      );
-      
-      // Invalidate queries to ensure fresh data
-      queryClient.invalidateQueries(['chapter', chapterId]);
-    } catch (error) {
-      console.error('Failed to update chapter mode:', error);
-      
-      // Revert optimistic update if request failed
-      queryClient.invalidateQueries(['chapter', chapterId]);
-      
-      // Display error to user (optional)
-      setError('Không thể cập nhật chế độ chương. Vui lòng thử lại.');
-    }
   };
 
   // Check if user can edit
@@ -1374,7 +1178,6 @@ const Chapter = ({ novelId, chapterId }) => {
           lineHeight={lineHeight}
           editorRef={editorRef}
           getSafeHtml={getSafeHtml}
-          onModeChange={handleModeChange}
           canEdit={canEdit}
           userRole={user?.role || 'user'}
           moduleData={moduleData}
@@ -1391,11 +1194,7 @@ const Chapter = ({ novelId, chapterId }) => {
         <ChapterActions
           isLiked={isLiked}
           likeCount={likeCount}
-          currentRating={currentRating}
-          averageRating={averageRating}
-          ratingCount={ratingCount}
           handleLike={handleLike}
-          setShowRatingModal={setShowRatingModal}
         />
       </div>
 
@@ -1473,14 +1272,6 @@ const Chapter = ({ novelId, chapterId }) => {
         applyTheme={applyTheme}
       />
 
-      <RatingModal
-        showRatingModal={showRatingModal}
-        setShowRatingModal={setShowRatingModal}
-        currentRating={currentRating}
-        setCurrentRating={setCurrentRating}
-        handleSubmitRating={handleSubmitRating}
-      />
-
       <ReportModal
         showReportModal={showReportModal}
         setShowReportModal={setShowReportModal}
@@ -1491,9 +1282,9 @@ const Chapter = ({ novelId, chapterId }) => {
         chapterId={chapterId}
         chapterTitle={chapter?.title}
         novelId={novelId}
-              />
-      </div>
-    );
+      />
+    </div>
+  );
 };
 
 export default Chapter; 

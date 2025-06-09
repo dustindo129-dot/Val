@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faTimes, faStar as fasStar
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
-import { faStar as farStar } from '@fortawesome/free-regular-svg-icons';
 import api from '../../services/api';
 import '../../styles/components/ReportModal.css';
 
@@ -107,113 +106,21 @@ export const SettingsModal = ({
                 onClick={() => applyTheme('light')}
               >
                 Sáng
-                {theme === 'light' && <FontAwesomeIcon icon={fasStar} className="theme-check" />}
               </button>
               <button 
                 className={`theme-btn sepia ${theme === 'sepia' ? 'active' : ''}`}
                 onClick={() => applyTheme('sepia')}
               >
                 Sepia
-                {theme === 'sepia' && <FontAwesomeIcon icon={fasStar} className="theme-check" />}
               </button>
               <button 
                 className={`theme-btn dark ${theme === 'dark' ? 'active' : ''}`}
                 onClick={() => applyTheme('dark')}
               >
                 Tối
-                {theme === 'dark' && <FontAwesomeIcon icon={fasStar} className="theme-check" />}
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const RatingModal = ({
-  showRatingModal,
-  setShowRatingModal,
-  currentRating,
-  setCurrentRating,
-  handleSubmitRating
-}) => {
-  // Store temporary rating
-  const [tempRating, setTempRating] = useState(currentRating);
-  
-  // Update tempRating when modal opens or currentRating changes
-  React.useEffect(() => {
-    if (showRatingModal || currentRating !== tempRating) {
-      setTempRating(currentRating);
-    }
-  }, [showRatingModal, currentRating]);
-  
-  // Early return if modal is not shown
-  if (!showRatingModal) return null;
-
-  const handleCancel = () => {
-    // Reset temporary rating to the current rating when canceling
-    setTempRating(currentRating);
-    setShowRatingModal(false);
-  };
-
-  const handleSubmit = () => {
-    // Call the submission handler with the temporary rating
-    handleSubmitRating(tempRating);
-  };
-
-  return (
-    <div className="rating-modal-container">
-      <div className="rating-modal">
-        <div className="rating-modal-header">
-          <h3>Đánh giá chương</h3>
-          <button 
-            className="close-modal-btn"
-            onClick={handleCancel}
-          >
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
-        </div>
-        
-        <div className="rating-modal-body">
-          <div className="star-rating">
-            {[1, 2, 3, 4, 5].map(rating => (
-              <span 
-                key={rating}
-                onClick={() => setTempRating(rating)}
-                className={`star-icon ${tempRating >= rating ? 'active' : ''}`}
-              >
-                <FontAwesomeIcon 
-                  icon={tempRating >= rating ? fasStar : farStar} 
-                  size="2x"
-                />
-              </span>
-            ))}
-          </div>
-          <p className="rating-text">
-            {tempRating === 1 && "Kém"}
-            {tempRating === 2 && "Trung bình"}
-            {tempRating === 3 && "Tốt"}
-            {tempRating === 4 && "Rất tốt"}
-            {tempRating === 5 && "Xuất sắc"}
-            {tempRating === 0 && "Chọn đánh giá"}
-          </p>
-        </div>
-        
-        <div className="rating-modal-footer">
-          <button 
-            className="cancel-rating-btn"
-            onClick={handleCancel}
-          >
-            Hủy
-          </button>
-          <button 
-            className="submit-rating-btn"
-            onClick={handleSubmit}
-            disabled={tempRating === 0}
-          >
-            Gửi đánh giá
-          </button>
         </div>
       </div>
     </div>

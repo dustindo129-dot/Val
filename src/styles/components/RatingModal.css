@@ -30,6 +30,90 @@
   pointer-events: none;
 }
 
+/* Rating modal action footer styles */
+.rating-modal-action-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.rating-modal-cancel-btn,
+.rating-modal-submit-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-width: 85px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rating-modal-cancel-btn {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.rating-modal-cancel-btn:hover:not(:disabled) {
+  background-color: #e9ecef;
+  color: #495057;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rating-modal-submit-btn {
+  background-color: #007bff;
+  color: white;
+  border: 1px solid #007bff;
+}
+
+.rating-modal-submit-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+  border-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.rating-modal-cancel-btn:disabled,
+.rating-modal-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.rating-modal-submit-btn:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* Dark mode support */
+:root.dark-mode .rating-modal-cancel-btn {
+  background-color: #343a40;
+  color: #adb5bd;
+  border-color: #495057;
+}
+
+:root.dark-mode .rating-modal-cancel-btn:hover:not(:disabled) {
+  background-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .rating-modal-submit-btn {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+:root.dark-mode .rating-modal-submit-btn:hover:not(:disabled) {
+  background-color: #0b5ed7;
+  border-color: #0b5ed7;
+}
+
 /* Reviews section styles */
 .reviews-section {
   margin-top: 20px;

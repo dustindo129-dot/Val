@@ -509,17 +509,9 @@
   color: white;
 }
 
-.action-btn.rate {
-  color: #f39c12;
-  border-color: #f39c12;
-}
 
-.action-btn.rate:hover, .action-btn.rate.active {
-  background-color: #f39c12;
-  color: white;
-}
 
-.like-count, .rate-count {
+.like-count {
   font-weight: 600;
   font-size: 0.85rem;
   padding: 2px 5px;
