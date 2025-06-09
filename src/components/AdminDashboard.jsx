@@ -1661,7 +1661,7 @@ const AdminDashboard = () => {
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                       'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount', 'contextmenu'
+                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
                     ],
                     toolbar: 'undo redo | formatselect | ' +
                       'bold italic underline strikethrough | ' +
@@ -1768,7 +1768,7 @@ const AdminDashboard = () => {
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'charmap',
                       'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount', 'contextmenu'
+                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
                     ],
                     toolbar: 'undo redo | formatselect | ' +
                       'bold italic underline | ' +
