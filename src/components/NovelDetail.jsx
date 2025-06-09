@@ -26,8 +26,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import '../styles/components/NovelDetail.css';
 import '../styles/components/RedesignedNovelDetail.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComment, faLock } from '@fortawesome/free-solid-svg-icons';
+
 import LoadingSpinner from './LoadingSpinner';
 import NovelInfo from './novel-detail/NovelInfo';
 import ScrollToTop from './ScrollToTop';
@@ -430,7 +429,7 @@ const NovelDetail = ({ novelId }) => {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [autoLoadComments, setAutoLoadComments] = useState(false);
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [moduleForm, setModuleForm] = useState({ 
     title: '', 
@@ -468,6 +467,15 @@ const NovelDetail = ({ novelId }) => {
     
     fetchUserBalance();
   }, [isAuthenticated, user]);
+
+  // Auto-show comments after delay (Option 1: Always show after delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAutoLoadComments(true);
+    }, 2000); // 2 second delay after page load
+    
+    return () => clearTimeout(timer);
+  }, []); // Run once when component mounts
 
   // Handler for deleting modules
   const handleDeleteModule = useCallback(async (moduleId) => {
@@ -831,10 +839,7 @@ const NovelDetail = ({ novelId }) => {
     refetchOnReconnect: false // Don't refetch when reconnecting
   });
   
-  // Toggle comments section
-  const toggleComments = () => {
-    setIsCommentsOpen(!isCommentsOpen);
-  };
+
 
   // Add handler functions for chapters
   const handleChapterReorder = useCallback(async (moduleId, chapterId, direction) => {
@@ -1112,26 +1117,9 @@ const NovelDetail = ({ novelId }) => {
             )}
           </div>
 
-          {/* Comments section */}
-          <div className="comments-section">
-            <button
-              className="comments-toggle-btn" 
-              onClick={toggleComments}
-            >
-              {isCommentsOpen ? (
-                <>
-                  <FontAwesomeIcon icon={faLock} className="icon-margin-right" />
-                  Ẩn bình luận
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faComment} className="icon-margin-right" />
-                  Hiển thị bình luận
-                </>
-              )}
-            </button>
-            
-            {isCommentsOpen && (
+          {/* Comments section - Auto-loads after delay */}
+          {autoLoadComments && (
+            <div className="comments-section">
               <Suspense fallback={<LoadingSpinner />}>
                 <CommentSection 
                   contentId={novelId}
@@ -1140,8 +1128,8 @@ const NovelDetail = ({ novelId }) => {
                   isAuthenticated={!!user}
                 />
               </Suspense>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Rating Modal */}
           {isRatingModalOpen && (

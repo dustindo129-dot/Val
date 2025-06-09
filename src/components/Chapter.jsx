@@ -232,7 +232,7 @@ const Chapter = ({ novelId, chapterId }) => {
   const [editedTitle, setEditedTitle] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+
   const [showChapterList, setShowChapterList] = useState(false);
   const [showNavControls, setShowNavControls] = useState(false);
   const [error, setError] = useState(null);
@@ -1428,8 +1428,6 @@ const Chapter = ({ novelId, chapterId }) => {
 
       {/* Comments section */}
       <ChapterCommentsSection
-        isCommentsOpen={isCommentsOpen}
-        setIsCommentsOpen={setIsCommentsOpen}
         novelId={novelId}
         chapterId={chapterId}
         user={user}
