@@ -19,7 +19,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/SecondaryNavbar.css';
 import axios from 'axios';
 import config from '../config/config';
@@ -51,23 +51,46 @@ const SecondaryNavbar = () => {
   /**
    * Fetch user balance when authenticated
    */
-  useEffect(() => {
-    const fetchUserBalance = async () => {
-      if (isAuthenticated && user) {
-        try {
-          const response = await axios.get(
-            `${config.backendUrl}/api/users/${user.username}/profile`,
-            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-          );
-          setUserBalance(response.data.balance || 0);
-        } catch (error) {
-          console.error('Failed to fetch user balance:', error);
-        }
+  const fetchUserBalance = useCallback(async () => {
+    if (isAuthenticated && user) {
+      try {
+        const timestamp = Date.now();
+        const response = await axios.get(
+          `${config.backendUrl}/api/users/${user.username}/profile`,
+          { 
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            params: { _t: timestamp } // Cache busting parameter
+          }
+        );
+        const newBalance = response.data.balance || 0;
+        setUserBalance(newBalance);
+      } catch (error) {
+        console.error('Failed to fetch user balance:', error);
       }
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    fetchUserBalance();
+  }, [fetchUserBalance]);
+
+  /**
+   * Listen for balance update events from other components
+   */
+  useEffect(() => {
+    const handleBalanceUpdate = () => {
+      // Small delay to ensure database transaction is committed
+      setTimeout(() => {
+        fetchUserBalance();
+      }, 100);
     };
 
-    fetchUserBalance();
-  }, [isAuthenticated, user]);
+    window.addEventListener('balanceUpdated', handleBalanceUpdate);
+    
+    return () => {
+      window.removeEventListener('balanceUpdated', handleBalanceUpdate);
+    };
+  }, [fetchUserBalance]);
 
   /**
    * Add click outside listener to close menu when clicking outside

@@ -320,6 +320,8 @@ const Market = () => {
       // Update user balance (only for non-web requests)
       if (requestType !== 'web') {
         setUserBalance(prevBalance => prevBalance - Number(depositAmount));
+        // Notify other components about balance change
+        window.dispatchEvent(new CustomEvent('balanceUpdated'));
       }
       
       // Add request to withdrawableRequests after 24 hours (for user requests only)
@@ -816,6 +818,8 @@ const Market = () => {
       
       // Update user balance
       setUserBalance(prevBalance => prevBalance - Number(contributionAmount));
+      // Notify other components about balance change
+      window.dispatchEvent(new CustomEvent('balanceUpdated'));
       
       // Reset form and close modal
       handleCloseContributionModal();

@@ -54,7 +54,7 @@ const MarketRequestsList = ({
 
   const isAdmin = user && user.role === 'admin';
   const webRequests = requests.filter(req => req.type === 'web');
-  const userRequests = requests.filter(req => req.type === 'new' || req.type === 'open');
+  const userRequests = requests.filter(req => req.type === 'new');
 
   return (
     <>
