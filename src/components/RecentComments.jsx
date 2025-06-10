@@ -84,9 +84,7 @@ const CommentCard = memo(({ comment }) => {
     } else {
       linkTitle = 'Chapter';
     }
-  } else if (comment.contentType === 'feedback') {
-    linkPath = '/phan-hoi';
-    linkTitle = 'Feedback';
+  
   }
 
   // Decode HTML entities in the comment text

@@ -208,13 +208,7 @@ export const generateLocalizedAdminDashboardUrl = () => {
   return '/bang-quan-tri';
 };
 
-/**
- * Generates a localized feedback URL
- * @returns {string} Localized feedback URL
- */
-export const generateLocalizedFeedbackUrl = () => {
-  return '/phan-hoi';
-};
+
 
 /**
  * Generates a localized market URL

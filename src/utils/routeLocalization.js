@@ -27,7 +27,7 @@ export const PATH_MAPPINGS = {
   'reset-password': 'phuc-hoi-mat-khau',
   
   // Other features
-  'feedback': 'phan-hoi',
+
   'market': 'bang-yeu-cau',
   'top-up': 'nap-tien',
   'topup-management': 'quan-ly-giao-dich',

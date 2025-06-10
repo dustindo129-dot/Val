@@ -135,9 +135,7 @@ const SecondaryNavbar = () => {
             <Link to="/oln/trang/1" className={`nav-link ${isActive('/oln')}`} onClick={() => setIsMenuOpen(false)}>
               Truyện sáng tác
             </Link>
-            <Link to="/phan-hoi" className={`nav-link ${isActive('/phan-hoi')}`} onClick={() => setIsMenuOpen(false)}>
-              Phản hồi
-            </Link>
+
             {/* Market link - visible to everyone */}
             <Link to="/bang-yeu-cau" className={`nav-link ${isActive('/bang-yeu-cau')}`} onClick={() => setIsMenuOpen(false)}>
               Bảng yêu cầu

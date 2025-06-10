@@ -5,7 +5,7 @@ Allow: /
 # Allow all important Vietnamese SEO pages
 Allow: /danh-sach-truyen
 Allow: /trang/*
-Allow: /phan-hoi
+
 Allow: /bang-yeu-cau
 Allow: /nap-tien
 Allow: /oln

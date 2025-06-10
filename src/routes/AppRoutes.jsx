@@ -15,7 +15,7 @@ const UserBookmarks = lazy(() => import('../pages/UserBookmarks'));
 const ChangePassword = lazy(() => import('../pages/ChangePassword'));
 const Chapter = lazy(() => import('../components/Chapter'));
 const ResetPassword = lazy(() => import('../components/auth/ResetPassword'));
-const Feedback = lazy(() => import('../pages/Feedback'));
+
 const OLN = lazy(() => import('../pages/OLN'));
 const Market = lazy(() => import('../pages/Market'));
 const TopUp = lazy(() => import('../pages/TopUp'));
@@ -43,7 +43,6 @@ function AppRoutes() {
         <Route path="/truyen/:novelId/tap/:moduleSlug/them-chuong" element={<LazyRoute><ProtectedRoute><ChapterDashboard /></ProtectedRoute></LazyRoute>} />
         
         {/* Vietnamese Pages */}
-        <Route path="/phan-hoi" element={<LazyRoute><Feedback /></LazyRoute>} />
         <Route path="/bang-yeu-cau" element={<LazyRoute><Market /></LazyRoute>} />
         <Route path="/nap-tien" element={<LazyRoute><TopUp /></LazyRoute>} />
         <Route path="/quan-ly-giao-dich" element={<LazyRoute><ProtectedRoute><TopUpManagement /></ProtectedRoute></LazyRoute>} />

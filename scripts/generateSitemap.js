@@ -60,7 +60,7 @@ async function generateSitemap() {
     // Add localized Vietnamese pages
     sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/danh-sach-truyen')}</loc>\n    <priority>0.9</priority>\n  </url>\n`;
     sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/oln')}</loc>\n    <priority>0.7</priority>\n  </url>\n`;
-    sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/phan-hoi')}</loc>\n    <priority>0.6</priority>\n  </url>\n`;
+  
     sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/bang-yeu-cau')}</loc>\n    <priority>0.6</priority>\n  </url>\n`;
     sitemap += `  <url>\n    <loc>${createSafeUrl(baseUrl, '/nap-tien')}</loc>\n    <priority>0.5</priority>\n  </url>\n`;
     

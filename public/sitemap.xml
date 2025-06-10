@@ -12,10 +12,7 @@
     <loc>https://valvrareteam.net/oln</loc>
     <priority>0.7</priority>
   </url>
-  <url>
-    <loc>https://valvrareteam.net/phan-hoi</loc>
-    <priority>0.6</priority>
-  </url>
+
   <url>
     <loc>https://valvrareteam.net/bang-yeu-cau</loc>
     <priority>0.6</priority>
