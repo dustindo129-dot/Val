@@ -135,7 +135,6 @@ export default defineConfig(({ command, mode }) => {
       global: 'globalThis',
     },
     build: {
-      outDir: 'dist/client',
       minify: isProduction,
       sourcemap: !isProduction,
       // Don't empty outDir to preserve the .gitkeep file
