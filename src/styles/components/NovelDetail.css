@@ -902,7 +902,7 @@
 }
 
 /* Even smaller screens */
-@media (max-width: 480px) {
+@media (max-width: 576px) {
   .novel-cover-section {
     width: 160px;
     height: 240px;
@@ -914,5 +914,48 @@
 
   .module-cover-image {
     height: 180px;
+  }
+
+  /* Stack chapter items vertically on small screens */
+  .module-chapter-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 8px;
+  }
+
+  .chapter-list-content {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .chapter-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .novel-detail-chapter-date {
+    margin-left: 0;
+    padding-left: 0;
+    font-size: 0.75rem;
+    margin-top: 4px;
+  }
+
+  .chapter-number {
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+    margin-right: 8px;
+  }
+
+  .edit-module-btn, 
+  .delete-module-btn, 
+  .add-chapter-btn {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    min-width: 45px;
   }
 }

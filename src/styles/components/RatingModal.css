@@ -186,4 +186,167 @@
   padding: 10px 0;
   font-size: 14px;
   color: #666;
+}
+
+/* Reviews loading styles */
+.reviews-loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.loading-dots {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+/* Dark mode support for loading */
+:root.dark-mode .reviews-loading {
+  color: #adb5bd;
+}
+
+/* Rating modal height constraint */
+.rating-modal {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .rating-modal {
+    width: 95%;
+    padding: 20px;
+    margin: 10px;
+  }
+
+  .rating-modal-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .rating-stars-container {
+    gap: 8px;
+    margin: 15px 0;
+  }
+
+  .star-button {
+    padding: 3px;
+  }
+
+  .rating-value-display {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+
+  .review-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .reviews-list {
+    max-height: 200px;
+  }
+
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .review-rating {
+    order: -1;
+  }
+}
+
+@media (max-width: 576px) {
+  .rating-modal {
+    width: 98%;
+    padding: 15px;
+    margin: 5px;
+    border-radius: 8px;
+  }
+
+  .rating-modal-header {
+    margin-bottom: 15px;
+  }
+
+  .rating-modal-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .close-button {
+    font-size: 1.6rem;
+  }
+
+  .rating-stars-container {
+    gap: 6px;
+    margin: 12px 0;
+  }
+
+  .star-button {
+    padding: 2px;
+  }
+
+  .rating-value-display {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+
+  .review-input-container {
+    margin: 12px 0;
+  }
+
+  .review-input {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+
+  .reviews-section {
+    margin-top: 15px;
+    padding-top: 15px;
+  }
+
+  .reviews-section h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .reviews-list {
+    max-height: 150px;
+  }
+
+  .review-item {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .review-header {
+    margin-bottom: 6px;
+  }
+
+  .review-user {
+    font-size: 14px;
+  }
+
+  .review-rating {
+    font-size: 14px;
+  }
+
+  .review-date {
+    font-size: 11px;
+  }
+
+  .review-content {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .reviews-loading {
+    padding: 15px;
+    font-size: 13px;
+  }
 } 

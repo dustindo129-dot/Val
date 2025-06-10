@@ -262,7 +262,7 @@ const ModuleChapters = memo(({
                     {canDeleteContent && (
                       <button
                         className="delete-chapter-btn"
-                        onClick={() => handleChapterDelete(moduleId, chapterId)}
+                        onClick={() => handleChapterDelete(chapterId)}
                         title="Xóa chương"
                       >
                         Xóa

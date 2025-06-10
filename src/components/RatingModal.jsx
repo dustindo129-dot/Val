@@ -22,7 +22,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
   });
 
   // Get reviews for this novel
-  const { data: reviewsData } = useQuery({
+  const { data: reviewsData, isLoading: isLoadingReviews } = useQuery({
     queryKey: ['novel-reviews', novelId],
     queryFn: () => api.getNovelReviews(novelId),
     enabled: isOpen && !!novelId,
@@ -234,32 +234,41 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
         </div>
 
         {/* Reviews section */}
-        {reviewsData?.reviews?.length > 0 && (
+        {(isLoadingReviews || reviewsData?.reviews?.length > 0) && (
           <div className="reviews-section">
             <h3>Đánh giá từ độc giả</h3>
-            <div className="reviews-list">
-              {reviewsData.reviews.map(review => (
-                <div key={review.id} className="review-item">
-                  <div className="review-header">
-                    <span className="review-user">{review.user.displayName || review.user.username}</span>
-                    <div className="review-rating">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>
-                          {i < review.rating ? '★' : '☆'}
-                        </span>
-                      ))}
-                    </div>
-                    <span className="review-date">{formatDate(review.date)}</span>
-                  </div>
-                  <div className="review-content">{review.review}</div>
-                </div>
-              ))}
-            </div>
             
-            {reviewsData.pagination.totalPages > 1 && (
-              <div className="reviews-pagination">
-                <span>Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}</span>
+            {isLoadingReviews ? (
+              <div className="reviews-loading">
+                <span>Đang tải đánh giá<span className="loading-dots">...</span></span>
               </div>
+            ) : (
+              <>
+                <div className="reviews-list">
+                  {reviewsData.reviews.map(review => (
+                    <div key={review.id} className="review-item">
+                      <div className="review-header">
+                        <span className="review-user">{review.user.displayName || review.user.username}</span>
+                        <div className="review-rating">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>
+                              {i < review.rating ? '★' : '☆'}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="review-date">{formatDate(review.date)}</span>
+                      </div>
+                      <div className="review-content">{review.review}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                {reviewsData.pagination.totalPages > 1 && (
+                  <div className="reviews-pagination">
+                    <span>Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
