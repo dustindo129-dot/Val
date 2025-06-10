@@ -412,6 +412,27 @@
   .history-table td:nth-child(2) {
     display: none;
   }
+  
+  /* Compact modal sizing for mobile with browser nav bars */
+  .contribution-history-modal-content {
+    height: 70vh;
+    margin: 15vh auto;
+    width: 95%;
+    max-height: none;
+  }
+  
+  .contribution-history-modal-body {
+    padding: 12px;
+    overflow-y: auto;
+  }
+  
+  .contribution-history-modal-header {
+    padding: 10px 15px;
+  }
+  
+  .modal-title {
+    font-size: 1.1rem;
+  }
 }
 
 /* Dark mode support */

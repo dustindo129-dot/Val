@@ -315,6 +315,47 @@
   }
 }
 
+@media (max-width: 576px) {
+  /* Compact modal sizing for mobile with browser nav bars */
+  .gift-modal-content {
+    height: 70vh;
+    margin: 15vh auto;
+    width: 95%;
+    max-height: none;
+  }
+  
+  .gift-modal-body {
+    padding: 12px;
+    overflow-y: auto;
+  }
+  
+  .gift-modal-header {
+    padding: 10px 15px;
+  }
+  
+  .gift-modal-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .gift-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .gift-option {
+    padding: 10px;
+  }
+  
+  .gift-icon {
+    font-size: 1.3rem;
+  }
+  
+  .gift-modal-actions .btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
+
 @media (max-width: 480px) {
   .gift-grid {
     grid-template-columns: repeat(2, 1fr);

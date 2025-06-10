@@ -65,12 +65,17 @@ export const refreshToken = async () => {
       throw new Error('No token in refresh response');
       
     } catch (error) {
-      // Check if this is a recent login (within 5 minutes) to be less aggressive
-      const loginTime = localStorage.getItem('loginTime');
-      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
+      console.error('Token refresh failed:', error);
       
-      if (!isRecentLogin) {
-        // If refresh fails and it's not a recent login, clear all auth data
+      // Check if this is a recent login (within 10 minutes) to be less aggressive
+      const loginTime = localStorage.getItem('loginTime');
+      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (10 * 60 * 1000);
+      
+      // Only clear auth data if it's a 401/403 error and not a recent login
+      const isAuthError = error.response && (error.response.status === 401 || error.response.status === 403);
+      
+      if (isAuthError && !isRecentLogin) {
+        // If refresh fails due to auth error and it's not a recent login, clear auth data
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
@@ -119,16 +124,24 @@ export const setupAutoRefresh = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     
+    // Only refresh if token actually needs it (within 10 minutes of expiry)
     if (shouldRefreshToken(token)) {
-      await refreshToken();
+      try {
+        await refreshToken();
+      } catch (error) {
+        console.error('Auto-refresh failed:', error);
+        // Don't automatically logout on auto-refresh failure
+        // Let the user continue until they make an authenticated request
+      }
     }
   };
   
-  // Check every 5 minutes
-  const intervalId = setInterval(checkAndRefresh, 5 * 60 * 1000);
+  // Changed from 5 minutes to 8 minutes to avoid conflicts with query stale times
+  // This ensures token refresh happens between query refetches
+  const intervalId = setInterval(checkAndRefresh, 8 * 60 * 1000);
   
-  // Initial check
-  checkAndRefresh();
+  // Initial check after a delay to avoid conflicts during page load
+  setTimeout(checkAndRefresh, 30000); // Check after 30 seconds
   
   // Return cleanup function
   return () => clearInterval(intervalId);

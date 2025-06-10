@@ -284,7 +284,7 @@ const Chapter = ({ novelId, chapterId }) => {
       const novelRes = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
       return novelRes.data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
     enabled: !!novelId
   });
 
@@ -298,8 +298,17 @@ const Chapter = ({ novelId, chapterId }) => {
 
       return chapterRes.data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!chapterId
+    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
+    enabled: !!chapterId,
+    retry: (failureCount, error) => {
+      // Don't retry on auth errors to prevent logout loops
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      // Retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
   });
 
   // Fetch user interaction data (likes, bookmarks)
@@ -323,7 +332,14 @@ const Chapter = ({ novelId, chapterId }) => {
       }
     },
     enabled: !!chapterId && !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
+    retry: (failureCount, error) => {
+      // Don't retry on auth errors, just return default values
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 2;
+    },
     onSuccess: (data) => {
       if (data) {
         setIsLiked(data.liked || false);
@@ -491,7 +507,7 @@ const Chapter = ({ novelId, chapterId }) => {
       const res = await axios.get(`${config.backendUrl}/api/modules/${novelId}/modules/${chapter.moduleId}`);
       return res.data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
     enabled: !!chapter?.moduleId
   });
 
@@ -503,7 +519,7 @@ const Chapter = ({ novelId, chapterId }) => {
       const res = await axios.get(`${config.backendUrl}/api/chapters/module/${chapter.moduleId}`);
       return { chapters: res.data }; // Wrap the response data in a chapters property to match our expected format
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
     enabled: !!chapter?.moduleId && showChapterList, // Only fetch when dropdown is open
   });
 
@@ -572,7 +588,7 @@ const Chapter = ({ novelId, chapterId }) => {
       });
       return res.data;
     },
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60 * 15, // Changed to 15 minutes for comments as they're less critical
     enabled: !!chapterId,
     onError: () => {
       // Handle missing endpoint gracefully
