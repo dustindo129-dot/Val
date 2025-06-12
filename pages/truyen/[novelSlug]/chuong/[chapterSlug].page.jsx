@@ -58,40 +58,120 @@ export async function onBeforeRender(pageContext) {
         }
       }
       
-      // Get chapter data
+      // Get chapter data with better error handling
       if (chapterId) {
         try {
           const chapterResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/chapters/${chapterId}?skipViewTracking=true`);
-          const chapterData = await chapterResponse.json();
-          chapter = chapterData.chapter;
+          if (chapterResponse.ok) {
+            const chapterData = await chapterResponse.json();
+            chapter = chapterData.chapter;
+          } else {
+            console.error(`Chapter API returned ${chapterResponse.status} for ${chapterSlug}`);
+            // Return 404 if chapter not found instead of showing empty content
+            return {
+              pageContext: {
+                pageProps: { error: 'Chapter not found' },
+                documentProps: {
+                  title: 'Chương không tồn tại - Valvrareteam',
+                  description: 'Chương bạn tìm kiếm không tồn tại hoặc đã bị xóa.',
+                  meta: [
+                    { name: 'robots', content: 'noindex, nofollow' }
+                  ]
+                }
+              }
+            };
+          }
         } catch (chapterError) {
           console.error(`Error pre-fetching chapter with slug: ${chapterSlug}`, chapterError);
+          // Return 404 for network errors too
+          return {
+            pageContext: {
+              pageProps: { error: 'Chapter unavailable' },
+              documentProps: {
+                title: 'Chương không khả dụng - Valvrareteam',
+                description: 'Chương hiện tại không khả dụng, vui lòng thử lại sau.',
+                meta: [
+                  { name: 'robots', content: 'noindex, nofollow' }
+                ]
+              }
+            }
+          };
         }
+      } else {
+        // If we can't determine chapter ID, return 404
+        return {
+          pageContext: {
+            pageProps: { error: 'Invalid chapter URL' },
+            documentProps: {
+              title: 'URL không hợp lệ - Valvrareteam',
+              description: 'URL chương không hợp lệ.',
+              meta: [
+                { name: 'robots', content: 'noindex, nofollow' }
+              ]
+            }
+          }
+        };
       }
       
-      // Get novel data
+      // Get novel data with better error handling
       if (novelId) {
         try {
           const response = await api.fetchNovelWithModules(novelId);
           novel = response?.novel;
         } catch (novelError) {
           console.error(`Error pre-fetching novel with slug: ${novelSlug}`, novelError);
+          // Continue without novel data but log the error
         }
       }
       
-      if (chapter && novel) {
-        pageTitle = `${chapter.title} - ${novel.title} Vietsub - Valvrareteam`;
+      // Only proceed if we have chapter data
+      if (chapter) {
+        // Create unique titles and descriptions
+        const novelTitle = novel?.title || 'Truyện';
+        pageTitle = `${chapter.title} - ${novelTitle} Vietsub - Valvrareteam`;
         
         // Extract text from chapter content for description
         const text = getTextFromHTML(chapter.content || '');
         
-        pageDescription = text.length > 160 
-          ? text.substring(0, 157) + '...' 
-          : text;
+        if (text.length > 0) {
+          pageDescription = text.length > 160 
+            ? text.substring(0, 157) + '...' 
+            : text;
+        } else {
+          // Fallback description with chapter-specific info
+          pageDescription = `Đọc ${chapter.title} - ${novelTitle} vietsub chất lượng cao tại Valvrareteam. Light novel tiếng Việt cập nhật nhanh.`;
+        }
+      } else {
+        // This shouldn't happen due to early returns above, but just in case
+        return {
+          pageContext: {
+            pageProps: { error: 'Chapter data not available' },
+            documentProps: {
+              title: 'Nội dung không khả dụng - Valvrareteam',
+              description: 'Nội dung chương hiện không khả dụng.',
+              meta: [
+                { name: 'robots', content: 'noindex, nofollow' }
+              ]
+            }
+          }
+        };
       }
     }
   } catch (error) {
     console.error(`Error in onBeforeRender for chapter ${chapterSlug}:`, error);
+    // Return error page instead of empty content
+    return {
+      pageContext: {
+        pageProps: { error: 'Server error' },
+        documentProps: {
+          title: 'Lỗi server - Valvrareteam',
+          description: 'Đã xảy ra lỗi khi tải trang.',
+          meta: [
+            { name: 'robots', content: 'noindex, nofollow' }
+          ]
+        }
+      }
+    };
   }
   
   // Generate comprehensive meta data for SEO

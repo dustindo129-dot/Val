@@ -35,6 +35,72 @@
   --bookmark-active: #95a5a6;
 }
 
+/* Error Container Styles */
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 8px;
+  background: var(--background-secondary, #f8f9fa);
+  border: 1px solid var(--border-color, #e9ecef);
+}
+
+.error-content h1 {
+  color: var(--error-color, #dc3545);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.error-content p {
+  color: var(--text-secondary, #6c757d);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-actions .btn-primary,
+.error-actions .btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.error-actions .btn-primary {
+  background: var(--primary-color, #007bff);
+  color: white;
+}
+
+.error-actions .btn-primary:hover {
+  background: var(--primary-hover, #0056b3);
+}
+
+.error-actions .btn-secondary {
+  background: var(--secondary-color, #6c757d);
+  color: white;
+}
+
+.error-actions .btn-secondary:hover {
+  background: var(--secondary-hover, #545b62);
+}
+
 /* Main container styles */
 .chapter-container {
   max-width: 1200px;
@@ -508,8 +574,6 @@
   background-color: #e74c3c;
   color: white;
 }
-
-
 
 .like-count {
   font-weight: 600;
@@ -1112,7 +1176,6 @@
   display: block;
   height: 1.5em;
 }
-
 
 /* Force consistent text alignment and prevent side scrolling */
 .chapter-content p {

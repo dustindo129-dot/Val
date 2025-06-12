@@ -926,8 +926,11 @@
 
   .chapter-list-content {
     width: 100%;
+    display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 8px;
+    gap: 8px;
   }
 
   .chapter-actions {
@@ -938,10 +941,12 @@
   }
 
   .novel-detail-chapter-date {
-    margin-left: 0;
-    padding-left: 0;
+    margin-left: auto;
+    padding-left: 8px;
     font-size: 0.75rem;
-    margin-top: 4px;
+    margin-top: 0;
+    flex-shrink: 0;
+    text-align: right;
   }
 
   .chapter-number {

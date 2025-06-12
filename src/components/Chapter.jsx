@@ -209,7 +209,34 @@ const ChapterSEO = ({ novel, chapter }) => {
   );
 };
 
-const Chapter = ({ novelId, chapterId }) => {
+const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, preloadedNovelSlug, preloadedChapterSlug }) => {
+  // Handle error state first
+  if (error) {
+    return (
+      <div className="error-container">
+        <div className="error-content">
+          <h1>Oops! Có lỗi xảy ra</h1>
+          <p>
+            {error === 'Chapter not found' && 'Chương bạn tìm kiếm không tồn tại hoặc đã bị xóa.'}
+            {error === 'Chapter unavailable' && 'Chương hiện tại không khả dụng, vui lòng thử lại sau.'}
+            {error === 'Invalid chapter URL' && 'URL chương không hợp lệ.'}
+            {error === 'Chapter data not available' && 'Nội dung chương hiện không khả dụng.'}
+            {error === 'Server error' && 'Đã xảy ra lỗi server, vui lòng thử lại sau.'}
+            {!['Chapter not found', 'Chapter unavailable', 'Invalid chapter URL', 'Chapter data not available', 'Server error'].includes(error) && 'Đã xảy ra lỗi không xác định.'}
+          </p>
+          <div className="error-actions">
+            <button onClick={() => window.history.back()} className="btn-secondary">
+              Quay lại
+            </button>
+            <a href="/" className="btn-primary">
+              Trang chủ
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -235,7 +262,7 @@ const Chapter = ({ novelId, chapterId }) => {
 
   const [showChapterList, setShowChapterList] = useState(false);
   const [showNavControls, setShowNavControls] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorState, setError] = useState(null);
 
   // Modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -1123,8 +1150,8 @@ const Chapter = ({ novelId, chapterId }) => {
   }
 
   // Show error state
-  if (chapterError || error) {
-    return <div className="error">{chapterError?.message || error}</div>;
+  if (chapterError || errorState) {
+    return <div className="error">{chapterError?.message || errorState}</div>;
   }
 
   // Show not found state
