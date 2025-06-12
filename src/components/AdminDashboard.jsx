@@ -1692,46 +1692,81 @@ const AdminDashboard = () => {
                         }
                       });
                     },
+                    // Enhanced paste processing for Google Docs
                     paste_preprocess: function(plugin, args) {
-                      const wrapper = document.createElement('div');
-                      wrapper.innerHTML = args.content;
-
-                      // First remove all Word-specific tags and junk
-                      wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
+                      // Handle footnote markers first
+                      args.content = args.content.replace(
+                        /\[(\d+)\]/g,
+                        '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
+                      );
                       
-                      // Remove empty and problematic spans
-                      wrapper.querySelectorAll('span').forEach(span => {
-                        if (!span.textContent.trim()) {
-                          span.remove(); // Remove empty spans
-                        } else {
-                          // Replace nested spans with their content
-                          const text = document.createTextNode(span.textContent);
-                          span.replaceWith(text);
-                        }
-                      });
+                      let content = args.content;
                       
-                      // Strip unnecessary div wrappers that might cause layout issues
-                      wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
-                        if (div.children.length === 0 || div.textContent.trim() === '') {
-                          div.remove();
-                        } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
-                          // Unwrap divs that just contain a single paragraph
-                          div.replaceWith(div.children[0]);
-                        }
-                      });
-
-                      // Clean up section breaks and format as proper breaks
-                      args.content = wrapper.innerHTML
-                        .replace(/<!--Section Break-->/g, '<br clear="all">')
-                        .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
-                        // Replace multiple consecutive breaks with a single one
-                        .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
+                      // Remove Google Docs specific attributes but preserve formatting styles
+                      content = content.replace(/\s*dir="[^"]*"/g, '');
+                      
+                      // Convert Google Docs styling to semantic HTML BEFORE removing spans
+                      content = content.replace(/<span[^>]*style="[^"]*font-style:\s*italic[^"]*"[^>]*>(.*?)<\/span>/gi, '<em>$1</em>');
+                      content = content.replace(/<span[^>]*style="[^"]*font-weight:\s*bold[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong>$1</strong>');
+                      content = content.replace(/<span[^>]*style="[^"]*text-decoration:\s*underline[^"]*"[^>]*>(.*?)<\/span>/gi, '<u>$1</u>');
+                      
+                      // Handle mixed formatting (bold + italic, etc.)
+                      content = content.replace(/<span[^>]*style="[^"]*font-style:\s*italic[^;]*;[^"]*font-weight:\s*bold[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong><em>$1</em></strong>');
+                      content = content.replace(/<span[^>]*style="[^"]*font-weight:\s*bold[^;]*;[^"]*font-style:\s*italic[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong><em>$1</em></strong>');
+                      
+                      // Remove remaining empty or unstyled spans
+                      content = content.replace(/<span[^>]*>([^<]*)<\/span>/gi, '$1');
+                      content = content.replace(/<span[^>]*><\/span>/gi, '');
+                      
+                      args.content = content;
                     },
+                    // Post-process to clean up Google Docs span/break mess
                     paste_postprocess: function(plugin, args) {
-                      // Additional cleanup after paste
-                      args.node.querySelectorAll('span').forEach(span => {
-                        span.className = 'tinymce-inline-span';
-                      });
+                      let content = args.node.innerHTML;
+                      
+                      // Remove remaining empty spans
+                      content = content.replace(/<span[^>]*><\/span>/gi, '');
+                      content = content.replace(/<span[^>]*>\s*<\/span>/gi, '');
+                      
+                      // Convert excessive break patterns to paragraph structure
+                      // First, handle span-wrapped breaks
+                      content = content.replace(/<span[^>]*><br[^>]*><\/span>/gi, '<br>');
+                      content = content.replace(/<span[^>]*>\s*<br[^>]*>\s*<\/span>/gi, '<br>');
+                      
+                      // Unwrap content from remaining spans (Google Docs loves to wrap everything)
+                      content = content.replace(/<span[^>]*>([^<]+)<\/span>/gi, '$1');
+                      
+                      // Clean up multiple consecutive breaks and convert to paragraphs
+                      content = content.replace(/(<br[^>]*>\s*){2,}/gi, '</p><p>');
+                      
+                      // Ensure content starts and ends with paragraph tags
+                      if (!content.startsWith('<p>') && !content.startsWith('<h')) {
+                        content = '<p>' + content;
+                      }
+                      if (!content.endsWith('</p>') && !content.endsWith('>')) {
+                        content = content + '</p>';
+                      }
+                      
+                      // Clean up any remaining breaks at paragraph boundaries
+                      content = content.replace(/<p><br[^>]*>/gi, '<p>');
+                      content = content.replace(/<br[^>]*><\/p>/gi, '</p>');
+                      
+                      // Remove empty paragraphs
+                      content = content.replace(/<p>\s*<\/p>/gi, '');
+                      
+                      // Handle titles that might be wrapped in spans
+                      content = content.replace(/<h1><span[^>]*>([^<]+)<\/span><\/h1>/gi, '<h1>$1</h1>');
+                      
+                      args.node.innerHTML = content;
+                    },
+                    // Simplified paste filter to preserve formatting
+                    paste_filter: function(plugin, args) {
+                      // Normalize existing semantic tags
+                      args.content = args.content.replace(/<(\/?)(?:strong|b)(?:\s[^>]*)?>/gi, '<$1strong>');
+                      args.content = args.content.replace(/<(\/?)(?:em|i)(?:\s[^>]*)?>/gi, '<$1em>');
+                      args.content = args.content.replace(/<(\/?)(?:u)(?:\s[^>]*)?>/gi, '<$1u>');
+                      
+                      return args.content;
                     },
                     images_upload_handler: (blobInfo) => {
                       return new Promise((resolve, reject) => {
@@ -1787,49 +1822,86 @@ const AdminDashboard = () => {
                     wordcount_countwords: true,
                     wordcount_countspaces: false,
                     wordcount_alwaysshown: true,
+                    // Basic paste settings for TinyMCE 7.0
                     paste_data_images: true,
                     paste_as_text: false,
-                    smart_paste: true,
+                    valid_elements: '*[*]', // Allow all elements and attributes during paste
+                    extended_valid_elements: 'b,strong,i,em,u,s,span[style],p[style]',
+                    // Enhanced paste processing for Google Docs
                     paste_preprocess: function(plugin, args) {
-                      const wrapper = document.createElement('div');
-                      wrapper.innerHTML = args.content;
-
-                      // First remove all Word-specific tags and junk
-                      wrapper.querySelectorAll('table, td, tr, colgroup, col').forEach(el => el.remove());
+                      // Handle footnote markers first
+                      args.content = args.content.replace(
+                        /\[(\d+)\]/g,
+                        '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
+                      );
                       
-                      // Remove empty and problematic spans
-                      wrapper.querySelectorAll('span').forEach(span => {
-                        if (!span.textContent.trim()) {
-                          span.remove(); // Remove empty spans
-                        } else {
-                          // Replace nested spans with their content
-                          const text = document.createTextNode(span.textContent);
-                          span.replaceWith(text);
-                        }
-                      });
+                      let content = args.content;
                       
-                      // Strip unnecessary div wrappers that might cause layout issues
-                      wrapper.querySelectorAll('div:not(.WordSection1):not(.WordSection2):not(.WordSection3)').forEach(div => {
-                        if (div.children.length === 0 || div.textContent.trim() === '') {
-                          div.remove();
-                        } else if (div.children.length === 1 && div.children[0].nodeName === 'P') {
-                          // Unwrap divs that just contain a single paragraph
-                          div.replaceWith(div.children[0]);
-                        }
-                      });
-
-                      // Clean up section breaks and format as proper breaks
-                      args.content = wrapper.innerHTML
-                        .replace(/<!--Section Break-->/g, '<br clear="all">')
-                        .replace(/<!--\s*Section\s*Break\s*\([^)]*\)\s*-->/g, '<br clear="all">')
-                        // Replace multiple consecutive breaks with a single one
-                        .replace(/<br\s*\/?>\s*<br\s*\/?>\s*<br\s*\/?>/g, '<br clear="all">');
+                      // Remove Google Docs specific attributes but preserve formatting styles
+                      content = content.replace(/\s*dir="[^"]*"/g, '');
+                      
+                      // Convert Google Docs styling to semantic HTML BEFORE removing spans
+                      content = content.replace(/<span[^>]*style="[^"]*font-style:\s*italic[^"]*"[^>]*>(.*?)<\/span>/gi, '<em>$1</em>');
+                      content = content.replace(/<span[^>]*style="[^"]*font-weight:\s*bold[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong>$1</strong>');
+                      content = content.replace(/<span[^>]*style="[^"]*text-decoration:\s*underline[^"]*"[^>]*>(.*?)<\/span>/gi, '<u>$1</u>');
+                      
+                      // Handle mixed formatting (bold + italic, etc.)
+                      content = content.replace(/<span[^>]*style="[^"]*font-style:\s*italic[^;]*;[^"]*font-weight:\s*bold[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong><em>$1</em></strong>');
+                      content = content.replace(/<span[^>]*style="[^"]*font-weight:\s*bold[^;]*;[^"]*font-style:\s*italic[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong><em>$1</em></strong>');
+                      
+                      // Remove remaining empty or unstyled spans
+                      content = content.replace(/<span[^>]*>([^<]*)<\/span>/gi, '$1');
+                      content = content.replace(/<span[^>]*><\/span>/gi, '');
+                      
+                      args.content = content;
                     },
+                    // Post-process to clean up Google Docs span/break mess
                     paste_postprocess: function(plugin, args) {
-                      // Additional cleanup after paste
-                      args.node.querySelectorAll('span').forEach(span => {
-                        span.className = 'tinymce-inline-span';
-                      });
+                      let content = args.node.innerHTML;
+                      
+                      // Remove remaining empty spans
+                      content = content.replace(/<span[^>]*><\/span>/gi, '');
+                      content = content.replace(/<span[^>]*>\s*<\/span>/gi, '');
+                      
+                      // Convert excessive break patterns to paragraph structure
+                      // First, handle span-wrapped breaks
+                      content = content.replace(/<span[^>]*><br[^>]*><\/span>/gi, '<br>');
+                      content = content.replace(/<span[^>]*>\s*<br[^>]*>\s*<\/span>/gi, '<br>');
+                      
+                      // Unwrap content from remaining spans (Google Docs loves to wrap everything)
+                      content = content.replace(/<span[^>]*>([^<]+)<\/span>/gi, '$1');
+                      
+                      // Clean up multiple consecutive breaks and convert to paragraphs
+                      content = content.replace(/(<br[^>]*>\s*){2,}/gi, '</p><p>');
+                      
+                      // Ensure content starts and ends with paragraph tags
+                      if (!content.startsWith('<p>') && !content.startsWith('<h')) {
+                        content = '<p>' + content;
+                      }
+                      if (!content.endsWith('</p>') && !content.endsWith('>')) {
+                        content = content + '</p>';
+                      }
+                      
+                      // Clean up any remaining breaks at paragraph boundaries
+                      content = content.replace(/<p><br[^>]*>/gi, '<p>');
+                      content = content.replace(/<br[^>]*><\/p>/gi, '</p>');
+                      
+                      // Remove empty paragraphs
+                      content = content.replace(/<p>\s*<\/p>/gi, '');
+                      
+                      // Handle titles that might be wrapped in spans
+                      content = content.replace(/<h1><span[^>]*>([^<]+)<\/span><\/h1>/gi, '<h1>$1</h1>');
+                      
+                      args.node.innerHTML = content;
+                    },
+                    // Simplified paste filter to preserve formatting
+                    paste_filter: function(plugin, args) {
+                      // Normalize existing semantic tags
+                      args.content = args.content.replace(/<(\/?)(?:strong|b)(?:\s[^>]*)?>/gi, '<$1strong>');
+                      args.content = args.content.replace(/<(\/?)(?:em|i)(?:\s[^>]*)?>/gi, '<$1em>');
+                      args.content = args.content.replace(/<(\/?)(?:u)(?:\s[^>]*)?>/gi, '<$1u>');
+                      
+                      return args.content;
                     }
                   }}
                 />

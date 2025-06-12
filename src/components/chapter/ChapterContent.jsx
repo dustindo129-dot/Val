@@ -437,6 +437,9 @@ const ChapterContent = ({
                 }
               }}
               scriptLoading={{ async: true, load: "domainBased" }}
+              onLoadError={(error) => {
+                console.error('TinyMCE failed to load:', error);
+              }}
               init={{
                 script_src: config.tinymce.scriptPath,
                 license_key: 'gpl',
@@ -457,7 +460,7 @@ const ChapterContent = ({
                   'bold italic underline strikethrough | ' +
                   'alignleft aligncenter alignright alignjustify | ' +
                   'bullist numlist outdent indent | ' +
-                  'link image footnote | code preview | wordcount | removeformat | help',
+                  'link image footnote | code preview | wordcount | pastetext | removeformat | help',
                 contextmenu: 'cut copy paste | link image | inserttable | cell row column deletetable',
                 content_style: `
                   body { font-family:Helvetica,Arial,sans-serif; font-size:14px }
@@ -493,12 +496,83 @@ const ChapterContent = ({
                     }, 100);
                   });
                 },
-                // Preserve footnote markers during paste
+                // Enhanced paste processing for Google Docs
                 paste_preprocess: (plugin, args) => {
+                  // Handle footnote markers first
                   args.content = args.content.replace(
                     /\[(\d+)\]/g,
                     '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
                   );
+                  
+                  let content = args.content;
+                  
+                  // Remove Google Docs specific attributes but preserve formatting styles
+                  content = content.replace(/\s*dir="[^"]*"/g, '');
+                  
+                  // Convert Google Docs styling to semantic HTML BEFORE removing spans
+                  content = content.replace(/<span[^>]*style="[^"]*font-style:\s*italic[^"]*"[^>]*>(.*?)<\/span>/gi, '<em>$1</em>');
+                  content = content.replace(/<span[^>]*style="[^"]*font-weight:\s*bold[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong>$1</strong>');
+                  content = content.replace(/<span[^>]*style="[^"]*text-decoration:\s*underline[^"]*"[^>]*>(.*?)<\/span>/gi, '<u>$1</u>');
+                  
+                  // Handle mixed formatting (bold + italic, etc.)
+                  content = content.replace(/<span[^>]*style="[^"]*font-style:\s*italic[^;]*;[^"]*font-weight:\s*bold[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong><em>$1</em></strong>');
+                  content = content.replace(/<span[^>]*style="[^"]*font-weight:\s*bold[^;]*;[^"]*font-style:\s*italic[^"]*"[^>]*>(.*?)<\/span>/gi, '<strong><em>$1</em></strong>');
+                  
+                  // Remove remaining empty or unstyled spans
+                  content = content.replace(/<span[^>]*>([^<]*)<\/span>/gi, '$1');
+                  content = content.replace(/<span[^>]*><\/span>/gi, '');
+                  
+                  args.content = content;
+                },
+                
+                                // Post-process to clean up Google Docs span/break mess
+                paste_postprocess: (plugin, args) => {
+                  let content = args.node.innerHTML;
+                  
+                  // Remove remaining empty spans
+                  content = content.replace(/<span[^>]*><\/span>/gi, '');
+                  content = content.replace(/<span[^>]*>\s*<\/span>/gi, '');
+                  
+                  // Convert excessive break patterns to paragraph structure
+                  // First, handle span-wrapped breaks
+                  content = content.replace(/<span[^>]*><br[^>]*><\/span>/gi, '<br>');
+                  content = content.replace(/<span[^>]*>\s*<br[^>]*>\s*<\/span>/gi, '<br>');
+                  
+                  // Unwrap content from remaining spans (Google Docs loves to wrap everything)
+                  content = content.replace(/<span[^>]*>([^<]+)<\/span>/gi, '$1');
+                  
+                  // Clean up multiple consecutive breaks and convert to paragraphs
+                  content = content.replace(/(<br[^>]*>\s*){2,}/gi, '</p><p>');
+                  
+                  // Ensure content starts and ends with paragraph tags
+                  if (!content.startsWith('<p>') && !content.startsWith('<h')) {
+                    content = '<p>' + content;
+                  }
+                  if (!content.endsWith('</p>') && !content.endsWith('>')) {
+                    content = content + '</p>';
+                  }
+                  
+                  // Clean up any remaining breaks at paragraph boundaries
+                  content = content.replace(/<p><br[^>]*>/gi, '<p>');
+                  content = content.replace(/<br[^>]*><\/p>/gi, '</p>');
+                  
+                  // Remove empty paragraphs
+                  content = content.replace(/<p>\s*<\/p>/gi, '');
+                  
+                  // Handle titles that might be wrapped in spans
+                  content = content.replace(/<h1><span[^>]*>([^<]+)<\/span><\/h1>/gi, '<h1>$1</h1>');
+                  
+                  args.node.innerHTML = content;
+                },
+                
+                // Simplified paste filter to preserve formatting
+                paste_filter: (plugin, args) => {
+                  // Normalize existing semantic tags
+                  args.content = args.content.replace(/<(\/?)(?:strong|b)(?:\s[^>]*)?>/gi, '<$1strong>');
+                  args.content = args.content.replace(/<(\/?)(?:em|i)(?:\s[^>]*)?>/gi, '<$1em>');
+                  args.content = args.content.replace(/<(\/?)(?:u)(?:\s[^>]*)?>/gi, '<$1u>');
+                  
+                  return args.content;
                 },
                 // Add custom CSS for footnote styling
                 content_css: [
@@ -512,9 +586,11 @@ const ChapterContent = ({
                 resize: false,
                 branding: false,
                 promotion: false,
+                // Basic paste settings for TinyMCE 7.0
                 paste_data_images: true,
-                smart_paste: true,
                 paste_as_text: false,
+                valid_elements: '*[*]', // Allow all elements and attributes during paste
+                extended_valid_elements: 'b,strong,i,em,u,s,span[style],p[style]',
                 images_upload_handler: (blobInfo) => {
                   return new Promise((resolve, reject) => {
                     const file = blobInfo.blob();
