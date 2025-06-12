@@ -1100,6 +1100,143 @@
   }
 }
 
+/* Featured Banner Styles */
+.featured-banner {
+  margin: 0.5rem auto 1rem;
+  max-width: 800px;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.banner-link {
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+}
+
+.banner-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-width: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* Dark mode support for banner */
+:root.dark-mode .banner-link {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive design for banner */
+@media (max-width: 768px) {
+  .featured-banner {
+    margin: 1rem auto 1.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  .banner-link {
+    border-radius: 6px;
+  }
+}
+
+@media (max-width: 576px) {
+  .featured-banner {
+    margin: 0.75rem auto 1rem;
+    padding: 0 0.25rem;
+  }
+  
+  .banner-link {
+    border-radius: 4px;
+  }
+  
+  .banner-link:hover {
+    transform: none; /* Disable hover transform on mobile */
+  }
+  
+  .banner-link:hover .banner-image {
+    transform: none; /* Disable hover scale on mobile */
+  }
+}
+
+/* Discord Button Styles */
+.discord-button-container {
+  text-align: center;
+  margin: 1rem auto 2rem;
+  max-width: 600px;
+  padding: 0 1rem;
+}
+
+.discord-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #5865F2;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(88, 101, 242, 0.3);
+}
+
+.discord-button:hover {
+  background: #4752C4;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
+  text-decoration: none;
+  color: white;
+}
+
+.discord-button i {
+  font-size: 1.2rem;
+}
+
+/* Dark mode support for Discord button */
+:root.dark-mode .discord-button {
+  box-shadow: 0 4px 8px rgba(88, 101, 242, 0.4);
+}
+
+:root.dark-mode .discord-button:hover {
+  box-shadow: 0 6px 16px rgba(88, 101, 242, 0.5);
+}
+
+/* Responsive design for Discord button */
+@media (max-width: 768px) {
+  .discord-button-container {
+    margin: 0.75rem auto 1.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  .discord-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .discord-button-container {
+    margin: 0.5rem auto 1rem;
+    padding: 0 0.25rem;
+  }
+  
+  .discord-button {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .discord-button:hover {
+    transform: none; /* Disable hover transform on mobile */
+  }
+}
+
 /* Novel list specific minimum height to prevent footer jumping */
 .novel-list-wrapper {
     min-height: calc(100vh - 160px); /* Account for header and footer approximate heights */

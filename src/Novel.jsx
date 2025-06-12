@@ -14,7 +14,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import HotNovels from './components/HotNovels';
 import NovelList from './components/NovelList';
-import './Novel.css';
+
 import config from '../config/config';
 import sseService from './services/sseService';
 import { StarIcon } from "./components/Icons";

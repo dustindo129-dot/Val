@@ -664,163 +664,196 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
     return (
         <div className="novel-list-wrapper">
             <NovelListSEO currentPage={currentPage} />
+            
+            {/* Featured Banner - only show on homepage */}
+            {/* Temporarily commented out - will add different banner image later
+            {currentPage === 1 && (
+                <div className="featured-banner">
+                    <Link to="/truyen/tinh-vuc-hai-the-gioi-7edd33ad" className="banner-link">
+                        <img
+                            src="https://Valvrareteam.b-cdn.net/BIA%20TINH%20VUC%20typo%2001.png"
+                            alt="Tịnh Vực Hai Thế Giới - Light Novel mới nhất"
+                            className="banner-image"
+                            loading="lazy"
+                        />
+                    </Link>
+                </div>
+            )}
+            */}
+            
+            {/* Discord Button - only show on homepage */}
+            {currentPage === 1 && (
+                <div className="discord-button-container">
+                    <a 
+                        href="https://discord.gg/NDv9wz9ZQN" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="discord-button"
+                        title="Discord mới chính thức của team, nơi để hối chương, thảo luận, tương tác và bú sự kiện!"
+                    >
+                        <i className="fab fa-discord"></i>
+                        Tham gia Discord!
+                    </a>
+                </div>
+            )}
+            
             <div className="novel-list-container">
                 {/* SEO Header - rendered for bots */}
                 {currentPage === 1 && seoHeaderHTML && (
                     <div dangerouslySetInnerHTML={{ __html: seoHeaderHTML }} />
                 )}
                 <div className="content-layout">
-                        {/* Main content area */}
-                        <div className="main-content">
-                            <div className="section-headers">
-                                <h2>MỚI CẬP NHẬT</h2>
-                            </div>
-                            {/* Novel grid */}
-                            <div className="novel-grid">
-                                {novels.map(novel => {
-                                    // Sort chapters by newest first and get the first three
-                                    const sortedChapters = (novel.chapters || [])
-                                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                                        .slice(0, 3);
+                    {/* Main content area */}
+                    <div className="main-content">
+                        <div className="section-headers">
+                            <h2>MỚI CẬP NHẬT</h2>
+                        </div>
+                        {/* Novel grid */}
+                        <div className="novel-grid">
+                            {novels.map(novel => {
+                                // Sort chapters by newest first and get the first three
+                                const sortedChapters = (novel.chapters || [])
+                                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                    .slice(0, 3);
 
-                                    // Get genres for this novel
-                                    const genreTags = getGenreTags(novel);
+                                // Get genres for this novel
+                                const genreTags = getGenreTags(novel);
 
-                                    // Find the first chapter (lowest chapter number)
-                                    const firstChapter = novel.firstChapter ||
-                                        (novel.chapters && novel.chapters.length > 0
-                                            ? novel.chapters.reduce((prev, curr) =>
-                                                (prev.chapterNumber < curr.chapterNumber) ? prev : curr
-                                            )
-                                            : null);
+                                // Find the first chapter (lowest chapter number)
+                                const firstChapter = novel.firstChapter ||
+                                    (novel.chapters && novel.chapters.length > 0
+                                        ? novel.chapters.reduce((prev, curr) =>
+                                            (prev.chapterNumber < curr.chapterNumber) ? prev : curr
+                                        )
+                                        : null);
 
-                                    return (
-                                        <div key={novel._id} className="novel-card" 
-                                        /* Temporarily commented out background image - can be restored later
-                                        style={{
-                                            backgroundImage: "var(--novel-card-bg)",
-                                            backgroundSize: "cover",
-                                            backgroundPosition: "center"
-                                        }}
-                                        */
-                                        >
-                                            {/* Novel header with title and update time */}
-                                            <div className="novel-header">
-                                                <Link to={generateNovelUrl(novel)} className="novel-list-title-link">
-                                                    <h3 className="novel-title">{novel.title}</h3>
-                                                </Link>
-                                                <div className="update-time">
-                                                    <i className="far fa-clock"></i> {getTimeAgo(novel.updatedAt || new Date())}
-                                                </div>
-                                            </div>
-
-                                            {/* Novel main content area */}
-                                            <div className="novel-main">
-                                                {/* Novel cover image with status and first chapter link */}
-                                                <NovelImage
-                                                    src={novel.illustration || cdnConfig.defaultImages.novel}
-                                                    alt={novel.title}
-                                                    status={novel.status}
-                                                    novelId={novel._id}
-                                                    firstChapter={firstChapter}
-                                                />
-
-                                                {/* Novel info section */}
-                                                <div className="novel-info">
-                                                    {/* Genre tags section - Với class needs-toggle động dựa trên state */}
-                                                    {genreTags.length > 0 && (
-                                                        <div
-                                                            ref={el => tagListRefs.current[novel._id] = el}
-                                                            className={`tag-list ${expandedTags[novel._id] ? 'expanded' : ''} ${needsToggle[novel._id] ? 'needs-toggle' : ''}`}
-                                                            id={`tag-list-${novel._id}`}
-                                                        >
-                                                            {genreTags.map((genre, index) => (
-                                                                <span key={index} className={`tag ${genre.class}`}>
-                                {genre.name}
-                              </span>
-                                                            ))}
-                                                            <span
-                                                                className="toggle-tags"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    toggleTags(novel._id);
-                                                                }}
-                                                            >
-                              ...
-                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Novel description with height-based overflow check */}
-                                                    <div
-                                                        className={`description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
-                                                        ref={el => descriptionRefs.current[novel._id] = el}
-                                                    >
-                                                        {(() => {
-                                                            const truncatedResult = truncateHTML(novel.description, 1000);
-                                                            return (
-                                                                <div dangerouslySetInnerHTML={{ 
-                                                                    __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html 
-                                                                }} />
-                                                            );
-                                                        })()}
-                                                    </div>
-
-                                                    {/* Read more button - only show when description is actually truncated */}
-                                                    {(() => {
-                                                        const truncatedResult = truncateHTML(novel.description, 1000);
-                                                        return truncatedResult.isTruncated && descriptionNeedsReadMore[novel._id] && (
-                                                            <div className="read-more-container">
-                                                                <a
-                                                                    href="#"
-                                                                    className="read-more"
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        toggleDescription(novel._id);
-                                                                    }}
-                                                                >
-                                                                    {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
-                                                                </a>
-                                                            </div>
-                                                        );
-                                                    })()}
-
-                                                    {/* Latest chapters list */}
-                                                    <div className="chapter-list">
-                                                        {sortedChapters.map(chapter => (
-                                                            <div key={chapter._id} className="novel-list-chapter-item">
-                                                                <Link
-                                                                    to={generateChapterUrl(novel, chapter)}
-                                                                    className="novel-list-chapter-title"
-                                                                >
-                                                                    {chapter.title}
-                                                                </Link>
-                                                                <span className="novel-list-chapter-date">
-                                {formatDate(chapter.createdAt)}
-                              </span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                </div>
+                                return (
+                                    <div key={novel._id} className="novel-card" 
+                                    /* Temporarily commented out background image - can be restored later
+                                    style={{
+                                        backgroundImage: "var(--novel-card-bg)",
+                                        backgroundSize: "cover",
+                                        backgroundPosition: "center"
+                                    }}
+                                    */
+                                    >
+                                        {/* Novel header with title and update time */}
+                                        <div className="novel-header">
+                                            <Link to={generateNovelUrl(novel)} className="novel-list-title-link">
+                                                <h3 className="novel-title">{novel.title}</h3>
+                                            </Link>
+                                            <div className="update-time">
+                                                <i className="far fa-clock"></i> {getTimeAgo(novel.updatedAt || new Date())}
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                            {/* Pagination controls */}
-                            {renderPagination()}
+
+                                        {/* Novel main content area */}
+                                        <div className="novel-main">
+                                            {/* Novel cover image with status and first chapter link */}
+                                            <NovelImage
+                                                src={novel.illustration || cdnConfig.defaultImages.novel}
+                                                alt={novel.title}
+                                                status={novel.status}
+                                                novelId={novel._id}
+                                                firstChapter={firstChapter}
+                                            />
+
+                                            {/* Novel info section */}
+                                            <div className="novel-info">
+                                                {/* Genre tags section - Với class needs-toggle động dựa trên state */}
+                                                {genreTags.length > 0 && (
+                                                    <div
+                                                        ref={el => tagListRefs.current[novel._id] = el}
+                                                        className={`tag-list ${expandedTags[novel._id] ? 'expanded' : ''} ${needsToggle[novel._id] ? 'needs-toggle' : ''}`}
+                                                        id={`tag-list-${novel._id}`}
+                                                    >
+                                                        {genreTags.map((genre, index) => (
+                                                            <span key={index} className={`tag ${genre.class}`}>
+                                {genre.name}
+                              </span>
+                                                        ))}
+                                                        <span
+                                                            className="toggle-tags"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                toggleTags(novel._id);
+                                                            }}
+                                                        >
+                              ...
+                            </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Novel description with height-based overflow check */}
+                                                <div
+                                                    className={`description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                                                    ref={el => descriptionRefs.current[novel._id] = el}
+                                                >
+                                                    {(() => {
+                                                        const truncatedResult = truncateHTML(novel.description, 1000);
+                                                        return (
+                                                            <div dangerouslySetInnerHTML={{ 
+                                                                __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html 
+                                                            }} />
+                                                        );
+                                                    })()}
+                                                </div>
+
+                                                {/* Read more button - only show when description is actually truncated */}
+                                                {(() => {
+                                                    const truncatedResult = truncateHTML(novel.description, 1000);
+                                                    return truncatedResult.isTruncated && descriptionNeedsReadMore[novel._id] && (
+                                                        <div className="read-more-container">
+                                                            <a
+                                                                href="#"
+                                                                className="read-more"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    toggleDescription(novel._id);
+                                                                }}
+                                                            >
+                                                                {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
+                                                            </a>
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                                {/* Latest chapters list */}
+                                                <div className="chapter-list">
+                                                    {sortedChapters.map(chapter => (
+                                                        <div key={chapter._id} className="novel-list-chapter-item">
+                                                            <Link
+                                                                to={generateChapterUrl(novel, chapter)}
+                                                                className="novel-list-chapter-title"
+                                                            >
+                                                                {chapter.title}
+                                                            </Link>
+                                                            <span className="novel-list-chapter-date">
+                                {formatDate(chapter.createdAt)}
+                              </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        {/* Sidebar with hot novels and Facebook plugin */}
-                        <aside className="sidebar">
-                            <HotNovels/>
-                            <RecentlyRead/>
-                            <FacebookPlugin/>
-                            <RecentComments/>
-                        </aside>
+                        {/* Pagination controls */}
+                        {renderPagination()}
                     </div>
+                    {/* Sidebar with hot novels and Facebook plugin */}
+                    <aside className="sidebar">
+                        <HotNovels/>
+                        <RecentlyRead/>
+                        <FacebookPlugin/>
+                        <RecentComments/>
+                    </aside>
                 </div>
             </div>
+        </div>
     );
 };
 

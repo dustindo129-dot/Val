@@ -114,7 +114,7 @@ html {
 .main-content {
   position: relative;
   z-index: 1;
-  padding: 40px 0 20px;
+  padding: 10px 0;
   max-width: 1400px;
   margin: 0 auto;
   flex: 1 0 auto; /* This ensures the footer stays at the bottom */
