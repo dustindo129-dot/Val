@@ -9,7 +9,7 @@ export async function onBeforeRender(pageContext) {
   let novels = [];
   let totalPages = 1;
   const pageTitle = 'Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất';
-  const pageDescription = 'Thư viện Light Novel vietsub lớn nhất Việt Nam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh, dịch chất lượng cao. Hàng nghìn bộ Light Novel hay như Sword Art Online, Re:Zero, Overlord đang chờ bạn khám phá!';
+  const pageDescription = 'Thư viện Light Novel vietsub hàng đầu Việt Nam với 1000+ bộ truyện chất lượng cao. Khám phá, tìm kiếm và đọc Light Novel tiếng Việt miễn phí tại Valvrareteam - Cập nhật hàng ngày, dịch chuẩn xác!';
   
   try {
     if (pageContext.isBot || process.env.NODE_ENV === 'production') {
@@ -27,14 +27,21 @@ export async function onBeforeRender(pageContext) {
   const siteName = 'Valvrareteam';
   
   // Generate keywords for homepage SEO
-  const generateHomepageKeywords = () => {
+  const generateHomepageKeywords = (novels) => {
     const keywords = [
-      // Main target keywords
+      // Main target keywords - BRAND SPECIFIC
+      'valvrareteam',
+      'valvrareteam light novel',
+      'valvrareteam vietsub',
+      'đọc light novel valvrareteam',
+      'light novel valvrareteam',
+      'valvrareteam.net',
+      
+      // Main target keywords - GENERIC
       'đọc light novel tiếng việt',
       'light novel vietsub',
       'light novel tiếng việt',
       'đọc light novel vietsub',
-      'valvrareteam',
       
       // Popular novel titles and general terms
       'light novel',
@@ -48,23 +55,40 @@ export async function onBeforeRender(pageContext) {
       'thư viện light novel',
       'light novel online',
       
-      // Popular series that might be on the site
-      'sword art online',
-      're:zero',
-      'overlord',
-      'konosuba',
-      'danmachi',
-      'that time i got reincarnated as a slime',
+      // Brand + Popular series combinations
+      'light novel valvrareteam',
+      'novel vietsub valvrareteam',
+      'truyện dịch valvrareteam',
+      'đọc light novel valvrareteam',
       
       // Vietnamese specific terms
       'truyện dịch',
       'novel dịch',
       'truyện nhật',
+      'truyện trung quốc',
+      'truyện hàn quốc',
       'light novel việt nam',
       'đọc truyện online',
       'web novel',
-      'ln vietsub'
+      'ln vietsub',
+      'novel online'
     ];
+    
+    // Add dynamic keywords from actual novels (limit to prevent keyword stuffing)
+    if (novels && novels.length > 0) {
+      // Take first 5 novels to add their titles as keywords
+      const topNovels = novels.slice(0, 5);
+      topNovels.forEach(novel => {
+        if (novel?.title) {
+          const novelTitle = novel.title.toLowerCase();
+          keywords.push(
+            `${novelTitle} valvrareteam`,
+            `${novelTitle} vietsub`,
+            `đọc ${novelTitle}`
+          );
+        }
+      });
+    }
     
     return keywords.join(', ');
   };
@@ -75,12 +99,35 @@ export async function onBeforeRender(pageContext) {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": siteName,
+      "alternateName": ["Valvrareteam", "ValvraTeam", "Light Novel Vietsub"],
       "description": pageDescription,
       "url": url,
+      "sameAs": [
+        // Add your social media profiles when available
+        // "https://facebook.com/valvrareteam",
+        // "https://twitter.com/valvrareteam"
+      ],
       "publisher": {
         "@type": "Organization",
         "name": siteName,
-        "url": url
+        "url": url,
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${url}/images/valvrare-logo.svg`,
+          "width": 100,
+          "height": 100
+        },
+        "description": "Thư viện Light Novel vietsub lớn nhất Việt Nam",
+        "foundingDate": "2023",
+        "knowsAbout": [
+          "Light Novel",
+          "Light Novel Vietsub", 
+          "Light Novel Tiếng Việt",
+          "Japanese Light Novels",
+          "Chinese Web Novels",
+          "Korean Light Novels",
+          "Vietnamese Web Novels"
+        ]
       },
       "potentialAction": {
         "@type": "SearchAction",
@@ -91,10 +138,31 @@ export async function onBeforeRender(pageContext) {
         "query-input": "required name=search_term_string"
       },
       "inLanguage": "vi-VN",
-      "about": {
-        "@type": "Thing",
-        "name": "Light Novel",
-        "description": "Vietnamese translated light novels"
+      "about": [
+        {
+          "@type": "Thing",
+          "name": "Light Novel",
+          "description": "Vietnamese translated light novels"
+        },
+        {
+          "@type": "Thing", 
+          "name": "Light Novel Vietsub",
+          "description": "Vietnamese light novel translations and original content"
+        }
+      ],
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Light Novel readers",
+        "geographicArea": {
+          "@type": "Country",
+          "name": "Vietnam"
+        }
+      },
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": "Light Novel Collection",
+        "description": "Complete collection of Vietnamese translated light novels",
+        "numberOfItems": novels?.length || 0
       }
     };
   };
@@ -108,7 +176,7 @@ export async function onBeforeRender(pageContext) {
         <div class="seo-content">
           <p class="seo-description">
             Khám phá thế giới Light Novel Việt Nam với hàng nghìn bộ truyện được dịch chất lượng cao. 
-            Từ những tác phẩm kinh điển như Sword Art Online, Re:Zero, Overlord đến những bộ truyện mới nhất, 
+            Từ những tác phẩm kinh điển đến những bộ truyện mới nhất từ Nhật Bản, Trung Quốc, Hàn Quốc, 
             tất cả đều được cập nhật thường xuyên và hoàn toàn miễn phí.
           </p>
           <div class="seo-features">
@@ -135,29 +203,43 @@ export async function onBeforeRender(pageContext) {
     return `
       <div class="seo-content">
         <div class="seo-section">
-          <h2 class="seo-h2">Tại Sao Chọn Valvrareteam?</h2>
+          <h2 class="seo-h2">Valvrareteam - Thư Viện Light Novel Vietsub Uy Tín Nhất</h2>
           <p class="seo-description">
-            Valvrareteam là điểm đến hàng đầu cho những người yêu thích Light Novel tại Việt Nam. 
+            <strong>Valvrareteam</strong> là điểm đến hàng đầu cho những người yêu thích Light Novel tại Việt Nam. 
             Với hơn 1000+ bộ truyện đa dạng từ Nhật Bản, Trung Quốc, Hàn Quốc và cả Web Novel gốc Việt Nam, 
-            chúng tôi cam kết mang đến trải nghiệm đọc truyện tuyệt vời nhất.
+            <strong>Valvrareteam.net</strong> cam kết mang đến trải nghiệm đọc truyện tuyệt vời nhất.
+            Khi bạn tìm kiếm bất kỳ Light Novel nào kèm từ khóa "Valvrareteam", đây chính là nguồn chính thức và uy tín nhất.
           </p>
         </div>
         
         <div class="seo-section">
-          <h2 class="seo-h2">Thể Loại Light Novel Phong Phú</h2>
+          <h2 class="seo-h2">Tại Sao Chọn Valvrareteam Cho Light Novel Vietsub?</h2>
           <p class="seo-description">
-            Khám phá đa dạng thể loại từ Fantasy, Romance, Action, Comedy đến Isekai, Slice of Life. 
-            Mỗi thể loại đều có những tác phẩm chất lượng cao được lựa chọn kỹ càng và dịch chuẩn xác.
+            <strong>Valvrareteam</strong> nổi tiếng với chất lượng dịch thuật chuẩn xác và cập nhật nhanh chóng. 
+            Các bộ Light Novel từ Nhật Bản, Trung Quốc, Hàn Quốc và Web Novel Việt Nam
+            đều được dịch và cập nhật thường xuyên tại <strong>Valvrareteam.net</strong>. 
+            Đây là lý do tại sao khi tìm kiếm "[Tên truyện] Valvrareteam" bạn sẽ tìm thấy nguồn chính thức và chất lượng nhất.
           </p>
         </div>
         
-        <div class="seo-popular">
-          <h2>Light Novel Nổi Bật</h2>
-          <p>
-            Một số tác phẩm được yêu thích nhất tại Valvrareteam bao gồm các series nổi tiếng như 
-            Sword Art Online với thế giới ảo đầy mạo hiểm, Re:Zero kể về cuộc sống trong thế giới khác, 
-            và Overlord với câu chuyện về một game thủ trở thành Overlord trong game. 
-            Ngoài ra còn có hàng trăm tác phẩm khác đang chờ bạn khám phá.
+        <div class="seo-section">
+          <h2 class="seo-h2">Light Novel Nổi Bật Tại Valvrareteam</h2>
+          <p class="seo-description">
+            <strong>Valvrareteam</strong> chuyên cung cấp các bộ Light Novel chất lượng cao với dịch thuật chuẩn xác.
+            Từ những series kinh điển đến những tác phẩm mới nhất, tất cả đều được cập nhật thường xuyên 
+            với chất lượng dịch thuật hàng đầu tại <strong>Valvrareteam.net</strong>.
+            Đây là lý do tại sao khi tìm kiếm bất kỳ Light Novel nào kèm "Valvrareteam" 
+            bạn sẽ tìm thấy nguồn chính thức và chất lượng nhất.
+          </p>
+        </div>
+        
+        <div class="seo-section">
+          <h2 class="seo-h2">Tìm Kiếm Light Novel Tại Valvrareteam</h2>
+          <p class="seo-description">
+            Để tìm được bản dịch chính thức và chất lượng nhất của bất kỳ Light Novel nào, 
+            hãy thêm từ khóa "<strong>Valvrareteam</strong>" vào tìm kiếm của bạn. 
+            Ví dụ: "Tên truyện + Valvrareteam" sẽ đưa bạn đến nguồn dịch thuật uy tín nhất.
+            <strong>Valvrareteam.net</strong> - Điểm đến số 1 cho Light Novel Vietsub!
           </p>
         </div>
       </div>
@@ -181,7 +263,7 @@ export async function onBeforeRender(pageContext) {
           // Keywords - targeting Vietnamese light novel searches
           {
             name: 'keywords',
-            content: generateHomepageKeywords()
+            content: generateHomepageKeywords(novels)
           },
           // Robots
           {

@@ -134,12 +134,19 @@ export async function onBeforeRender(pageContext) {
         const text = getTextFromHTML(chapter.content || '');
         
         if (text.length > 0) {
-          pageDescription = text.length > 160 
-            ? text.substring(0, 157) + '...' 
+          // Create chapter-specific description with content preview
+          const contentPreview = text.length > 100 
+            ? text.substring(0, 97) + '...' 
             : text;
+          pageDescription = `${chapter.title}: ${contentPreview} Đọc tiếp chương này của ${novelTitle} vietsub tại Valvrareteam.`;
         } else {
           // Fallback description with chapter-specific info
-          pageDescription = `Đọc ${chapter.title} - ${novelTitle} vietsub chất lượng cao tại Valvrareteam. Light novel tiếng Việt cập nhật nhanh.`;
+          pageDescription = `Đọc ${chapter.title} - Chương mới nhất của ${novelTitle} vietsub tại Valvrareteam. Nội dung chương được cập nhật và dịch chất lượng cao.`;
+        }
+        
+        // Ensure description is within optimal length (150-160 characters)
+        if (pageDescription.length > 160) {
+          pageDescription = pageDescription.substring(0, 157) + '...';
         }
       } else {
         // This shouldn't happen due to early returns above, but just in case

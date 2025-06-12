@@ -53,13 +53,24 @@ export async function onBeforeRender(pageContext) {
         novel = response?.novel;
         
         if (novel) {
-          pageTitle = `${novel.title} Vietsub - Valvrareteam`;
+          pageTitle = `${novel.title} Vietsub - Đọc Light Novel tại Valvrareteam | ${novel.title} Tiếng Việt`;
           
           const text = getTextFromHTML(novel.description || '');
           
-          pageDescription = text.length > 160 
-            ? text.substring(0, 157) + '...' 
-            : text;
+          if (text.length > 0) {
+            pageDescription = text.length > 100 
+              ? text.substring(0, 97) + '...' 
+              : text;
+            // Add brand context to description - focus on novel overview
+            pageDescription += ` Tổng quan ${novel.title} vietsub đầy đủ tại Valvrareteam.net - Thông tin truyện, danh sách chương, cập nhật nhanh.`;
+          } else {
+            pageDescription = `${novel.title} vietsub - Thông tin chi tiết, danh sách chương và đọc miễn phí tại Valvrareteam. Light novel ${novel.title} tiếng Việt chất lượng cao.`;
+          }
+          
+          // Ensure description is within optimal length (150-160 characters)  
+          if (pageDescription.length > 160) {
+            pageDescription = pageDescription.substring(0, 157) + '...';
+          }
         }
       }
     }
@@ -129,11 +140,21 @@ export async function onBeforeRender(pageContext) {
     
     // Add general keywords
     baseKeywords.push(
+      // Brand-specific combinations
+      `${novel.title} valvrareteam`,
+      `${novel.title} valvrareteam.net`,
+      `đọc ${novel.title} valvrareteam`,
+      `${novel.title} tại valvrareteam`,
+      'valvrareteam',
+      'valvrareteam.net',
+      
+      // General keywords
       'light novel tiếng việt',
       'light novel vietsub',
-      'valvrareteam',
       'truyện dịch',
-      'novel dịch'
+      'novel dịch',
+      'đọc light novel online',
+      'light novel miễn phí'
     );
     
     // Remove duplicates and return
