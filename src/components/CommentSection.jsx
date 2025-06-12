@@ -483,13 +483,13 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           <div className="comment-header">
             <div className="comment-user-info">
               <span className="comment-username">
-                {comment.isDeleted && !comment.adminDeleted ? '[deleted]' : (comment.user.displayName || comment.user.username)}
+                {comment.isDeleted && !comment.adminDeleted ? '[đã xóa]' : (comment.user.displayName || comment.user.username)}
               </span>
               {isAuthenticated && user && !comment.isDeleted && comment.user.username !== user.username && (
                 <button
                   className="block-btn"
                   onClick={() => openBlockModal(comment.user)}
-                  title={user.role === 'admin' ? 'Ban user' : 'Block user'}
+                  title={user.role === 'admin' ? 'Cho người dùng vào danh sách đen' : 'Chặn người dùng'}
                 >
                   🚫
                 </button>
@@ -498,7 +498,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
           </div>
           <div className="comment-text">
-            {comment.isDeleted && !comment.adminDeleted ? 'Comment deleted by user' : (
+            {comment.isDeleted && !comment.adminDeleted ? 'Bình luận gốc bị xóa bởi người dùng' : (
               <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(decodeHTMLEntities(comment.text)) }} />
             )}
           </div>
@@ -540,7 +540,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             <div className="reply-form">
               <textarea
                 className="reply-input"
-                placeholder="Write a reply..."
+                placeholder="Viết trả lời..."
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 required

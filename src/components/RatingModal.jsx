@@ -152,10 +152,8 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
       year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      month: '2-digit',
+      day: '2-digit'
     });
   }, []);
   
