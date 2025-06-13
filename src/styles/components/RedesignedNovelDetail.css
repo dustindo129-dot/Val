@@ -1,16 +1,28 @@
 /**
- * RedesignedNovelDetail.css
- * 
+ * RedesignedNovelDetail.css - Clean Version
  * Redesigned styles for the NovelDetail component.
  * All classes are prefixed with 'rd-' to avoid conflicts with existing styles.
  */
 
-/* Container styles */
-.rd-novel-detail-container {
-  margin: 0 auto;
+/* ===== ROOT VARIABLES ===== */
+:root {
+  --rd-primary-color: #3498db;
+  --rd-secondary-color: #2c3e50;
+  --rd-accent-color: #e74c3c;
+  --rd-text-color: #333;
+  --rd-light-bg: #f5f5f5;
+  --rd-card-bg: #fff;
+  --rd-border-radius: 8px;
+  --rd-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --rd-active-color: #2ecc71;
+  --rd-inactive-color: #e74c3c;
+  --rd-translator-color: #9b59b6;
+  --rd-editor-color: #3498db;
+  --rd-qc-color: #f39c12;
+  --rd-name-color: #16a085;
 }
 
-/* Header styles */
+/* ===== HEADER SECTION ===== */
 .rd-novel-header {
   display: flex;
   justify-content: space-between;
@@ -24,14 +36,53 @@
   gap: 15px;
 }
 
+.rd-title-with-follow {
+  position: relative;
+}
+
 .rd-novel-title {
   font-family: 'Montserrat', sans-serif;
   font-size: 2.2rem;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--rd-secondary-color);
   margin: 0;
+  display: inline;
+  position: relative;
 }
 
+/* Follow button */
+.rd-follow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--rd-primary-color);
+  color: white;
+  font-size: 0.6em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.3em;
+  vertical-align: middle;
+}
+
+.rd-follow-btn:hover {
+  background-color: #2980b9;
+  transform: scale(1.1);
+}
+
+.rd-follow-btn.following {
+  background-color: var(--rd-active-color);
+}
+
+.rd-follow-btn.following:hover {
+  background-color: #229954;
+}
+
+/* Status badge */
 .rd-status-badge {
   display: inline-flex;
   align-items: center;
@@ -79,23 +130,12 @@
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
 
-.rd-facebook {
-  background-color: #3b5998;
-}
+.rd-facebook { background-color: #3b5998; }
+.rd-twitter { background-color: #1da1f2; }
+.rd-pinterest { background-color: #bd081c; }
+.rd-telegram { background-color: #0088cc; }
 
-.rd-twitter {
-  background-color: #1da1f2;
-}
-
-.rd-pinterest {
-  background-color: #bd081c;
-}
-
-.rd-telegram {
-  background-color: #0088cc;
-}
-
-/* Main content layout */
+/* ===== MAIN CONTENT LAYOUT ===== */
 .rd-novel-content {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -109,23 +149,24 @@
   gap: 20px;
 }
 
-/* Novel card styles */
+/* ===== NOVEL CARD ===== */
 .rd-novel-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: var(--rd-card-bg);
+  border-radius: var(--rd-border-radius);
+  box-shadow: var(--rd-box-shadow);
   overflow: hidden;
 }
 
 .rd-novel-header-content {
   display: flex;
-  background-color: #2c3e50;
+  background-color: var(--rd-secondary-color);
   padding: 15px;
   position: relative;
 }
 
+/* Novel cover section */
 .rd-novel-cover {
-  flex: 0 0 180px;
+  flex: 0 0 300px;
   margin-right: 15px;
   position: relative;
   width: 300px;
@@ -134,13 +175,108 @@
 }
 
 .rd-cover-image {
+  width: 100%;
   height: 100%;
   border-radius: 8px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   aspect-ratio: 2/3;
   object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 1;
 }
 
+/* Novel type banner with shimmer effect */
+.rd-novel-type-banner {
+  position: absolute;
+  top: 20px;
+  left: -6px;
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  color: white;
+  padding: 6px 28px 6px 15px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  z-index: 15;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transform: rotate(-10deg);
+  transform-origin: top left;
+  overflow: hidden;
+  border-radius: 0 4px 4px 0;
+  margin: 0;
+  max-width: 160px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Shimmer effect */
+.rd-novel-type-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 3s infinite;
+  z-index: 1;
+}
+
+/* Arrow after banner */
+.rd-novel-type-banner::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-left: 8px solid #c0392b;
+  border-top: 16px solid transparent;
+  border-bottom: 16px solid transparent;
+  z-index: 0;
+}
+
+/* Banner variants */
+.rd-novel-type-banner.original {
+  background: linear-gradient(45deg, #27ae60, #229954);
+}
+
+.rd-novel-type-banner.original::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation-delay: 0.5s;
+}
+
+.rd-novel-type-banner.original::after {
+  border-left-color: #229954;
+}
+
+.rd-novel-type-banner.translated {
+  background: linear-gradient(45deg, #3498db, #2980b9);
+}
+
+.rd-novel-type-banner.translated::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation-delay: 1s;
+}
+
+.rd-novel-type-banner.translated::after {
+  border-left-color: #2980b9;
+}
+
+/* Banner hover effect */
+.rd-novel-type-banner:hover {
+  transform: rotate(-1deg) scale(1.05);
+  transition: transform 0.2s ease;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+
+.rd-novel-type-banner:hover::before {
+  animation-duration: 2s;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+}
+
+/* Update time */
 .rd-update-time {
   position: absolute;
   bottom: 0;
@@ -152,9 +288,11 @@
   font-weight: 500;
   padding: 5px;
   text-align: center;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 8px 8px;
+  z-index: 10;
 }
 
+/* Novel info section */
 .rd-novel-info {
   flex: 1;
   color: white;
@@ -173,6 +311,7 @@
   padding-right: 10px;
 }
 
+/* Chapter count */
 .rd-chapter-count {
   position: absolute;
   top: 0;
@@ -200,6 +339,7 @@
   font-weight: 700;
 }
 
+/* Info rows */
 .rd-info-rows {
   display: flex;
   flex-direction: column;
@@ -227,6 +367,7 @@
   font-weight: 600;
 }
 
+/* Genres */
 .rd-genres-row {
   display: flex;
   align-items: flex-start;
@@ -257,68 +398,59 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* Genre tag variants */
 .rd-genre-tag.japanese-novel {
-  background-color: rgba(39, 174, 96, 0.35);   
-  border-color: rgba(39, 174, 96, 0.6);        
-  color: #e2fff1;     
+  background-color: rgba(39, 174, 96, 0.35);
+  border-color: rgba(39, 174, 96, 0.6);
+  color: #e2fff1;
 }
 
 .rd-genre-tag.chinese-novel {
-  background-color: rgba(230, 126, 34, 0.35);   
-  border-color: rgba(230, 126, 34, 0.6);        
-  color: #fff2e0;   
+  background-color: rgba(230, 126, 34, 0.35);
+  border-color: rgba(230, 126, 34, 0.6);
+  color: #fff2e0;
 }
 
 .rd-genre-tag.korean-novel {
-  background-color: rgba(142, 68, 173, 0.35);  
-  border-color: rgba(142, 68, 173, 0.6);       
-  color: #f2e7ff;   
+  background-color: rgba(142, 68, 173, 0.35);
+  border-color: rgba(142, 68, 173, 0.6);
+  color: #f2e7ff;
 }
 
 .rd-genre-tag.english-novel {
-  background-color: rgba(52, 101, 164, 0.35); 
-  border-color: rgba(52, 101, 164, 0.6);      
-  color: #cce6ff;   
+  background-color: rgba(52, 101, 164, 0.35);
+  border-color: rgba(52, 101, 164, 0.6);
+  color: #cce6ff;
 }
 
 .rd-genre-tag.vietnamese-novel {
-  background-color: rgba(192, 57, 43, 0.35);  
-  border-color: rgba(192, 57, 43, 0.6);       
-  color: #ffd6d1;   
+  background-color: rgba(192, 57, 43, 0.35);
+  border-color: rgba(192, 57, 43, 0.6);
+  color: #ffd6d1;
 }
 
 .rd-genre-tag.mature {
-  background-color: rgba(231, 76, 60, 0.35);   
-  border-color: rgba(231, 76, 60, 0.6);        
-  color: #ffe5e2;  
+  background-color: rgba(231, 76, 60, 0.35);
+  border-color: rgba(231, 76, 60, 0.6);
+  color: #ffe5e2;
 }
 
-/* Stats and action footer */
+.rd-genre-tag.ai-assisted {
+  background-color: rgba(156, 39, 176, 0.35);
+  border-color: rgba(156, 39, 176, 0.6);
+  color: #f3e5f5;
+}
+
+
+/* ===== CARD FOOTER ===== */
 .rd-card-footer {
-  background-color: #f5f5f5;
+  background-color: var(--rd-light-bg);
 }
 
-/* Dark mode support for card footer and section content */
-:root.dark-mode .rd-card-footer {
-  background-color: #2a2a2a;
-}
-
-:root.dark-mode .rd-section-content {
-  background-color: #2a2a2a;
-}
-
-:root.dark-mode .rd-stats-row {
-  background-color: #2a2a2a;
-  border-color: #404040;
-}
-
-:root.dark-mode .rd-stat-value {
-  color: #e0e0e0;
-}
-
+/* Stats row */
 .rd-stats-row {
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   background-color: #f8f9fa;
@@ -326,54 +458,77 @@
 
 .rd-stat-item {
   flex: 1;
-  padding: 10px 5px;
+  padding: 15px 10px;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   position: relative;
   transition: background-color 0.2s ease;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.rd-stat-item:hover {
+.rd-stat-item:last-child {
+  border-right: none;
+}
+
+.rd-stat-item.clickable {
+  cursor: pointer;
+}
+
+.rd-stat-item.clickable:hover {
   background-color: rgba(0, 0, 0, 0.03);
 }
 
-.rd-stat-item:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 20%;
-  bottom: 20%;
-  width: 1px;
-  background-color: rgba(0, 0, 0, 0.1);
+.rd-stat-group {
+  display: flex;
+  align-items: center;
 }
 
 .rd-stat-icon {
-  font-size: 1.2rem;
-  margin-bottom: 5px;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  display: flex;
+  margin-right: 16px;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Add specific colors for each stat icon */
-.rd-stat-icon .fa-eye {
-  color: #3498db;  /* Blue */
-}
-
+.rd-stat-icon .fa-eye { color: #3498db; }
+.rd-stat-icon .fa-file-alt { color: #9b59b6; }
 .rd-stat-icon .fa-heart,
-.rd-stat-icon .fa-heart-regular {
-  color: #e74c3c;  /* Red */
-}
-
+.rd-stat-icon .fa-heart-regular { color: #e74c3c; }
 .rd-stat-icon .fa-star,
-.rd-stat-icon .fa-star-regular {
-  color: #f1c40f;  /* Yellow */
+.rd-stat-icon .fa-star-regular { color: #f1c40f; }
+
+.rd-stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1.1;
 }
 
 .rd-stat-value {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #2c3e50;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--rd-secondary-color);
+  margin: 0 0 3px 0;
+  line-height: 1.1;
+  display: block;
+  white-space: nowrap;
 }
 
+.rd-stat-label {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin: 1px 0 0 0;
+  line-height: 1.1;
+  display: block;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Actions row */
 .rd-actions-row {
   display: flex;
   justify-content: space-between;
@@ -399,7 +554,7 @@
 }
 
 .rd-btn-primary {
-  background-color: #3498db;
+  background-color: var(--rd-primary-color);
   color: white;
 }
 
@@ -426,19 +581,11 @@
   color: white;
 }
 
-/* Description section */
+/* ===== DESCRIPTION SECTION ===== */
 .rd-description-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-/* Gift section */
-.rd-gift-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: var(--rd-card-bg);
+  border-radius: var(--rd-border-radius);
+  box-shadow: var(--rd-box-shadow);
   overflow: hidden;
 }
 
@@ -447,7 +594,7 @@
   font-size: 16px;
   font-weight: 600;
   padding: 10px 15px;
-  background-color: #2c3e50;
+  background-color: var(--rd-secondary-color);
   color: white;
   position: relative;
   display: flex;
@@ -478,7 +625,7 @@
 }
 
 .rd-show-toggle {
-  color: #3498db;
+  color: var(--rd-primary-color);
   text-decoration: none;
   display: inline-block;
   margin: 0 15px 15px;
@@ -495,46 +642,118 @@
   transform: translateY(-2px);
 }
 
-/* Dark mode support for description section */
-:root.dark-mode .rd-novel-title {
-  color: #fff;
+/* ===== MODULE NAVIGATION ===== */
+.module-list-nav-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 130px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 999;
 }
 
-:root.dark-mode .rd-description-section {
-  background-color: #2a2a2a;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+.module-list-nav-btn:hover {
+  transform: scale(1.1);
+  opacity: 1;
 }
 
-/* Dark mode support for gift section */
-:root.dark-mode .rd-gift-section {
-  background-color: #2a2a2a;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-:root.dark-mode .rd-description-title {
-  background-color: #1a1a1a;
-  color: #f0f0f0;
-}
-
-:root.dark-mode .rd-description-content {
-  color: #e0e0e0;
-}
-
-:root.dark-mode .rd-show-toggle {
-  color: #66b0ff;
-  background-color: rgba(102, 176, 255, 0.1);
-}
-
-:root.dark-mode .rd-show-toggle:hover {
-  background-color: rgba(102, 176, 255, 0.2);
-}
-
-/* Staff and announcement sections */
-.rd-section {
+.module-nav-sidebar {
+  position: fixed;
+  left: -400px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 380px;
+  max-height: 80vh;
   background-color: white;
-  border-radius: 8px;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+  transition: left 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.module-nav-sidebar.open {
+  left: 0;
+}
+
+.module-nav-header {
+  background-color: var(--rd-secondary-color);
+  color: white;
+  padding: 22px;
+  font-weight: 600;
+  font-size: 1.3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.module-nav-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.module-nav-close:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.module-nav-list {
+  padding: 20px 0;
+}
+
+.module-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 20px 25px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.module-nav-item:hover {
+  background-color: #f8f9fa;
+}
+
+.module-nav-item:last-child {
+  border-bottom: none;
+}
+
+.module-nav-cover {
+  width: 48px;
+  height: 66px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.module-nav-title {
+  font-size: 1.1rem;
+  color: var(--rd-secondary-color);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ===== SIDEBAR SECTIONS ===== */
+.rd-section {
+  background-color: var(--rd-card-bg);
+  border-radius: var(--rd-border-radius);
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--rd-box-shadow);
   margin-bottom: 20px;
 }
 
@@ -543,7 +762,7 @@
   font-size: 16px;
   font-weight: 600;
   padding: 10px 15px;
-  background-color: #2c3e50;
+  background-color: var(--rd-secondary-color);
   color: white;
   position: relative;
 }
@@ -570,7 +789,7 @@
 .rd-active-category {
   font-size: 18px;
   font-weight: 700;
-  color: #2ecc71;
+  color: var(--rd-active-color);
   position: relative;
   padding-bottom: 8px;
   margin-bottom: 15px;
@@ -590,7 +809,7 @@
 .rd-inactive-category {
   font-size: 16px;
   font-weight: 600;
-  color: #e74c3c;
+  color: var(--rd-inactive-color);
   position: relative;
   padding-bottom: 5px;
   margin: 20px 0 15px;
@@ -617,15 +836,15 @@
 }
 
 .rd-role-translator {
-  color: #9b59b6;
+  color: var(--rd-translator-color);
 }
 
 .rd-role-editor {
-  color: #3498db;
+  color: var(--rd-editor-color);
 }
 
 .rd-role-qc {
-  color: #f39c12;
+  color: var(--rd-qc-color);
 }
 
 .rd-role-badge {
@@ -640,15 +859,15 @@
 }
 
 .rd-translator-badge {
-  background-color: #9b59b6;
+  background-color: var(--rd-translator-color);
 }
 
 .rd-editor-badge {
-  background-color: #3498db;
+  background-color: var(--rd-editor-color);
 }
 
 .rd-qc-badge {
-  background-color: #f39c12;
+  background-color: var(--rd-qc-color);
 }
 
 .rd-staff-members {
@@ -660,7 +879,7 @@
 }
 
 .rd-staff-name {
-  color: #16a085;
+  color: var(--rd-name-color);
   text-decoration: none;
   transition: all 0.2s ease;
   background-color: rgba(22, 160, 133, 0.1);
@@ -669,7 +888,7 @@
 }
 
 .rd-staff-name:hover {
-  background-color: #16a085;
+  background-color: var(--rd-name-color);
   color: white;
 }
 
@@ -686,12 +905,12 @@
   font-size: 14px;
 }
 
-/* Contribution section */
+/* ===== CONTRIBUTION SECTION ===== */
 .rd-contribution-section {
-  background-color: white;
-  border-radius: 8px;
+  background-color: var(--rd-card-bg);
+  border-radius: var(--rd-border-radius);
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--rd-box-shadow);
   margin-bottom: 20px;
 }
 
@@ -700,7 +919,7 @@
   font-size: 16px;
   font-weight: 600;
   padding: 10px 15px;
-  background-color: #2c3e50;
+  background-color: var(--rd-secondary-color);
   color: white;
   position: relative;
   display: flex;
@@ -716,102 +935,43 @@
   margin-right: 8px;
 }
 
-.rd-contribution-list {
-  padding: 10px 15px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.rd-contribution-item {
-  padding: 12px;
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.2s ease;
-}
-
-.rd-contribution-item:last-child {
-  border-bottom: none;
-}
-
-.rd-contribution-item:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-.rd-contribution-content {
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 6px;
-}
-
-.rd-contributor-name {
-  font-weight: 600;
-  color: #16a085;
-}
-
-.rd-contribution-amount {
-  font-weight: 600;
-  color: #f39c12;
-}
-
-.rd-contribution-message {
-  font-style: italic;
-  color: #555;
-  margin-top: 5px;
-  padding-left: 10px;
-  border-left: 2px solid #e0e0e0;
-}
-
-.rd-contribution-date {
+/* FAQ toggle button */
+.faq-toggle-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
   font-size: 12px;
-  color: #7f8c8d;
-  text-align: right;
-  margin-top: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.rd-no-contributions {
+/* FAQ Section */
+.faq-section {
   padding: 15px;
-  text-align: center;
-  color: #7f8c8d;
-  font-style: italic;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-/* Dark mode support for contribution section */
-:root.dark-mode .rd-contribution-section {
-  background-color: #2a2a2a;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+.faq-title {
+  font-weight: 600;
+  color: var(--rd-secondary-color);
+  margin-bottom: 15px;
+  font-size: 1rem;
 }
 
-:root.dark-mode .rd-contribution-section-title {
-  background-color: #1a1a1a;
-  color: #f0f0f0;
+.faq-question {
+  margin-bottom: 5px;
+  color: var(--rd-secondary-color);
+  font-size: 0.9rem;
 }
 
-:root.dark-mode .rd-contribution-item {
-  border-color: #404040;
-}
-
-:root.dark-mode .rd-contribution-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-:root.dark-mode .rd-contributor-name {
-  color: #2ecc71;
-}
-
-:root.dark-mode .rd-contribution-amount {
-  color: #f1c40f;
-}
-
-:root.dark-mode .rd-contribution-message {
-  color: #bbb;
-  border-color: #555;
-}
-
-:root.dark-mode .rd-contribution-date {
-  color: #aaa;
-}
-
-:root.dark-mode .rd-no-contributions {
-  color: #aaa;
+.faq-answer {
+  margin-bottom: 15px;
+  color: #4b5563;
+  font-size: 0.9rem;
+  padding-left: 10px;
 }
 
 /* Novel Budget Card */
@@ -823,7 +983,7 @@
   background-color: #effaf5;
   padding: 15px;
   border-radius: 8px;
-  border-left: 4px solid #2ecc71;
+  border-left: 4px solid var(--rd-active-color);
 }
 
 .balance-info {
@@ -839,7 +999,7 @@
 .balance-value {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #2ecc71;
+  color: var(--rd-active-color);
 }
 
 /* Contribution Actions */
@@ -885,93 +1045,382 @@
   transform: translateY(-2px);
 }
 
-/* Contribute Form */
-.contribute-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.contribution-btn-primary {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  box-shadow: 0 4px 8px rgba(30, 58, 138, 0.3);
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.contribution-btn-primary:hover {
+  background: linear-gradient(135deg, #1e40af, #2563eb);
+  box-shadow: 0 6px 12px rgba(30, 58, 138, 0.4);
 }
 
-.form-group label {
-  font-weight: 600;
-  color: #4b5563;
+.contribution-btn-secondary {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.form-group input, .form-group textarea {
-  padding: 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 1rem;
+.contribution-btn-secondary:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
-.form-group textarea {
-  min-height: 100px;
-  resize: vertical;
+/* ===== ANIMATIONS ===== */
+@keyframes shimmer {
+  0% {
+      left: -100%;
+  }
+  100% {
+      left: 100%;
+  }
 }
 
-.user-balance-info {
-  background-color: #f0f9ff;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  border-left: 4px solid #3b82f6;
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .rd-novel-content {
+      grid-template-columns: 1fr;
+  }
+
+  .rd-novel-header-content {
+      flex-direction: column;
+      padding: 15px 10px;
+  }
+
+  .rd-chapter-count {
+      position: static;
+      width: auto;
+      border-radius: 5px;
+      margin: 0 auto 15px;
+      padding: 8px 15px;
+      text-align: center;
+  }
+
+  .rd-novel-cover {
+      margin: 0 auto 20px;
+      width: 200px;
+      height: 300px;
+      max-width: 200px;
+      flex: 0 0 200px;
+  }
+
+  .rd-cover-image {
+      width: 100%;
+      height: 100%;
+  }
+
+  /* Update time - trở lại overlay trên ảnh */
+  .rd-update-time {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px;
+      text-align: center;
+      border-radius: 0 0 8px 8px;
+      z-index: 10;
+  }
+
+  .rd-alt-title {
+      padding-right: 0;
+      margin-bottom: 15px;
+  }
+
+  .rd-novel-info {
+      padding: 0 10px;
+      width: 100%;
+  }
+
+  .rd-actions-row {
+      flex-direction: column;
+  }
+
+  .rd-staff-members {
+      flex-direction: column;
+  }
+
+  .rd-novel-header {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+
+  .rd-social-share {
+      margin-top: 15px;
+      align-self: flex-end;
+  }
+
+  .module-list-nav-btn {
+      right: 15px;
+      bottom: 110px;
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+  }
+
+  .module-nav-sidebar {
+      width: 85%;
+      left: -85%;
+  }
+
+  .module-nav-sidebar.open {
+      left: 0;
+  }
+
+  /* Mobile stats layout: 2x2 grid */
+  .rd-stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+  }
+
+  .rd-stat-item {
+      border-right: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 12px 8px;
+  }
+
+  .rd-stat-item:nth-child(odd) {
+      border-right: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .rd-stat-item:nth-child(n+3) {
+      border-bottom: none;
+  }
+
+  .rd-stat-icon {
+      font-size: 1.3rem;
+      margin-right: 8px;
+  }
+
+  .rd-stat-value {
+      font-size: 1rem;
+  }
+
+  .rd-stat-label {
+      font-size: 0.75rem;
+  }
+
+   /* Banner adjustments for mobile */
+  .rd-novel-type-banner {
+      font-size: 9px;
+      padding: 4px 22px 4px 12px;
+      max-width: 120px;
+      transform: rotate(-5deg);
+      top: 12px;
+      left: -6px;
+  }
+
+  .rd-novel-type-banner::after {
+      right: -7px;
+      border-left: 7px solid #c0392b;
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+  }
+
+  .rd-novel-type-banner.original::after {
+      border-left-color: #229954;
+  }
+
+  .rd-novel-type-banner.translated::after {
+      border-left-color: #2980b9;
+  }
 }
 
-/* History Table */
-.history-table {
-  width: 100%;
-  border-collapse: collapse;
+@media (max-width: 480px) {
+  .rd-novel-title {
+      font-size: 1.8rem;
+  }
+
+  .rd-chapter-count {
+      padding: 5px 10px;
+      margin-bottom: 10px;
+  }
+
+  .rd-chapter-count-label {
+      font-size: 9px;
+  }
+
+  .rd-chapter-count-value {
+      font-size: 16px;
+  }
+
+  .rd-alt-title {
+      font-size: 14px;
+      margin-bottom: 10px;
+  }
+
+  .rd-novel-cover {
+      width: 160px;
+      height: 240px;
+      margin: 0 auto 15px;
+      flex: 0 0 160px;
+  }
+
+  .rd-novel-info {
+      padding: 0 5px;
+  }
+
+  .rd-genres-list {
+      gap: 4px;
+  }
+
+  .rd-genre-tag {
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 10px;
+  }
+
+  .rd-info-rows {
+      gap: 5px;
+  }
+
+  .rd-info-label {
+      flex: 0 0 80px;
+      font-size: 14px;
+  }
+
+  .rd-info-value {
+      font-size: 14px;
+  }
+
+  .module-nav-sidebar {
+      width: 90%;
+      left: -90%;
+  }
+
+  .module-nav-sidebar.open {
+      left: 0;
+  }
+
+  .rd-stat-item {
+      padding: 10px 6px;
+  }
+
+  .rd-stat-icon {
+      font-size: 1.1rem;
+      margin-right: 6px;
+  }
+
+  .rd-stat-value {
+      font-size: 0.85rem;
+  }
+
+  .rd-stat-label {
+      font-size: 0.65rem;
+  }
+
+   /* Banner adjustments for very small screens */
+  .rd-novel-type-banner {
+      font-size: 8px;
+      padding: 3px 20px 3px 10px;
+      max-width: 110px;
+      letter-spacing: 0.2px;
+      transform: rotate(-5deg);
+      top: 10px;
+      left: -4px;
+  }
+
+  .rd-novel-type-banner::after {
+      right: -6px;
+      border-left: 6px solid #c0392b;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+  }
+
+  .rd-novel-type-banner.original::after {
+      border-left-color: #229954;
+  }
+
+  .rd-novel-type-banner.translated::after {
+      border-left-color: #2980b9;
+  }
 }
 
-.history-table th, .history-table td {
-  padding: 10px 15px;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+/* ===== DARK MODE SUPPORT ===== */
+:root.dark-mode .rd-novel-title {
+  color: #fff;
 }
 
-.history-table th {
-  background-color: #f3f4f6;
-  font-weight: 600;
-  color: #4b5563;
+:root.dark-mode .rd-novel-card,
+:root.dark-mode .rd-description-section,
+:root.dark-mode .rd-section {
+  background-color: #2a2a2a;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-.history-user {
-  font-weight: 500;
+:root.dark-mode .rd-card-footer,
+:root.dark-mode .rd-stats-row {
+  background-color: #2a2a2a;
+  border-color: #404040;
 }
 
-.history-amount {
-  font-weight: 600;
+:root.dark-mode .rd-stat-item {
+  border-color: #404040;
 }
 
-.history-amount.positive {
-  color: #2ecc71;
+:root.dark-mode .rd-stat-item.clickable:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.history-amount.negative {
-  color: #e74c3c;
+:root.dark-mode .rd-stat-value {
+  color: #e0e0e0;
 }
 
-.history-balance {
-  color: #2ecc71;
-  font-weight: 600;
+:root.dark-mode .rd-stat-label {
+  color: #aaa;
 }
 
-.system-row {
-  background-color: #f8f9fa;
+:root.dark-mode .rd-description-title,
+:root.dark-mode .rd-section-title {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
 }
 
-.system-user {
-  color: #1e3a8a;
-  font-weight: 600;
+:root.dark-mode .rd-description-content,
+:root.dark-mode .rd-section-content {
+  color: #e0e0e0;
 }
 
-/* Dark mode support for new elements */
+:root.dark-mode .rd-show-toggle {
+  color: #66b0ff;
+  background-color: rgba(102, 176, 255, 0.1);
+}
+
+:root.dark-mode .rd-show-toggle:hover {
+  background-color: rgba(102, 176, 255, 0.2);
+}
+
+:root.dark-mode .module-nav-sidebar {
+  background-color: #2a2a2a;
+}
+
+:root.dark-mode .module-nav-header {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .module-nav-item {
+  border-color: #404040;
+}
+
+:root.dark-mode .module-nav-item:hover {
+  background-color: #333;
+}
+
+:root.dark-mode .module-nav-title {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .rd-staff-empty {
+  color: #777;
+}
+
+:root.dark-mode .rd-announcement {
+  background-color: #2c2c20;
+  border-left-color: #ff9800;
+  color: #e0e0e0;
+}
+
 :root.dark-mode .novel-budget {
   background-color: #1a3a2e;
   border-color: #27ae60;
@@ -995,161 +1444,93 @@
   background-color: #333;
 }
 
-:root.dark-mode .form-group input,
-:root.dark-mode .form-group textarea {
+:root.dark-mode .faq-section {
   background-color: #333;
-  border-color: #555;
+}
+
+:root.dark-mode .faq-title {
   color: #f0f0f0;
 }
 
-:root.dark-mode .form-group label {
+:root.dark-mode .faq-question {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .faq-answer {
   color: #ccc;
 }
 
-:root.dark-mode .user-balance-info {
-  background-color: #1a2332;
-  border-color: #3b82f6;
+:root.dark-mode .rd-contribution-section {
+  background-color: #2a2a2a;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
-:root.dark-mode .history-table th {
-  background-color: #333;
+:root.dark-mode .rd-contribution-section-title {
+  background-color: #1a1a1a;
   color: #f0f0f0;
 }
 
-:root.dark-mode .history-table td {
-  border-color: #555;
-  color: #f0f0f0;
+
+@keyframes moduleNavFadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(10px);
+  }
+  to {
+      opacity: 0.8;
+      transform: translateY(0);
+  }
 }
 
-:root.dark-mode .system-row {
-  background-color: #333;
+.module-list-nav-btn {
+  animation: moduleNavFadeIn 0.3s ease-in-out;
 }
 
-/* Responsive styles */
+/* ===== STATUS BADGE INLINE STYLES ===== */
+
+.rd-status-badge-inline {
+  align-items: center;
+  padding: 0.3em 0.4em;
+  border-radius: 0.3em;
+  font-size: 0.5em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  margin-left: 0.75em;
+  vertical-align: middle;
+}
+
+.rd-status-badge-inline.rd-status-ongoing {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+}
+
+.rd-status-badge-inline.rd-status-completed {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+}
+
+.rd-status-badge-inline.rd-status-hiatus {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
 @media (max-width: 768px) {
-  .rd-novel-content {
-    grid-template-columns: 1fr;
-  }
-
-  .rd-novel-header-content {
-    flex-direction: column;
-    padding: 15px 10px;
-  }
-
-  .rd-chapter-count {
-    position: static;
-    width: auto;
-    border-radius: 5px;
-    margin: 0 auto 15px;
-    padding: 8px 15px;
-    text-align: center;
-  }
-
-  .rd-novel-cover {
-    margin: 0 auto 20px;
-    width: 180px;
-    height: auto;
-    max-width: 180px;
-  }
-
-  .rd-cover-image {
-    width: 100%;
-    height: auto;
-  }
-
-  .rd-alt-title {
-    padding-right: 0;
-    margin-bottom: 15px;
-  }
-
-  .rd-novel-info {
-    padding: 0 10px;
-    width: 100%;
-  }
-
-  .rd-actions-row {
-    flex-direction: column;
-  }
-
-  .rd-staff-members {
-    flex-direction: column;
-  }
-
-  .rd-novel-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .rd-social-share {
-    margin-top: 15px;
-    align-self: flex-end;
+  .rd-novel-title {
+      font-size: 1.8rem;
   }
 }
 
 @media (max-width: 480px) {
   .rd-novel-title {
-    font-size: 1.8rem;
+      font-size: 1.6rem;
   }
-  
-  .rd-chapter-count {
-    padding: 5px 10px;
-    margin-bottom: 10px;
-  }
-  
-  .rd-chapter-count-label {
-    font-size: 9px;
-  }
-  
-  .rd-chapter-count-value {
-    font-size: 16px;
-  }
-  
-  .rd-alt-title {
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
-  
-  .rd-novel-cover {
-    width: 140px;
-    margin: 0 auto 15px;
-  }
-  
-  .rd-novel-info {
-    padding: 0 5px;
-  }
-  
-  .rd-genres-list {
-    gap: 4px;
-  }
-  
-  .rd-genre-tag {
-    font-size: 10px;
-    padding: 3px 6px;
-    border-radius: 10px;
-  }
-  
-  .rd-stats-row {
-    flex-direction: column;
-  }
-  
-  .rd-stat-item:not(:last-child)::after {
-    width: 0;
-    height: 1px;
-    bottom: 0;
-    left: 20%;
-    right: 20%;
-  }
-  
-  .rd-info-rows {
-    gap: 5px;
-  }
-  
-  .rd-info-label {
-    flex: 0 0 80px;
-    font-size: 14px;
-  }
-  
-  .rd-info-value {
-    font-size: 14px;
-  }
-} 
+}
+
+:root.dark-mode .rd-novel-title {
+  color: #f0f0f0;
+}
+

@@ -507,7 +507,6 @@ const ChapterContent = ({
                 paste_strip_class_attributes: 'none',
                 paste_merge_formats: false,
                 paste_webkit_styles: 'all',
-                paste_retain_style_properties: 'all',
                 // Handle footnote markers only - don't touch anything else
                 paste_preprocess: (plugin, args) => {
                   // Only handle footnote markers, absolutely nothing else

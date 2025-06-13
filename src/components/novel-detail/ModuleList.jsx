@@ -171,10 +171,11 @@ const ModuleList = memo(({
       )}
 
       {modules.map((module, moduleIndex) => (
-        <div 
-          key={module._id} 
-          className={`module-container ${isReordering ? 'reordering' : ''} ${module.mode ? `module-mode-${module.mode}` : ''}`}
-        >
+          <div
+              key={module._id}
+              className={`module-container ${isReordering ? 'reordering' : ''} ${module.mode ? `module-mode-${module.mode}` : ''}`}
+              data-module-id={module._id}
+          >
           <div className="module-content">
             <div className="module-cover">
               <img 

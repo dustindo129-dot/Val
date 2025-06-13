@@ -160,26 +160,22 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
   if (!isOpen) return null;
   
   return (
-    <div className="rating-modal-overlay">
-      <div className="rating-modal">
+    <div className="rd-rating-modal" style={{ display: 'flex' }}>
+      <div className="rd-rating-box">
         <div className="rating-modal-header">
-          <h2>Đánh giá truyện</h2>
+          <h2 className="rd-rating-title">Đánh giá truyện</h2>
           <button className="close-button" onClick={handleCancel}>×</button>
         </div>
         
-        <div className="rating-stars-container">
+        <div className="rd-rating-stars">
           {[1, 2, 3, 4, 5].map((star) => (
-            <button
+            <span
               key={star}
-              className={`star-button ${star <= selectedRating ? 'active' : ''}`}
+              className={`rd-rating-star ${star <= selectedRating ? 'active' : ''}`}
               onClick={() => setSelectedRating(star === selectedRating ? selectedRating : star)}
             >
-              {star <= selectedRating ? (
-                <StarFilledIcon size={32} />
-              ) : (
-                <StarIcon size={32} />
-              )}
-            </button>
+              {star <= selectedRating ? '★' : '☆'}
+            </span>
           ))}
         </div>
         
@@ -208,9 +204,9 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
           </div>
         )}
         
-        <div className="rating-modal-action-footer">
+        <div className="rd-rating-buttons">
           <button 
-            className="rating-modal-cancel-btn" 
+            className="rd-rating-btn rd-rating-btn-cancel" 
             onClick={handleCancel}
             disabled={rateMutation.isLoading}
           >
@@ -218,7 +214,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
           </button>
           
           <button 
-            className="rating-modal-submit-btn" 
+            className="rd-rating-btn rd-rating-btn-submit" 
             onClick={handleSubmit}
             disabled={rateMutation.isLoading || selectedRating === 0}
           >

@@ -1018,22 +1018,22 @@ const NovelDetail = ({ novelId }) => {
       ) : data?.novel ? (
         <>
           <NovelSEO novel={data.novel} />
-          <NovelInfo 
-            novel={data.novel}
-            user={user}
-            userInteraction={userInteraction}
-            hasChapters={hasChapters}
-            setIsRatingModalOpen={setIsRatingModalOpen}
-            handleModuleFormToggle={handleModuleFormToggle}
-            truncateHTML={truncateHTML}
-            chaptersData={chaptersData}
-            sidebar={<NovelContributions 
-              novelId={novelId} 
-              novelBudget={data.novel.novelBudget} 
-              onContributionSuccess={handleContributionSuccess}
-              modules={data.modules}
-            />}
-          />
+            <NovelInfo
+                novel={{...data.novel, modules: data.modules}}
+                user={user}
+                userInteraction={userInteraction}
+                hasChapters={hasChapters}
+                setIsRatingModalOpen={setIsRatingModalOpen}
+                handleModuleFormToggle={handleModuleFormToggle}
+                truncateHTML={truncateHTML}
+                chaptersData={chaptersData}
+                sidebar={<NovelContributions
+                    novelId={novelId}
+                    novelBudget={data.novel.novelBudget}
+                    onContributionSuccess={handleContributionSuccess}
+                    modules={data.modules}
+                />}
+            />
           
           <div className="chapter-list-container">
             <div className="chapters-header">

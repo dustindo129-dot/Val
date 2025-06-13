@@ -1705,7 +1705,6 @@ const AdminDashboard = () => {
                     paste_strip_class_attributes: 'none',
                     paste_merge_formats: false,
                     paste_webkit_styles: 'all',
-                    paste_retain_style_properties: 'all',
                     // Allow all HTML elements and attributes without restriction
                     valid_elements: '*[*]',
                     valid_children: '*[*]',
@@ -1786,7 +1785,6 @@ const AdminDashboard = () => {
                     paste_strip_class_attributes: 'none',
                     paste_merge_formats: false,
                     paste_webkit_styles: 'all',
-                    paste_retain_style_properties: 'all',
                     // Allow all HTML elements and attributes without restriction
                     valid_elements: '*[*]',
                     valid_children: '*[*]',

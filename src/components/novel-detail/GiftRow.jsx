@@ -47,37 +47,40 @@ const GiftRow = ({ novelId, onGiftSuccess }) => {
 
   if (loading) {
     return (
-      <div className="gift-row">
-        <div className="gift-loading">Đang tải quà tặng...</div>
-      </div>
+        <div className="gift-row">
+          <div className="gift-loading">Đang tải quà tặng...</div>
+        </div>
     );
   }
 
   return (
-    <>
-      <div className="gift-row">
-        {gifts.map((gift) => (
-          <div
-            key={gift._id}
-            className="gift-item"
-            onClick={() => handleGiftClick(gift)}
-            title={`Tặng ${gift.name} - ${gift.price} 🌾`}
-          >
-            <div className="gift-icon">{gift.icon}</div>
-            <div className="gift-count">{gift.count}</div>
-            <div className="gift-price">{gift.price} lúa</div>
-          </div>
-        ))}
-      </div>
+      <>
+        <div className="gift-row">
+          {gifts.map((gift) => (
+              <div
+                  key={gift._id}
+                  className="gift-item"
+                  onClick={() => handleGiftClick(gift)}
+                  title={`Tặng ${gift.name} - ${gift.price} 🌾`}
+              >
+                {/* FIXED: Icon container với count ở góc dưới trái */}
+                <div className="gift-icon-container">
+                  <div className="gift-icon">{gift.icon}</div>
+                  <div className="gift-count">{gift.count}</div>
+                </div>
+                <div className="gift-price">{gift.price} lúa</div>
+              </div>
+          ))}
+        </div>
 
-      <GiftModal
-        isOpen={isGiftModalOpen}
-        onClose={() => setIsGiftModalOpen(false)}
-        novelId={novelId}
-        onGiftSuccess={handleGiftSuccess}
-      />
-    </>
+        <GiftModal
+            isOpen={isGiftModalOpen}
+            onClose={() => setIsGiftModalOpen(false)}
+            novelId={novelId}
+            onGiftSuccess={handleGiftSuccess}
+        />
+      </>
   );
 };
 
-export default GiftRow; 
+export default GiftRow;
