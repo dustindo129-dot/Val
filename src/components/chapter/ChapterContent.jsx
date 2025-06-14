@@ -267,69 +267,86 @@ const ChapterContent = ({
     // Changes will be saved when the user clicks the Save Changes button
   };
 
+  const detectDecoratedContent = (content) => {
+    // Detect if content has decorative styling
+    const hasGradient = /background[^;]*gradient/i.test(content);
+    const hasBorder = /border[^;]*solid/i.test(content);
+    const hasBoxShadow = /box-shadow/i.test(content);
+    const hasSpecialPadding = /padding:\s*[2-9]\d+px/i.test(content);
+
+    return hasGradient || hasBorder || hasBoxShadow || hasSpecialPadding;
+  };
+
   // Process content to wrap footnote references and sanitize HTML
   const processContent = (content) => {
     if (!content) return '';
-    
+
     try {
-      // First ensure content is a string
       const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
-      
-      // Replace footnote markers with proper bi-directional links
+
+      // Replace footnote markers
       let processedContent = contentString.replace(
-        /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
-        (match, simpleNum, dataNum, supNum) => {
-          const footnoteNum = simpleNum || dataNum || supNum;
-          return `<sup><a href="#note-${footnoteNum}" id="ref-${footnoteNum}" class="footnote-ref" data-footnote="${footnoteNum}">[${footnoteNum}]</a></sup>`;
-        }
+          /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
+          (match, simpleNum, dataNum, supNum) => {
+            const footnoteNum = simpleNum || dataNum || supNum;
+            return `<sup><a href="#note-${footnoteNum}" id="ref-${footnoteNum}" class="footnote-ref" data-footnote="${footnoteNum}">[${footnoteNum}]</a></sup>`;
+          }
       );
 
-      // Clean up and normalize br tags
+      // Clean up br tags
       processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
-      
-      // Try to split by double <br> tags first
-      let paragraphBlocks = processedContent
-        .split(/(<br>\s*){2,}/gi)
-        .filter(block => block && block.trim() && !block.match(/^(<br>\s*)+$/i));
 
-      // If no double <br> splits found, try splitting by single <br> tags
+      // SMART APPROACH: Convert inline styles to CSS classes for theme compatibility
+      // Detect decorated content containers and convert them to themed classes
+      processedContent = processedContent.replace(
+          /<div\s+style="[^"]*(?:background[^"]*gradient|border[^"]*solid|box-shadow)[^"]*"[^>]*>/gi,
+          '<div class="content-frame themed-container">'
+      );
+
+      // Remove only conflicting typography styles, keep layout/decoration
+      processedContent = processedContent.replace(/font-family:\s*[^;'"]*[;'"]/gi, '');
+      processedContent = processedContent.replace(/font-size:\s*[\d.]+p[tx][;'"]/gi, '');
+      processedContent = processedContent.replace(/line-height:\s*[\d.]+[;'"]/gi, '');
+
+      // Remove fixed colors that conflict with theme, but preserve layout
+      processedContent = processedContent.replace(/color:\s*#[0-9a-fA-F]{3,6}[;'"]/gi, '');
+
+      // Rest of processing...
+      let paragraphBlocks = processedContent
+          .split(/(<br>\s*){2,}/gi)
+          .filter(block => block && block.trim() && !block.match(/^(<br>\s*)+$/i));
+
       if (paragraphBlocks.length <= 1) {
         paragraphBlocks = processedContent
-          .split(/<br>/gi)
-          .filter(block => block && block.trim());
+            .split(/<br>/gi)
+            .filter(block => block && block.trim());
       }
 
-      // Process each block
       paragraphBlocks = paragraphBlocks
-        .map(block => {
-          let trimmedBlock = block.trim();
-          
-          // Remove any remaining <br> tags at the beginning or end
-          trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
-          
-          if (trimmedBlock) {
-            // Only wrap in <p> if not already wrapped in block elements
-            if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
-              return `<p>${trimmedBlock}</p>`;
+          .map(block => {
+            let trimmedBlock = block.trim();
+            trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
+
+            if (trimmedBlock) {
+              if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+                return `<p>${trimmedBlock}</p>`;
+              }
+              return trimmedBlock;
             }
-            return trimmedBlock;
-          }
-          return '';
-        })
-        .filter(block => block);
+            return '';
+          })
+          .filter(block => block);
 
       let finalContent = paragraphBlocks.join('');
 
-      // If still no paragraphs were created, wrap the entire content
       if (paragraphBlocks.length === 0 && processedContent.trim()) {
         const cleanContent = processedContent.replace(/<br>/gi, ' ');
         finalContent = `<p>${cleanContent}</p>`;
       }
 
-      // Sanitize HTML but allow our footnote structure and paragraph tags
       return DOMPurify.sanitize(finalContent, {
-        ADD_TAGS: ['sup', 'a', 'p', 'br'],
-        ADD_ATTR: ['href', 'id', 'class', 'data-footnote']
+        ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
+        ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
       });
     } catch (error) {
       console.error('Lỗi xử lý nội dung:', error);
@@ -609,16 +626,19 @@ const ChapterContent = ({
         </>
       ) : (
         <div className="chapter-content-container">
-          <div 
-            ref={contentRef}
-            className="chapter-content"
-            style={{
-              fontSize: `${fontSize}px`,
-              fontFamily: fontFamily,
-              lineHeight: lineHeight,
-              padding: '15px 10px'
-            }}
-            dangerouslySetInnerHTML={{ __html: processContent(chapter.content) }}
+          <div
+              ref={contentRef}
+              className="chapter-content"
+              style={{
+                '--content-font-size': `${fontSize}px`,
+                '--content-font-family': fontFamily,
+                '--content-line-height': lineHeight,
+                fontSize: `${fontSize}px`,
+                fontFamily: fontFamily,
+                lineHeight: lineHeight,
+                padding: '15px 10px'
+              }}
+              dangerouslySetInnerHTML={{ __html: processContent(chapter.content) }}
           />
           
           {chapter.footnotes && chapter.footnotes.length > 0 && (

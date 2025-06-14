@@ -14,7 +14,7 @@
  * - Social sharing and interactions
  */
 
-:root {
+ :root {
   --primary-color: #3498db;
   --secondary-color: #2c3e50;
   --accent-color: #e74c3c;
@@ -1882,4 +1882,108 @@
 :root.dark-mode .draft-content p,
 :root.dark-mode .paid-content p {
   color: #d1d5db;
+}
+
+/* Themed container that adapts to reading themes */
+.chapter-content .content-frame.themed-container {
+  /* Base styling that works with all themes */
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 28px;
+  margin: 30px auto;
+  max-width: 1700px;
+  position: relative;
+  backdrop-filter: blur(2px);
+}
+
+/* Light theme (default) */
+.chapter-content .content-frame.themed-container {
+  background: linear-gradient(135deg,
+  rgba(248, 240, 255, 0.8),
+  rgba(227, 242, 253, 0.8),
+  rgba(255, 240, 245, 0.8)
+  );
+  border-color: rgba(216, 180, 254, 0.8);
+  box-shadow: 0 0 15px rgba(215, 190, 255, 0.3);
+}
+
+/* Dark theme */
+:root.dark-mode .chapter-content .content-frame.themed-container {
+  background: linear-gradient(135deg,
+  rgba(45, 35, 55, 0.8),
+  rgba(35, 45, 65, 0.8),
+  rgba(55, 35, 45, 0.8)
+  );
+  border-color: rgba(120, 80, 200, 0.6);
+  box-shadow: 0 0 15px rgba(120, 80, 200, 0.2);
+}
+
+/* Sepia theme */
+:root.sepia-mode .chapter-content .content-frame.themed-container {
+  background: linear-gradient(135deg,
+  rgba(248, 240, 220, 0.8),
+  rgba(240, 235, 215, 0.8),
+  rgba(245, 240, 225, 0.8)
+  );
+  border-color: rgba(180, 150, 120, 0.8);
+  box-shadow: 0 0 15px rgba(180, 150, 120, 0.3);
+}
+
+/* Ensure typography respects user settings */
+.chapter-content .content-frame.themed-container {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--text-color);
+}
+
+/* Preserve text formatting within frames */
+.chapter-content .content-frame.themed-container h1,
+.chapter-content .content-frame.themed-container h2,
+.chapter-content .content-frame.themed-container h3 {
+  color: inherit;
+  text-align: center;
+  margin: 0 0 20px 0;
+}
+
+.chapter-content .content-frame.themed-container h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.chapter-content .content-frame.themed-container p {
+  margin: 1.2em 0;
+  text-align: justify;
+  color: inherit;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .chapter-content .content-frame.themed-container {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 95%;
+  }
+}
+
+/* Override only conflicting styles, preserve frame structure */
+.chapter-content .content-frame.themed-container * {
+  font-family: inherit !important;
+  color: inherit !important;
+}
+
+/* Special styling for title within frame */
+.chapter-content .content-frame.themed-container h2:first-child {
+  background: linear-gradient(45deg, var(--primary-color, #7c3aed), var(--accent-color, #a855f7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+}
+
+/* Fallback for browsers that don't support background-clip */
+@supports not (-webkit-background-clip: text) {
+  .chapter-content .content-frame.themed-container h2:first-child {
+    color: var(--primary-color, #7c3aed);
+  }
 }

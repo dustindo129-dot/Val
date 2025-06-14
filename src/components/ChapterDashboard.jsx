@@ -790,9 +790,9 @@ const ChapterDashboard = () => {
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                         'searchreplace', 'visualblocks', 'code', 'fullscreen',
                         'insertdatetime', 'media', 'table', 'help', 'wordcount',
-                        'preview'
+                        'preview', 'paste'
                       ],
-                      toolbar: 'undo redo | formatselect | ' +
+                      toolbar: 'undo redo | pastetext | formatselect | ' +
                           'bold italic underline strikethrough | ' +
                           'alignleft aligncenter alignright alignjustify | ' +
                           'bullist numlist outdent indent | ' +
