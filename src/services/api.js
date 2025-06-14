@@ -1,7 +1,7 @@
 import axios from 'axios';
 import config from '../config/config';
 import { queryClient } from '../lib/react-query';
-import hybridCdnService from './bunnyUploadService';
+import bunnyUploadService from './bunnyUploadService';
 import { ensureValidToken, refreshToken } from './tokenRefresh';
 
 // Helper function to validate JWT token format
@@ -444,7 +444,7 @@ const api = {
 
   uploadModuleCover: async (file) => {
     try {
-      return await hybridCdnService.uploadFile(file, 'illustration');
+      return await bunnyUploadService.uploadFile(file, 'illustration');
     } catch (error) {
       console.error('Error uploading cover image:', error);
       throw new Error('Failed to upload cover image');

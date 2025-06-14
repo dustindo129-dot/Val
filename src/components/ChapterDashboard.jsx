@@ -31,10 +31,10 @@ import {
   faExclamationTriangle, faSpinner, faEdit
 } from '@fortawesome/free-solid-svg-icons';
 import bunnyUploadService from '../services/bunnyUploadService';
-import hybridCdnService from '../services/bunnyUploadService';
 import LoadingSpinner from './LoadingSpinner';
 import { createUniqueSlug, generateNovelUrl } from '../utils/slugUtils';
 import { translateChapterModuleStatus } from '../utils/statusTranslation';
+import DOMPurify from 'dompurify';
 
 /**
  * ChapterDashboard Component
@@ -428,15 +428,148 @@ const ChapterDashboard = () => {
     }
 
     try {
-      // Get content from TinyMCE editor and clean it
+      // Get content from TinyMCE editor and process it
       const content = editorRef.current.getContent();
 
-      // Basic HTML cleaning while preserving important formatting
-      const cleanedContent = content
+      // Process content with consistent formatting preservation (matching ChapterContent)
+      let processedContent = content;
+
+      // Replace footnote markers
+      processedContent = processedContent.replace(
+          /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
+          (match, simpleNum, dataNum, supNum) => {
+            const footnoteNum = simpleNum || dataNum || supNum;
+            return `<sup class="footnote-marker" data-footnote="${footnoteNum}">[${footnoteNum}]</sup>`;
+          }
+      );
+
+      // Clean up br tags
+      processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
+
+      // PRESERVE ALL TEXT FORMATTING - Convert inline styles to CSS classes
+      processedContent = processedContent.replace(
+          /<span[^>]*style="([^"]*)"[^>]*>/gi,
+          (match, styleContent) => {
+            const classes = [];
+
+            // Preserve font-weight (bold)
+            if (/font-weight:\s*bold/i.test(styleContent)) {
+              classes.push('text-bold');
+            }
+
+            // Preserve font-style (italic)
+            if (/font-style:\s*italic/i.test(styleContent)) {
+              classes.push('text-italic');
+            }
+
+            // Preserve text-decoration (underline)
+            if (/text-decoration:\s*underline/i.test(styleContent)) {
+              classes.push('text-underline');
+            }
+
+            // Preserve colors - extract and convert to CSS custom properties
+            const colorMatch = styleContent.match(/color:\s*#([0-9a-fA-F]{3,6})/i);
+            if (colorMatch) {
+              classes.push(`text-color-${colorMatch[1]}`);
+            }
+
+            // Preserve background colors
+            const bgColorMatch = styleContent.match(/background-color:\s*#([0-9a-fA-F]{3,6})/i);
+            if (bgColorMatch) {
+              classes.push(`bg-color-${bgColorMatch[1]}`);
+            }
+
+            // Remove only conflicting typography, preserve formatting
+            const preservedStyles = styleContent.replace(
+                /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                ''
+            ).trim();
+
+            const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+            const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
+
+            return `<span${classStr}${styleStr}>`;
+          }
+      );
+
+      // Handle paragraph-level text alignment
+      processedContent = processedContent.replace(
+          /<p[^>]*style="([^"]*)"[^>]*>/gi,
+          (match, styleContent) => {
+            const classes = [];
+
+            // Preserve text alignment
+            if (/text-align:\s*center/i.test(styleContent)) {
+              classes.push('text-center');
+            } else if (/text-align:\s*right/i.test(styleContent)) {
+              classes.push('text-right');
+            } else if (/text-align:\s*left/i.test(styleContent)) {
+              classes.push('text-left');
+            }
+
+            // Remove only conflicting styles, preserve alignment and spacing
+            const preservedStyles = styleContent.replace(
+                /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                ''
+            ).trim();
+
+            const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+            const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
+
+            return `<p${classStr}${styleStr}>`;
+          }
+      );
+
+      // Convert decorated containers to themed classes
+      processedContent = processedContent.replace(
+          /<div\s+style="[^"]*(?:background[^"]*gradient|border[^"]*solid|box-shadow)[^"]*"[^>]*>/gi,
+          '<div class="content-frame themed-container">'
+      );
+
+      // Process paragraph blocks
+      let paragraphBlocks = processedContent
+          .split(/(<br>\s*){2,}/gi)
+          .filter(block => block && block.trim() && !block.match(/^(<br>\s*)+$/i));
+
+      if (paragraphBlocks.length <= 1) {
+        paragraphBlocks = processedContent
+            .split(/<br>/gi)
+            .filter(block => block && block.trim());
+      }
+
+      paragraphBlocks = paragraphBlocks
+          .map(block => {
+            let trimmedBlock = block.trim();
+            trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
+
+            if (trimmedBlock) {
+              if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+                return `<p>${trimmedBlock}</p>`;
+              }
+              return trimmedBlock;
+            }
+            return '';
+          })
+          .filter(block => block);
+
+      let finalContent = paragraphBlocks.join('');
+
+      if (paragraphBlocks.length === 0 && processedContent.trim()) {
+        const cleanContent = processedContent.replace(/<br>/gi, ' ');
+        finalContent = `<p>${cleanContent}</p>`;
+      }
+
+      // Final cleaning while preserving important formatting
+      let cleanedContent = finalContent
           .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
-          .replace(/\s+/g, ' ') // Replace multiple spaces with single space
           .replace(/>\s+</g, '><') // Remove spaces between HTML tags
           .trim();
+
+      // Sanitize the processed content
+      cleanedContent = DOMPurify.sanitize(cleanedContent, {
+        ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
+        ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
+      });
 
       // Check content size
       const contentSizeMB = (cleanedContent.length / (1024 * 1024)).toFixed(2);
@@ -820,12 +953,8 @@ const ChapterDashboard = () => {
                       paste_strip_class_attributes: 'none',
                       paste_merge_formats: false,
                       paste_webkit_styles: 'all',
-                      // Allow all HTML elements and attributes without restriction
-                      valid_elements: '*[*]',
-                      valid_children: '*[*]',
-                      extended_valid_elements: '*[*]',
                       // Handle footnote markers only - don't touch anything else
-                      paste_preprocess: function(plugin, args) {
+                      paste_preprocess: (plugin, args) => {
                         // Only handle footnote markers, absolutely nothing else
                         args.content = args.content.replace(
                           /\[(\d+)\]/g,
@@ -833,6 +962,10 @@ const ChapterDashboard = () => {
                         );
                         // Don't modify the content at all otherwise
                       },
+                      // Allow all HTML elements and attributes without restriction
+                      valid_elements: '*[*]',
+                      valid_children: '*[*]',
+                      extended_valid_elements: '*[*]',
                       setup: function(editor) {
                         // Add custom button for inserting footnotes
                         editor.ui.registry.addButton('footnote', {
@@ -861,23 +994,23 @@ const ChapterDashboard = () => {
                           }
                         });
                       },
-                      images_upload_handler: (blobInfo) => {
-                        return new Promise((resolve, reject) => {
-                          const file = blobInfo.blob();
-                          
-                          // Use bunny CDN service
-                          bunnyUploadService.uploadFile(file, 'illustrations')
-                            .then(url => {
-                              resolve(url);
-                            })
-                            .catch(error => {
-                              console.error('Image upload error:', error);
-                              reject('Image upload failed');
-                            });
-                        });
-                      },
-                      images_upload_base_path: '/',
-                      automatic_uploads: true
+                                              images_upload_handler: (blobInfo) => {
+                          return new Promise((resolve, reject) => {
+                            const file = blobInfo.blob();
+                            
+                            // Use bunny CDN service
+                            bunnyUploadService.uploadFile(file, 'illustrations')
+                              .then(url => {
+                                resolve(url);
+                              })
+                              .catch(error => {
+                                console.error('Image upload error:', error);
+                                reject('Image upload failed');
+                              });
+                          });
+                        },
+                        images_upload_base_path: '/',
+                        automatic_uploads: true
                     }}
                 />
               </div>

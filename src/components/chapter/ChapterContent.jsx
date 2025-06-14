@@ -8,7 +8,7 @@ import ChapterFootnotes from './ChapterFootnotes';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import './ChapterContent.css';
-import hybridCdnService from '../../services/bunnyUploadService';
+import bunnyUploadService from '../../services/bunnyUploadService';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 
 const ChapterContent = ({
@@ -267,16 +267,6 @@ const ChapterContent = ({
     // Changes will be saved when the user clicks the Save Changes button
   };
 
-  const detectDecoratedContent = (content) => {
-    // Detect if content has decorative styling
-    const hasGradient = /background[^;]*gradient/i.test(content);
-    const hasBorder = /border[^;]*solid/i.test(content);
-    const hasBoxShadow = /box-shadow/i.test(content);
-    const hasSpecialPadding = /padding:\s*[2-9]\d+px/i.test(content);
-
-    return hasGradient || hasBorder || hasBoxShadow || hasSpecialPadding;
-  };
-
   // Process content to wrap footnote references and sanitize HTML
   const processContent = (content) => {
     if (!content) return '';
@@ -296,20 +286,85 @@ const ChapterContent = ({
       // Clean up br tags
       processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
 
-      // SMART APPROACH: Convert inline styles to CSS classes for theme compatibility
-      // Detect decorated content containers and convert them to themed classes
+      // PRESERVE ALL TEXT FORMATTING - Convert inline styles to CSS classes
+      processedContent = processedContent.replace(
+          /<span[^>]*style="([^"]*)"[^>]*>/gi,
+          (match, styleContent) => {
+            const classes = [];
+
+            // Preserve font-weight (bold)
+            if (/font-weight:\s*bold/i.test(styleContent)) {
+              classes.push('text-bold');
+            }
+
+            // Preserve font-style (italic)
+            if (/font-style:\s*italic/i.test(styleContent)) {
+              classes.push('text-italic');
+            }
+
+            // Preserve text-decoration (underline)
+            if (/text-decoration:\s*underline/i.test(styleContent)) {
+              classes.push('text-underline');
+            }
+
+            // Preserve colors - extract and convert to CSS custom properties
+            const colorMatch = styleContent.match(/color:\s*#([0-9a-fA-F]{3,6})/i);
+            if (colorMatch) {
+              classes.push(`text-color-${colorMatch[1]}`);
+            }
+
+            // Preserve background colors
+            const bgColorMatch = styleContent.match(/background-color:\s*#([0-9a-fA-F]{3,6})/i);
+            if (bgColorMatch) {
+              classes.push(`bg-color-${bgColorMatch[1]}`);
+            }
+
+            // Remove only conflicting typography, preserve formatting
+            const preservedStyles = styleContent.replace(
+                /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                ''
+            ).trim();
+
+            const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+            const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
+
+            return `<span${classStr}${styleStr}>`;
+          }
+      );
+
+      // Handle paragraph-level text alignment
+      processedContent = processedContent.replace(
+          /<p[^>]*style="([^"]*)"[^>]*>/gi,
+          (match, styleContent) => {
+            const classes = [];
+
+            // Preserve text alignment
+            if (/text-align:\s*center/i.test(styleContent)) {
+              classes.push('text-center');
+            } else if (/text-align:\s*right/i.test(styleContent)) {
+              classes.push('text-right');
+            } else if (/text-align:\s*left/i.test(styleContent)) {
+              classes.push('text-left');
+            }
+
+            // Remove only conflicting styles, preserve alignment and spacing
+            const preservedStyles = styleContent.replace(
+                /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                ''
+            ).trim();
+
+            const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+            const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
+
+            return `<p${classStr}${styleStr}>`;
+          }
+      );
+
+      // Convert decorated containers to themed classes
       processedContent = processedContent.replace(
           /<div\s+style="[^"]*(?:background[^"]*gradient|border[^"]*solid|box-shadow)[^"]*"[^>]*>/gi,
           '<div class="content-frame themed-container">'
       );
-
-      // Remove only conflicting typography styles, keep layout/decoration
-      processedContent = processedContent.replace(/font-family:\s*[^;'"]*[;'"]/gi, '');
-      processedContent = processedContent.replace(/font-size:\s*[\d.]+p[tx][;'"]/gi, '');
-      processedContent = processedContent.replace(/line-height:\s*[\d.]+[;'"]/gi, '');
-
-      // Remove fixed colors that conflict with theme, but preserve layout
-      processedContent = processedContent.replace(/color:\s*#[0-9a-fA-F]{3,6}[;'"]/gi, '');
 
       // Rest of processing...
       let paragraphBlocks = processedContent
@@ -551,7 +606,7 @@ const ChapterContent = ({
                     const file = blobInfo.blob();
                     
                     // Use bunny CDN service
-                    hybridCdnService.uploadFile(file, 'illustrations')
+                    bunnyUploadService.uploadFile(file, 'illustrations')
                       .then(url => {
                         resolve(url);
                       })

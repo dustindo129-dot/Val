@@ -1987,3 +1987,128 @@
     color: var(--primary-color, #7c3aed);
   }
 }
+
+/* Text formatting classes that preserve original styling */
+.chapter-content .text-bold {
+  font-weight: bold;
+}
+
+.chapter-content .text-italic {
+  font-style: italic;
+}
+
+.chapter-content .text-underline {
+  text-decoration: underline;
+}
+
+/* Text alignment classes */
+.chapter-content .text-center {
+  text-align: center !important;
+}
+
+.chapter-content .text-right {
+  text-align: right !important;
+}
+
+.chapter-content .text-left {
+  text-align: left !important;
+}
+
+/* Dynamic color classes - using CSS custom properties */
+.chapter-content [class*="text-color-"] {
+  /* Colors will be set dynamically based on theme */
+}
+
+.chapter-content [class*="bg-color-"] {
+  /* Background colors will be set dynamically */
+}
+
+/* Specific color mappings that work with themes */
+.chapter-content .text-color-ff0000,
+.chapter-content .text-color-f00 {
+  color: #e74c3c; /* Red that works in light mode */
+}
+
+.chapter-content .text-color-0000ff,
+.chapter-content .text-color-00f {
+  color: #3498db; /* Blue that works in light mode */
+}
+
+.chapter-content .text-color-008000 {
+  color: #27ae60; /* Green that works in light mode */
+}
+
+/* Dark mode color adjustments */
+:root.dark-mode .chapter-content .text-color-ff0000,
+:root.dark-mode .chapter-content .text-color-f00 {
+  color: #ff6b6b; /* Lighter red for dark mode */
+}
+
+:root.dark-mode .chapter-content .text-color-0000ff,
+:root.dark-mode .chapter-content .text-color-00f {
+  color: #74b9ff; /* Lighter blue for dark mode */
+}
+
+:root.dark-mode .chapter-content .text-color-008000 {
+  color: #55efc4; /* Lighter green for dark mode */
+}
+
+/* Sepia mode color adjustments */
+:root.sepia-mode .chapter-content .text-color-ff0000,
+:root.sepia-mode .chapter-content .text-color-f00 {
+  color: #d63031; /* Adjusted red for sepia */
+}
+
+:root.sepia-mode .chapter-content .text-color-0000ff,
+:root.sepia-mode .chapter-content .text-color-00f {
+  color: #0984e3; /* Adjusted blue for sepia */
+}
+
+:root.sepia-mode .chapter-content .text-color-008000 {
+  color: #00b894; /* Adjusted green for sepia */
+}
+
+/* Ensure text formatting inherits font settings but preserves weight/style */
+.chapter-content .text-bold,
+.chapter-content .text-italic,
+.chapter-content .text-underline {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Combination classes */
+.chapter-content .text-bold.text-italic {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.chapter-content .text-bold.text-underline {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.chapter-content .text-italic.text-underline {
+  font-style: italic;
+  text-decoration: underline;
+}
+
+/* Override base typography while preserving formatting */
+.chapter-content {
+  font-family: var(--content-font-family, 'Arial, sans-serif') !important;
+  font-size: var(--content-font-size, 1rem) !important;
+  line-height: var(--content-line-height, 1.6) !important;
+  color: var(--text-color) !important;
+}
+
+/* Ensure span elements inherit base typography but preserve their formatting */
+.chapter-content span {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Don't override color for spans with specific color classes */
+.chapter-content span:not([class*="text-color-"]) {
+  color: inherit;
+}
