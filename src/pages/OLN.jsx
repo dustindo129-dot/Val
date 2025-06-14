@@ -204,7 +204,7 @@ const OLN = () => {
     const [expandedTags, setExpandedTags] = useState({});
     const [needsToggle, setNeedsToggle] = useState({});
     const [descriptionNeedsReadMore, setDescriptionNeedsReadMore] = useState({});
-    const [sortOrder, setSortOrder] = useState('alphabet'); // Default sort: alphabetical
+    const [sortOrder, setSortOrder] = useState('updated'); // Default sort: most recently updated
     const currentPage = parseInt(page) || 1;
     const tagListRefs = useRef({});
     const descriptionRefs = useRef({});
@@ -223,12 +223,16 @@ const OLN = () => {
             });
             
             // Sort novels
-            if (sortOrder === 'alphabet') {
-                vietnameseNovels.sort((a, b) => a.title.localeCompare(b.title));
-            } else if (sortOrder === 'newest') {
+            if (sortOrder === 'newest') {
                 vietnameseNovels.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             } else if (sortOrder === 'updated') {
                 vietnameseNovels.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            } else if (sortOrder === 'rating') {
+                vietnameseNovels.sort((a, b) => {
+                    const aRating = parseFloat(a.averageRating || '0');
+                    const bRating = parseFloat(b.averageRating || '0');
+                    return bRating - aRating; // Sort by highest rating first
+                });
             }
             
             // Handle pagination manually after filtering
@@ -546,9 +550,9 @@ const OLN = () => {
                                     onChange={handleSortChange}
                                     className="sort-select"
                                 >
-                                    <option value="alphabet">A-Z</option>
+                                    <option value="updated">Mới cập nhật</option>
                                     <option value="newest">Mới nhất</option>
-                                    <option value="updated">Cập nhật gần đây</option>
+                                    <option value="rating">Đánh giá cao nhất</option>
                                 </select>
                             </div>
                         </div>
