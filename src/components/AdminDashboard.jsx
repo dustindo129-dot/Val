@@ -1658,6 +1658,8 @@ const AdminDashboard = () => {
                     license_key: 'gpl',
                     height: 300,
                     menubar: false,
+                    remove_empty_elements: false,
+                    forced_root_block: 'p',
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                       'searchreplace', 'visualblocks', 'code', 'fullscreen',
@@ -1750,6 +1752,8 @@ const AdminDashboard = () => {
                     license_key: 'gpl',
                     height: 200,
                     menubar: false,
+                    remove_empty_elements: false,
+                    forced_root_block: 'p',
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'charmap',
                       'searchreplace', 'visualblocks', 'code', 'fullscreen',

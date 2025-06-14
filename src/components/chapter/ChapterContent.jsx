@@ -268,146 +268,260 @@ const ChapterContent = ({
   };
 
   // Process content to wrap footnote references and sanitize HTML
-  const processContent = (content) => {
-    if (!content) return '';
+    const processContent = (content) => {
+        if (!content) return '';
 
-    try {
-      const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
+        try {
+            const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
 
-      // Replace footnote markers
-      let processedContent = contentString.replace(
-          /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
-          (match, simpleNum, dataNum, supNum) => {
-            const footnoteNum = simpleNum || dataNum || supNum;
-            return `<sup><a href="#note-${footnoteNum}" id="ref-${footnoteNum}" class="footnote-ref" data-footnote="${footnoteNum}">[${footnoteNum}]</a></sup>`;
-          }
-      );
+            // Replace footnote markers
+            let processedContent = contentString.replace(
+                /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
+                (match, simpleNum, dataNum, supNum) => {
+                    const footnoteNum = simpleNum || dataNum || supNum;
+                    return `<sup><a href="#note-${footnoteNum}" id="ref-${footnoteNum}" class="footnote-ref" data-footnote="${footnoteNum}">[${footnoteNum}]</a></sup>`;
+                }
+            );
 
-      // Clean up br tags
-      processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
+            // Clean up br tags
+            processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
 
-      // PRESERVE ALL TEXT FORMATTING - Convert inline styles to CSS classes
-      processedContent = processedContent.replace(
-          /<span[^>]*style="([^"]*)"[^>]*>/gi,
-          (match, styleContent) => {
-            const classes = [];
+            // COLOR DETECTION - Preserve intentional colors, remove default colors
+            processedContent = processedContent.replace(
+                /<span[^>]*style="([^"]*)"[^>]*>/gi,
+                (match, styleContent) => {
+                    const classes = [];
+                    let preservedStyles = styleContent;
 
-            // Preserve font-weight (bold)
-            if (/font-weight:\s*bold/i.test(styleContent)) {
-              classes.push('text-bold');
+                    // Preserve font-weight (bold)
+                    if (/font-weight:\s*bold/i.test(styleContent)) {
+                        classes.push('text-bold');
+                    }
+
+                    // Preserve font-style (italic)
+                    if (/font-style:\s*italic/i.test(styleContent)) {
+                        classes.push('text-italic');
+                    }
+
+                    // Preserve text-decoration (underline)
+                    if (/text-decoration:\s*underline/i.test(styleContent)) {
+                        classes.push('text-underline');
+                    }
+
+                    // COLOR HANDLING
+                    const colorMatch = styleContent.match(/color:\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|[a-zA-Z]+)/i);
+                    if (colorMatch) {
+                        const colorValue = colorMatch[1].toLowerCase();
+
+                        // Check if it's a default black color (these should follow theme)
+                        const isDefaultBlack = colorValue === '#000000' ||
+                            colorValue === '#000' ||
+                            colorValue === 'black' ||
+                            colorValue === 'rgb(0, 0, 0)' ||
+                            colorValue === 'rgb(0,0,0)';
+
+                        if (isDefaultBlack) {
+                            // Remove default black color - let theme handle it
+                            preservedStyles = preservedStyles.replace(/color:\s*[^;]+[;]?/gi, '');
+                            classes.push('text-default-color');
+                        } else {
+                            // Keep intentional colors
+                            const hexColor = convertToHex(colorValue);
+                            if (hexColor) {
+                                classes.push(`text-color-${hexColor.replace('#', '')}`);
+                            }
+                        }
+                    } else {
+                        // No color specified - should follow theme
+                        classes.push('text-default-color');
+                    }
+
+                    // Preserve background colors (always keep)
+                    const bgColorMatch = styleContent.match(/background-color:\s*#([0-9a-fA-F]{3,6})/i);
+                    if (bgColorMatch) {
+                        classes.push(`bg-color-${bgColorMatch[1]}`);
+                    }
+
+                    // Remove conflicting typography but keep everything else
+                    preservedStyles = preservedStyles.replace(
+                        /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                        ''
+                    );
+
+                    // Remove color if it was default black
+                    if (colorMatch) {
+                        const colorValue = colorMatch[1].toLowerCase();
+                        const isDefaultBlack = colorValue === '#000000' ||
+                            colorValue === '#000' ||
+                            colorValue === 'black' ||
+                            colorValue === 'rgb(0, 0, 0)' ||
+                            colorValue === 'rgb(0,0,0)';
+                        if (isDefaultBlack) {
+                            preservedStyles = preservedStyles.replace(/color:\s*[^;]+[;]?/gi, '');
+                        }
+                    }
+
+                    preservedStyles = preservedStyles.trim().replace(/;$/, '');
+
+                    const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+                    const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
+
+                    return `<span${classStr}${styleStr}>`;
+                }
+            );
+
+            // Handle paragraph-level styles
+            processedContent = processedContent.replace(
+                /<p[^>]*style="([^"]*)"[^>]*>/gi,
+                (match, styleContent) => {
+                    const classes = [];
+                    let preservedStyles = styleContent;
+
+                    // Preserve text alignment
+                    if (/text-align:\s*center/i.test(styleContent)) {
+                        classes.push('text-center');
+                    } else if (/text-align:\s*right/i.test(styleContent)) {
+                        classes.push('text-right');
+                    } else if (/text-align:\s*left/i.test(styleContent)) {
+                        classes.push('text-left');
+                    }
+
+                    // Handle paragraph colors the same way
+                    const colorMatch = styleContent.match(/color:\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|[a-zA-Z]+)/i);
+                    if (colorMatch) {
+                        const colorValue = colorMatch[1].toLowerCase();
+                        const isDefaultBlack = colorValue === '#000000' ||
+                            colorValue === '#000' ||
+                            colorValue === 'black' ||
+                            colorValue === 'rgb(0, 0, 0)' ||
+                            colorValue === 'rgb(0,0,0)';
+
+                        if (isDefaultBlack) {
+                            preservedStyles = preservedStyles.replace(/color:\s*[^;]+[;]?/gi, '');
+                            classes.push('text-default-color');
+                        } else {
+                            const hexColor = convertToHex(colorValue);
+                            if (hexColor) {
+                                classes.push(`text-color-${hexColor.replace('#', '')}`);
+                            }
+                        }
+                    } else {
+                        classes.push('text-default-color');
+                    }
+
+                    // Remove conflicting styles
+                    preservedStyles = preservedStyles.replace(
+                        /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                        ''
+                    );
+
+                    preservedStyles = preservedStyles.trim().replace(/;$/, '');
+
+                    const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
+                    const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
+
+                    return `<p${classStr}${styleStr}>`;
+                }
+            );
+
+            // Convert decorated containers to themed classes
+            processedContent = processedContent.replace(
+                /<div\s+style="[^"]*(?:background[^"]*gradient|border[^"]*solid|box-shadow)[^"]*"[^>]*>/gi,
+                '<div class="content-frame themed-container">'
+            );
+
+            // Check if content already contains proper paragraph tags
+            if (processedContent.includes('<p')) {
+                // Content already has paragraph structure, preserve it including empty paragraphs
+                let finalContent = processedContent;
+                // Just ensure empty paragraphs have non-breaking space
+                finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '<p$1>&nbsp;</p>');
+                
+                return DOMPurify.sanitize(finalContent, {
+                    ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
+                    ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
+                    KEEP_CONTENT: false,
+                    ALLOW_EMPTY_TAGS: ['p'],
+                });
             }
 
-            // Preserve font-style (italic)
-            if (/font-style:\s*italic/i.test(styleContent)) {
-              classes.push('text-italic');
+            // Fallback: process content that doesn't have paragraph structure
+            let paragraphBlocks = processedContent
+                .split(/(<br>\s*){2,}/gi)
+                .filter(block => block !== undefined && !block.match(/^(<br>\s*)+$/i));
+
+            if (paragraphBlocks.length <= 1) {
+                paragraphBlocks = processedContent
+                    .split(/<br>/gi);
             }
 
-            // Preserve text-decoration (underline)
-            if (/text-decoration:\s*underline/i.test(styleContent)) {
-              classes.push('text-underline');
+            paragraphBlocks = paragraphBlocks
+                .map(block => {
+                    let trimmedBlock = block.trim();
+                    trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
+
+                    if (trimmedBlock) {
+                        if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+                            return `<p class="text-default-color">${trimmedBlock}</p>`;
+                        }
+                        return trimmedBlock;
+                    }
+                    // Return empty paragraph with non-breaking space to preserve spacing
+                    return '<p>&nbsp;</p>';
+                });
+
+            let finalContent = paragraphBlocks.join('');
+
+            if (paragraphBlocks.length === 0 && processedContent.trim()) {
+                const cleanContent = processedContent.replace(/<br>/gi, ' ');
+                finalContent = `<p class="text-default-color">${cleanContent}</p>`;
             }
 
-            // Preserve colors - extract and convert to CSS custom properties
-            const colorMatch = styleContent.match(/color:\s*#([0-9a-fA-F]{3,6})/i);
-            if (colorMatch) {
-              classes.push(`text-color-${colorMatch[1]}`);
+            return DOMPurify.sanitize(finalContent, {
+                ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
+                ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
+                KEEP_CONTENT: false,
+                ALLOW_EMPTY_TAGS: ['p'],
+            });
+        } catch (error) {
+            console.error('Lỗi xử lý nội dung:', error);
+            return 'Lỗi tải chương nội dung';
+        }
+    };
+
+// Helper function to convert colors to hex
+    const convertToHex = (color) => {
+        if (color.startsWith('#')) {
+            return color;
+        }
+
+        if (color.startsWith('rgb')) {
+            const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            if (rgbMatch) {
+                const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+                const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+                const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+                return `#${r}${g}${b}`;
             }
+        }
 
-            // Preserve background colors
-            const bgColorMatch = styleContent.match(/background-color:\s*#([0-9a-fA-F]{3,6})/i);
-            if (bgColorMatch) {
-              classes.push(`bg-color-${bgColorMatch[1]}`);
-            }
+        // Named colors to hex conversion
+        const namedColors = {
+            'red': '#ff0000',
+            'blue': '#0000ff',
+            'green': '#008000',
+            'yellow': '#ffff00',
+            'purple': '#800080',
+            'orange': '#ffa500',
+            'pink': '#ffc0cb',
+            'brown': '#a52a2a',
+            'gray': '#808080',
+            'grey': '#808080'
+        };
 
-            // Remove only conflicting typography, preserve formatting
-            const preservedStyles = styleContent.replace(
-                /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
-                ''
-            ).trim();
+        return namedColors[color.toLowerCase()] || null;
+    };
 
-            const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
-            const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
-
-            return `<span${classStr}${styleStr}>`;
-          }
-      );
-
-      // Handle paragraph-level text alignment
-      processedContent = processedContent.replace(
-          /<p[^>]*style="([^"]*)"[^>]*>/gi,
-          (match, styleContent) => {
-            const classes = [];
-
-            // Preserve text alignment
-            if (/text-align:\s*center/i.test(styleContent)) {
-              classes.push('text-center');
-            } else if (/text-align:\s*right/i.test(styleContent)) {
-              classes.push('text-right');
-            } else if (/text-align:\s*left/i.test(styleContent)) {
-              classes.push('text-left');
-            }
-
-            // Remove only conflicting styles, preserve alignment and spacing
-            const preservedStyles = styleContent.replace(
-                /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
-                ''
-            ).trim();
-
-            const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
-            const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
-
-            return `<p${classStr}${styleStr}>`;
-          }
-      );
-
-      // Convert decorated containers to themed classes
-      processedContent = processedContent.replace(
-          /<div\s+style="[^"]*(?:background[^"]*gradient|border[^"]*solid|box-shadow)[^"]*"[^>]*>/gi,
-          '<div class="content-frame themed-container">'
-      );
-
-      // Rest of processing...
-      let paragraphBlocks = processedContent
-          .split(/(<br>\s*){2,}/gi)
-          .filter(block => block && block.trim() && !block.match(/^(<br>\s*)+$/i));
-
-      if (paragraphBlocks.length <= 1) {
-        paragraphBlocks = processedContent
-            .split(/<br>/gi)
-            .filter(block => block && block.trim());
-      }
-
-      paragraphBlocks = paragraphBlocks
-          .map(block => {
-            let trimmedBlock = block.trim();
-            trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
-
-            if (trimmedBlock) {
-              if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
-                return `<p>${trimmedBlock}</p>`;
-              }
-              return trimmedBlock;
-            }
-            return '';
-          })
-          .filter(block => block);
-
-      let finalContent = paragraphBlocks.join('');
-
-      if (paragraphBlocks.length === 0 && processedContent.trim()) {
-        const cleanContent = processedContent.replace(/<br>/gi, ' ');
-        finalContent = `<p>${cleanContent}</p>`;
-      }
-
-      return DOMPurify.sanitize(finalContent, {
-        ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
-        ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
-      });
-    } catch (error) {
-      console.error('Lỗi xử lý nội dung:', error);
-      return 'Lỗi tải chương nội dung';
-    }
-  };
 
   return (
     <div className="chapter-card">
@@ -522,6 +636,8 @@ const ChapterContent = ({
                 convert_urls: false,
                 verify_html: false,
                 cleanup: false,
+                remove_empty_elements: false,
+                forced_root_block: 'p',
                 plugins: [
                   'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                   'searchreplace', 'visualblocks', 'code', 'fullscreen',

@@ -446,11 +446,12 @@ const ChapterDashboard = () => {
       // Clean up br tags
       processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
 
-      // PRESERVE ALL TEXT FORMATTING - Convert inline styles to CSS classes
+      // COLOR DETECTION - Preserve intentional colors, remove default colors
       processedContent = processedContent.replace(
           /<span[^>]*style="([^"]*)"[^>]*>/gi,
           (match, styleContent) => {
             const classes = [];
+            let preservedStyles = styleContent;
 
             // Preserve font-weight (bold)
             if (/font-weight:\s*bold/i.test(styleContent)) {
@@ -467,23 +468,60 @@ const ChapterDashboard = () => {
               classes.push('text-underline');
             }
 
-            // Preserve colors - extract and convert to CSS custom properties
-            const colorMatch = styleContent.match(/color:\s*#([0-9a-fA-F]{3,6})/i);
+            // COLOR HANDLING
+            const colorMatch = styleContent.match(/color:\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|[a-zA-Z]+)/i);
             if (colorMatch) {
-              classes.push(`text-color-${colorMatch[1]}`);
+              const colorValue = colorMatch[1].toLowerCase();
+
+              // Check if it's a default black color (these should follow theme)
+              const isDefaultBlack = colorValue === '#000000' ||
+                  colorValue === '#000' ||
+                  colorValue === 'black' ||
+                  colorValue === 'rgb(0, 0, 0)' ||
+                  colorValue === 'rgb(0,0,0)';
+
+              if (isDefaultBlack) {
+                // Remove default black color - let theme handle it
+                preservedStyles = preservedStyles.replace(/color:\s*[^;]+[;]?/gi, '');
+                classes.push('text-default-color');
+              } else {
+                // Keep intentional colors
+                const hexColor = convertToHex(colorValue);
+                if (hexColor) {
+                  classes.push(`text-color-${hexColor.replace('#', '')}`);
+                }
+              }
+            } else {
+              // No color specified - should follow theme
+              classes.push('text-default-color');
             }
 
-            // Preserve background colors
+            // Preserve background colors (always keep)
             const bgColorMatch = styleContent.match(/background-color:\s*#([0-9a-fA-F]{3,6})/i);
             if (bgColorMatch) {
               classes.push(`bg-color-${bgColorMatch[1]}`);
             }
 
-            // Remove only conflicting typography, preserve formatting
-            const preservedStyles = styleContent.replace(
+            // Remove conflicting typography but keep everything else
+            preservedStyles = preservedStyles.replace(
                 /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
                 ''
-            ).trim();
+            );
+
+            // Remove color if it was default black
+            if (colorMatch) {
+              const colorValue = colorMatch[1].toLowerCase();
+              const isDefaultBlack = colorValue === '#000000' ||
+                  colorValue === '#000' ||
+                  colorValue === 'black' ||
+                  colorValue === 'rgb(0, 0, 0)' ||
+                  colorValue === 'rgb(0,0,0)';
+              if (isDefaultBlack) {
+                preservedStyles = preservedStyles.replace(/color:\s*[^;]+[;]?/gi, '');
+              }
+            }
+
+            preservedStyles = preservedStyles.trim().replace(/;$/, '');
 
             const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
             const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
@@ -492,11 +530,12 @@ const ChapterDashboard = () => {
           }
       );
 
-      // Handle paragraph-level text alignment
+      // Handle paragraph-level styles
       processedContent = processedContent.replace(
           /<p[^>]*style="([^"]*)"[^>]*>/gi,
           (match, styleContent) => {
             const classes = [];
+            let preservedStyles = styleContent;
 
             // Preserve text alignment
             if (/text-align:\s*center/i.test(styleContent)) {
@@ -507,11 +546,36 @@ const ChapterDashboard = () => {
               classes.push('text-left');
             }
 
-            // Remove only conflicting styles, preserve alignment and spacing
-            const preservedStyles = styleContent.replace(
+            // Handle paragraph colors the same way
+            const colorMatch = styleContent.match(/color:\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|[a-zA-Z]+)/i);
+            if (colorMatch) {
+              const colorValue = colorMatch[1].toLowerCase();
+              const isDefaultBlack = colorValue === '#000000' ||
+                  colorValue === '#000' ||
+                  colorValue === 'black' ||
+                  colorValue === 'rgb(0, 0, 0)' ||
+                  colorValue === 'rgb(0,0,0)';
+
+              if (isDefaultBlack) {
+                preservedStyles = preservedStyles.replace(/color:\s*[^;]+[;]?/gi, '');
+                classes.push('text-default-color');
+              } else {
+                const hexColor = convertToHex(colorValue);
+                if (hexColor) {
+                  classes.push(`text-color-${hexColor.replace('#', '')}`);
+                }
+              }
+            } else {
+              classes.push('text-default-color');
+            }
+
+            // Remove conflicting styles
+            preservedStyles = preservedStyles.replace(
                 /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
                 ''
-            ).trim();
+            );
+
+            preservedStyles = preservedStyles.trim().replace(/;$/, '');
 
             const classStr = classes.length > 0 ? ` class="${classes.join(' ')}"` : '';
             const styleStr = preservedStyles ? ` style="${preservedStyles}"` : '';
@@ -544,7 +608,7 @@ const ChapterDashboard = () => {
 
             if (trimmedBlock) {
               if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
-                return `<p>${trimmedBlock}</p>`;
+                return `<p class="text-default-color">${trimmedBlock}</p>`;
               }
               return trimmedBlock;
             }
@@ -556,7 +620,7 @@ const ChapterDashboard = () => {
 
       if (paragraphBlocks.length === 0 && processedContent.trim()) {
         const cleanContent = processedContent.replace(/<br>/gi, ' ');
-        finalContent = `<p>${cleanContent}</p>`;
+        finalContent = `<p class="text-default-color">${cleanContent}</p>`;
       }
 
       // Final cleaning while preserving important formatting
@@ -570,6 +634,39 @@ const ChapterDashboard = () => {
         ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
         ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
       });
+
+      // Helper function to convert colors to hex
+      function convertToHex(color) {
+        if (color.startsWith('#')) {
+          return color;
+        }
+
+        if (color.startsWith('rgb')) {
+          const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+          if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+            const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+            const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+            return `#${r}${g}${b}`;
+          }
+        }
+
+        // Named colors to hex conversion
+        const namedColors = {
+          'red': '#ff0000',
+          'blue': '#0000ff',
+          'green': '#008000',
+          'yellow': '#ffff00',
+          'purple': '#800080',
+          'orange': '#ffa500',
+          'pink': '#ffc0cb',
+          'brown': '#a52a2a',
+          'gray': '#808080',
+          'grey': '#808080'
+        };
+
+        return namedColors[color.toLowerCase()] || null;
+      }
 
       // Check content size
       const contentSizeMB = (cleanedContent.length / (1024 * 1024)).toFixed(2);
@@ -919,6 +1016,8 @@ const ChapterDashboard = () => {
                       license_key: 'gpl',
                       height: 600,
                       menubar: false,
+                      remove_empty_elements: false,
+                      forced_root_block: 'p',
                       plugins: [
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                         'searchreplace', 'visualblocks', 'code', 'fullscreen',
@@ -994,23 +1093,23 @@ const ChapterDashboard = () => {
                           }
                         });
                       },
-                                              images_upload_handler: (blobInfo) => {
-                          return new Promise((resolve, reject) => {
-                            const file = blobInfo.blob();
-                            
-                            // Use bunny CDN service
-                            bunnyUploadService.uploadFile(file, 'illustrations')
-                              .then(url => {
-                                resolve(url);
-                              })
-                              .catch(error => {
-                                console.error('Image upload error:', error);
-                                reject('Image upload failed');
-                              });
-                          });
-                        },
-                        images_upload_base_path: '/',
-                        automatic_uploads: true
+                      images_upload_handler: (blobInfo) => {
+                        return new Promise((resolve, reject) => {
+                          const file = blobInfo.blob();
+                          
+                          // Use bunny CDN service
+                          bunnyUploadService.uploadFile(file, 'illustrations')
+                            .then(url => {
+                              resolve(url);
+                            })
+                            .catch(error => {
+                              console.error('Image upload error:', error);
+                              reject('Image upload failed');
+                            });
+                        });
+                      },
+                      images_upload_base_path: '/',
+                      automatic_uploads: true
                     }}
                 />
               </div>

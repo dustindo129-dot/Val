@@ -1761,33 +1761,33 @@
   .footer-nav-container {
     gap: 10px;
   }
-  
+
   .breadcrumb-nav {
     width: 100%;
     flex-wrap: wrap;
   }
-  
+
   .breadcrumb-info {
     width: 100%;
   }
-  
+
   .header-bookmark {
     align-self: flex-end;
   }
-  
+
   .header-actions {
     gap: 10px;
   }
-  
+
   .reader-controls {
     width: 100%;
     justify-content: flex-end;
   }
-  
+
   .admin-controls {
     width: 100%;
   }
-  
+
   .edit-chapter-btn,
   .delete-chapter-btn,
   .save-changes-btn,
@@ -1796,7 +1796,7 @@
     margin-bottom: 5px;
     text-align: center;
   }
-  
+
   /* Position toggle button below scroll-to-top button */
   .toggle-btn {
     bottom: 15px;  /* Toggle button at the bottom */
@@ -1804,17 +1804,17 @@
     width: 40px;
     height: 40px;
   }
-  
+
   .nav-controls-container {
     bottom: 15px;
     right: 65px;
   }
-  
+
   .control-btn {
     width: 40px;
     height: 40px;
   }
-  
+
   /* Chapter dropdown needs to be positioned above the toggle button */
   .chapter-dropdown {
     bottom: 65px;  /* 15px (toggle button) + 40px (button size) + 10px (gap) */
@@ -1825,39 +1825,39 @@
   .settings-modal {
     padding: 0.5rem;
   }
-  
+
   .settings-container {
     max-width: 95%;
     padding: 1.5rem;
     max-height: 95vh;
   }
-  
+
   .settings-modal-header h3 {
     font-size: 1.25rem;
   }
-  
+
   .settings-section h4 {
     font-size: 0.9rem;
   }
-  
+
   .font-size-control {
     gap: 8px;
   }
-  
+
   .size-control-btn {
     padding: 6px 10px;
     font-size: 0.9rem;
   }
-  
+
   .current-size,
   .current-line-height {
     font-size: 0.9rem;
   }
-  
+
   .theme-selector {
     gap: 8px;
   }
-  
+
   .theme-btn {
     padding: 8px;
     font-size: 0.85rem;
@@ -2111,4 +2111,127 @@
 /* Don't override color for spans with specific color classes */
 .chapter-content span:not([class*="text-color-"]) {
   color: inherit;
+}
+
+/* Default color class - follows theme */
+.chapter-content .text-default-color {
+  color: var(--text-color) !important;
+}
+
+/* Intentional colors - always preserved */
+.chapter-content [class*="text-color-"]:not(.text-default-color) {
+  /* These colors are preserved exactly as specified */
+}
+
+/* Specific intentional color mappings */
+.chapter-content .text-color-ff0000,
+.chapter-content .text-color-f00 {
+  color: #ff0000 !important; /* Keep red exactly as intended */
+}
+
+.chapter-content .text-color-0000ff,
+.chapter-content .text-color-00f {
+  color: #0000ff !important; /* Keep blue exactly as intended */
+}
+
+.chapter-content .text-color-008000 {
+  color: #008000 !important; /* Keep green exactly as intended */
+}
+
+.chapter-content .text-color-ffff00 {
+  color: #ffff00 !important; /* Keep yellow exactly as intended */
+}
+
+.chapter-content .text-color-800080 {
+  color: #800080 !important; /* Keep purple exactly as intended */
+}
+
+.chapter-content .text-color-ffa500 {
+  color: #ffa500 !important; /* Keep orange exactly as intended */
+}
+
+/* For colors that might be hard to read in dark mode, provide slight adjustments */
+:root.dark-mode .chapter-content .text-color-ffff00 {
+  color: #ffd700 !important; /* Slightly darker yellow for dark mode readability */
+}
+
+:root.dark-mode .chapter-content .text-color-808080 {
+  color: #b0b0b0 !important; /* Lighter gray for dark mode */
+}
+
+/* Text formatting classes */
+.chapter-content .text-bold {
+  font-weight: bold;
+}
+
+.chapter-content .text-italic {
+  font-style: italic;
+}
+
+.chapter-content .text-underline {
+  text-decoration: underline;
+}
+
+/* Text alignment classes */
+.chapter-content .text-center {
+  text-align: center !important;
+}
+
+.chapter-content .text-right {
+  text-align: right !important;
+}
+
+.chapter-content .text-left {
+  text-align: left !important;
+}
+
+/* Base typography - only affects default color text */
+.chapter-content {
+  font-family: var(--content-font-family, 'Arial, sans-serif') !important;
+  font-size: var(--content-font-size, 1rem) !important;
+  line-height: var(--content-line-height, 1.6) !important;
+  color: var(--text-color) !important;
+}
+
+/* Ensure spans inherit base typography but preserve their formatting */
+.chapter-content span {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Default color spans follow theme */
+.chapter-content span.text-default-color {
+  color: var(--text-color) !important;
+}
+
+/* Paragraphs with default color follow theme */
+.chapter-content p.text-default-color {
+  color: var(--text-color) !important;
+}
+
+/* Dark mode - only affects default colors */
+:root.dark-mode .chapter-content .text-default-color {
+  color: #f0f0f0 !important;
+}
+
+/* Sepia mode - only affects default colors */
+:root.sepia-mode .chapter-content .text-default-color {
+  color: #4B2E2E !important;
+}
+
+/* Combination classes preserve their intentional colors */
+.chapter-content .text-bold.text-italic {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.chapter-content .text-bold.text-underline {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.chapter-content .text-italic.text-underline {
+  font-style: italic;
+  text-decoration: underline;
 }
