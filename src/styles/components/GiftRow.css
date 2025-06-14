@@ -75,23 +75,26 @@
 }
 
 
-/* Count badge with frame like original design */
+/* Count badge - moved to top right, bigger and clearer */
 .gift-count {
   position: absolute;
-  bottom: -6px;
-  left: -6px;
-  font-size: 8px;
-  font-weight: bold;
+  top: -10px;
+  right: -18px;
+  font-size: 14px;
+  font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #ff6b35, #f7931e);
-  padding: 3px 6px;
-  border-radius: 10px;
-  min-width: 18px;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  padding: 4px 8px;
+  border-radius: 12px;
+  min-width: 24px;
   text-align: center;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
   z-index: 10;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .gift-price {
@@ -138,11 +141,11 @@
   }
 
   .gift-count {
-    font-size: 9px;
-    padding: 2px 5px;
-    bottom: -3px;
-    left: -3px;
-    min-width: 16px;
+    font-size: 11px;
+    padding: 3px 6px;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
   }
 
   .gift-price {
@@ -165,11 +168,11 @@
   }
 
   .gift-count {
-    font-size: 8px;
-    padding: 2px 4px;
-    bottom: -3px;
-    left: -3px;
-    min-width: 14px;
+    font-size: 10px;
+    padding: 3px 5px;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
   }
 
   .gift-price {

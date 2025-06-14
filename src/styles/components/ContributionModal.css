@@ -38,6 +38,11 @@
   flex-direction: column;
 }
 
+.contribution-history-modal-content {
+  max-height: 70vh;
+  margin: 15vh auto;
+}
+
 /* Modal header */
 .contribution-modal-header,
 .contribution-history-modal-header {
@@ -415,10 +420,7 @@
   
   /* Compact modal sizing for mobile with browser nav bars */
   .contribution-history-modal-content {
-    height: 70vh;
-    margin: 15vh auto;
     width: 95%;
-    max-height: none;
   }
   
   .contribution-history-modal-body {

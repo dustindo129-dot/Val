@@ -622,6 +622,7 @@
   white-space: nowrap;
   margin-left: auto;
   padding-left: 10px;
+  order: 999;
 }
 
 .chapter-actions {
@@ -1471,6 +1472,36 @@
 
 /* Mobile responsive styles */
 @media (max-width: 768px) {
+  .rd-novel-content {
+    grid-template-columns: 1fr;
+  }
+
+  .rd-novel-header-content {
+    flex-direction: column;
+  }
+
+  .rd-novel-cover {
+    margin: 0 auto 20px;
+  }
+
+  .rd-actions-row {
+    flex-direction: column;
+  }
+
+  .rd-staff-members {
+    flex-direction: column;
+  }
+
+  .rd-novel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rd-social-share {
+    margin-top: 15px;
+    align-self: flex-end;
+  }
+
   .novel-detail-container {
     padding: 0 1rem;
   }
@@ -1647,31 +1678,6 @@
 
   .staff-label {
     width: 100%;
-  }
-}
-
-/* Even smaller screens */
-@media (max-width: 480px) {
-  .novel-cover-section {
-    width: 160px;
-    height: 240px;
-  }
-
-  .module-cover {
-    width: 120px;
-  }
-
-  .module-cover-image {
-    height: 180px;
-  }
-
-  .novel-detail-stat-item,
-  .novel-action-row .action-button {
-    min-width: 120px;
-  }
-
-  .stat-value {
-    font-size: 1.1rem;
   }
 }
 
@@ -1934,7 +1940,7 @@
 }
 
 .rd-stat-item:nth-child(2) .rd-stat-icon {
-  color: #e74c3c; /* Red for Likes */
+  color: #000; /* Black for Words */
 }
 
 .rd-stat-item:nth-child(3) .rd-stat-icon {
@@ -2237,40 +2243,6 @@
 
 
 /* Responsive styles */
-@media (max-width: 992px) {
-  .rd-novel-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .rd-novel-header-content {
-    flex-direction: column;
-  }
-
-  .rd-novel-cover {
-    margin: 0 auto 20px;
-  }
-
-  .rd-actions-row {
-    flex-direction: column;
-  }
-
-  .rd-staff-members {
-    flex-direction: column;
-  }
-
-  .rd-novel-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .rd-social-share {
-    margin-top: 15px;
-    align-self: flex-end;
-  }
-}
-
 @media (max-width: 576px) {
   .rd-novel-detail-container {
     padding: 10px;
@@ -2295,6 +2267,82 @@
   .rd-btn {
     font-size: 0.8rem;
     padding: 6px 3px;
+  }
+
+  /* Module chapter items stack vertically */
+  .module-chapter-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 8px;
+  }
+
+  .chapter-list-content {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .novel-detail-chapter-date {
+    margin-left: auto;
+    padding-left: 0;
+    align-self: flex-end;
+    order: 999;
+  }
+
+  .chapter-actions {
+    align-self: flex-end;
+    margin-top: 4px;
+  }
+  .novel-cover-section {
+    width: 160px;
+    height: 240px;
+  }
+
+  .module-cover {
+    width: 120px;
+  }
+
+  .module-cover-image {
+    height: 180px;
+  }
+
+  .novel-detail-stat-item,
+  .novel-action-row .action-button {
+    min-width: 120px;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  /* Module chapter items stack vertically on very small screens */
+  .module-chapter-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 6px;
+  }
+
+  .chapter-list-content {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .novel-detail-chapter-date {
+    margin-left: auto;
+    padding-left: 0;
+    align-self: flex-end;
+    font-size: 0.75rem;
+    order: 999;
+  }
+
+  .chapter-actions {
+    align-self: flex-end;
+    margin-top: 3px;
   }
 }
 
