@@ -19,15 +19,21 @@ const ChapterToolbar = ({
     <div className="action-toolbar">
       {/* Staff Info */}
       <div className="staff-info">
-        <span className="staff-member translator">
-          <FontAwesomeIcon icon={faLanguage}/> {chapter.translator || 'Không có dịch giả'}
-        </span>
-        <span className="staff-member editor">
-          <FontAwesomeIcon icon={faEdit}/> {chapter.editor || 'Không có biên tập'}
-        </span>
-        <span className="staff-member proofreader">
-          <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader || 'Không có kiểm tra chất lượng'}
-        </span>
+        {chapter.translator && (
+          <span className="staff-member translator">
+            <FontAwesomeIcon icon={faLanguage}/> {chapter.translator}
+          </span>
+        )}
+        {chapter.editor && (
+          <span className="staff-member editor">
+            <FontAwesomeIcon icon={faEdit}/> {chapter.editor}
+          </span>
+        )}
+        {chapter.proofreader && (
+          <span className="staff-member proofreader">
+            <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader}
+          </span>
+        )}
       </div>
 
       <div className="action-toolbar-right">
