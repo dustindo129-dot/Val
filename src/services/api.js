@@ -671,7 +671,7 @@ const api = {
       return response.data;
     } catch (error) {
       console.error("Error fetching novel stats:", error);
-      return { totalLikes: 0, totalRatings: 0, averageRating: '0.0' };
+      return { totalLikes: 0, totalRatings: 0, totalBookmarks: 0, averageRating: '0.0' };
     }
   },
 

@@ -320,7 +320,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     const novelId = novelData?._id;  // Get the ID directly
 
     // Query for novel stats
-    const { data: novelStats = { totalLikes: 0, totalRatings: 0, averageRating: '0.0' } } = useQuery({
+    const { data: novelStats = { totalLikes: 0, totalRatings: 0, totalBookmarks: 0, averageRating: '0.0' } } = useQuery({
         queryKey: ['novel-stats', novelId],
         queryFn: () => api.getNovelStats(novelId),
         enabled: !!novelId,
@@ -359,8 +359,44 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
             }
             return api.toggleBookmark(novelId);
         },
+        onMutate: async () => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries(['novel-stats', novelId]);
+            await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
+
+            // Snapshot the previous values
+            const previousStats = queryClient.getQueryData(['novel-stats', novelId]);
+            const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
+
+            // Optimistically update the bookmark status and count
+            const willBeBookmarked = !(previousInteraction?.bookmarked);
+
+            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+                ...old,
+                bookmarked: willBeBookmarked
+            }));
+
+            queryClient.setQueryData(['novel-stats', novelId], old => ({
+                ...old,
+                totalBookmarks: willBeBookmarked ? (old.totalBookmarks + 1) : (old.totalBookmarks - 1)
+            }));
+
+            // Return a context object with the snapshotted values
+            return { previousStats, previousInteraction };
+        },
+        onError: (err, variables, context) => {
+            // If the mutation fails, use the context we saved to roll back
+            if (context?.previousStats) {
+                queryClient.setQueryData(['novel-stats', novelId], context.previousStats);
+            }
+            if (context?.previousInteraction) {
+                queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
+            }
+            console.error("Lỗi đánh dấu:", err);
+            alert("Không thể đánh dấu: Vui lòng thử lại.");
+        },
         onSuccess: (response) => {
-            // Immediately update the novel data in the cache
+            // Update the novel data in the cache
             queryClient.setQueryData(['novel', novelId], (oldData) => {
                 if (!oldData) return oldData;
 
@@ -399,10 +435,12 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                     refetchType: 'none'
                 });
             }
-        },
-        onError: (error) => {
-            console.error("Lỗi đánh dấu:", error);
-            alert("Không thể đánh dấu: Vui lòng thử lại.");
+
+            // Invalidate novel stats to ensure fresh data on next fetch
+            queryClient.invalidateQueries({
+                queryKey: ['novel-stats', novelId],
+                refetchType: 'none'
+            });
         }
     });
 
@@ -1064,7 +1102,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                         onClick={toggleBookmark}
                                     >
                                         <FontAwesomeIcon icon={isBookmarked ? faBookmarkSolid : faBookmark} />
-                                        {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu'}
+                                        {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu'} ({novelStats.totalBookmarks?.toLocaleString() || '0'})
                                     </button>
                                 </div>
                             </div>
