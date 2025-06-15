@@ -530,4 +530,66 @@
     height: 32px;
     font-size: 14px;
   }
+}
+
+/* Notification categories */
+.notification-categories {
+  display: flex;
+  border-bottom: 1px solid #e1e5e9;
+  background-color: #f8f9fa;
+}
+
+:root.dark-mode .notification-categories {
+  background-color: #1a1a1a;
+  border-bottom-color: #444;
+}
+
+.category-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.category-tab:hover {
+  color: #495057;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.category-tab.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+:root.dark-mode .category-tab {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .category-tab:hover {
+  color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark-mode .category-tab.active {
+  color: #63b3ed;
+  border-bottom-color: #63b3ed;
+  background-color: rgba(99, 179, 237, 0.1);
+}
+
+/* Follow comment notification icon */
+.notification-icon i[class*="fa-users"] {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-users"] {
+  background-color: #1a365d;
+  color: #68d391;
 } 

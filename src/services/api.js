@@ -640,7 +640,7 @@ const api = {
       const token = getValidToken();
       const user = JSON.parse(localStorage.getItem('user') || 'null');
       if (!token || !user) {
-        return { liked: false, rating: null, review: null, bookmarked: false };
+        return { liked: false, rating: null, review: null, bookmarked: false, followed: false };
       }
       
       // Get all interactions from usernovelinteractions endpoint
@@ -659,7 +659,7 @@ const api = {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
-      return { liked: false, rating: null, review: null, bookmarked: false };
+      return { liked: false, rating: null, review: null, bookmarked: false, followed: false };
     }
   },
 
@@ -1004,7 +1004,93 @@ const api = {
       console.error('Failed to delete notification:', error);
       throw error;
     }
-  }
+  },
+
+  // Follow related API calls
+  followNovel: async (username, novelId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.post(
+        `${config.backendUrl}/api/users/${username}/follows`,
+        { novelId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  unfollowNovel: async (username, novelId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.delete(
+        `${config.backendUrl}/api/users/${username}/follows/${novelId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  checkFollowStatus: async (username, novelId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        return { isFollowed: false };
+      }
+      
+      const response = await axios.get(
+        `${config.backendUrl}/api/users/${username}/follows/${novelId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return { isFollowed: false };
+    }
+  },
+
+  getFollowedNovels: async (username) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.get(
+        `${config.backendUrl}/api/users/${username}/follows`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default api;

@@ -47,6 +47,19 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
   const [allNotifications, setAllNotifications] = useState([]);
   const [lastFetchedPage, setLastFetchedPage] = useState(0); // Track last successfully fetched page
   const [isAllDataLoaded, setIsAllDataLoaded] = useState(false); // Track when we've truly loaded everything
+  const [activeCategory, setActiveCategory] = useState('general'); // 'general' or 'followed'
+
+  // Separate notifications by category
+  const generalNotifications = allNotifications.filter(notification => 
+    ['report_feedback', 'comment_reply', 'new_chapter'].includes(notification.type)
+  );
+  
+  const followedNotifications = allNotifications.filter(notification => 
+    notification.type === 'follow_comment'
+  );
+
+  // Get current category notifications
+  const currentNotifications = activeCategory === 'general' ? generalNotifications : followedNotifications;
 
   // Fetch notifications with infinite scroll logic
   const { data: notificationsData, isLoading, error, refetch } = useQuery({
@@ -540,6 +553,14 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
           return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}`;
         }
         return '#';
+      case 'follow_comment':
+        if (notification.data?.chapterId && notification.data?.novelId) {
+          const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
+          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}#comment-${notification.data.commentId}`;
+        } else if (notification.data?.novelId) {
+          return `/truyen/${notification.data.novelId}#comment-${notification.data.commentId}`;
+        }
+        return '#';
       default:
         return '#';
     }
@@ -598,6 +619,21 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         )}
       </div>
 
+      <div className="notification-categories">
+        <button 
+          className={`category-tab ${activeCategory === 'general' ? 'active' : ''}`}
+          onClick={() => setActiveCategory('general')}
+        >
+          Chung ({generalNotifications.length})
+        </button>
+        <button 
+          className={`category-tab ${activeCategory === 'followed' ? 'active' : ''}`}
+          onClick={() => setActiveCategory('followed')}
+        >
+          Theo dõi ({followedNotifications.length})
+        </button>
+      </div>
+
       <div className="notification-dropdown-content" ref={scrollContainerRef}>
         {isLoading && page === 1 ? (
           <div className="notification-loading">
@@ -607,14 +643,19 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
           <div className="notification-error">
             Không thể tải thông báo
           </div>
-        ) : allNotifications.length === 0 ? (
+        ) : currentNotifications.length === 0 ? (
           <div className="no-notifications">
             <i className="fa-regular fa-bell-slash"></i>
-            <span>Không có thông báo mới</span>
+            <span>
+              {activeCategory === 'general' 
+                ? 'Không có thông báo chung' 
+                : 'Không có thông báo theo dõi'
+              }
+            </span>
           </div>
         ) : (
           <div className="notification-list">
-            {allNotifications.map((notification) => (
+            {currentNotifications.map((notification) => (
               <div
                 key={notification._id}
                 className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
@@ -631,6 +672,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         {notification.type === 'report_feedback' && <i className="fa-solid fa-reply"></i>}
                         {notification.type === 'comment_reply' && <i className="fa-solid fa-comment"></i>}
                         {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
+                        {notification.type === 'follow_comment' && <i className="fa-solid fa-users"></i>}
                       </div>
                       <div className="notification-text">
                         <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
@@ -654,6 +696,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       {notification.type === 'report_feedback' && <i className="fa-solid fa-reply"></i>}
                       {notification.type === 'comment_reply' && <i className="fa-solid fa-comment"></i>}
                       {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
+                      {notification.type === 'follow_comment' && <i className="fa-solid fa-users"></i>}
                     </div>
                     <div className="notification-text">
                       <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
@@ -685,7 +728,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
             )}
             
             {/* End of notifications indicator */}
-            {isAllDataLoaded && !isLoadingMore && allNotifications.length > 0 && (
+            {isAllDataLoaded && !isLoadingMore && currentNotifications.length > 0 && (
               <div className="notifications-end">
                 <span>Đã tải hết thông báo</span>
               </div>
@@ -694,7 +737,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         )}
       </div>
 
-      {allNotifications.length > 0 && (
+      {currentNotifications.length > 0 && (
         <div className="notification-dropdown-footer">
           <button 
             className="clear-all-footer-btn"

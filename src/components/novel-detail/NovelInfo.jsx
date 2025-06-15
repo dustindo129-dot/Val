@@ -303,7 +303,6 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isNoteExpanded, setIsNoteExpanded] = useState(false);
     const [lastLikeTime, setLastLikeTime] = useState(0);
-    const [isFollowing, setIsFollowing] = useState(false);
     const [isModuleNavOpen, setIsModuleNavOpen] = useState(false);
     const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
 
@@ -311,7 +310,8 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     const safeUserInteraction = {
         liked: userInteraction?.liked || false,
         rating: userInteraction?.rating || null,
-        bookmarked: userInteraction?.bookmarked || false
+        bookmarked: userInteraction?.bookmarked || false,
+        followed: userInteraction?.followed || false
     };
 
     // Check if we have a nested novel object
@@ -467,14 +467,71 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
         }
     });
 
+    // Follow mutation
+    const followMutation = useMutation({
+        mutationFn: () => api.followNovel(user.username, novelId),
+        onMutate: async () => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
+
+            // Snapshot the previous value
+            const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
+
+            // Optimistically update the follow status
+            const willBeFollowed = !(previousInteraction?.followed);
+
+            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+                ...old,
+                followed: willBeFollowed
+            }));
+
+            // Return a context object with the snapshotted value
+            return { previousInteraction };
+        },
+        onError: (err, variables, context) => {
+            // If the mutation fails, use the context we saved to roll back
+            if (context?.previousInteraction) {
+                queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
+            }
+        },
+        onSuccess: (response) => {
+            // Update the cache with the actual response data
+            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
+                ...old,
+                followed: response.isFollowed
+            }));
+
+            // Invalidate related queries to ensure consistency
+            queryClient.invalidateQueries({
+                queryKey: ['userInteraction', user?.username, novelId],
+                refetchType: 'none'
+            });
+        }
+    });
+
     // Handle follow toggling
     const handleFollowToggle = () => {
         if (!user?.username) {
             alert('Vui lòng đăng nhập để theo dõi truyện');
             return;
         }
-        // TODO: Implement follow API call
-        setIsFollowing(!isFollowing);
+
+        // Validate token presence
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error("Token không tồn tại khi theo dõi truyện");
+            alert("Lỗi xác thực. Vui lòng đăng xuất và đăng nhập lại.");
+            return;
+        }
+
+        // Check if we have a novel ID
+        if (!novelId) {
+            console.error("Không thể theo dõi: ID truyện không tồn tại");
+            alert("Lỗi: Không thể xác định truyện. Vui lòng thử tải lại trang.");
+            return;
+        }
+
+        followMutation.mutate();
     };
 
     // Handle module navigation
@@ -714,6 +771,8 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     const isBookmarked = safeUserInteraction.bookmarked || false;
     // Determine if the novel is liked
     const isLiked = safeUserInteraction.liked || false;
+    // Determine if the novel is followed
+    const isFollowed = safeUserInteraction.followed || false;
     // Current user rating
     const currentRating = safeUserInteraction.rating || 0;
     // Novel type banner
@@ -728,11 +787,12 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                         <h1 className="rd-novel-title">
                             {novelTitle || 'Đang tải...'}
                             <button
-                                className={`rd-follow-btn ${isFollowing ? 'following' : ''}`}
+                                className={`rd-follow-btn ${isFollowed ? 'following' : ''}`}
                                 onClick={handleFollowToggle}
-                                title={isFollowing ? 'Bỏ theo dõi' : 'Theo dõi'}
+                                title={isFollowed ? 'Bỏ theo dõi' : 'Theo dõi'}
+                                disabled={followMutation.isPending}
                             >
-                                {isFollowing ? '✓' : '+'}
+                                {followMutation.isPending ? '...' : (isFollowed ? '✓' : '+')}
                             </button>
                             <span className={`rd-status-badge-inline rd-status-${getStatusForCSS(novelData.status)?.toLowerCase() || 'ongoing'}`}>
                                 {translateStatus(novelData.status)}
