@@ -1159,22 +1159,10 @@
   width: 100%;
 }
 
-.chapter-content br[clear="all"] {
-  display: block;
-  margin: 1em 0;
-  content: "";
-  clear: both;
-}
-
+/* Basic br tag styling (fallback) */
 .chapter-content br {
   display: block;
-  margin: 1em 0;
-}
-
-.chapter-content br + br::before {
-  content: "";
-  display: block;
-  height: 1.5em;
+  margin: 0.5em 0;
 }
 
 /* Force consistent text alignment and prevent side scrolling */
@@ -1185,6 +1173,7 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   width: 100%;
+  line-height: 1.8;
 }
 
 .chapter-content .MsoNormal,
@@ -1968,8 +1957,8 @@
 
 /* Override only conflicting styles, preserve frame structure */
 .chapter-content .content-frame.themed-container * {
-  font-family: inherit !important;
-  color: inherit !important;
+  font-family: inherit;
+  color: inherit;
 }
 
 /* Special styling for title within frame */
@@ -2003,24 +1992,15 @@
 
 /* Text alignment classes */
 .chapter-content .text-center {
-  text-align: center !important;
+  text-align: center;
 }
 
 .chapter-content .text-right {
-  text-align: right !important;
+  text-align: right;
 }
 
 .chapter-content .text-left {
-  text-align: left !important;
-}
-
-/* Dynamic color classes - using CSS custom properties */
-.chapter-content [class*="text-color-"] {
-  /* Colors will be set dynamically based on theme */
-}
-
-.chapter-content [class*="bg-color-"] {
-  /* Background colors will be set dynamically */
+  text-align: left;
 }
 
 /* Specific color mappings that work with themes */
@@ -2095,10 +2075,10 @@
 
 /* Override base typography while preserving formatting */
 .chapter-content {
-  font-family: var(--content-font-family, 'Arial, sans-serif') !important;
-  font-size: var(--content-font-size, 1rem) !important;
-  line-height: var(--content-line-height, 1.6) !important;
-  color: var(--text-color) !important;
+  font-family: var(--content-font-family, 'Arial, sans-serif');
+  font-size: var(--content-font-size, 1rem);
+  line-height: var(--content-line-height, 1.6);
+  color: var(--text-color);
 }
 
 /* Ensure span elements inherit base typography but preserve their formatting */
@@ -2115,12 +2095,7 @@
 
 /* Default color class - follows theme */
 .chapter-content .text-default-color {
-  color: var(--text-color) !important;
-}
-
-/* Intentional colors - always preserved */
-.chapter-content [class*="text-color-"]:not(.text-default-color) {
-  /* These colors are preserved exactly as specified */
+  color: var(--text-color);
 }
 
 /* Specific intentional color mappings */
@@ -2152,86 +2127,30 @@
 
 /* For colors that might be hard to read in dark mode, provide slight adjustments */
 :root.dark-mode .chapter-content .text-color-ffff00 {
-  color: #ffd700 !important; /* Slightly darker yellow for dark mode readability */
+  color: #ffd700; /* Slightly darker yellow for dark mode readability */
 }
 
 :root.dark-mode .chapter-content .text-color-808080 {
-  color: #b0b0b0 !important; /* Lighter gray for dark mode */
-}
-
-/* Text formatting classes */
-.chapter-content .text-bold {
-  font-weight: bold;
-}
-
-.chapter-content .text-italic {
-  font-style: italic;
-}
-
-.chapter-content .text-underline {
-  text-decoration: underline;
-}
-
-/* Text alignment classes */
-.chapter-content .text-center {
-  text-align: center !important;
-}
-
-.chapter-content .text-right {
-  text-align: right !important;
-}
-
-.chapter-content .text-left {
-  text-align: left !important;
-}
-
-/* Base typography - only affects default color text */
-.chapter-content {
-  font-family: var(--content-font-family, 'Arial, sans-serif') !important;
-  font-size: var(--content-font-size, 1rem) !important;
-  line-height: var(--content-line-height, 1.6) !important;
-  color: var(--text-color) !important;
-}
-
-/* Ensure spans inherit base typography but preserve their formatting */
-.chapter-content span {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  color: #b0b0b0; /* Lighter gray for dark mode */
 }
 
 /* Default color spans follow theme */
 .chapter-content span.text-default-color {
-  color: var(--text-color) !important;
+  color: var(--text-color);
 }
 
 /* Paragraphs with default color follow theme */
 .chapter-content p.text-default-color {
-  color: var(--text-color) !important;
+  color: var(--text-color);
 }
 
 /* Dark mode - only affects default colors */
 :root.dark-mode .chapter-content .text-default-color {
-  color: #f0f0f0 !important;
+  color: #f0f0f0;
 }
 
 /* Sepia mode - only affects default colors */
 :root.sepia-mode .chapter-content .text-default-color {
-  color: #4B2E2E !important;
+  color: #4B2E2E;
 }
 
-/* Combination classes preserve their intentional colors */
-.chapter-content .text-bold.text-italic {
-  font-weight: bold;
-  font-style: italic;
-}
-
-.chapter-content .text-bold.text-underline {
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-.chapter-content .text-italic.text-underline {
-  font-style: italic;
-  text-decoration: underline;
-}

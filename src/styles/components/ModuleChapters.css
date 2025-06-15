@@ -265,6 +265,7 @@
   font-size: 0.7rem;
   font-weight: bold;
   animation: pulse 2s infinite;
+  margin-left: 8px;
 }
 
 .novel-detail-chapter-date {

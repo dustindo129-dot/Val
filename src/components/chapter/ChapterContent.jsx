@@ -283,8 +283,25 @@ const ChapterContent = ({
                 }
             );
 
-            // Clean up br tags
+            // Convert br tags to paragraph breaks
+            // First normalize br tags
             processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
+            
+            // Split content by br tags and convert to paragraphs
+            if (processedContent.includes('<br>')) {
+                // Split by br tags, filter out empty parts, and wrap in paragraphs
+                let parts = processedContent.split(/<br>/gi);
+                parts = parts.map(part => {
+                    let trimmed = part.trim();
+                    if (trimmed && !trimmed.match(/^<\/?p/i)) {
+                        // If it's not already a paragraph and has content, wrap it
+                        return `<p>${trimmed}</p>`;
+                    }
+                    return trimmed;
+                }).filter(part => part.length > 0);
+                
+                processedContent = parts.join('');
+            }
 
             // COLOR DETECTION - Preserve intentional colors, remove default colors
             processedContent = processedContent.replace(
@@ -432,7 +449,7 @@ const ChapterContent = ({
 
             // Check if content already contains proper paragraph tags
             if (processedContent.includes('<p')) {
-                // Content already has paragraph structure, preserve it including empty paragraphs
+                // Content already has paragraph structure, preserve it including empty paragraphs and consecutive br tags
                 let finalContent = processedContent;
                 // Just ensure empty paragraphs have non-breaking space
                 finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '<p$1>&nbsp;</p>');
