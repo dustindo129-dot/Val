@@ -58,8 +58,16 @@ const organizeComments = (flatComments) => {
     return comment;
   };
 
-  // Sort root comments by date (newest first) and sort all nested replies
-  rootComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  // Sort root comments: pinned comments first, then by date
+  rootComments.sort((a, b) => {
+    // First, check if either comment is pinned
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    
+    // If both are pinned or both are not pinned, sort by date (newest first)
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+  
   rootComments.forEach(comment => sortReplies(comment));
 
   return rootComments;
@@ -82,7 +90,7 @@ const decodeHTMLEntities = (text) => {
   return textarea.value;
 };
 
-const CommentSection = ({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest' }) => {
+const CommentSection = ({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null }) => {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,6 +103,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   const [isBanned, setIsBanned] = useState(false);
   const [likingComments, setLikingComments] = useState(new Set());
   const [sortOrder, setSortOrder] = useState(defaultSort);
+  const [pinningComments, setPinningComments] = useState(new Set());
 
   const { data: authUser } = useAuth();
 
@@ -302,6 +311,81 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     setShowBlockModal(true);
   };
 
+  // Add pin/unpin handler
+  const handlePin = async (commentId, currentPinStatus) => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để thực hiện hành động này');
+      return;
+    }
+
+    if (!user || (!user._id && !user.id)) {
+      alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
+      return;
+    }
+
+    // Prevent multiple simultaneous pin operations on the same comment
+    if (pinningComments.has(commentId)) {
+      return;
+    }
+
+    try {
+      // Add comment to loading state
+      setPinningComments(prev => new Set([...prev, commentId]));
+
+      const response = await axios.post(
+        `${config.backendUrl}/api/comments/${commentId}/pin`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      const data = response.data;
+
+      // If a comment was pinned, we need to refresh all comments to ensure
+      // any previously pinned comments are unpinned in the UI
+      if (data.isPinned) {
+        // Refetch all comments to get the updated pin states
+        refetch();
+      } else {
+        // If just unpinning, we can update locally
+        setComments(prevComments => 
+          prevComments.map(comment => {
+            if (comment._id === commentId) {
+              return {
+                ...comment,
+                isPinned: false
+              };
+            }
+            // Also check replies
+            if (comment.replies) {
+              return {
+                ...comment,
+                replies: comment.replies.map(reply => 
+                  reply._id === commentId
+                    ? {
+                        ...reply,
+                        isPinned: false
+                      }
+                    : reply
+                )
+              };
+            }
+            return comment;
+          })
+        );
+      }
+    } catch (err) {
+      console.error('Error pinning comment:', err);
+      alert(`Không thể ${currentPinStatus ? 'bỏ ghim' : 'ghim'} bình luận: ${err.response?.data?.message || err.message}`);
+    } finally {
+      // Remove comment from loading state
+      setPinningComments(prev => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
+    }
+  };
+
   // Add this function before the RenderComment component
   const handleLike = async (commentId) => {
     if (!isAuthenticated) {
@@ -390,7 +474,9 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [submittingReply, setSubmittingReply] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
     const replyTextareaRef = useRef(null);
+    const dropdownRef = useRef(null);
 
     // Focus the reply textarea when the reply form is shown
     useEffect(() => {
@@ -398,6 +484,22 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         replyTextareaRef.current.focus();
       }
     }, [isReplying]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setShowDropdown(false);
+        }
+      };
+
+      if (showDropdown) {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+        };
+      }
+    }, [showDropdown]);
 
     // Handle reply button click
     const handleReplyClick = () => {
@@ -467,35 +569,78 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     const isLikedByCurrentUser = isAuthenticated && user && userId && 
       comment.likes && Array.isArray(comment.likes) && 
       comment.likes.some(likeId => likeId === userId);
+
+    // Check if user can pin comments (only for novel detail page)
+    const canPinComments = contentType === 'novels' && isAuthenticated && user && (
+      user.role === 'admin' || 
+      user.role === 'moderator' || 
+      (user.role === 'pj_user' && novel?.active?.pj_user && (
+        novel.active.pj_user.includes(user.id) || 
+        novel.active.pj_user.includes(user._id) ||
+        novel.active.pj_user.includes(user.username) ||
+        novel.active.pj_user.includes(user.displayName)
+      ))
+    );
     
     return (
       <div className="comment-item">
-        <div className="comment-avatar">
-          {comment.user.avatar ? (
-            <img src={comment.user.avatar} alt={comment.user.displayName || comment.user.username} />
-          ) : (
-            <div className="default-avatar">
-              {(comment.user.displayName || comment.user.username).charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
-        <div className="comment-content">
+        <div className="comment-main">
+          <div className="comment-avatar">
+            {comment.user.avatar ? (
+              <img src={comment.user.avatar} alt={comment.user.displayName || comment.user.username} />
+            ) : (
+              <div className="default-avatar">
+                {(comment.user.displayName || comment.user.username).charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className={`comment-content ${comment.isPinned ? 'pinned-comment' : ''}`}>
           <div className="comment-header">
             <div className="comment-user-info">
               <span className="comment-username">
                 {comment.isDeleted && !comment.adminDeleted ? '[đã xóa]' : (comment.user.displayName || comment.user.username)}
+                {comment.isPinned && <span className="pinned-indicator">📌</span>}
               </span>
-              {isAuthenticated && user && !comment.isDeleted && comment.user.username !== user.username && (
-                <button
-                  className="block-btn"
-                  onClick={() => openBlockModal(comment.user)}
-                  title={user.role === 'admin' ? 'Cho người dùng vào danh sách đen' : 'Chặn người dùng'}
-                >
-                  🚫
-                </button>
-              )}
+              <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
             </div>
-            <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
+            {isAuthenticated && user && !comment.isDeleted && (comment.user.username !== user.username || canPinComments) && (
+              <div className="comment-dropdown" ref={dropdownRef}>
+                <button
+                  className="comment-dropdown-trigger"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  title="Tùy chọn"
+                >
+                  ⋯
+                </button>
+                {showDropdown && (
+                  <div className="comment-dropdown-menu">
+                    {canPinComments && (
+                      <button
+                        className="comment-dropdown-item"
+                        onClick={() => {
+                          handlePin(comment._id, comment.isPinned);
+                          setShowDropdown(false);
+                        }}
+                        disabled={pinningComments.has(comment._id)}
+                      >
+                        {pinningComments.has(comment._id) ? '⏳' : (comment.isPinned ? '📌' : '📌')} {comment.isPinned ? 'Bỏ ghim' : 'Ghim'}
+                      </button>
+                    )}
+                    {comment.user.username !== user.username && (
+                      <button
+                        className="comment-dropdown-item"
+                        onClick={() => {
+                          openBlockModal(comment.user);
+                          setShowDropdown(false);
+                        }}
+                      >
+                        🚫 {user.role === 'admin' ? 'Vào danh sách đen' : 'Chặn'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="comment-text">
             {comment.isDeleted && !comment.adminDeleted ? 'Bình luận gốc bị xóa bởi người dùng' : (
@@ -535,51 +680,52 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             )}
           </div>
 
-          {/* Reply form */}
-          {isReplying && (
-            <div className="reply-form">
-              <textarea
-                className="reply-input"
-                placeholder="Viết trả lời..."
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                required
-                ref={replyTextareaRef}
-              />
-              <div className="reply-actions">
-                <button 
-                  className="reply-submit-btn"
-                  onClick={handleReplySubmit}
-                  disabled={!replyText.trim() || submittingReply}
-                >
-                  {submittingReply ? 'Đang đăng...' : 'Đăng trả lời'}
-                </button>
-                <button 
-                  className="reply-cancel-btn"
-                  onClick={() => {
-                    setIsReplying(false);
-                    setReplyText('');
-                  }}
-                >
-                  Hủy bỏ
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Nested replies */}
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="replies-list">
-              {comment.replies.map((reply) => (
-                <RenderComment 
-                  key={reply._id} 
-                  comment={reply} 
-                  level={level + 1}
+            {/* Reply form */}
+            {isReplying && (
+              <div className="reply-form">
+                <textarea
+                  className="reply-input"
+                  placeholder="Viết trả lời..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  required
+                  ref={replyTextareaRef}
                 />
-              ))}
-            </div>
-          )}
+                <div className="reply-actions">
+                  <button 
+                    className="reply-submit-btn"
+                    onClick={handleReplySubmit}
+                    disabled={!replyText.trim() || submittingReply}
+                  >
+                    {submittingReply ? 'Đang đăng...' : 'Đăng trả lời'}
+                  </button>
+                  <button 
+                    className="reply-cancel-btn"
+                    onClick={() => {
+                      setIsReplying(false);
+                      setReplyText('');
+                    }}
+                  >
+                    Hủy bỏ
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Nested replies - outside of pinned comment wrapper */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="replies-list">
+            {comment.replies.map((reply) => (
+              <RenderComment 
+                key={reply._id} 
+                comment={reply} 
+                level={level + 1}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   };

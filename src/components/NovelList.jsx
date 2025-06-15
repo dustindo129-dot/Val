@@ -848,8 +848,8 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                     <aside className="sidebar">
                         <HotNovels/>
                         <RecentlyRead/>
-                        <FacebookPlugin/>
                         <RecentComments/>
+                        <FacebookPlugin/>
                     </aside>
                 </div>
             </div>

@@ -1125,6 +1125,7 @@ const NovelDetail = ({ novelId }) => {
                 contentType="novels"
                 user={user}
                 isAuthenticated={!!user}
+                novel={data.novel}
               />
             </Suspense>
           )}
