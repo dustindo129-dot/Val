@@ -51,7 +51,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
 
   // Separate notifications by category
   const generalNotifications = allNotifications.filter(notification => 
-    ['report_feedback', 'comment_reply', 'new_chapter'].includes(notification.type)
+    ['report_feedback', 'comment_reply', 'new_chapter', 'liked_comment'].includes(notification.type)
   );
   
   const followedNotifications = allNotifications.filter(notification => 
@@ -561,6 +561,14 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
           return `/truyen/${notification.data.novelId}#comment-${notification.data.commentId}`;
         }
         return '#';
+      case 'liked_comment':
+        if (notification.data?.chapterId && notification.data?.novelId) {
+          const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
+          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}#comment-${notification.data.commentId}`;
+        } else if (notification.data?.novelId) {
+          return `/truyen/${notification.data.novelId}#comment-${notification.data.commentId}`;
+        }
+        return '#';
       default:
         return '#';
     }
@@ -673,6 +681,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         {notification.type === 'comment_reply' && <i className="fa-solid fa-comment"></i>}
                         {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
                         {notification.type === 'follow_comment' && <i className="fa-solid fa-users"></i>}
+                        {notification.type === 'liked_comment' && <i className="fa-solid fa-thumbs-up"></i>}
                       </div>
                       <div className="notification-text">
                         <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
@@ -697,6 +706,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       {notification.type === 'comment_reply' && <i className="fa-solid fa-comment"></i>}
                       {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
                       {notification.type === 'follow_comment' && <i className="fa-solid fa-users"></i>}
+                      {notification.type === 'liked_comment' && <i className="fa-solid fa-thumbs-up"></i>}
                     </div>
                     <div className="notification-text">
                       <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
