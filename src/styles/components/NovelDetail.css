@@ -553,7 +553,7 @@
 .modules-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 2rem;
 }
 
 /* Dark mode support */
@@ -729,7 +729,6 @@
 
 /* Module container and content */
 .module-container {
-  margin-bottom: 2rem;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
