@@ -212,42 +212,16 @@ const OLN = () => {
     const { data, isLoading, error } = useQuery({
         queryKey: ['vietnameseNovels', currentPage, sortOrder],
         queryFn: async () => {
-            // Get all novels instead of paginated results to ensure we don't miss any Vietnamese novels
-            const response = await axios.get(`${config.backendUrl}/api/novels?limit=100`);
-            
-            // Filter novels with "Vietnamese Novel" genre tag
-            const allNovels = response.data.novels || [];
-            const vietnameseNovels = allNovels.filter(novel => {
-                const hasVietnameseTag = novel.genres && novel.genres.includes('Vietnamese Novel');
-                return hasVietnameseTag;
+            // Use the dedicated Vietnamese novels endpoint with server-side filtering and sorting
+            const response = await axios.get(`${config.backendUrl}/api/novels/vietnamese`, {
+                params: {
+                    page: currentPage,
+                    limit: 15,
+                    sortOrder: sortOrder
+                }
             });
             
-            // Sort novels
-            if (sortOrder === 'newest') {
-                vietnameseNovels.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            } else if (sortOrder === 'updated') {
-                vietnameseNovels.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-            } else if (sortOrder === 'rating') {
-                vietnameseNovels.sort((a, b) => {
-                    const aRating = parseFloat(a.averageRating || '0');
-                    const bRating = parseFloat(b.averageRating || '0');
-                    return bRating - aRating; // Sort by highest rating first
-                });
-            }
-            
-            // Handle pagination manually after filtering
-            const startIndex = (currentPage - 1) * 15;
-            const endIndex = startIndex + 15;
-            const paginatedNovels = vietnameseNovels.slice(startIndex, endIndex);
-            
-            return {
-                novels: paginatedNovels,
-                pagination: {
-                    currentPage: currentPage,
-                    totalPages: Math.ceil(vietnameseNovels.length / 15) || 1,
-                    totalItems: vietnameseNovels.length
-                }
-            };
+            return response.data;
         },
         staleTime: 1000 * 60 * 5,
         cacheTime: 1000 * 60 * 10,
@@ -551,7 +525,7 @@ const OLN = () => {
                                     className="sort-select"
                                 >
                                     <option value="updated">Mới cập nhật</option>
-                                    <option value="newest">Mới nhất</option>
+                                    <option value="newest">Truyện mới</option>
                                     <option value="rating">Đánh giá cao nhất</option>
                                 </select>
                             </div>
