@@ -114,8 +114,8 @@
   color: #2d3748;
   background: linear-gradient(135deg, #2d3748, #4a5568);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Horizontal Gift Row - Full Width */
@@ -125,6 +125,7 @@
   align-items: stretch;
   width: 100%;
   overflow: visible;
+  padding: 0 4px 12px 4px;
 }
 
 /* Compact Gift Item - Full Width Distribution */
@@ -316,11 +317,11 @@
 
   .gift-row-horizontal {
     gap: 6px;
+    padding: 0 8px 12px 8px;
   }
 
   .compact-gift-item {
     padding: 10px 6px;
-    height: 60px;
     border-radius: 8px;
   }
 
@@ -357,7 +358,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 576px) {
   .gift-header-compact {
     gap: 4px;
     margin-bottom: 4px;
@@ -378,7 +379,8 @@
 
   .gift-row-horizontal {
     gap: 6px;
-  }
+    padding: 4px 0 12px 0;
+  } 
 
   .compact-gift-item {
     padding: 4px;
@@ -451,6 +453,7 @@
   color: #f7fafc;
   background: linear-gradient(135deg, #f7fafc, #e2e8f0);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
