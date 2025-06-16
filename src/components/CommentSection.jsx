@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAuthHeaders } from '../utils/auth';
 import { Editor } from '@tinymce/tinymce-react';
 import bunnyUploadService from '../services/bunnyUploadService';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 /**
  * Comment section component for novels
@@ -106,6 +107,12 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   const [likingComments, setLikingComments] = useState(new Set());
   const [sortOrder, setSortOrder] = useState(defaultSort);
   const [pinningComments, setPinningComments] = useState(new Set());
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedReplies, setExpandedReplies] = useState(new Set());
+  const commentsPerPage = 10;
+  const maxVisibleReplies = 2;
 
   const { data: authUser } = useAuth();
   const commentEditorRef = useRef(null);
@@ -227,12 +234,21 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
 
   // Fetch comments
   const { data: commentsData = [], isLoading: commentsLoading, error: commentsError, refetch } = useQuery({
-    queryKey: ['comments', `${contentType}-${contentId}`],
+    queryKey: ['comments', `${contentType}-${contentId}`, sortOrder],
     queryFn: async () => {
-      const response = await axios.get(`${config.backendUrl}/api/comments`, {
-        params: { contentType, contentId, sort: sortOrder }
-      });
-      return response.data;
+      // If we're on a novel detail page, fetch all comments for the novel (including chapter comments)
+      if (contentType === 'novels') {
+        const response = await axios.get(`${config.backendUrl}/api/comments/novel/${contentId}`, {
+          params: { sort: sortOrder }
+        });
+        return response.data;
+      } else {
+        // For other content types (chapters, feedback), use the regular endpoint
+        const response = await axios.get(`${config.backendUrl}/api/comments`, {
+          params: { contentType, contentId, sort: sortOrder }
+        });
+        return response.data;
+      }
     },
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: false
@@ -242,6 +258,8 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     if (commentsData.length > 0) {
       setComments(organizeComments(commentsData));
     }
+    // Reset expanded replies when comments data changes
+    setExpandedReplies(new Set());
   }, [commentsData]);
 
   const handleSubmit = async (e) => {
@@ -298,6 +316,9 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         },
         ...prevComments
       ]);
+      
+      // Reset to first page when new comment is added
+      setCurrentPage(1);
       
       // Clear the form
       if (hasRichTextPrivileges() && commentEditorRef.current) {
@@ -602,11 +623,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         // Basic HTML sanitization while preserving images and formatting
         let processedContent = contentString;
         
-        // Ensure images have proper styling for comments
-        processedContent = processedContent.replace(
-          /<img([^>]*)>/gi,
-          '<img$1 style="max-width: 100%; height: auto; border-radius: 4px; margin: 8px 0;">'
-        );
+        // Images will be styled via CSS, no need for inline styles
         
         // Convert br tags to proper line breaks
         processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
@@ -795,11 +812,24 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           <div className={`comment-content ${comment.isPinned ? 'pinned-comment' : ''}`}>
           <div className="comment-header">
             <div className="comment-user-info">
-              <span className="comment-username">
-                {comment.isDeleted && !comment.adminDeleted ? '[đã xóa]' : (comment.user.displayName || comment.user.username)}
-                {comment.isPinned && <span className="pinned-indicator">📌</span>}
-              </span>
-              <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
+              <div className="comment-user-line">
+                <span className="comment-username">
+                  {comment.isDeleted && !comment.adminDeleted ? '[đã xóa]' : (comment.user.displayName || comment.user.username)}
+                  {comment.isPinned && <span className="pinned-indicator">📌</span>}
+                </span>
+                <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
+              </div>
+              {/* Show chapter link for chapter comments on novel detail page */}
+              {contentType === 'novels' && comment.contentType === 'chapters' && comment.chapterInfo && (
+                <div className="comment-chapter-link">
+                  <Link 
+                    to={`/truyen/${novel?.title ? createUniqueSlug(novel.title, novel._id || contentId) : contentId}/chuong/${comment.chapterInfo.title ? createUniqueSlug(comment.chapterInfo.title, comment.contentId.includes('-') ? comment.contentId.split('-')[1] : comment.contentId) : comment.contentId}`}
+                    className="chapter-link"
+                  >
+                    📖 {comment.chapterInfo.title}
+                  </Link>
+                </div>
+              )}
             </div>
             {isAuthenticated && user && !comment.isDeleted && (comment.user.username !== user.username || canPinComments) && (
               <div className="comment-dropdown" ref={dropdownRef}>
@@ -946,13 +976,38 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         {/* Nested replies - outside of pinned comment wrapper */}
         {comment.replies && comment.replies.length > 0 && (
           <div className="replies-list">
-            {comment.replies.map((reply) => (
+            {/* Show first maxVisibleReplies replies */}
+            {comment.replies.slice(0, expandedReplies.has(comment._id) ? comment.replies.length : maxVisibleReplies).map((reply) => (
               <RenderComment 
                 key={reply._id} 
                 comment={reply} 
                 level={level + 1}
               />
             ))}
+            
+            {/* Show "Xem thêm" button if there are more replies */}
+            {comment.replies.length > maxVisibleReplies && !expandedReplies.has(comment._id) && (
+              <button 
+                className="show-more-replies-btn"
+                onClick={() => setExpandedReplies(prev => new Set([...prev, comment._id]))}
+              >
+                Xem thêm {comment.replies.length - maxVisibleReplies} trả lời
+              </button>
+            )}
+            
+            {/* Show "Thu gọn" button if replies are expanded */}
+            {comment.replies.length > maxVisibleReplies && expandedReplies.has(comment._id) && (
+              <button 
+                className="show-less-replies-btn"
+                onClick={() => setExpandedReplies(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete(comment._id);
+                  return newSet;
+                })}
+              >
+                Thu gọn trả lời
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -962,6 +1017,37 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   // Add a function to handle sorting
   const handleSortChange = (newSortOrder) => {
     setSortOrder(newSortOrder);
+    setCurrentPage(1); // Reset to first page when sorting changes
+    // The query will automatically refetch due to the sortOrder dependency
+  };
+
+  // Pagination calculations
+  const totalComments = comments.length;
+  const totalPages = Math.ceil(totalComments / commentsPerPage);
+  const startIndex = (currentPage - 1) * commentsPerPage;
+  const endIndex = startIndex + commentsPerPage;
+  const currentComments = comments.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Scroll to comments section when page changes
+    const commentsSection = document.querySelector('.comments-section');
+    if (commentsSection) {
+      commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      handlePageChange(currentPage + 1);
+    }
   };
 
   if (commentsLoading) {
@@ -978,7 +1064,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   
   return (
     <div className="comments-section">
-      <h3 className="comments-title">Bình luận ({comments.length})</h3>
+      <h3 className="comments-title">Bình luận ({totalComments})</h3>
       
       {/* Sort controls */}
       <div className="sort-controls">
@@ -1044,11 +1130,66 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       )}
       
       {comments.length > 0 ? (
-        <div className="comments-list">
-          {comments.map((comment) => (
-            <RenderComment key={comment._id} comment={comment} />
-          ))}
-        </div>
+        <>
+          <div className="comments-list">
+            {currentComments.map((comment) => (
+              <RenderComment key={comment._id} comment={comment} />
+            ))}
+          </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="pagination-controls">
+              <div className="pagination-info">
+                Trang {currentPage} / {totalPages} ({totalComments} bình luận)
+              </div>
+              
+              <div className="pagination-buttons">
+                <button 
+                  className="pagination-btn prev-btn"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
+                  ← Trước
+                </button>
+                
+                {/* Page numbers */}
+                <div className="page-numbers">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`page-number-btn ${currentPage === pageNum ? 'active' : ''}`}
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button 
+                  className="pagination-btn next-btn"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Sau →
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="no-comments">
           <p>Chưa có bình luận. Hãy là người đầu tiên bình luận!</p>

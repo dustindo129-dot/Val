@@ -107,7 +107,6 @@
 .comment-main {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 /* Avatar styles */
@@ -141,6 +140,9 @@
   background-color: #f8f9fa;
   padding: 1rem;
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 /* Pinned comment styles */
@@ -160,10 +162,15 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.5rem;
 }
 
 .comment-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.comment-user-line {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -179,8 +186,30 @@
   color: #6c757d;
 }
 
+.comment-chapter-link {
+  margin-top: 2px;
+}
+
+.chapter-link {
+  font-size: 0.75rem;
+  color: #007bff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background-color: rgba(0, 123, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.chapter-link:hover {
+  background-color: rgba(0, 123, 255, 0.2);
+  text-decoration: none;
+  color: #0056b3;
+}
+
 .comment-text {
-  margin-bottom: 0.75rem;
   line-height: 1.5;
   color: #212529;
   word-break: break-word;
@@ -589,6 +618,16 @@
   color: #e9ecef;
 }
 
+:root.dark-mode .chapter-link {
+  color: #66b0ff;
+  background-color: rgba(102, 176, 255, 0.1);
+}
+
+:root.dark-mode .chapter-link:hover {
+  background-color: rgba(102, 176, 255, 0.2);
+  color: #99ccff;
+}
+
 :root.dark-mode .no-comments, 
 :root.dark-mode .comments-loading {
   color: #adb5bd;
@@ -914,6 +953,10 @@
     gap: 0.75rem;
   }
   
+  .comment-content {
+    gap: 0.5rem;
+  }
+  
   .comment-item {
     padding-bottom: 1rem;
   }
@@ -1022,6 +1065,11 @@
     gap: 0.5rem;
   }
   
+  .comment-content {
+    gap: 0.4rem;
+    padding: 0.75rem;
+  }
+  
   .comment-item {
     padding-bottom: 0.75rem;
   }
@@ -1045,10 +1093,13 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.25rem;
-    margin-bottom: 0.4rem;
   }
 
   .comment-user-info {
+    gap: 0.2rem;
+  }
+
+  .comment-user-line {
     gap: 0.4rem;
     flex-direction: column;
     align-items: flex-start;
@@ -1062,9 +1113,13 @@
     font-size: 0.8rem;
   }
 
+  .chapter-link {
+    font-size: 0.7rem;
+    padding: 1px 4px;
+  }
+
   .comment-text {
     font-size: 0.9rem;
-    margin-bottom: 0.5rem;
   }
 
   .comment-actions {
@@ -1157,6 +1212,11 @@
 
   .reply-time {
     font-size: 0.75rem;
+  }
+
+  .chapter-link {
+    font-size: 0.65rem;
+    padding: 1px 3px;
   }
 
   .reply-text {
@@ -1269,9 +1329,9 @@
 .comment-content-wrapper img {
   max-width: 100%;
   height: auto;
-  border-radius: 4px;
-  margin: 8px 0;
   display: block;
+  margin: 1rem auto;
+  border-radius: 4px;
 }
 
 /* Dark mode support for comment content */
@@ -1305,5 +1365,225 @@
   
   .see-more-btn {
     font-size: 12px;
+  }
+}
+
+/* Reply pagination styles */
+.show-more-replies-btn,
+.show-less-replies-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  text-decoration: none;
+  margin-left: 1rem;
+  margin-top: 0.5rem;
+}
+
+.show-more-replies-btn:hover,
+.show-less-replies-btn:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Comment pagination styles */
+.pagination-controls {
+  margin-top: 2rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-align: center;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pagination-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.pagination-btn:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.page-number-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  min-width: 40px;
+  transition: all 0.2s ease;
+}
+
+.page-number-btn:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.page-number-btn.active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.page-number-btn.active:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+/* Dark mode styles for pagination */
+:root.dark-mode .show-more-replies-btn,
+:root.dark-mode .show-less-replies-btn {
+  color: #4dabf7;
+}
+
+:root.dark-mode .show-more-replies-btn:hover,
+:root.dark-mode .show-less-replies-btn:hover {
+  color: #74c0fc;
+}
+
+:root.dark-mode .pagination-controls {
+  border-top-color: #495057;
+}
+
+:root.dark-mode .pagination-info {
+  color: #adb5bd;
+}
+
+:root.dark-mode .pagination-btn {
+  background-color: #495057;
+  border-color: #6c757d;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .pagination-btn:hover:not(:disabled) {
+  background-color: #6c757d;
+  border-color: #adb5bd;
+}
+
+:root.dark-mode .pagination-btn:disabled {
+  background-color: #343a40;
+  color: #6c757d;
+}
+
+:root.dark-mode .page-number-btn {
+  background-color: #495057;
+  border-color: #6c757d;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .page-number-btn:hover {
+  background-color: #6c757d;
+  border-color: #adb5bd;
+}
+
+:root.dark-mode .page-number-btn.active {
+  background-color: #4dabf7;
+  border-color: #4dabf7;
+  color: #212529;
+}
+
+:root.dark-mode .page-number-btn.active:hover {
+  background-color: #74c0fc;
+  border-color: #74c0fc;
+}
+
+/* Mobile responsive styles for pagination */
+@media (max-width: 768px) {
+  .pagination-controls {
+    margin-top: 1.5rem;
+    padding: 1rem 0;
+    gap: 0.75rem;
+  }
+  
+  .pagination-info {
+    font-size: 0.8rem;
+  }
+  
+  .pagination-buttons {
+    gap: 0.25rem;
+  }
+  
+  .pagination-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .page-number-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    min-width: 36px;
+  }
+  
+  .show-more-replies-btn,
+  .show-less-replies-btn {
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .pagination-controls {
+    margin-top: 1rem;
+    padding: 0.75rem 0;
+    gap: 0.5rem;
+  }
+  
+  .pagination-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .page-numbers {
+    order: -1;
+  }
+  
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    min-width: 80px;
+  }
+  
+  .show-more-replies-btn,
+  .show-less-replies-btn {
+    margin-left: 0;
+    text-align: left;
   }
 }
