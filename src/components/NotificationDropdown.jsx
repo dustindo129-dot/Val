@@ -544,29 +544,39 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       case 'comment_reply':
         if (notification.data?.chapterId && notification.data?.novelId) {
           const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
-          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}#comment-${notification.data.originalCommentId}`;
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}/chuong/${chapterSlug}#comment-${notification.data.originalCommentId}`;
+        } else if (notification.data?.novelId) {
+          // Handle novel-level comment replies
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}#comment-${notification.data.originalCommentId}`;
         }
         return '#';
       case 'new_chapter':
         if (notification.data?.chapterId && notification.data?.novelId) {
           const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
-          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}`;
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}/chuong/${chapterSlug}`;
         }
         return '#';
       case 'follow_comment':
         if (notification.data?.chapterId && notification.data?.novelId) {
           const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
-          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}#comment-${notification.data.commentId}`;
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}/chuong/${chapterSlug}#comment-${notification.data.commentId}`;
         } else if (notification.data?.novelId) {
-          return `/truyen/${notification.data.novelId}#comment-${notification.data.commentId}`;
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}#comment-${notification.data.commentId}`;
         }
         return '#';
       case 'liked_comment':
         if (notification.data?.chapterId && notification.data?.novelId) {
           const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
-          return `/truyen/${notification.data.novelId}/chuong/${chapterSlug}#comment-${notification.data.commentId}`;
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}/chuong/${chapterSlug}#comment-${notification.data.commentId}`;
         } else if (notification.data?.novelId) {
-          return `/truyen/${notification.data.novelId}#comment-${notification.data.commentId}`;
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}#comment-${notification.data.commentId}`;
         }
         return '#';
       default:

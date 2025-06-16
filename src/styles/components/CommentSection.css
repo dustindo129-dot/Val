@@ -712,10 +712,6 @@
   color: #f8f9fa;
 }
 
-:root.dark-mode .comments-header {
-  /* No specific dark mode styles needed, inherits from children */
-}
-
 :root.dark-mode .comment-input {
   background-color: #212529;
   border-color: #495057;
