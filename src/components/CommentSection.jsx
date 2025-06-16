@@ -899,7 +899,6 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                   <span className="like-icon comment-like-icon">
                     {likingComments.has(comment._id) ? '⏳' : <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
                   </span>
-                  <span className="like-text">Thích</span>
                   <span className="like-count">{comment.likes ? comment.likes.length : 0}</span>
                 </button>
                 <button 

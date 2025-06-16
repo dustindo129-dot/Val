@@ -115,15 +115,15 @@
 }
 
 .comment-avatar img {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .default-avatar {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background-color: #007bff;
   color: white;
@@ -131,7 +131,7 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
 /* Comment content styles */
@@ -211,8 +211,9 @@
 
 .comment-text {
   line-height: 1.5;
-  color: #212529;
+  color: #0f0f0f;
   word-break: break-word;
+  font-family: "Roboto", "Arial", sans-serif;
 }
 
 /* Comment actions styles */
@@ -444,8 +445,9 @@
 
 .reply-text {
   line-height: 1.5;
-  color: #212529;
+  color: #0f0f0f;
   word-break: break-word;
+  font-family: "Roboto", "Arial", sans-serif;
 }
 
 /* Comment dropdown styles */
@@ -627,6 +629,7 @@
 
 :root.dark-mode .comment-text {
   color: #e9ecef;
+  font-family: "Roboto", "Arial", sans-serif;
 }
 
 :root.dark-mode .chapter-link {
@@ -670,6 +673,7 @@
 
 :root.dark-mode .reply-text {
   color: #e9ecef;
+  font-family: "Roboto", "Arial", sans-serif;
 }
 
 :root.dark-mode .block-confirm-content {
@@ -978,12 +982,12 @@
 
   .comment-avatar img,
   .default-avatar {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
 
   .default-avatar {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
   }
 
   .comment-actions {
@@ -1095,12 +1099,12 @@
 
   .comment-avatar img,
   .default-avatar {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
 
   .default-avatar {
-    font-size: 1rem;
+    font-size: 1.2rem;
   }
 
   .comment-header {
