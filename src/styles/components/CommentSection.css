@@ -329,6 +329,28 @@
   border-radius: 4px;
 }
 
+/* Edit form styles */
+.edit-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.edit-form.clean {
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+.edit-editor.clean {
+  padding: 0;
+  border: none;
+}
+
 .reply-input {
   width: 100%;
   min-height: 80px;
@@ -386,6 +408,85 @@
 
 .reply-cancel-btn:hover {
   background-color: #5a6268;
+}
+
+.edit-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.edit-input.clean {
+  padding: 8px;
+  border: none;
+  outline: none;
+  min-height: 450px;
+  width: 100%;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: inherit;
+  margin-bottom: 0.5rem;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #6c757d;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-submit-btn {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-submit-btn:hover {
+  background-color: #0056b3;
+}
+
+.edit-submit-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.edit-cancel-btn {
+  padding: 0.5rem 1rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-cancel-btn:hover {
+  background-color: #5a6268;
+}
+
+.edited-indicator {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-left: 0.5rem;
 }
 
 /* Replies list styles */
@@ -674,6 +775,26 @@
 :root.dark-mode .reply-text {
   color: #e9ecef;
   font-family: "Roboto", "Arial", sans-serif;
+}
+
+:root.dark-mode .edit-form {
+  background-color: #212529;
+  border-color: #495057;
+}
+
+:root.dark-mode .edit-input {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .edit-input:focus {
+  border-color: #6c757d;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+:root.dark-mode .edited-indicator {
+  color: #adb5bd;
 }
 
 :root.dark-mode .block-confirm-content {
@@ -1197,6 +1318,30 @@
 
   .reply-submit-btn,
   .reply-cancel-btn {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+
+  .edit-form {
+    margin-top: 0.75rem;
+    padding: 0.6rem;
+  }
+
+  .edit-input {
+    min-height: 60px;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .edit-actions {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .edit-submit-btn,
+  .edit-cancel-btn {
     width: 100%;
     padding: 0.5rem;
     font-size: 0.8rem;

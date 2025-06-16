@@ -23,58 +23,6 @@ import { createUniqueSlug } from '../utils/slugUtils';
  * @returns {JSX.Element} CommentSection component
  */
 
-// Add this helper function at the top of the file, after the imports
-const organizeComments = (flatComments) => {
-  // Create a map to store all comments with their replies
-  const commentMap = new Map();
-  const rootComments = [];
-
-  // Initialize the map with all comments
-  flatComments.forEach(comment => {
-    commentMap.set(comment._id, {
-      ...comment,
-      replies: []
-    });
-  });
-
-  // Build the nested structure
-  flatComments.forEach(comment => {
-    if (comment.parentId) {
-      // If this comment has a parent, add it to the parent's replies
-      const parentComment = commentMap.get(comment.parentId);
-      if (parentComment) {
-        const commentWithReplies = commentMap.get(comment._id);
-        parentComment.replies.push(commentWithReplies);
-      }
-    } else {
-      // If this is a root comment, add it to the root array
-      rootComments.push(commentMap.get(comment._id));
-    }
-  });
-
-  // Helper function to sort replies recursively
-  const sortReplies = (comment) => {
-    // Sort immediate replies by date (oldest first for replies)
-    comment.replies.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    // Recursively sort replies of replies
-    comment.replies.forEach(reply => sortReplies(reply));
-    return comment;
-  };
-
-  // Sort root comments: pinned comments first, then by date
-  rootComments.sort((a, b) => {
-    // First, check if either comment is pinned
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    
-    // If both are pinned or both are not pinned, sort by date (newest first)
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-  
-  rootComments.forEach(comment => sortReplies(comment));
-
-  return rootComments;
-};
 
 // Create a safe sanitize function
 const sanitizeHTML = (content) => {
@@ -140,6 +88,21 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     
     return false;
   };
+
+  // Memoize the privileges check at the component level to prevent infinite loops
+  const globalHasRichTextPrivileges = React.useMemo(() => {
+    return hasRichTextPrivileges();
+  }, [
+    isAuthenticated, 
+    user?.role, 
+    user?.id, 
+    user?._id, 
+    user?.username, 
+    user?.displayName, 
+    contentType,
+    // Create a stable reference for pj_user array
+    novel?.active?.pj_user?.join(',') || ''
+  ]);
 
   // TinyMCE configuration for comments
   const getTinyMCEConfig = () => ({
@@ -254,13 +217,80 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     refetchOnWindowFocus: false
   });
 
+  // Memoize the organizeComments function to prevent recreation on every render
+  const organizeCommentsCallback = React.useCallback((flatComments) => {
+    // Create a map to store all comments with their replies
+    const commentMap = new Map();
+    const rootComments = [];
+
+    // Initialize the map with all comments
+    flatComments.forEach(comment => {
+      commentMap.set(comment._id, {
+        ...comment,
+        replies: []
+      });
+    });
+
+    // Build the nested structure
+    flatComments.forEach(comment => {
+      if (comment.parentId) {
+        // If this comment has a parent, add it to the parent's replies
+        const parentComment = commentMap.get(comment.parentId);
+        if (parentComment) {
+          const commentWithReplies = commentMap.get(comment._id);
+          parentComment.replies.push(commentWithReplies);
+        }
+      } else {
+        // If this is a root comment, add it to the root array
+        rootComments.push(commentMap.get(comment._id));
+      }
+    });
+
+    // Helper function to sort replies recursively
+    const sortReplies = (comment) => {
+      // Sort immediate replies by date (oldest first for replies)
+      comment.replies.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      // Recursively sort replies of replies
+      comment.replies.forEach(reply => sortReplies(reply));
+      return comment;
+    };
+
+    // Sort root comments: pinned comments first, then by date
+    rootComments.sort((a, b) => {
+      // First, check if either comment is pinned
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      
+      // If both are pinned or both are not pinned, sort by date (newest first)
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    
+    rootComments.forEach(comment => sortReplies(comment));
+
+    return rootComments;
+  }, []);
+
   useEffect(() => {
     if (commentsData.length > 0) {
-      setComments(organizeComments(commentsData));
+      const organizedComments = organizeCommentsCallback(commentsData);
+      setComments(organizedComments);
+    } else {
+      setComments(prevComments => {
+        if (prevComments.length === 0) {
+          return prevComments; // Don't trigger re-render if already empty
+        }
+        return [];
+      });
     }
-    // Reset expanded replies when comments data changes
-    setExpandedReplies(new Set());
-  }, [commentsData]);
+    
+    // Reset expanded replies when comments data changes - only if not already empty
+    setExpandedReplies(prevExpanded => {
+      if (prevExpanded.size === 0) {
+        return prevExpanded; // Don't trigger re-render if already empty
+      }
+      return new Set();
+    });
+  }, [commentsData]); // Remove organizeCommentsCallback dependency since it should be stable
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -277,7 +307,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     
     // Get content from appropriate editor
     let commentContent = '';
-    if (hasRichTextPrivileges() && commentEditorRef.current) {
+    if (globalHasRichTextPrivileges && commentEditorRef.current) {
       commentContent = commentEditorRef.current.getContent();
     } else {
       commentContent = newComment;
@@ -321,7 +351,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       setCurrentPage(1);
       
       // Clear the form
-      if (hasRichTextPrivileges() && commentEditorRef.current) {
+      if (globalHasRichTextPrivileges && commentEditorRef.current) {
         commentEditorRef.current.setContent('');
       } else {
         setNewComment('');
@@ -472,39 +502,53 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
 
       const data = response.data;
 
-      // If a comment was pinned, we need to refresh all comments to ensure
-      // any previously pinned comments are unpinned in the UI
-      if (data.isPinned) {
-        // Refetch all comments to get the updated pin states
-        refetch();
-      } else {
-        // If just unpinning, we can update locally
-        setComments(prevComments => 
-          prevComments.map(comment => {
-            if (comment._id === commentId) {
-              return {
-                ...comment,
-                isPinned: false
-              };
-            }
-            // Also check replies
-            if (comment.replies) {
-              return {
-                ...comment,
-                replies: comment.replies.map(reply => 
-                  reply._id === commentId
-                    ? {
-                        ...reply,
-                        isPinned: false
-                      }
-                    : reply
-                )
-              };
-            }
-            return comment;
-          })
-        );
-      }
+      // Update local state efficiently without refetching
+      setComments(prevComments => {
+        return prevComments.map(comment => {
+          // If this is the comment being pinned/unpinned
+          if (comment._id === commentId) {
+            return {
+              ...comment,
+              isPinned: data.isPinned
+            };
+          }
+          
+          // If a comment was pinned, unpin all other comments at root level
+          if (data.isPinned && comment.isPinned && comment._id !== commentId) {
+            return {
+              ...comment,
+              isPinned: false
+            };
+          }
+          
+          // Check replies for the target comment
+          if (comment.replies && comment.replies.length > 0) {
+            const updatedReplies = comment.replies.map(reply => {
+              if (reply._id === commentId) {
+                return {
+                  ...reply,
+                  isPinned: data.isPinned
+                };
+              }
+              // Unpin other replies if this one was pinned
+              if (data.isPinned && reply.isPinned && reply._id !== commentId) {
+                return {
+                  ...reply,
+                  isPinned: false
+                };
+              }
+              return reply;
+            });
+            
+            return {
+              ...comment,
+              replies: updatedReplies
+            };
+          }
+          
+          return comment;
+        });
+      });
     } catch (err) {
       console.error('Error pinning comment:', err);
       alert(`Không thể ${currentPinStatus ? 'bỏ ghim' : 'ghim'} bình luận: ${err.response?.data?.message || err.message}`);
@@ -608,8 +652,13 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     const [submittingReply, setSubmittingReply] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editText, setEditText] = useState('');
+    const [submittingEdit, setSubmittingEdit] = useState(false);
     const replyTextareaRef = useRef(null);
     const replyEditorRef = useRef(null);
+    const editTextareaRef = useRef(null);
+    const editEditorRef = useRef(null);
     const dropdownRef = useRef(null);
     const commentContentRef = useRef(null);
 
@@ -688,6 +737,31 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       }
     }, [isReplying]);
 
+
+
+    // Initialize edit content when edit mode is enabled
+    useEffect(() => {
+      if (isEditing && !globalHasRichTextPrivileges) {
+        // For plain text, decode HTML entities and strip HTML tags for editing
+        let plainText = comment.text || '';
+        
+        // First decode HTML entities
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = plainText;
+        plainText = tempDiv.textContent || tempDiv.innerText || '';
+        
+        setEditText(plainText);
+        
+        // Focus after a short delay to ensure the textarea is rendered
+        setTimeout(() => {
+          if (editTextareaRef.current) {
+            editTextareaRef.current.focus();
+          }
+        }, 100);
+      }
+      // Rich text editor content will be set in the onInit callback
+    }, [isEditing, globalHasRichTextPrivileges, comment.text]);
+
     // Close dropdown when clicking outside
     useEffect(() => {
       const handleClickOutside = (event) => {
@@ -732,7 +806,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       
       // Get content from appropriate editor
       let replyContent = '';
-      if (hasRichTextPrivileges() && replyEditorRef.current) {
+      if (globalHasRichTextPrivileges && replyEditorRef.current) {
         replyContent = replyEditorRef.current.getContent();
       } else {
         replyContent = replyText;
@@ -759,7 +833,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         const data = response.data;
         
         // Clear the reply form immediately
-        if (hasRichTextPrivileges() && replyEditorRef.current) {
+        if (globalHasRichTextPrivileges && replyEditorRef.current) {
           replyEditorRef.current.setContent('');
         } else {
           setReplyText('');
@@ -774,6 +848,82 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       } finally {
         // Reset submitting state to false at the end
         setSubmittingReply(false);
+      }
+    };
+
+    // Local handleEditSubmit function
+    const handleEditSubmit = async () => {
+      if (!isAuthenticated) {
+        window.dispatchEvent(new CustomEvent('openLoginModal'));
+        return;
+      }
+  
+      if (!user || (!user._id && !user.id)) {
+        alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
+        return;
+      }
+  
+      if (isBanned) {
+        alert('Bạn không thể chỉnh sửa vì đã bị chặn');
+        return;
+      }
+      
+      // Get content from appropriate editor
+      let editContent = '';
+      if (globalHasRichTextPrivileges && editEditorRef.current) {
+        editContent = editEditorRef.current.getContent();
+      } else {
+        editContent = editText;
+      }
+      
+      if (!editContent.trim()) {
+        return;
+      }
+  
+      // Prevent multiple submissions
+      if (submittingEdit) {
+        return;
+      }
+      
+      setSubmittingEdit(true);
+      
+      try {
+        const response = await axios.patch(
+          `${config.backendUrl}/api/comments/${comment._id}`,
+          { text: sanitizeHTML(editContent) },
+          { headers: getAuthHeaders() }
+        );
+        
+        // Update the comment in local state
+        setComments(prevComments => 
+          prevComments.map(c => {
+            if (c._id === comment._id) {
+              return { ...c, text: editContent, isEdited: true };
+            }
+            // Also check replies
+            if (c.replies) {
+              return {
+                ...c,
+                replies: c.replies.map(reply => 
+                  reply._id === comment._id
+                    ? { ...reply, text: editContent, isEdited: true }
+                    : reply
+                )
+              };
+            }
+            return c;
+          })
+        );
+        
+        // Clear the edit form
+        setEditText('');
+        setIsEditing(false);
+      } catch (err) {
+        console.error('Error editing comment:', err);
+        alert(err.response?.data?.message || 'Không thể chỉnh sửa bình luận. Vui lòng thử lại.');
+      } finally {
+        // Reset submitting state to false at the end
+        setSubmittingEdit(false);
       }
     };
 
@@ -854,6 +1004,17 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                         {pinningComments.has(comment._id) ? '⏳' : (comment.isPinned ? '📌' : '📌')} {comment.isPinned ? 'Bỏ ghim' : 'Ghim'}
                       </button>
                     )}
+                    {comment.user.username === user.username && comment.isPinned && (
+                      <button
+                        className="comment-dropdown-item"
+                        onClick={() => {
+                          setIsEditing(true);
+                          setShowDropdown(false);
+                        }}
+                      >
+                        ✏️ Chỉnh sửa
+                      </button>
+                    )}
                     {comment.user.username !== user.username && (
                       <button
                         className="comment-dropdown-item"
@@ -870,60 +1031,141 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
               </div>
             )}
           </div>
-          <div className="comment-text" ref={commentContentRef}>
-            {comment.isDeleted && !comment.adminDeleted ? 'Bình luận gốc bị xóa bởi người dùng' : (
-              <div 
-                className={`comment-content-wrapper ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
-                dangerouslySetInnerHTML={{ 
-                  __html: processCommentContent(decodeHTMLEntities(comment.text))
-                }} 
-              />
-            )}
-            {needsTruncation && !comment.isDeleted && (
-              <button 
-                className="see-more-btn"
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                {isExpanded ? 'Thu gọn' : 'Xem thêm'}
-              </button>
-            )}
-          </div>
-          <div className="comment-actions">
-            {!comment.isDeleted && (
-              <>
+          {!isEditing ? (
+            <div className="comment-text" ref={commentContentRef}>
+              {comment.isDeleted && !comment.adminDeleted ? 'Bình luận gốc bị xóa bởi người dùng' : (
+                <div 
+                  className={`comment-content-wrapper ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
+                  dangerouslySetInnerHTML={{ 
+                    __html: processCommentContent(decodeHTMLEntities(comment.text))
+                  }} 
+                />
+              )}
+              {needsTruncation && !comment.isDeleted && (
                 <button 
-                  className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
-                  onClick={() => handleLike(comment._id)}
-                  disabled={likingComments.has(comment._id)}
+                  className="see-more-btn"
+                  onClick={() => setIsExpanded(!isExpanded)}
                 >
-                  <span className="like-icon comment-like-icon">
-                    {likingComments.has(comment._id) ? '⏳' : <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
-                  </span>
-                  <span className="like-count">{comment.likes ? comment.likes.length : 0}</span>
+                  {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                </button>
+              )}
+              {comment.isEdited && (
+                <span className="edited-indicator">(đã chỉnh sửa)</span>
+              )}
+            </div>
+          ) : (
+                        <div className="edit-form clean">
+              {globalHasRichTextPrivileges ? (
+                <div className="edit-editor clean">
+                  <Editor
+                    onInit={(evt, editor) => {
+                      editEditorRef.current = editor;
+                      // Set the initial content once the editor is ready
+                      const contentToSet = comment.text || '';
+                      
+                      // Try setting content with a small delay to ensure editor is fully ready
+                      setTimeout(() => {
+                        editor.setContent(contentToSet);
+                        
+                        // Verify the content was set and focus to remove placeholder if needed
+                        setTimeout(() => {
+                          editor.focus();
+                        }, 100);
+                      }, 10);
+                    }}
+                    scriptLoading={{ async: true, load: "domainBased" }}
+                    init={{
+                      ...getTinyMCEConfig(),
+                      height: 450, // Increased height for better editing experience
+                      // Remove placeholder for edit mode since we're prefilling content
+                      placeholder: '',
+                      // Remove editor borders and padding
+                      content_style: `
+                        body { 
+                          font-family:Helvetica,Arial,sans-serif; 
+                          font-size:14px; 
+                          line-height:1.6; 
+                          margin: 0;
+                          padding: 8px;
+                        }
+                        em, i { font-style: italic; }
+                        strong, b { font-weight: bold; }
+                      `,
+                      // Remove statusbar and menubar for cleaner look
+                      statusbar: false,
+                      menubar: false
+                    }}
+                  />
+                </div>
+              ) : (
+                <textarea
+                  className="edit-input clean"
+                  placeholder="Chỉnh sửa bình luận..."
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  required
+                  ref={editTextareaRef}
+                />
+              )}
+              <div className="edit-actions">
+                <button 
+                  className="edit-submit-btn"
+                  onClick={handleEditSubmit}
+                  disabled={submittingEdit}
+                >
+                  {submittingEdit ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </button>
                 <button 
-                  className="reply-button"
-                  onClick={handleReplyClick}
+                  className="edit-cancel-btn"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditText('');
+                    // Don't need to clear TinyMCE content as it will be reinitialized next time
+                  }}
                 >
-                  Trả lời
+                  Hủy bỏ
                 </button>
-                {isAuthenticated && user && (user.username === comment.user.username || user.role === 'admin') && (
+              </div>
+            </div>
+          )}
+          {!isEditing && (
+            <div className="comment-actions">
+              {!comment.isDeleted && (
+                <>
                   <button 
-                    className="delete-button"
-                    onClick={() => handleDelete(comment._id, level > 0, comment.parentId)}
-                    disabled={deleting}
+                    className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
+                    onClick={() => handleLike(comment._id)}
+                    disabled={likingComments.has(comment._id)}
                   >
-                    {deleting ? 'Đang xóa...' : 'Xóa'}
+                    <span className="like-icon comment-like-icon">
+                      {likingComments.has(comment._id) ? '⏳' : <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
+                    </span>
+                    <span className="like-count">{comment.likes ? comment.likes.length : 0}</span>
                   </button>
-                )}
-              </>
-            )}
-          </div>
+                  <button 
+                    className="reply-button"
+                    onClick={handleReplyClick}
+                  >
+                    Trả lời
+                  </button>
+                  {isAuthenticated && user && (user.username === comment.user.username || user.role === 'admin') && (
+                    <button 
+                      className="delete-button"
+                      onClick={() => handleDelete(comment._id, level > 0, comment.parentId)}
+                      disabled={deleting}
+                    >
+                      {deleting ? 'Đang xóa...' : 'Xóa'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
             {/* Reply form */}
             {isReplying && (
               <div className="reply-form">
-                {hasRichTextPrivileges() ? (
+                {globalHasRichTextPrivileges ? (
                   <div className="reply-editor">
                     <Editor
                       onInit={(evt, editor) => replyEditorRef.current = editor}
@@ -955,14 +1197,14 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                   </button>
                   <button 
                     className="reply-cancel-btn"
-                    onClick={() => {
-                      setIsReplying(false);
-                      if (hasRichTextPrivileges() && replyEditorRef.current) {
-                        replyEditorRef.current.setContent('');
-                      } else {
-                        setReplyText('');
-                      }
-                    }}
+                                      onClick={() => {
+                    setIsReplying(false);
+                    if (globalHasRichTextPrivileges && replyEditorRef.current) {
+                      replyEditorRef.current.setContent('');
+                    } else {
+                      setReplyText('');
+                    }
+                  }}
                   >
                     Hủy bỏ
                   </button>
@@ -1095,7 +1337,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           </div>
         ) : (
           <form className="comment-form" onSubmit={handleSubmit}>
-            {hasRichTextPrivileges() ? (
+            {globalHasRichTextPrivileges ? (
               <div className="comment-editor">
                 <Editor
                   onInit={(evt, editor) => commentEditorRef.current = editor}
