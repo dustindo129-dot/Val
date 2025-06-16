@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import '../styles/components/CommentSection.css';
 import axios from 'axios';
 import config from '../config/config';
@@ -61,6 +61,15 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const commentsPerPage = 10;
   const maxVisibleReplies = 2;
+
+  // Chapter comments visibility state (only for novel detail pages)
+  const [hideChapterComments, setHideChapterComments] = useState(() => {
+    if (contentType === 'novels') {
+      const saved = localStorage.getItem(`hideChapterComments_${contentId}`);
+      return saved === 'true';
+    }
+    return false;
+  });
 
   const { data: authUser } = useAuth();
   const commentEditorRef = useRef(null);
@@ -362,6 +371,15 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Add handler for toggling chapter comments visibility
+  const handleToggleChapterComments = () => {
+    const newValue = !hideChapterComments;
+    setHideChapterComments(newValue);
+    localStorage.setItem(`hideChapterComments_${contentId}`, newValue.toString());
+    // Reset to first page when toggling visibility
+    setCurrentPage(1);
   };
 
   // Handle comment deletion
@@ -1262,12 +1280,21 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     // The query will automatically refetch due to the sortOrder dependency
   };
 
-  // Pagination calculations
-  const totalComments = comments.length;
+  // Filter comments based on chapter visibility setting
+  const filteredComments = useMemo(() => {
+    if (contentType === 'novels' && hideChapterComments) {
+      // Only show comments that are not from chapters (i.e., novel-level comments)
+      return comments.filter(comment => comment.contentType !== 'chapters');
+    }
+    return comments;
+  }, [comments, contentType, hideChapterComments]);
+
+  // Pagination calculations using filtered comments
+  const totalComments = filteredComments.length;
   const totalPages = Math.ceil(totalComments / commentsPerPage);
   const startIndex = (currentPage - 1) * commentsPerPage;
   const endIndex = startIndex + commentsPerPage;
-  const currentComments = comments.slice(startIndex, endIndex);
+  const currentComments = filteredComments.slice(startIndex, endIndex);
 
   // Pagination handlers
   const handlePageChange = (page) => {
@@ -1305,7 +1332,21 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   
   return (
     <div className="comments-section">
-      <h3 className="comments-title">Bình luận ({totalComments})</h3>
+      <div className="comments-header">
+        <h3 className="comments-title">Bình luận ({totalComments})</h3>
+        
+        {/* Chapter comments toggle - only show on novel detail pages */}
+        {contentType === 'novels' && (
+          <button 
+            className={`chapter-comments-toggle-btn ${hideChapterComments ? 'active' : ''}`}
+            onClick={handleToggleChapterComments}
+            title={hideChapterComments ? 'Hiện bình luận trong chương' : 'Ẩn bình luận trong chương'}
+          >
+            <i className={`fas ${hideChapterComments ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+            {hideChapterComments ? 'Hiện bình luận trong chương' : 'Ẩn bình luận trong chương'}
+          </button>
+        )}
+      </div>
       
       {/* Sort controls */}
       <div className="sort-controls">

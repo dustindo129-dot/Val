@@ -23,11 +23,19 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.comments-header {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
 .comments-title {
   font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   color: #343a40;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 /* Comment form styles */
@@ -704,6 +712,10 @@
   color: #f8f9fa;
 }
 
+:root.dark-mode .comments-header {
+  /* No specific dark mode styles needed, inherits from children */
+}
+
 :root.dark-mode .comment-input {
   background-color: #212529;
   border-color: #495057;
@@ -1069,9 +1081,14 @@
     padding: 1rem;
   }
 
+  .comments-header {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
   .comments-title {
     font-size: 1.3rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
   }
 
   .comment-form {
@@ -1165,6 +1182,17 @@
   }
 
 
+
+  .chapter-comments-toggle-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.65rem;
+  }
+
+  .filter-info {
+    font-size: 0.75rem;
+  }
+
+
 }
 
 /* Responsive styles for small mobile devices */
@@ -1174,9 +1202,14 @@
     padding: 0.75rem;
   }
 
+  .comments-header {
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
   .comments-title {
     font-size: 1.2rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0;
   }
 
   .comment-form {
@@ -1440,6 +1473,17 @@
     font-size: 0.9rem;
   }
 
+
+
+  .chapter-comments-toggle-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.6rem;
+  }
+
+  .filter-info {
+    font-size: 0.7rem;
+  }
+
   /* Better touch targets for small screens */
   .comment-actions button {
     min-height: 32px;
@@ -1447,6 +1491,10 @@
   }
 
   .sort-controls button {
+    min-height: 32px;
+  }
+
+  .chapter-comments-toggle-btn {
     min-height: 32px;
   }
 }
@@ -1751,4 +1799,72 @@
     margin-left: 0;
     text-align: left;
   }
+}
+
+/* Chapter comments toggle - now inline with title */
+
+.chapter-comments-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  color: #495057;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.chapter-comments-toggle-btn:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.chapter-comments-toggle-btn.active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.chapter-comments-toggle-btn.active:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.filter-info {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Dark mode styles for chapter comments toggle - no background styles needed */
+
+:root.dark-mode .chapter-comments-toggle-btn {
+  background-color: #495057;
+  border-color: #6c757d;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .chapter-comments-toggle-btn:hover {
+  background-color: #6c757d;
+  border-color: #adb5bd;
+}
+
+:root.dark-mode .chapter-comments-toggle-btn.active {
+  background-color: #4dabf7;
+  border-color: #4dabf7;
+  color: #212529;
+}
+
+:root.dark-mode .chapter-comments-toggle-btn.active:hover {
+  background-color: #74c0fc;
+  border-color: #74c0fc;
+}
+
+:root.dark-mode .filter-info {
+  color: #adb5bd;
 }
