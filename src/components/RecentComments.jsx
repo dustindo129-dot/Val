@@ -103,7 +103,7 @@ const CommentCard = memo(({ comment }) => {
       </Link>
       <p className="comment-text" dangerouslySetInnerHTML={{ __html: truncatedText }} />
       <div className="comment-footer">
-        <span className="comment-username">{comment.user.displayName || comment.user.username}</span>
+        <span className="recent-comment-username">{comment.user.displayName || comment.user.username}</span>
         <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
       </div>
     </div>

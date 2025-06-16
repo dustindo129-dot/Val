@@ -94,8 +94,9 @@
   margin-top: 5px;
 }
 
-.comment-username {
+.recent-comment-username {
   font-weight: 500;
+  color:  #2c3e50;
 }
 
 .no-comments-message {
@@ -157,6 +158,10 @@
 
 :root.dark-mode .comment-footer {
   color: #999;
+}
+
+:root.dark-mode .recent-comment-username {
+  color: #ddd;
 }
 
 :root.dark-mode .no-comments-message {

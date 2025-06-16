@@ -69,6 +69,50 @@
   color: #000;
 }
 
+/* Styles for links within footnote content */
+.footnote-content a {
+  color: var(--link-color, #0066cc);
+  text-decoration: none;
+  word-break: break-word;
+}
+
+:root.dark-mode .footnote-content a {
+  color: var(--link-color, #66b3ff);
+}
+
+.footnote-content a:hover {
+  text-decoration: underline;
+}
+
+.footnote-content a:visited {
+  color: var(--visited-link-color, #551a8b);
+}
+
+:root.dark-mode .footnote-content a:visited {
+  color: var(--visited-link-color, #bb86fc);
+}
+
+/* External link indicator */
+.footnote-content a[target="_blank"]:after {
+  content: " ↗";
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+/* Styles for formatting within footnote content */
+.footnote-content strong {
+  font-weight: bold;
+}
+
+.footnote-content em {
+  font-style: italic;
+}
+
+/* Better line spacing for multi-line footnotes */
+.footnote-content {
+  line-height: 1.6;
+}
+
 /* Animation for highlighting when navigating to footnote */
 @keyframes highlight-fade {
   0% { background-color: var(--highlight-color, #fff3cd); }
