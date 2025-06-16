@@ -862,7 +862,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                           setShowDropdown(false);
                         }}
                       >
-                        🚫 {user.role === 'admin' ? 'Vào danh sách đen' : 'Chặn'}
+                        🚫 {user.role === 'admin' ? 'Cấm (Danh sách đen)' : 'Chặn'}
                       </button>
                     )}
                   </div>
@@ -1200,15 +1200,20 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       {showBlockModal && (
         <div className="block-confirm-modal">
           <div className="block-confirm-content">
-            <p>Bạn có chắc chắn muốn {user.role === 'admin' ? 'chặn' : 'chặn'} {userToBlock.username}?</p>
+            <p>Bạn có chắc chắn muốn {user.role === 'admin' ? 'cấm' : 'chặn'} người dùng <strong>{userToBlock.username}</strong>?</p>
+            {user.role === 'admin' ? (
+              <p className="block-warning">Người dùng này sẽ bị cấm hoàn toàn khỏi hệ thống.</p>
+            ) : (
+              <p className="block-warning">Bạn sẽ không còn thấy bình luận từ người dùng này.</p>
+            )}
             <div className="block-confirm-actions">
-              <button onClick={handleBlock}>
-                {user.role === 'admin' ? 'Chặn User' : 'Chặn User'}
+              <button onClick={handleBlock} className="block-confirm-btn">
+                {user.role === 'admin' ? 'Cấm người dùng' : 'Chặn người dùng'}
               </button>
               <button onClick={() => {
                 setShowBlockModal(false);
                 setUserToBlock(null);
-              }}>
+              }} className="block-cancel-btn">
                 Hủy bỏ
               </button>
             </div>

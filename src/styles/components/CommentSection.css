@@ -550,6 +550,17 @@
   color: #333;
 }
 
+.block-confirm-content p:last-of-type {
+  margin-bottom: 1.5rem;
+}
+
+.block-warning {
+  font-size: 0.9rem;
+  color: #dc3545;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
 .block-confirm-actions {
   display: flex;
   justify-content: center;
@@ -667,6 +678,10 @@
 
 :root.dark-mode .block-confirm-content p {
   color: #f8f9fa;
+}
+
+:root.dark-mode .block-warning {
+  color: #ff6b6b;
 }
 
 :root.dark-mode .block-confirm-actions button:last-child {
@@ -1061,7 +1076,7 @@
   }
 
   .comment-main {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
   }
   
@@ -1075,7 +1090,7 @@
   }
 
   .comment-avatar {
-    align-self: flex-start;
+    flex-shrink: 0;
   }
 
   .comment-avatar img,
@@ -1101,8 +1116,8 @@
 
   .comment-user-line {
     gap: 0.4rem;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
   }
 
   .comment-username {
