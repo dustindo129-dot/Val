@@ -545,9 +545,37 @@
   border-bottom: 2px solid #007bff;
 }
 
+/* Chapters header */
+.chapters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
 
+/* Module action buttons - shared styles */
+.edit-module-btn, .delete-module-btn, .add-chapter-btn, .add-module-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
 
-/* Dark mode support */
+/* Add module button specific styles */
+.add-module-btn {
+  background-color: #8b5cf6;
+  color: white;
+  border: 1px solid #8b5cf6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 
 /* Modules list */
 .modules-list {
@@ -559,27 +587,6 @@
 /* Dark mode support */
 :root.dark-mode .module-container {
   background-color: #1f2937;
-}
-
-
-
-/* Add module button */
-.add-module-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.add-module-btn:hover {
-  background-color: #2563eb;
 }
 
 /* Module form */

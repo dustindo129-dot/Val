@@ -54,6 +54,7 @@ const SecondaryNavbar = () => {
   const fetchUserBalance = useCallback(async () => {
     if (isAuthenticated && user) {
       try {
+        console.log(`🔄 [SecondaryNavbar] Fetching user balance for ${user.username}...`);
         const timestamp = Date.now();
         const response = await axios.get(
           `${config.backendUrl}/api/users/${user.username}/profile`,
@@ -63,34 +64,51 @@ const SecondaryNavbar = () => {
           }
         );
         const newBalance = response.data.balance || 0;
+        const oldBalance = userBalance;
         setUserBalance(newBalance);
+        console.log(`💰 [SecondaryNavbar] Balance updated: ${oldBalance} → ${newBalance} 🌾`);
       } catch (error) {
-        console.error('Failed to fetch user balance:', error);
+        console.error('❌ [SecondaryNavbar] Failed to fetch user balance:', error);
       }
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, userBalance]);
 
   useEffect(() => {
     fetchUserBalance();
   }, [fetchUserBalance]);
 
   /**
+   * Log balance changes for debugging
+   */
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log(`🎯 [SecondaryNavbar] Balance display updated: ${userBalance} 🌾 for user ${user.username}`);
+    }
+  }, [userBalance, isAuthenticated, user]);
+
+  /**
    * Listen for balance update events from other components
    */
   useEffect(() => {
-    const handleBalanceUpdate = () => {
+    const handleBalanceUpdate = (event) => {
+      console.log(`📡 [SecondaryNavbar] Received balanceUpdated event:`, event.detail || 'no detail');
+      console.log(`🔄 [SecondaryNavbar] Current balance in navbar: ${userBalance} 🌾`);
+      
       // Small delay to ensure database transaction is committed
       setTimeout(() => {
+        console.log(`⏰ [SecondaryNavbar] Triggering balance refresh after 100ms delay...`);
         fetchUserBalance();
       }, 100);
     };
 
+    console.log(`👂 [SecondaryNavbar] Setting up balanceUpdated event listener...`);
     window.addEventListener('balanceUpdated', handleBalanceUpdate);
     
     return () => {
+      console.log(`🔇 [SecondaryNavbar] Removing balanceUpdated event listener...`);
       window.removeEventListener('balanceUpdated', handleBalanceUpdate);
     };
-  }, [fetchUserBalance]);
+  }, [fetchUserBalance, userBalance]);
 
   /**
    * Add click outside listener to close menu when clicking outside

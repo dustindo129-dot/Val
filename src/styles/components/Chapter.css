@@ -2154,3 +2154,134 @@
   color: #4B2E2E;
 }
 
+/* =========================
+   ADDITIONAL CSS FOR LINE-HEIGHT FIX
+   Add this to the end of Chapter.css
+   ========================= */
+
+/* Force all child elements to inherit line-height from parent */
+.chapter-content * {
+  line-height: inherit !important;
+  font-family: inherit !important;
+}
+
+/* Force spans to inherit typography but preserve formatting */
+.chapter-content span {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+/* Preserve intentional formatting while forcing typography inheritance */
+.chapter-content .text-bold {
+  font-weight: bold;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+.chapter-content .text-italic {
+  font-style: italic;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+.chapter-content .text-underline {
+  text-decoration: underline;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+/* Combination classes */
+.chapter-content .text-bold.text-italic {
+  font-weight: bold;
+  font-style: italic;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+.chapter-content .text-bold.text-underline {
+  font-weight: bold;
+  text-decoration: underline;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+.chapter-content .text-italic.text-underline {
+  font-style: italic;
+  text-decoration: underline;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+/* Ensure headings also inherit line-height */
+.chapter-content h1,
+.chapter-content h2,
+.chapter-content h3,
+.chapter-content h4,
+.chapter-content h5,
+.chapter-content h6 {
+  line-height: var(--content-line-height, 1.6) !important;
+  font-family: var(--content-font-family, 'Arial', 'Georgia', sans-serif) !important;
+  white-space: inherit !important;
+}
+
+/* Override any inline styles that might interfere with typography */
+.chapter-content [style*="line-height"] {
+  line-height: var(--content-line-height, 1.6) !important;
+}
+
+.chapter-content [style*="font-size"] {
+  font-size: var(--content-font-size, 1rem) !important;
+}
+
+.chapter-content [style*="font-family"] {
+  font-family: var(--content-font-family, 'Arial', 'Georgia', sans-serif) !important;
+}
+
+.chapter-content [style*="white-space"] {
+  white-space: inherit !important;
+}
+
+/* Ensure themed container inherits typography */
+.chapter-content .content-frame.themed-container {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+  color: var(--text-color);
+}
+
+.chapter-content .content-frame.themed-container * {
+  font-family: inherit !important;
+  color: inherit !important;
+  line-height: inherit !important;
+  white-space: inherit !important;
+}
+
+/* Ensure empty paragraphs with &nbsp; display properly */
+.chapter-content p {
+  min-height: 1em; /* Ensure paragraphs always have minimum height */
+}
+
+/* Handle paragraphs with only non-breaking space */
+.chapter-content p:empty::before {
+  content: "\00a0"; /* Add non-breaking space to truly empty paragraphs */
+}
+
+/* Ensure paragraphs with margin-top: 0pt; margin-bottom: 0pt; still have proper spacing */
+.chapter-content p[style*="margin-top: 0pt"][style*="margin-bottom: 0pt"] {
+  margin: 0.75em 0 !important; /* Override inline margin styles for better readability */
+}

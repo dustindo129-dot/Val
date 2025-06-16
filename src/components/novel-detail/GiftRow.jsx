@@ -47,30 +47,61 @@ const GiftRow = ({ novelId, onGiftSuccess }) => {
 
   if (loading) {
     return (
-        <div className="gift-row">
-          <div className="gift-loading">Đang tải quà tặng...</div>
+        <div className="compact-gift-container">
+          <div className="gift-header-compact">
+            <div className="gift-header-icon-compact">
+              <i className="fas fa-gift"></i>
+            </div>
+            <span className="gift-title-compact">Tặng Quà</span>
+          </div>
+
+          <div className="gift-row-horizontal">
+            <div className="gift-empty-compact">
+              <i className="fas fa-spinner fa-spin"></i>
+              <span>Đang tải...</span>
+            </div>
+          </div>
         </div>
     );
   }
 
   return (
       <>
-        <div className="gift-row">
-          {gifts.map((gift) => (
-              <div
-                  key={gift._id}
-                  className="gift-item"
-                  onClick={() => handleGiftClick(gift)}
-                  title={`Tặng ${gift.name} - ${gift.price} 🌾`}
-              >
-                {/* FIXED: Icon container với count ở góc dưới trái */}
-                <div className="gift-icon-container">
-                  <div className="gift-icon">{gift.icon}</div>
-                  <div className="gift-count">{gift.count}</div>
+        <div className="compact-gift-container">
+          <div className="gift-header-compact">
+            <div className="gift-header-icon-compact">
+              <i className="fas fa-gift"></i>
+            </div>
+            <span className="gift-title-compact">Tặng Quà</span>
+          </div>
+
+          <div className="gift-row-horizontal">
+            {gifts.map((gift) => (
+                <div
+                    key={gift._id}
+                    className="compact-gift-item"
+                    onClick={() => handleGiftClick(gift)}
+                    title={`Tặng ${gift.name} - ${gift.price} 🌾`}
+                >
+                  <div className="gift-content">
+                    <div className="gift-icon-and-price">
+                      <div className="gift-icon-wrapper">
+                        <span className="gift-icon-compact">{gift.icon}</span>
+                        {gift.count > 0 && (
+                            <div className="gift-count-compact">{gift.count}</div>
+                        )}
+                      </div>
+                      <span className="gift-price-text">🌾 {gift.price}</span>
+                    </div>
+                    <div className="gift-name-compact">{gift.name}</div>
+                  </div>
                 </div>
-                <div className="gift-price">{gift.price} lúa</div>
-              </div>
-          ))}
+            ))}
+
+            {gifts.length === 0 && (
+                <div className="gift-empty-compact">Chưa có quà</div>
+            )}
+          </div>
         </div>
 
         <GiftModal

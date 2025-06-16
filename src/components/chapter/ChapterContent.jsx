@@ -267,7 +267,7 @@ const ChapterContent = ({
     // Changes will be saved when the user clicks the Save Changes button
   };
 
-  // Process content to wrap footnote references and sanitize HTML
+// Process content to wrap footnote references and sanitize HTML
     const processContent = (content) => {
         if (!content) return '';
 
@@ -286,7 +286,7 @@ const ChapterContent = ({
             // Convert br tags to paragraph breaks
             // First normalize br tags
             processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
-            
+
             // Split content by br tags and convert to paragraphs
             if (processedContent.includes('<br>')) {
                 // Split by br tags, filter out empty parts, and wrap in paragraphs
@@ -299,7 +299,7 @@ const ChapterContent = ({
                     }
                     return trimmed;
                 }).filter(part => part.length > 0);
-                
+
                 processedContent = parts.join('');
             }
 
@@ -359,9 +359,10 @@ const ChapterContent = ({
                         classes.push(`bg-color-${bgColorMatch[1]}`);
                     }
 
-                    // Remove conflicting typography but keep everything else
+                    // REMOVE ALL TYPOGRAPHY STYLES INCLUDING LINE-HEIGHT AND WHITE-SPACE
+                    // Remove font-family, font-size, line-height, white-space to let user settings take priority
                     preservedStyles = preservedStyles.replace(
-                        /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                        /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+|white-space:\s*[^;]+)[;]?/gi,
                         ''
                     );
 
@@ -387,7 +388,7 @@ const ChapterContent = ({
                 }
             );
 
-            // Handle paragraph-level styles
+            // Handle paragraph-level styles - ALSO REMOVE LINE-HEIGHT
             processedContent = processedContent.replace(
                 /<p[^>]*style="([^"]*)"[^>]*>/gi,
                 (match, styleContent) => {
@@ -426,9 +427,9 @@ const ChapterContent = ({
                         classes.push('text-default-color');
                     }
 
-                    // Remove conflicting styles
+                    // REMOVE ALL TYPOGRAPHY STYLES INCLUDING LINE-HEIGHT FROM PARAGRAPHS TOO
                     preservedStyles = preservedStyles.replace(
-                        /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+)[;]?/gi,
+                        /(?:font-family[^;]*|font-size:\s*[\d.]+p[tx]|line-height:\s*[\d.]+|white-space:\s*[^;]+)[;]?/gi,
                         ''
                     );
 
@@ -451,9 +452,22 @@ const ChapterContent = ({
             if (processedContent.includes('<p')) {
                 // Content already has paragraph structure, preserve it including empty paragraphs and consecutive br tags
                 let finalContent = processedContent;
-                // Just ensure empty paragraphs have non-breaking space
+
+                // Handle paragraphs with empty spans or just whitespace
+                finalContent = finalContent.replace(
+                    /<p(\s[^>]*)?>\s*<span[^>]*>\s*<\/span>\s*<\/p>/gi,
+                    '<p$1>&nbsp;</p>'
+                );
+
+                // Handle completely empty paragraphs
                 finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '<p$1>&nbsp;</p>');
-                
+
+                // Handle paragraphs with only whitespace content
+                finalContent = finalContent.replace(
+                    /<p(\s[^>]*)?>\s*<span[^>]*>[\s\u00A0]*<\/span>\s*<\/p>/gi,
+                    '<p$1>&nbsp;</p>'
+                );
+
                 return DOMPurify.sanitize(finalContent, {
                     ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
                     ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],

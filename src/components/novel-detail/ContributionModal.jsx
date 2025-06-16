@@ -48,6 +48,9 @@ const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) 
       return;
     }
 
+    console.log(`💰 [ContributionModal] Starting contribution: ${amount} 🌾 for novel ${novelId}`);
+    console.log(`💰 [ContributionModal] User balance before contribution: ${userBalance} 🌾`);
+
     setIsSubmitting(true);
 
     try {
@@ -60,8 +63,25 @@ const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) 
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
 
+      console.log(`✅ [ContributionModal] Contribution successful:`, response.data);
+
       // Update local user balance
-      setUserBalance(prevBalance => prevBalance - amount);
+      const newBalance = userBalance - amount;
+      setUserBalance(newBalance);
+      console.log(`💰 [ContributionModal] Updated local balance: ${userBalance} → ${newBalance} 🌾`);
+      
+      // Dispatch balance update event for SecondaryNavbar
+      console.log(`📡 [ContributionModal] Dispatching balanceUpdated event...`);
+      window.dispatchEvent(new CustomEvent('balanceUpdated', { 
+        detail: { 
+          oldBalance: userBalance, 
+          newBalance: newBalance, 
+          amount: amount,
+          source: 'contribution',
+          novelId: novelId
+        } 
+      }));
+      console.log(`📡 [ContributionModal] balanceUpdated event dispatched successfully`);
       
       alert(`Cảm ơn bạn đã đóng góp ${amount} 🌾!`);
       
@@ -76,7 +96,7 @@ const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) 
       }
       
     } catch (error) {
-      console.error('Failed to contribute:', error);
+      console.error('❌ [ContributionModal] Failed to contribute:', error);
       alert(error.response?.data?.message || 'Không thể thực hiện đóng góp');
     } finally {
       setIsSubmitting(false);
