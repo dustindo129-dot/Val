@@ -11,7 +11,8 @@ const ChapterCommentsSection = ({
   chapterId,
   user,
   comments,
-  isCommentsLoading
+  isCommentsLoading,
+  novel
 }) => {
   const [autoLoadComments, setAutoLoadComments] = useState(false);
 
@@ -34,6 +35,7 @@ const ChapterCommentsSection = ({
           isAuthenticated={!!user}
           comments={comments}
           isLoading={isCommentsLoading}
+          novel={novel}
         />
       )}
     </div>

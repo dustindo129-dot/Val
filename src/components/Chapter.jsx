@@ -1275,6 +1275,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         user={user}
         comments={comments}
         isCommentsLoading={isCommentsLoading}
+        novel={novel}
       />
 
       {/* Add the ScrollToTop component */}

@@ -8,6 +8,8 @@ import LoadingSpinner from './LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAuthHeaders } from '../utils/auth';
+import { Editor } from '@tinymce/tinymce-react';
+import bunnyUploadService from '../services/bunnyUploadService';
 
 /**
  * Comment section component for novels
@@ -77,8 +79,8 @@ const organizeComments = (flatComments) => {
 const sanitizeHTML = (content) => {
   if (!content) return '';
   return DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
-    ALLOWED_ATTR: ['href', 'target', 'rel']
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height']
   });
 };
 
@@ -106,6 +108,103 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
   const [pinningComments, setPinningComments] = useState(new Set());
 
   const { data: authUser } = useAuth();
+  const commentEditorRef = useRef(null);
+
+  // Helper function to check if user has rich text editor privileges
+  const hasRichTextPrivileges = () => {
+    if (!isAuthenticated || !user) return false;
+    
+    // Admin and moderator always have privileges
+    if (user.role === 'admin' || user.role === 'moderator') return true;
+    
+    // For novel detail page, check if pj_user is assigned to this novel
+    if (contentType === 'novels' && user.role === 'pj_user' && novel?.active?.pj_user) {
+      return novel.active.pj_user.includes(user.id) || 
+             novel.active.pj_user.includes(user._id) ||
+             novel.active.pj_user.includes(user.username) ||
+             novel.active.pj_user.includes(user.displayName);
+    }
+    
+    // For chapter page, we need to check if pj_user is assigned to the novel that owns this chapter
+    // This would require additional data, but for now we'll allow pj_user on chapter pages
+    if (contentType === 'chapters' && user.role === 'pj_user') {
+      return true; // You might want to add more specific logic here
+    }
+    
+    return false;
+  };
+
+  // TinyMCE configuration for comments
+  const getTinyMCEConfig = () => ({
+    script_src: config.tinymce.scriptPath,
+    license_key: 'gpl',
+    height: 200,
+    menubar: false,
+    remove_empty_elements: false,
+    forced_root_block: 'p',
+    plugins: [
+      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+      'searchreplace', 'visualblocks', 'code', 'fullscreen',
+      'insertdatetime', 'media', 'table', 'help', 'wordcount'
+    ],
+    toolbar: 'undo redo | formatselect | ' +
+      'bold italic underline | ' +
+      'alignleft aligncenter alignright | ' +
+      'bullist numlist | ' +
+      'link image | code | removeformat | help',
+    contextmenu: 'cut copy paste | link image | removeformat',
+    content_style: `
+      body { font-family:Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; }
+      em, i { font-style: italic; }
+      strong, b { font-weight: bold; }
+    `,
+    skin: 'oxide',
+    content_css: 'default',
+    placeholder: 'Viết bình luận...',
+    statusbar: false,
+    resize: false,
+    branding: false,
+    promotion: false,
+    images_upload_handler: async (blobInfo, progress) => {
+      try {
+        // Convert blob to file
+        const file = new File([blobInfo.blob()], blobInfo.filename(), {
+          type: blobInfo.blob().type
+        });
+        
+        // Upload to bunny.net comments folder
+        const url = await bunnyUploadService.uploadFile(file, 'comments');
+        return url;
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        throw new Error('Failed to upload image');
+      }
+    },
+    automatic_uploads: true,
+    file_picker_types: 'image',
+    file_picker_callback: (callback, value, meta) => {
+      if (meta.filetype === 'image') {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        
+        input.onchange = async function() {
+          const file = this.files[0];
+          if (file) {
+            try {
+              const url = await bunnyUploadService.uploadFile(file, 'comments');
+              callback(url, { alt: file.name });
+            } catch (error) {
+              console.error('Error uploading image:', error);
+              alert('Failed to upload image');
+            }
+          }
+        };
+        
+        input.click();
+      }
+    }
+  });
 
   // Check if user is banned
   useEffect(() => {
@@ -158,7 +257,15 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       return;
     }
     
-    if (!newComment.trim()) {
+    // Get content from appropriate editor
+    let commentContent = '';
+    if (hasRichTextPrivileges() && commentEditorRef.current) {
+      commentContent = commentEditorRef.current.getContent();
+    } else {
+      commentContent = newComment;
+    }
+    
+    if (!commentContent.trim()) {
       return;
     }
     
@@ -167,7 +274,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     try {
       const response = await axios.post(
         `${config.backendUrl}/api/comments/${contentType}/${contentId}`,
-        { text: sanitizeHTML(newComment) },
+        { text: sanitizeHTML(commentContent) },
         { headers: getAuthHeaders() }
       );
       
@@ -182,7 +289,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             displayName: user.displayName || user.username,
             avatar: user.avatar || '' 
           },
-          text: newComment,
+          text: commentContent,
           createdAt: new Date().toISOString(),
           likes: [],
           replies: [],
@@ -193,7 +300,11 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       ]);
       
       // Clear the form
-      setNewComment('');
+      if (hasRichTextPrivileges() && commentEditorRef.current) {
+        commentEditorRef.current.setContent('');
+      } else {
+        setNewComment('');
+      }
     } catch (err) {
       console.error('Error posting comment:', err);
       alert('Không thể đăng bình luận. Vui lòng thử lại.');
@@ -475,8 +586,83 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     const [replyText, setReplyText] = useState('');
     const [submittingReply, setSubmittingReply] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const replyTextareaRef = useRef(null);
+    const replyEditorRef = useRef(null);
     const dropdownRef = useRef(null);
+    const commentContentRef = useRef(null);
+
+    // Process comment content similar to chapter content
+    const processCommentContent = (content) => {
+      if (!content) return '';
+      
+      try {
+        const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
+        
+        // Basic HTML sanitization while preserving images and formatting
+        let processedContent = contentString;
+        
+        // Ensure images have proper styling for comments
+        processedContent = processedContent.replace(
+          /<img([^>]*)>/gi,
+          '<img$1 style="max-width: 100%; height: auto; border-radius: 4px; margin: 8px 0;">'
+        );
+        
+        // Convert br tags to proper line breaks
+        processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
+        
+        // If content doesn't have paragraph structure, wrap in paragraphs
+        if (!processedContent.includes('<p')) {
+          const parts = processedContent.split(/<br>/gi);
+          processedContent = parts
+            .map(part => {
+              const trimmed = part.trim();
+              if (trimmed && !trimmed.match(/^<(img|div|h[1-6])/i)) {
+                return `<p>${trimmed}</p>`;
+              }
+              return trimmed;
+            })
+            .filter(part => part.length > 0)
+            .join('');
+        }
+        
+        return DOMPurify.sanitize(processedContent, {
+          ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'u'],
+          ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height', 'style', 'class']
+        });
+      } catch (error) {
+        console.error('Error processing comment content:', error);
+        return content;
+      }
+    };
+
+    // Check if comment content needs truncation (more than 4 lines)
+    const checkIfNeedsTruncation = (content) => {
+      if (!content) return false;
+      
+      // Create a temporary element to measure content height
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = processCommentContent(content);
+      tempDiv.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        width: 400px;
+        font-size: 14px;
+        line-height: 1.5;
+        font-family: inherit;
+      `;
+      document.body.appendChild(tempDiv);
+      
+      const lineHeight = 21; // 14px * 1.5
+      const maxHeight = lineHeight * 4; // 4 lines
+      const actualHeight = tempDiv.offsetHeight;
+      
+      document.body.removeChild(tempDiv);
+      
+      return actualHeight > maxHeight;
+    };
+
+    const needsTruncation = checkIfNeedsTruncation(comment.text);
 
     // Focus the reply textarea when the reply form is shown
     useEffect(() => {
@@ -527,7 +713,15 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         return;
       }
       
-      if (!replyText.trim()) {
+      // Get content from appropriate editor
+      let replyContent = '';
+      if (hasRichTextPrivileges() && replyEditorRef.current) {
+        replyContent = replyEditorRef.current.getContent();
+      } else {
+        replyContent = replyText;
+      }
+      
+      if (!replyContent.trim()) {
         return;
       }
   
@@ -541,14 +735,18 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       try {
         const response = await axios.post(
           `${config.backendUrl}/api/comments/${comment._id}/replies`,
-          { text: sanitizeHTML(replyText) },
+          { text: sanitizeHTML(replyContent) },
           { headers: getAuthHeaders() }
         );
         
         const data = response.data;
         
         // Clear the reply form immediately
-        setReplyText('');
+        if (hasRichTextPrivileges() && replyEditorRef.current) {
+          replyEditorRef.current.setContent('');
+        } else {
+          setReplyText('');
+        }
         setIsReplying(false);
   
         // Refetch all comments to ensure correct structure
@@ -642,9 +840,22 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
               </div>
             )}
           </div>
-          <div className="comment-text">
+          <div className="comment-text" ref={commentContentRef}>
             {comment.isDeleted && !comment.adminDeleted ? 'Bình luận gốc bị xóa bởi người dùng' : (
-              <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(decodeHTMLEntities(comment.text)) }} />
+              <div 
+                className={`comment-content-wrapper ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
+                dangerouslySetInnerHTML={{ 
+                  __html: processCommentContent(decodeHTMLEntities(comment.text))
+                }} 
+              />
+            )}
+            {needsTruncation && !comment.isDeleted && (
+              <button 
+                className="see-more-btn"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+              </button>
             )}
           </div>
           <div className="comment-actions">
@@ -683,19 +894,33 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             {/* Reply form */}
             {isReplying && (
               <div className="reply-form">
-                <textarea
-                  className="reply-input"
-                  placeholder="Viết trả lời..."
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  required
-                  ref={replyTextareaRef}
-                />
+                {hasRichTextPrivileges() ? (
+                  <div className="reply-editor">
+                    <Editor
+                      onInit={(evt, editor) => replyEditorRef.current = editor}
+                      scriptLoading={{ async: true, load: "domainBased" }}
+                      init={{
+                        ...getTinyMCEConfig(),
+                        height: 150,
+                        placeholder: 'Viết trả lời...'
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <textarea
+                    className="reply-input"
+                    placeholder="Viết trả lời..."
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    required
+                    ref={replyTextareaRef}
+                  />
+                )}
                 <div className="reply-actions">
                   <button 
                     className="reply-submit-btn"
                     onClick={handleReplySubmit}
-                    disabled={!replyText.trim() || submittingReply}
+                    disabled={submittingReply}
                   >
                     {submittingReply ? 'Đang đăng...' : 'Đăng trả lời'}
                   </button>
@@ -703,7 +928,11 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                     className="reply-cancel-btn"
                     onClick={() => {
                       setIsReplying(false);
-                      setReplyText('');
+                      if (hasRichTextPrivileges() && replyEditorRef.current) {
+                        replyEditorRef.current.setContent('');
+                      } else {
+                        setReplyText('');
+                      }
                     }}
                   >
                     Hủy bỏ
@@ -781,18 +1010,28 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           </div>
         ) : (
           <form className="comment-form" onSubmit={handleSubmit}>
-            <textarea
-              className="comment-input"
-              placeholder="Thêm bình luận..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              disabled={submitting}
-              required
-            />
+            {hasRichTextPrivileges() ? (
+              <div className="comment-editor">
+                <Editor
+                  onInit={(evt, editor) => commentEditorRef.current = editor}
+                  scriptLoading={{ async: true, load: "domainBased" }}
+                  init={getTinyMCEConfig()}
+                />
+              </div>
+            ) : (
+              <textarea
+                className="comment-input"
+                placeholder="Thêm bình luận..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                disabled={submitting}
+                required
+              />
+            )}
             <button 
               type="submit" 
               className="comment-submit-btn"
-              disabled={submitting || !newComment.trim()}
+              disabled={submitting}
             >
               {submitting ? 'Đang đăng...' : 'Đăng bình luận'}
             </button>

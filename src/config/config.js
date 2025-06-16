@@ -7,7 +7,7 @@ const config = {
     folders: {
       avatar: 'avatars',
       illustration: 'illustrations',
-      comment: 'comment-images'
+      comments: 'comments'
     }
   },
   tinymce: {
