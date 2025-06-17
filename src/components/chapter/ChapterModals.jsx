@@ -242,6 +242,17 @@ export const ReportModal = ({
             <div className="report-option">
               <input 
                 type="radio" 
+                id="ai-elements" 
+                name="report-reason" 
+                value="AI elements" 
+                checked={reportReason === 'AI elements'}
+                onChange={() => setReportReason('AI elements')}
+              />
+              <label htmlFor="ai-elements">Yếu tố AI</label>
+            </div>
+            <div className="report-option">
+              <input 
+                type="radio" 
                 id="other-issue" 
                 name="report-reason" 
                 value="Other" 

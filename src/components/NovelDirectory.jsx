@@ -56,7 +56,8 @@ const statusOptions = [
 // Sort options (removed latest-update)
 const sortOptions = [
     { value: 'title-asc', label: 'Tên truyện (A-Z)' },
-    { value: 'word-count-desc', label: 'Số từ (Cao → Thấp)' }
+    { value: 'word-count-desc', label: 'Số từ (Cao → Thấp)' },
+    { value: 'view-count-desc', label: 'Lượt xem (Cao → Thấp)' }
 ];
 
 // Function to truncate HTML content safely
@@ -291,17 +292,12 @@ const NovelDirectory = () => {
         queryFn: async () => {
             const response = await axios.get(`${config.backendUrl}/api/novels?page=1&limit=1000`);
             
-            // Sort novels by title (case-insensitive)
-            const sortedNovels = (response.data.novels || []).sort((a, b) => {
-                return a.title.toLowerCase().localeCompare(b.title.toLowerCase(), undefined, {
-                    numeric: true,
-                    sensitivity: 'base'
-                });
-            });
+            // Don't pre-sort here - let the frontend sorting handle it based on user selection
+            const novels = response.data.novels || [];
 
             return {
-                novels: sortedNovels,
-                totalCount: sortedNovels.length
+                novels: novels,
+                totalCount: novels.length
             };
         },
         staleTime: 1000 * 60 * 10,
@@ -371,6 +367,8 @@ const NovelDirectory = () => {
             switch (sortBy) {
                 case 'word-count-desc':
                     return (b.wordCount || 0) - (a.wordCount || 0);
+                case 'view-count-desc':
+                    return (b.views?.total || 0) - (a.views?.total || 0);
                 case 'title-asc':
                 default:
                     return a.title.toLowerCase().localeCompare(b.title.toLowerCase(), undefined, {
