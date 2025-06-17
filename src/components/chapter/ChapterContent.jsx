@@ -679,7 +679,7 @@ const ChapterContent = ({
                   'bold italic underline strikethrough | ' +
                   'alignleft aligncenter alignright alignjustify | ' +
                   'bullist numlist outdent indent | ' +
-                  'link image footnote | code preview | wordcount | pastetext | removeformat | help',
+                  'link image footnote | code preview | wordcount | removeformat | help',
                 contextmenu: 'cut copy paste | link image | inserttable | cell row column deletetable',
                 content_style: `
                   body { font-family:Helvetica,Arial,sans-serif; font-size:14px }

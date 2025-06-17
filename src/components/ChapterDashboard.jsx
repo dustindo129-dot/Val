@@ -1022,9 +1022,9 @@ const ChapterDashboard = () => {
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
                         'searchreplace', 'visualblocks', 'code', 'fullscreen',
                         'insertdatetime', 'media', 'table', 'help', 'wordcount',
-                        'preview', 'paste'
+                        'preview'
                       ],
-                      toolbar: 'undo redo | pastetext | formatselect | ' +
+                      toolbar: 'undo redo | formatselect | ' +
                           'bold italic underline strikethrough | ' +
                           'alignleft aligncenter alignright alignjustify | ' +
                           'bullist numlist outdent indent | ' +
