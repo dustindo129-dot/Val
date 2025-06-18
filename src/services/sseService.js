@@ -103,7 +103,6 @@ class SSEService {
   }
 
   becomeLeader() {
-    console.log(`Tab ${this.tabId} becoming SSE leader`);
     this.isLeaderTab = true;
     
     // Announce leadership
@@ -199,7 +198,6 @@ class SSEService {
     if (!this.isLeaderTab && this.lastHeartbeat > 0) {
       const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeat;
       if (timeSinceLastHeartbeat > 15000) { // No heartbeat for 15 seconds
-        console.log('Leader tab seems dead, requesting new election');
         this.broadcastChannel.postMessage({
           type: 'REQUEST_LEADERSHIP',
           tabId: this.tabId,
@@ -366,7 +364,6 @@ class SSEService {
       this.eventSource = new EventSource(`${config.backendUrl}/api/novels/sse?sessionId=${this.sessionId}&tabId=${this.tabId}`);
       
       this.eventSource.onopen = () => {
-        console.log('SSE connection opened (leader tab)');
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.clearReconnectTimeout();

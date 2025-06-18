@@ -539,6 +539,19 @@ const NovelDirectory = () => {
         }
     };
 
+    // Format view count
+    const formatViewCount = (viewCount) => {
+        if (viewCount === undefined || viewCount === null || viewCount === 0) return '0 lượt xem';
+
+        if (viewCount >= 1000000) {
+            return `${(viewCount / 1000000).toFixed(1)}M lượt xem`;
+        } else if (viewCount >= 1000) {
+            return `${(viewCount / 1000).toFixed(1)}K lượt xem`;
+        } else {
+            return `${viewCount} lượt xem`;
+        }
+    };
+
     // Render pagination controls
     const renderPagination = () => {
         const pages = [];
@@ -812,9 +825,14 @@ const NovelDirectory = () => {
                                                     </div>
                                                 )}
 
-                                                {/* Word count */}
-                                                <div className="nd-word-count">
-                                                    <span className="nd-word-count-label">Số từ:</span> {formatWordCount(novel.wordCount)}
+                                                {/* Word count and view count */}
+                                                <div className="nd-stats-row">
+                                                    <div className="nd-word-count">
+                                                        <span className="nd-word-count-label">Số từ:</span> {formatWordCount(novel.wordCount)}
+                                                    </div>
+                                                    <div className="nd-view-count">
+                                                        <span className="nd-view-count-label">Lượt xem:</span> {formatViewCount(novel.views?.total)}
+                                                    </div>
                                                 </div>
 
                                                 {/* Novel description */}
