@@ -9,19 +9,35 @@ class SSEService {
     this.clientId = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 10;
-    this.baseReconnectDelay = 1000; // Start with 1 second
-    this.maxReconnectDelay = 30000; // Max 30 seconds
+    this.baseReconnectDelay = 1000; // Back to original 1 second
+    this.maxReconnectDelay = 30000; // Back to original 30 seconds
     this.isManuallyDisconnected = false;
     
     // Circuit breaker for rapid reconnections
     this.recentConnections = [];
-    this.circuitBreakerThreshold = 3; // Max 3 connections in a time window
-    this.circuitBreakerWindow = 10000; // 10 seconds window
-    this.circuitBreakerCooldown = 30000; // 30 seconds cooldown
+    this.circuitBreakerThreshold = 3; // Back to original
+    this.circuitBreakerWindow = 10000; // Back to original
+    this.circuitBreakerCooldown = 30000; // Back to original
     this.isCircuitBreakerOpen = false;
     
-    // Use sessionStorage to persist tab ID across refreshes
+    // Connection sharing between tabs using BroadcastChannel
+    this.broadcastChannel = new BroadcastChannel('sse_connection_sharing');
+    this.isLeaderTab = false;
+    this.leaderElectionTimeout = null;
+    this.heartbeatInterval = null;
+    this.lastHeartbeat = 0;
+    
+    // Generate unique session ID (same across tabs for same user session)
+    this.sessionId = this.getOrCreateSessionId();
     this.tabId = this.getOrCreateTabId();
+    
+    // Start leader election process
+    this.startLeaderElection();
+    
+    // Listen for messages from other tabs
+    this.broadcastChannel.addEventListener('message', (event) => {
+      this.handleBroadcastMessage(event.data);
+    });
     
     // Listen for online/offline events
     window.addEventListener('online', () => this.handleOnline());
@@ -29,6 +45,22 @@ class SSEService {
     
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+    
+    // Listen for beforeunload to handle leader handoff
+    window.addEventListener('beforeunload', () => this.handleBeforeUnload());
+  }
+
+  // Get or create session ID (shared across tabs for same user)
+  getOrCreateSessionId() {
+    const storageKey = 'sse_session_id';
+    let sessionId = localStorage.getItem(storageKey);
+    
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      localStorage.setItem(storageKey, sessionId);
+    }
+    
+    return sessionId;
   }
 
   // Get existing tab ID from sessionStorage or create a new one
@@ -36,25 +68,182 @@ class SSEService {
     const storageKey = 'sse_tab_id';
     let tabId = sessionStorage.getItem(storageKey);
     
-    // If no existing tab ID, create and store a new one
     if (!tabId) {
-      // Generate a unique ID using timestamp and random string
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 10);
       const uniqueId = `${timestamp}_${randomStr}`;
       tabId = `tab_${uniqueId}`;
-      
-      // Store in sessionStorage (unique per tab)
       sessionStorage.setItem(storageKey, tabId);
     }
     
     return tabId;
   }
 
+  // Leader election: only one tab per session should maintain SSE connection
+  startLeaderElection() {
+    // Announce this tab wants to be leader
+    this.broadcastChannel.postMessage({
+      type: 'LEADER_ELECTION',
+      tabId: this.tabId,
+      sessionId: this.sessionId,
+      timestamp: Date.now()
+    });
+
+    // Wait for responses, then decide if we should be leader
+    setTimeout(() => {
+      this.checkLeadershipStatus();
+    }, 1000);
+  }
+
+  checkLeadershipStatus() {
+    // If no other tab has claimed leadership, become leader
+    if (!this.isLeaderTab) {
+      this.becomeLeader();
+    }
+  }
+
+  becomeLeader() {
+    console.log(`Tab ${this.tabId} becoming SSE leader`);
+    this.isLeaderTab = true;
+    
+    // Announce leadership
+    this.broadcastChannel.postMessage({
+      type: 'LEADER_ANNOUNCEMENT',
+      tabId: this.tabId,
+      sessionId: this.sessionId,
+      timestamp: Date.now()
+    });
+
+    // Start heartbeat to let other tabs know we're alive
+    this.startHeartbeat();
+    
+    // Connect to SSE if we have listeners
+    if (this.listeners.size > 0) {
+      this.connect();
+    }
+  }
+
+  startHeartbeat() {
+    this.heartbeatInterval = setInterval(() => {
+      this.broadcastChannel.postMessage({
+        type: 'LEADER_HEARTBEAT',
+        tabId: this.tabId,
+        sessionId: this.sessionId,
+        timestamp: Date.now()
+      });
+    }, 5000); // Heartbeat every 5 seconds
+  }
+
+  handleBroadcastMessage(data) {
+    if (data.sessionId !== this.sessionId) return; // Ignore messages from other sessions
+
+    switch (data.type) {
+      case 'LEADER_ELECTION':
+        if (data.tabId !== this.tabId && this.isLeaderTab) {
+          // Another tab wants to be leader, respond with our status
+          this.broadcastChannel.postMessage({
+            type: 'LEADER_RESPONSE',
+            tabId: this.tabId,
+            sessionId: this.sessionId,
+            isLeader: true,
+            timestamp: Date.now()
+          });
+        }
+        break;
+
+      case 'LEADER_RESPONSE':
+        if (data.isLeader && data.tabId !== this.tabId) {
+          // Another tab is already leader
+          this.isLeaderTab = false;
+        }
+        break;
+
+      case 'LEADER_ANNOUNCEMENT':
+        if (data.tabId !== this.tabId) {
+          // Another tab became leader
+          this.isLeaderTab = false;
+          this.lastHeartbeat = data.timestamp;
+        }
+        break;
+
+      case 'LEADER_HEARTBEAT':
+        if (data.tabId !== this.tabId) {
+          this.lastHeartbeat = data.timestamp;
+        }
+        break;
+
+      case 'SSE_EVENT':
+        // Received SSE event from leader tab, broadcast to local listeners
+        if (!this.isLeaderTab) {
+          this.broadcastEventToListeners(data.eventName, data.eventData);
+        }
+        break;
+
+      case 'REQUEST_LEADERSHIP':
+        // Another tab is requesting leadership (maybe leader died)
+        if (this.isLeaderTab) {
+          this.broadcastChannel.postMessage({
+            type: 'LEADER_RESPONSE',
+            tabId: this.tabId,
+            sessionId: this.sessionId,
+            isLeader: true,
+            timestamp: Date.now()
+          });
+        }
+        break;
+    }
+  }
+
+  // Check if current leader is still alive
+  checkLeaderHealth() {
+    if (!this.isLeaderTab && this.lastHeartbeat > 0) {
+      const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeat;
+      if (timeSinceLastHeartbeat > 15000) { // No heartbeat for 15 seconds
+        console.log('Leader tab seems dead, requesting new election');
+        this.broadcastChannel.postMessage({
+          type: 'REQUEST_LEADERSHIP',
+          tabId: this.tabId,
+          sessionId: this.sessionId,
+          timestamp: Date.now()
+        });
+        
+        // Wait for response, if none, become leader
+        setTimeout(() => {
+          if (!this.isLeaderTab && (Date.now() - this.lastHeartbeat) > 20000) {
+            this.becomeLeader();
+          }
+        }, 2000);
+      }
+    }
+  }
+
+  handleBeforeUnload() {
+    if (this.isLeaderTab) {
+      // Leader tab is closing, trigger new election
+      this.broadcastChannel.postMessage({
+        type: 'LEADER_ELECTION',
+        tabId: 'closing',
+        sessionId: this.sessionId,
+        timestamp: Date.now()
+      });
+    }
+  }
+
+  broadcastEventToListeners(eventName, eventData) {
+    const listeners = this.listeners.get(eventName) || [];
+    listeners.forEach(callback => {
+      try {
+        callback(eventData);
+      } catch (error) {
+        console.error(`Error processing ${eventName} event:`, error);
+      }
+    });
+  }
+
   handleOnline() {
-    if (!this.isConnected && !this.isManuallyDisconnected) {
-      this.reconnectAttempts = 0; // Reset attempts when coming back online
-      this.scheduleReconnect(1000); // Reconnect quickly when online
+    if (!this.isConnected && !this.isManuallyDisconnected && this.isLeaderTab) {
+      this.reconnectAttempts = 0;
+      this.scheduleReconnect(1000);
     }
   }
 
@@ -64,12 +253,12 @@ class SSEService {
 
   handleVisibilityChange() {
     if (document.hidden) {
-      // Page is hidden, stop any pending reconnections to save resources
       this.clearReconnectTimeout();
     } else {
-      // Page is visible again, check connection and reconnect if needed
-      if (!this.isConnected && !this.isManuallyDisconnected && this.listeners.size > 0) {
-        // Reset attempts when tab becomes visible again
+      // Check if leader is still alive when tab becomes visible
+      if (!this.isLeaderTab) {
+        this.checkLeaderHealth();
+      } else if (!this.isConnected && !this.isManuallyDisconnected && this.listeners.size > 0) {
         this.reconnectAttempts = Math.max(0, this.reconnectAttempts - 2);
         this.scheduleReconnect(2000);
       }
@@ -77,17 +266,12 @@ class SSEService {
   }
 
   getReconnectDelay() {
-    // Exponential backoff with jitter
     const delay = Math.min(
       this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts),
       this.maxReconnectDelay
     );
     
-    // Add jitter (±25% random variation) to prevent thundering herd
     const jitter = delay * 0.25 * (Math.random() - 0.5);
-    
-    // Add extra delay if there have been multiple recent reconnection attempts
-    // This helps prevent bulk reconnection storms
     const extraDelay = this.reconnectAttempts > 3 ? (this.reconnectAttempts - 3) * 2000 : 0;
     
     return Math.max(1000, delay + jitter + extraDelay);
@@ -100,25 +284,21 @@ class SSEService {
     }
   }
 
-  // Check if circuit breaker should be triggered
   checkCircuitBreaker() {
     const now = Date.now();
     
-    // Clean old entries outside the window
     this.recentConnections = this.recentConnections.filter(
       timestamp => now - timestamp < this.circuitBreakerWindow
     );
     
-    // Check if we've exceeded the threshold
     if (this.recentConnections.length >= this.circuitBreakerThreshold) {
       if (!this.isCircuitBreakerOpen) {
         this.isCircuitBreakerOpen = true;
         
-        // Set a timeout to close the circuit breaker
         setTimeout(() => {
           this.isCircuitBreakerOpen = false;
           this.recentConnections = [];
-          this.reconnectAttempts = 0; // Reset attempts when circuit breaker closes
+          this.reconnectAttempts = 0;
         }, this.circuitBreakerCooldown);
       }
       return true;
@@ -127,25 +307,24 @@ class SSEService {
     return false;
   }
 
-  // Record a connection attempt
   recordConnectionAttempt() {
     this.recentConnections.push(Date.now());
   }
 
   scheduleReconnect(customDelay = null) {
+    // Only leader tab should reconnect
+    if (!this.isLeaderTab) return;
+    
     this.clearReconnectTimeout();
     
-    // Don't reconnect if manually disconnected or offline
     if (this.isManuallyDisconnected || !navigator.onLine) {
       return;
     }
     
-    // Don't reconnect if page is hidden (background tab)
     if (document.hidden) {
       return;
     }
 
-    // Don't reconnect if circuit breaker is open
     if (this.isCircuitBreakerOpen) {
       return;
     }
@@ -165,46 +344,42 @@ class SSEService {
   }
 
   connect() {
-    // Don't connect if manually disconnected or already connecting/connected
+    // Only leader tab should maintain SSE connection
+    if (!this.isLeaderTab) return;
+    
     if (this.isManuallyDisconnected || this.eventSource) {
       return;
     }
 
-    // Extra safety check - if we have an eventSource that's still connecting, wait
     if (this.eventSource && this.eventSource.readyState === EventSource.CONNECTING) {
       return;
     }
 
-    // Check circuit breaker
     if (this.checkCircuitBreaker()) {
       return;
     }
 
-    // Record this connection attempt
     this.recordConnectionAttempt();
 
     try {
-      // Add a unique query parameter to force a new connection for each tab
-      this.eventSource = new EventSource(`${config.backendUrl}/api/novels/sse?tabId=${this.tabId}`);
+      // Use session ID instead of tab ID for connection
+      this.eventSource = new EventSource(`${config.backendUrl}/api/novels/sse?sessionId=${this.sessionId}&tabId=${this.tabId}`);
       
       this.eventSource.onopen = () => {
+        console.log('SSE connection opened (leader tab)');
         this.isConnected = true;
-        this.reconnectAttempts = 0; // Reset on successful connection
+        this.reconnectAttempts = 0;
         this.clearReconnectTimeout();
       };
 
       this.eventSource.onerror = (error) => {
         this.isConnected = false;
         
-        // Only attempt reconnection if the connection is actually broken
-        // ReadyState 2 means CLOSED, which requires reconnection
         if (this.eventSource?.readyState === EventSource.CLOSED) {
           this.scheduleReconnect();
         } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
           // Don't schedule another reconnect if still trying to connect
         } else {
-          // Handle other error states more gracefully
-          // Only reconnect if we're not in a connecting state
           if (this.eventSource?.readyState !== EventSource.CONNECTING) {
             this.scheduleReconnect();
           }
@@ -226,15 +401,24 @@ class SSEService {
       const events = ['update', 'novel_status_changed', 'novel_deleted', 'refresh', 'new_novel', 'new_chapter', 'new_notification', 'notification_read', 'notifications_cleared'];
       events.forEach(eventName => {
         this.eventSource.addEventListener(eventName, (event) => {
-          const listeners = this.listeners.get(eventName) || [];
-          listeners.forEach(callback => {
-            try {
-              const data = event.data ? JSON.parse(event.data) : null;
-              callback(data);
-            } catch (error) {
-              console.error(`Error processing ${eventName} event:`, error);
-            }
-          });
+          try {
+            const eventData = event.data ? JSON.parse(event.data) : null;
+            
+            // Broadcast to local listeners
+            this.broadcastEventToListeners(eventName, eventData);
+            
+            // Broadcast to other tabs
+            this.broadcastChannel.postMessage({
+              type: 'SSE_EVENT',
+              eventName: eventName,
+              eventData: eventData,
+              tabId: this.tabId,
+              sessionId: this.sessionId,
+              timestamp: Date.now()
+            });
+          } catch (error) {
+            console.error(`Error processing ${eventName} event:`, error);
+          }
         });
       });
 
@@ -242,34 +426,26 @@ class SSEService {
       this.eventSource.addEventListener('duplicate_connection', (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.warn('Duplicate connection detected by server');
           
-          // This connection is being closed by the server as it's a duplicate
-          // Don't try to reconnect immediately to avoid creating another duplicate
           this.isManuallyDisconnected = true;
           this.clearReconnectTimeout();
-          
-          // Reset reconnection attempts to prevent immediate reconnection
           this.reconnectAttempts = 0;
-          
-          // Open circuit breaker to prevent rapid reconnections
           this.isCircuitBreakerOpen = true;
           
-          // Wait longer before allowing reconnections again
-          const delayTime = 20000; // 20 seconds
+          const delayTime = 20000;
           
           setTimeout(() => {
             this.isManuallyDisconnected = false;
             this.isCircuitBreakerOpen = false;
-            this.recentConnections = []; // Clear recent connections
+            this.recentConnections = [];
             
-            // Only reconnect if we still have listeners and tab is visible
-            if (this.listeners.size > 0 && !document.hidden) {
-              // Use a longer delay for the actual reconnection
+            if (this.listeners.size > 0 && !document.hidden && this.isLeaderTab) {
               setTimeout(() => {
                 if (!this.eventSource && !this.isManuallyDisconnected) {
                   this.connect();
                 }
-              }, 3000); // Additional 3 second delay
+              }, 3000);
             }
           }, delayTime);
         } catch (error) {
@@ -287,7 +463,6 @@ class SSEService {
     this.isManuallyDisconnected = manual;
     
     if (this.eventSource) {
-      // Clean up event source properly
       this.eventSource.close();
       this.eventSource = null;
     }
@@ -295,12 +470,14 @@ class SSEService {
     this.clearReconnectTimeout();
     
     if (manual) {
-      this.reconnectAttempts = 0; // Reset attempts on manual disconnect
+      this.reconnectAttempts = 0;
     }
   }
 
-  // Method to manually reconnect (resets attempt counter)
   forceReconnect() {
+    // Only leader can force reconnect
+    if (!this.isLeaderTab) return;
+    
     this.isManuallyDisconnected = false;
     this.reconnectAttempts = 0;
     this.disconnect();
@@ -313,9 +490,14 @@ class SSEService {
     }
     this.listeners.get(eventName).add(callback);
 
-    // Connect if not already connected and not manually disconnected
-    if (!this.isConnected && !this.isManuallyDisconnected) {
+    // If this is the first listener and we're leader, connect
+    if (!this.isConnected && !this.isManuallyDisconnected && this.isLeaderTab) {
       this.connect();
+    }
+    
+    // If we're not leader but have listeners, check if leader exists
+    if (!this.isLeaderTab && this.listeners.size === 1) {
+      this.checkLeaderHealth();
     }
   }
 
@@ -328,14 +510,29 @@ class SSEService {
       }
     }
 
-    // If no more listeners, disconnect manually (stop reconnection attempts)
-    if (this.listeners.size === 0) {
+    // If no more listeners and we're leader, disconnect
+    if (this.listeners.size === 0 && this.isLeaderTab) {
       this.disconnect(true);
     }
+  }
+
+  // Cleanup method
+  destroy() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+    this.clearReconnectTimeout();
+    this.disconnect(true);
+    this.broadcastChannel.close();
   }
 }
 
 // Create a singleton instance
 const sseService = new SSEService();
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  sseService.destroy();
+});
 
 export default sseService; 
