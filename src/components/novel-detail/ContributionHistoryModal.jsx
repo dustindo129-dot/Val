@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import config from '../../config/config';
 import LoadingSpinner from '../LoadingSpinner';
@@ -7,6 +8,66 @@ import '../../styles/components/ContributionModal.css';
 const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
   const [contributions, setContributions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Create portal container
+  const [portalContainer, setPortalContainer] = useState(null);
+
+  useEffect(() => {
+    // Create or get portal container
+    let container = document.getElementById('vt-contribution-history-modal-portal');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vt-contribution-history-modal-portal';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.zIndex = '10000';
+      container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+    }
+    setPortalContainer(container);
+
+    // Cleanup function
+    return () => {
+      if (container && container.parentNode && !isOpen) {
+        // Only remove if no other modals are using it
+        const existingModals = container.children.length;
+        if (existingModals === 0) {
+          container.parentNode.removeChild(container);
+        }
+      }
+    };
+  }, [isOpen]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('vt-modal-open');
+      // Enable pointer events for the portal when modal is open
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'auto';
+      }
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('vt-modal-open');
+      // Disable pointer events when modal is closed
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    }
+
+    // Cleanup function to restore scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('vt-modal-open');
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    };
+  }, [isOpen, portalContainer]);
 
   // Fetch contribution history when modal opens
   useEffect(() => {
@@ -39,16 +100,24 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
     return `${day}/${month}/${year}`;
   };
 
-  if (!isOpen) return null;
+  // Handle overlay click to close modal
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
-  return (
-    <div className="modal-overlay">
-      <div className="contribution-history-modal-content">
+  if (!isOpen || !portalContainer) return null;
+
+  // Render modal content with portal
+  const modalContent = (
+    <div className="vt-contribution-history-modal-overlay" onClick={handleOverlayClick}>
+      <div className="vt-contribution-history-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="contribution-history-modal-header">
           <h3 className="modal-title">Lịch sử đóng góp</h3>
           <button className="close-modal" onClick={onClose}>&times;</button>
         </div>
-        <div className="contribution-history-modal-body">
+        <div className="vt-contribution-history-modal-body">
           {isLoading ? (
             <LoadingSpinner size="small" text="Đang tải..." />
           ) : contributions.length > 0 ? (
@@ -71,7 +140,12 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
                       </div>
                     </td>
                     <td>{formatDate(contribution.createdAt || contribution.updatedAt)}</td>
-                    <td>{contribution.note || contribution.description || 'Không có ghi chú'}</td>
+                    <td>
+                      {contribution.note && contribution.note.trim() 
+                        ? contribution.note 
+                        : contribution.description || 'Không có ghi chú'
+                      }
+                    </td>
                     <td className={`history-amount ${contribution.amount >= 0 ? 'positive' : 'negative'}`}>
                       {contribution.amount >= 0 ? '+' : ''}{contribution.amount.toLocaleString()}
                     </td>
@@ -90,6 +164,9 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
       </div>
     </div>
   );
+
+  // Use createPortal to render outside the component tree
+  return createPortal(modalContent, portalContainer);
 };
 
 export default ContributionHistoryModal; 

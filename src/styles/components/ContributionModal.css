@@ -10,6 +10,126 @@
  * - Dark mode support
  */
 
+/* Portal container styles */
+#vt-contribution-modal-portal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* Overlay styles for contribution modal */
+.vt-contribution-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* Modal content container for portal */
+.vt-contribution-modal-overlay .vt-contribution-modal-content {
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+  animation: vtContributionModalAppear 0.3s ease-out forwards;
+  position: relative;
+  z-index: 10002;
+  pointer-events: auto;
+}
+
+@keyframes vtContributionModalAppear {
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Modal body for portal */
+.vt-contribution-modal-overlay .vt-contribution-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  color: #374151;
+}
+
+/* Overlay styles for contribution history modal */
+.vt-contribution-history-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* Modal content container for history portal */
+.vt-contribution-history-modal-overlay .vt-contribution-history-modal-content {
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+  animation: vtContributionHistoryModalAppear 0.3s ease-out forwards;
+  position: relative;
+  z-index: 10002;
+  pointer-events: auto;
+}
+
+@keyframes vtContributionHistoryModalAppear {
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Modal body for history portal */
+.vt-contribution-history-modal-overlay .vt-contribution-history-modal-body {
+  padding: 0 1px 0 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  flex: 1;
+  color: #374151;
+}
+
 /* Modal overlay */
 .modal-overlay {
   display: flex;
@@ -83,8 +203,15 @@
 /* Modal body */
 .contribution-modal-body,
 .contribution-history-modal-body {
-  padding: 20px;
+  padding: 0 1px 0 0;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Ensure table container doesn't overflow */
+.contribution-history-modal-body .history-table {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* User balance info */
@@ -209,14 +336,64 @@
 .history-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+}
+
+/* Column width distribution using flexible approach */
+.history-table th:nth-child(1), /* Người đóng góp */
+.history-table td:nth-child(1) {
+  width: 16%;
+  min-width: 70px;
+  max-width: 120px;
+}
+
+.history-table th:nth-child(2), /* Ngày */
+.history-table td:nth-child(2) {
+  width: 13%;
+  min-width: 75px;
+  max-width: 90px;
+  white-space: nowrap;
+}
+
+.history-table th:nth-child(3), /* Ghi chú - Give this the most space */
+.history-table td:nth-child(3) {
+  width: 42%;
+  min-width: 150px;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.history-table th:nth-child(4), /* Số lúa */
+.history-table td:nth-child(4) {
+  width: 14.5%;
+  min-width: 60px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.history-table th:nth-child(5), /* Kho lúa */
+.history-table td:nth-child(5) {
+  width: 14.5%;
+  min-width: 60px;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .history-table th, 
 .history-table td {
-  padding: 10px 15px;
+  padding: 10px 8px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
+  vertical-align: top; /* Align content to top for better readability with wrapped text */
+  position: relative;
+}
+
+/* Add some spacing between columns to prevent overlap */
+.history-table th:not(:last-child),
+.history-table td:not(:last-child) {
+  border-right: 1px solid transparent;
+  padding-right: 12px;
 }
 
 .history-table th {
@@ -400,24 +577,24 @@
   .btn {
     flex: none;
   }
-}
-
-@media (max-width: 576px) {
+  
+  /* Adjust table for tablet sizes */
   .history-table {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
   
   .history-table th, 
   .history-table td {
-    padding: 8px 10px;
+    padding: 8px 6px;
   }
   
-  /* Hide some columns on very small screens */
-  .history-table th:nth-child(2),
-  .history-table td:nth-child(2) {
-    display: none;
+  .history-table th:not(:last-child),
+  .history-table td:not(:last-child) {
+    padding-right: 8px;
   }
-  
+}
+
+@media (max-width: 576px) {
   /* Compact modal sizing for mobile with browser nav bars */
   .contribution-history-modal-content {
     width: 95%;
@@ -426,6 +603,13 @@
   .contribution-history-modal-body {
     padding: 12px;
     overflow-y: auto;
+    overflow-x: auto; /* Allow horizontal scrolling on small screens */
+  }
+
+  /* Ensure portal-based modal also allows horizontal scrolling */
+  .vt-contribution-history-modal-overlay .vt-contribution-history-modal-body {
+    overflow-y: auto;
+    overflow-x: auto; /* Allow horizontal scrolling on small screens */
   }
   
   .contribution-history-modal-header {
@@ -435,6 +619,51 @@
   .modal-title {
     font-size: 1.1rem;
   }
+
+  /* Hide date column on mobile */
+  .history-table th:nth-child(2),
+  .history-table td:nth-child(2) {
+    display: none;
+  }
+
+  /* Enable horizontal scrolling for the table */
+  .history-table {
+    font-size: 0.8rem;
+    min-width: 600px; /* Increased to accommodate wider columns */
+    table-layout: fixed;
+  }
+  
+  .history-table th, 
+  .history-table td {
+    padding: 8px 6px;
+    white-space: nowrap;
+  }
+  
+  /* Fixed widths for remaining columns (without date column) */
+  .history-table th:nth-child(1), /* Người đóng góp */
+  .history-table td:nth-child(1) {
+    width: 140px;
+    min-width: 140px;
+  }
+  
+  .history-table th:nth-child(3), /* Ghi chú */
+  .history-table td:nth-child(3) {
+    width: 300px;
+    min-width: 300px;
+    white-space: normal; /* Allow text wrapping for notes */
+  }
+  
+  .history-table th:nth-child(4), /* Số lúa */
+  .history-table td:nth-child(4) {
+    width: 80px;
+    min-width: 80px;
+  }
+  
+  .history-table th:nth-child(5), /* Kho lúa */
+  .history-table td:nth-child(5) {
+    width: 80px;
+    min-width: 80px;
+  }
 }
 
 /* Dark mode support */
@@ -442,6 +671,25 @@
 :root.dark-mode .contribution-history-modal-content {
   background-color: #1a1a1a;
   color: #e0e0e0;
+}
+
+/* Dark mode support for portal styles */
+:root.dark-mode .vt-contribution-modal-overlay .vt-contribution-modal-content {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+:root.dark-mode .vt-contribution-modal-overlay .vt-contribution-modal-body {
+  color: #e5e7eb;
+}
+
+:root.dark-mode .vt-contribution-history-modal-overlay .vt-contribution-history-modal-content {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+:root.dark-mode .vt-contribution-history-modal-overlay .vt-contribution-history-modal-body {
+  color: #e5e7eb;
 }
 
 :root.dark-mode .contribution-modal-header,

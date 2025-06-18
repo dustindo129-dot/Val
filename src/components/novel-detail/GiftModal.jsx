@@ -12,6 +12,7 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
   const [userBalance, setUserBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [giftNote, setGiftNote] = useState('');
 
   // Create portal container
   const [portalContainer, setPortalContainer] = useState(null);
@@ -138,7 +139,8 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
           `${config.backendUrl}/api/gifts/send`,
           {
             novelId,
-            giftId: selectedGift._id
+            giftId: selectedGift._id,
+            note: giftNote.trim() || null
           },
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -167,6 +169,7 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
   const handleClose = () => {
     setSelectedGift(null);
     setError('');
+    setGiftNote('');
     onClose();
   };
 
@@ -258,6 +261,23 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
                         </div>
                       </div>
                   )}
+
+                  {/* Gift note input */}
+                  <div className="vt-gift-note-input-section">
+                    <h4 className="vt-gift-note-input-title">Lời nhắn (không bắt buộc):</h4>
+                    <textarea
+                      className="vt-gift-note-input"
+                      placeholder="Để lại lời nhắn của bạn..."
+                      value={giftNote}
+                      onChange={(e) => setGiftNote(e.target.value)}
+                      maxLength={200}
+                      rows={3}
+                      disabled={loading}
+                    />
+                    <div className="vt-gift-note-input-count">
+                      {giftNote.length}/200
+                    </div>
+                  </div>
 
                   <div className="vt-gift-modal-actions">
                     <button

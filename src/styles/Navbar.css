@@ -482,6 +482,19 @@ body {
     flex: 0 0 100%;
   }
 
+  .search-input {
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .search-button {
+    right: 4px;
+  }
+
+  .clear-search {
+    right: 32px;
+  }
+
   .navbar-logo {
     height: 32px;
   }

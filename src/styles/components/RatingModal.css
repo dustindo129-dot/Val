@@ -1,3 +1,131 @@
+/* Portal container styles */
+#vt-rating-modal-portal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* Body class when modal is open */
+body.vt-modal-open {
+  overflow: hidden;
+}
+
+/* Overlay styles */
+.vt-rating-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* Modal content container */
+.vt-rating-modal-overlay .vt-rating-modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+  animation: vtRatingModalAppear 0.3s ease-out forwards;
+  position: relative;
+  z-index: 10002;
+  pointer-events: auto;
+}
+
+@keyframes vtRatingModalAppear {
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Modal header */
+.vt-rating-modal-overlay .rating-modal-header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vt-rating-modal-overlay .rd-rating-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+}
+
+.vt-rating-modal-overlay .close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.vt-rating-modal-overlay .close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Modal body */
+.vt-rating-modal-overlay .vt-rating-modal-body {
+  padding: 25px;
+  overflow-y: auto;
+  flex: 1;
+  color: #374151;
+}
+
+/* Reviews section styling for better readability */
+.vt-rating-modal-overlay .reviews-section h3 {
+  color: #374151;
+}
+
+.vt-rating-modal-overlay .review-user {
+  color: #1f2937;
+}
+
+.vt-rating-modal-overlay .review-content {
+  color: #4b5563;
+}
+
+.vt-rating-modal-overlay .review-date {
+  color: #6b7280;
+}
+
+.vt-rating-modal-overlay .reviews-pagination {
+  color: #6b7280;
+}
+
 /* Rating Modal - RD Redesigned Styles */
 .rd-rating-modal {
   display: none;
@@ -306,6 +434,49 @@
 /* Dark mode support for loading */
 :root.dark-mode .reviews-loading {
   color: #adb5bd;
+}
+
+/* Dark mode support for portal styles */
+:root.dark-mode .vt-rating-modal-overlay .vt-rating-modal-content {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .vt-rating-modal-body {
+  color: #e5e7eb;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .rating-modal-header {
+  background-color: #2c3e50;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .rd-rating-title {
+  color: white;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .close-button {
+  color: white;
+}
+
+/* Light colors for reviews section text */
+:root.dark-mode .vt-rating-modal-overlay .reviews-section h3 {
+  color: #f9fafb;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .review-user {
+  color: #f9fafb;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .review-content {
+  color: #e5e7eb;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .review-date {
+  color: #d1d5db;
+}
+
+:root.dark-mode .vt-rating-modal-overlay .reviews-pagination {
+  color: #d1d5db;
 }
 
 /* Media Queries */

@@ -293,6 +293,43 @@ body.vt-modal-open {
   color: #e65100;
 }
 
+/* Gift note input section */
+.vt-gift-modal-overlay .vt-gift-note-input-section {
+  margin-bottom: 25px;
+}
+
+.vt-gift-modal-overlay .vt-gift-note-input-title {
+  margin: 0 0 15px 0;
+  color: #374151;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.vt-gift-modal-overlay .vt-gift-note-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.vt-gift-modal-overlay .vt-gift-note-input:focus {
+  outline: none;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+}
+
+.vt-gift-modal-overlay .vt-gift-note-input-count {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 5px;
+}
+
 /* Modal actions */
 .vt-gift-modal-overlay .vt-gift-modal-actions {
   display: flex;
@@ -643,6 +680,25 @@ body.vt-modal-open {
 
 :root.dark-mode .vt-gift-modal-overlay .vt-gift-note-icon {
   color: #f59e0b;
+}
+
+:root.dark-mode .vt-gift-modal-overlay .vt-gift-note-input-title {
+  color: #f9fafb;
+}
+
+:root.dark-mode .vt-gift-modal-overlay .vt-gift-note-input {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+:root.dark-mode .vt-gift-modal-overlay .vt-gift-note-input:focus {
+  border-color: #6b7280;
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
+}
+
+:root.dark-mode .vt-gift-modal-overlay .vt-gift-note-input-count {
+  color: #9ca3af;
 }
 
 :root.dark-mode .vt-gift-modal-overlay .vt-gift-modal-actions {

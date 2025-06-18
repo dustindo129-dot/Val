@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import config from '../config/config';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,66 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Create portal container
+  const [portalContainer, setPortalContainer] = useState(null);
+
+  useEffect(() => {
+    // Create or get portal container
+    let container = document.getElementById('vt-rating-modal-portal');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vt-rating-modal-portal';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.zIndex = '10000';
+      container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+    }
+    setPortalContainer(container);
+
+    // Cleanup function
+    return () => {
+      if (container && container.parentNode && !isOpen) {
+        // Only remove if no other modals are using it
+        const existingModals = container.children.length;
+        if (existingModals === 0) {
+          container.parentNode.removeChild(container);
+        }
+      }
+    };
+  }, [isOpen]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('vt-modal-open');
+      // Enable pointer events for the portal when modal is open
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'auto';
+      }
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('vt-modal-open');
+      // Disable pointer events when modal is closed
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    }
+
+    // Cleanup function to restore scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('vt-modal-open');
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    };
+  }, [isOpen, portalContainer]);
 
   // Get user's current interaction including review
   const { data: userInteraction } = useQuery({
@@ -147,6 +208,13 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     onClose();
   };
 
+  // Handle overlay click to close modal
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleCancel();
+    }
+  };
+
   // Format the date to display
   const formatDate = useCallback((dateString) => {
     const date = new Date(dateString);
@@ -157,118 +225,124 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     });
   }, []);
   
-  if (!isOpen) return null;
-  
-  return (
-    <div className="rd-rating-modal" style={{ display: 'flex' }}>
-      <div className="rd-rating-box">
+  if (!isOpen || !portalContainer) return null;
+
+  // Render modal content with portal
+  const modalContent = (
+    <div className="vt-rating-modal-overlay" onClick={handleOverlayClick}>
+      <div className="vt-rating-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="rating-modal-header">
           <h2 className="rd-rating-title">Đánh giá truyện</h2>
           <button className="close-button" onClick={handleCancel}>×</button>
         </div>
         
-        <div className="rd-rating-stars">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <span
-              key={star}
-              className={`rd-rating-star ${star <= selectedRating ? 'active' : ''}`}
-              onClick={() => setSelectedRating(star === selectedRating ? selectedRating : star)}
-            >
-              {star <= selectedRating ? '★' : '☆'}
-            </span>
-          ))}
-        </div>
-        
-        <div className="rating-value-display">
-          {selectedRating > 0 ? `${selectedRating} / 5` : 'Chọn đánh giá'}
-        </div>
-
-        {/* Review text input */}
-        <div className="review-input-container">
-          <textarea
-            className="review-input"
-            placeholder="Để lại lời nhận xét... (nếu muốn)"
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-            maxLength={1000}
-            rows={4}
-          />
-          <div className="review-input-count">
-            {reviewText.length}/1000
+        <div className="vt-rating-modal-body">
+          <div className="rd-rating-stars">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={`rd-rating-star ${star <= selectedRating ? 'active' : ''}`}
+                onClick={() => setSelectedRating(star === selectedRating ? selectedRating : star)}
+              >
+                {star <= selectedRating ? '★' : '☆'}
+              </span>
+            ))}
           </div>
-        </div>
-
-        {error && (
-          <div className="error-message" style={{ color: 'red', marginTop: '10px', textAlign: 'center' }}>
-            {error}
-          </div>
-        )}
-        
-        <div className="rd-rating-buttons">
-          <button 
-            className="rd-rating-btn rd-rating-btn-cancel" 
-            onClick={handleCancel}
-            disabled={rateMutation.isLoading}
-          >
-            Hủy bỏ
-          </button>
           
-          <button 
-            className="rd-rating-btn rd-rating-btn-submit" 
-            onClick={handleSubmit}
-            disabled={rateMutation.isLoading || selectedRating === 0}
-          >
-            {rateMutation.isLoading 
-              ? 'Đang gửi...' 
-              : currentRating > 0 
-                ? 'Cập nhật đánh giá' 
-                : 'Gửi đánh giá'
-            }
-          </button>
-        </div>
-
-        {/* Reviews section */}
-        {(isLoadingReviews || reviewsData?.reviews?.length > 0) && (
-          <div className="reviews-section">
-            <h3>Đánh giá từ độc giả</h3>
-            
-            {isLoadingReviews ? (
-              <div className="reviews-loading">
-                <span>Đang tải đánh giá<span className="loading-dots">...</span></span>
-              </div>
-            ) : (
-              <>
-                <div className="reviews-list">
-                  {reviewsData.reviews.map(review => (
-                    <div key={review.id} className="review-item">
-                      <div className="review-header">
-                        <span className="review-user">{review.user.displayName || review.user.username}</span>
-                        <div className="review-rating">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>
-                              {i < review.rating ? '★' : '☆'}
-                            </span>
-                          ))}
-                        </div>
-                        <span className="review-date">{formatDate(review.date)}</span>
-                      </div>
-                      <div className="review-content">{review.review}</div>
-                    </div>
-                  ))}
-                </div>
-                
-                {reviewsData.pagination.totalPages > 1 && (
-                  <div className="reviews-pagination">
-                    <span>Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}</span>
-                  </div>
-                )}
-              </>
-            )}
+          <div className="rating-value-display">
+            {selectedRating > 0 ? `${selectedRating} / 5` : 'Chọn đánh giá'}
           </div>
-        )}
+
+          {/* Review text input */}
+          <div className="review-input-container">
+            <textarea
+              className="review-input"
+              placeholder="Để lại lời nhận xét... (nếu muốn)"
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              maxLength={1000}
+              rows={4}
+            />
+            <div className="review-input-count">
+              {reviewText.length}/1000
+            </div>
+          </div>
+
+          {error && (
+            <div className="error-message" style={{ color: 'red', marginTop: '10px', textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+          
+          <div className="rd-rating-buttons">
+            <button 
+              className="rd-rating-btn rd-rating-btn-cancel" 
+              onClick={handleCancel}
+              disabled={rateMutation.isLoading}
+            >
+              Hủy bỏ
+            </button>
+            
+            <button 
+              className="rd-rating-btn rd-rating-btn-submit" 
+              onClick={handleSubmit}
+              disabled={rateMutation.isLoading || selectedRating === 0}
+            >
+              {rateMutation.isLoading 
+                ? 'Đang gửi...' 
+                : currentRating > 0 
+                  ? 'Cập nhật đánh giá' 
+                  : 'Gửi đánh giá'
+              }
+            </button>
+          </div>
+
+          {/* Reviews section */}
+          {(isLoadingReviews || reviewsData?.reviews?.length > 0) && (
+            <div className="reviews-section">
+              <h3>Đánh giá từ độc giả</h3>
+              
+              {isLoadingReviews ? (
+                <div className="reviews-loading">
+                  <span>Đang tải đánh giá<span className="loading-dots">...</span></span>
+                </div>
+              ) : (
+                <>
+                  <div className="reviews-list">
+                    {reviewsData.reviews.map(review => (
+                      <div key={review.id} className="review-item">
+                        <div className="review-header">
+                          <span className="review-user">{review.user.displayName || review.user.username}</span>
+                          <div className="review-rating">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>
+                                {i < review.rating ? '★' : '☆'}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="review-date">{formatDate(review.date)}</span>
+                        </div>
+                        <div className="review-content">{review.review}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {reviewsData.pagination.totalPages > 1 && (
+                    <div className="reviews-pagination">
+                      <span>Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
+
+  // Use createPortal to render outside the component tree
+  return createPortal(modalContent, portalContainer);
 };
 
 export default RatingModal; 
