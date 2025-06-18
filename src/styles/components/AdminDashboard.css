@@ -61,6 +61,22 @@
   color: var(--text-color, #2c3e50);
 }
 
+/* Disabled field styling */
+.novel-form input.disabled-field,
+.novel-form textarea.disabled-field {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: #ccc;
+}
+
+.novel-form input.disabled-field:hover,
+.novel-form textarea.disabled-field:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
 .novel-form textarea {
   min-height: 150px;
   resize: vertical;
@@ -889,6 +905,22 @@
 :root.dark-mode .novel-form textarea:focus {
   border-color: #63b3ed;
   box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+}
+
+/* Dark mode disabled field styling */
+:root.dark-mode .novel-form input.disabled-field,
+:root.dark-mode .novel-form textarea.disabled-field {
+  background-color: #2d3748;
+  color: #718096;
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .novel-form input.disabled-field:hover,
+:root.dark-mode .novel-form textarea.disabled-field:hover {
+  background-color: #2d3748;
+  border-color: #4a5568;
 }
 
 :root.dark-mode .novel-form button {

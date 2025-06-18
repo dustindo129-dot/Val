@@ -34,6 +34,9 @@ const ChapterToolbar = ({
             <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader}
           </span>
         )}
+        <span className="staff-member author">
+          <em>Đăng bởi: {chapter.createdByUser ? (chapter.createdByUser.displayName || chapter.createdByUser.username) : 'Không xác định'}</em>
+        </span>
       </div>
 
       <div className="action-toolbar-right">

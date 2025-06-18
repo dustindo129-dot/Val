@@ -394,6 +394,20 @@
   background-color: var(--qc-color);
 }
 
+.staff-member.author {
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  font-style: italic;
+}
+
+/* Dark mode support for author info */
+:root.dark-mode .staff-member.author {
+  color: #adb5bd;
+  background-color: #343a40;
+  border-color: #495057;
+}
+
 .chapter-stats {
   display: flex;
   gap: 15px;

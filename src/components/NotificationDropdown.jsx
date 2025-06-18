@@ -347,10 +347,53 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
 
   const notifications = notificationsData?.notifications || [];
 
-  // Mark notification as read mutation
+  // Mark notification as read mutation with optimistic updates
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => api.markNotificationAsRead(notificationId),
-    onSuccess: () => {
+    onMutate: async (notificationId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      await queryClient.cancelQueries({ queryKey: ['unreadNotificationCount'] });
+
+      // Snapshot the previous values
+      const previousNotifications = allNotifications;
+      const previousUnreadCount = queryClient.getQueryData(['unreadNotificationCount']);
+
+      // Find the notification being marked as read
+      const notificationToUpdate = allNotifications.find(
+        notification => notification._id === notificationId
+      );
+      const wasUnread = notificationToUpdate && !notificationToUpdate.isRead;
+
+      // Optimistically update the notification as read in local state
+      setAllNotifications(prev => 
+        prev.map(notification =>
+          notification._id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
+        )
+      );
+
+      // Optimistically update unread count if the notification was unread
+      if (wasUnread && typeof previousUnreadCount === 'number') {
+        queryClient.setQueryData(['unreadNotificationCount'], Math.max(0, previousUnreadCount - 1));
+      }
+
+      // Return context for rollback
+      return { previousNotifications, previousUnreadCount };
+    },
+    onError: (err, notificationId, context) => {
+      // Roll back on error
+      if (context?.previousNotifications) {
+        setAllNotifications(context.previousNotifications);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['unreadNotificationCount'], context.previousUnreadCount);
+      }
+      console.error('Failed to mark notification as read:', err);
+    },
+    onSettled: () => {
+      // Always refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },

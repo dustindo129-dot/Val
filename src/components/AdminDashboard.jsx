@@ -513,6 +513,7 @@ const AdminDashboard = () => {
   const canEditBalances = user && (user.role === 'admin');
   const canCreateNovels = user && (user.role === 'admin' || user.role === 'moderator'); // Only admin/mod can create (involves staff assignment)
   const canEditStaff = user && (user.role === 'admin' || user.role === 'moderator'); // Only admin/mod can modify staff assignments
+  const canEditTitle = user && (user.role === 'admin' || user.role === 'moderator'); // Only admin/mod can edit novel titles
 
   /**
    * Handles input changes in the novel form
@@ -1452,6 +1453,8 @@ const AdminDashboard = () => {
                 placeholder="Tiêu đề"
                 value={editingNovel ? editingNovel.title : newNovel.title}
                 onChange={handleInputChange}
+                disabled={!canEditTitle}
+                className={!canEditTitle ? 'disabled-field' : ''}
                 required
               />
               <input
