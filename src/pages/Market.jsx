@@ -240,6 +240,11 @@ const Market = () => {
       return;
     }
 
+    if (requestType === 'new' && !requestNote.trim()) {
+      alert('Vui lòng nói rõ bạn muốn team dịch từ vol mấy và những mong muốn/ghi chú thêm nếu có');
+      return;
+    }
+
     if (requestType === 'web') {
       // For web requests, just validate the title
       if (!requestText.trim()) {

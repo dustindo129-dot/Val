@@ -116,10 +116,11 @@ const MarketRequestForm = ({
             />
             <textarea
               className="request-input"
-              placeholder="Nhắn nhủ thêm... (nếu có)"
+              placeholder="Vui lòng nói rõ bạn muốn team dịch từ vol mấy và những mong muốn/ghi chú thêm nếu có..."
               value={requestNote}
               onChange={(e) => setRequestNote(e.target.value)}
               disabled={submitting}
+              required
             />
           </>
         )}
