@@ -710,12 +710,12 @@
 
 .info-amount {
   font-weight: 700;
-  color: #007bff;
+  color: #0056b3;
   font-size: 1.2rem;
 }
 
 .copy-button {
-  background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   border: none;
   color: white;
   cursor: pointer;
@@ -728,7 +728,7 @@
 }
 
 .copy-button:hover {
-  background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
   transform: translateY(-1px);
 }
 
@@ -741,10 +741,10 @@
 .transfer-notes {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border: 2px solid #dee2e6;
-  border-left: 4px solid #6c757d;
+  border-left: 4px solid #007bff;
   border-radius: 8px;
   padding: 1rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
 }
 
 .note-title {
@@ -1590,7 +1590,7 @@
   }
 }
 
-/* Amount selection styles - updated to white theme */
+/* Amount selection styles - updated to blue theme */
 .amount-selection {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #dee2e6;
@@ -1622,7 +1622,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
   overflow: hidden;
 }
 
@@ -1633,14 +1633,14 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #6c757d, #495057);
+  background: linear-gradient(90deg, #007bff, #0056b3);
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
 
 .amount-option:hover {
-  border-color: #6c757d;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
   transform: translateY(-2px);
 }
 
@@ -1656,7 +1656,7 @@
   top: 1rem;
   left: 1rem;
   transform: scale(1.1);
-  accent-color: #6c757d;
+  accent-color: #007bff;
   cursor: pointer;
 }
 
@@ -1665,15 +1665,15 @@
 }
 
 .amount-option:has(input[type="radio"]:checked) {
-  border-color: #6c757d;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  border-color: #007bff;
+  background: linear-gradient(135deg, #e7f3ff 0%, #cce7ff 100%);
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.25);
   transform: translateY(-3px);
 }
 
 .amount-option:has(input[type="radio"]:checked)::before {
   transform: scaleX(1);
-  background: linear-gradient(90deg, #495057, #6c757d);
+  background: linear-gradient(90deg, #0056b3, #007bff);
 }
 
 .option-details {
@@ -1687,7 +1687,7 @@
 .option-price {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #495057;
+  color: #007bff;
   margin-bottom: 0.125rem;
   width: 100%;
 }
@@ -2047,7 +2047,7 @@
 }
 
 .qr-button {
-  background: linear-gradient(135deg, #6c757d 0%, #868e96 100%);
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -2059,13 +2059,13 @@
   display: block;
   margin: 1rem auto;
   min-width: 150px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
 }
 
 .qr-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
 .qr-button:disabled {

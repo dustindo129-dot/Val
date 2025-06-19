@@ -662,11 +662,6 @@ const TopUp = () => {
                           <span className="info-value">Vietinbank</span>
                         </div>
                         <div className="info-row">
-                          <span className="info-label">Tài khoản nhận:</span>
-                          <span className="info-value">100868151423</span>
-                          <button className="copy-button" onClick={() => {navigator.clipboard.writeText("100868151423")}}>[ Sao chép ]</button>
-                        </div>
-                        <div className="info-row">
                           <span className="info-label">Tên người nhận:</span>
                           <span className="info-value">TRUONG TAN TAI</span>
                         </div>
