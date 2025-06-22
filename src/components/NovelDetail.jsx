@@ -477,6 +477,23 @@ const NovelDetail = ({ novelId }) => {
     return () => clearTimeout(timer);
   }, []); // Run once when component mounts
 
+  // Handle scroll to contribution section when coming from chapter access guard
+  useEffect(() => {
+    if (location.state?.scrollToContribution) {
+      const timer = setTimeout(() => {
+        const contributionSection = document.querySelector('.rd-contribution-section');
+        if (contributionSection) {
+          contributionSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 500); // Small delay to ensure component is fully rendered
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
   // Handler for deleting modules
   const handleDeleteModule = useCallback(async (moduleId) => {
     // Only admin and moderator can delete modules (not pj_user)

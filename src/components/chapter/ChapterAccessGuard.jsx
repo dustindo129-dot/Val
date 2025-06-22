@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faCog } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
+import { generateNovelUrl } from '../../utils/slugUtils';
 import '../../styles/components/ChapterAccessGuard.css';
 
 /**
@@ -10,7 +11,7 @@ import '../../styles/components/ChapterAccessGuard.css';
  * 
  * Displays appropriate messages when a user doesn't have access to chapter content
  */
-const ChapterAccessGuard = ({ chapter, moduleData, user, children }) => {
+const ChapterAccessGuard = ({ chapter, moduleData, user, novel, children }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
@@ -107,6 +108,22 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, children }) => {
                 <FontAwesomeIcon icon={faLock} className="locked-chapter-icon" />
                 <h3>Chương này yêu cầu thanh toán để truy cập</h3>
                 <p>Cần {chapter.chapterBalance || 0} 🌾 để mở khóa.</p>
+                <div className="locked-chapter-actions">
+                  <button 
+                    className="go-to-market-btn"
+                    onClick={() => {
+                      const novelData = novel || chapter?.novel;
+                      if (novelData) {
+                        const novelUrl = generateNovelUrl(novelData);
+                        navigate(novelUrl, {
+                          state: { scrollToContribution: true }
+                        });
+                      }
+                    }}
+                  >
+                    Tới Kho lúa
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -118,6 +135,22 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, children }) => {
                 <FontAwesomeIcon icon={faLock} className="locked-chapter-icon" />
                 <h3>Chương này yêu cầu thanh toán để truy cập</h3>
                 <p>Cần {moduleData.moduleBalance || 0} 🌾 để mở khóa.</p>
+                <div className="locked-chapter-actions">
+                  <button 
+                    className="go-to-market-btn"
+                    onClick={() => {
+                      const novelData = novel || moduleData?.novel;
+                      if (novelData) {
+                        const novelUrl = generateNovelUrl(novelData);
+                        navigate(novelUrl, {
+                          state: { scrollToContribution: true }
+                        });
+                      }
+                    }}
+                  >
+                    Tới Kho lúa
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -1207,7 +1207,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       />
 
       {/* Chapter Content with Access Guard */}
-      <ChapterAccessGuard chapter={chapter} moduleData={moduleData} user={user}>
+      <ChapterAccessGuard chapter={chapter} moduleData={moduleData} user={user} novel={novel}>
         <ChapterContent
           key={`chapter-content-${chapterId}`}
           chapter={chapter}
