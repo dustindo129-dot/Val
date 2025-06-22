@@ -67,9 +67,13 @@ const RequestCard = ({
     }
   }, [request.note, request.illustration, isEditing]);
   
-  // Check if user can edit (admin or moderator)
-  const canEdit = user && (user.role === 'admin' || user.role === 'moderator') && 
-                  (request.type === 'new' || request.type === 'web');
+  // Check if user can edit (admin, moderator, or user who created a 'new' request)
+  const canEdit = user && (
+    // Admin and moderator can edit any 'new' or 'web' request
+    ((user.role === 'admin' || user.role === 'moderator') && (request.type === 'new' || request.type === 'web')) ||
+    // Regular users can only edit their own 'new' requests
+    (request.type === 'new' && request.user._id === (user._id || user.id))
+  );
 
   // Handle image upload for editing
   const handleEditImageUpload = async (e) => {
@@ -359,7 +363,7 @@ const RequestCard = ({
           </div>
         )}
         
-        {/* Edit actions for admin/moderator */}
+        {/* Edit actions for admin/moderator/owner */}
         {canEdit && !isEditing && (
           <div className="action-row">
             <button 

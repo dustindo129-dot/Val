@@ -96,18 +96,12 @@ const RequestHistory = ({
                     <span className="history-type">
                       {request.type === 'new' 
                         ? 'Truyện mới' 
-                        : request.type === 'web'
-                          ? 'Đề xuất từ nhóm dịch'
-                          : 'Mở chương/tập có sẵn'}
+                        : 'Đề xuất từ nhóm dịch'}
                     </span>
                     <span className={`history-status status-${request.status}`}>
                       {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                     </span>
-                    {request.openNow && (
-                      <span className="history-open-now-badge">
-                        Mở ngay
-                      </span>
-                    )}
+
                   </div>
                                     <div className="history-date">                    {(() => {                      const date = new Date(request.createdAt);                      const day = date.getDate().toString().padStart(2, '0');                      const month = (date.getMonth() + 1).toString().padStart(2, '0');                      const year = date.getFullYear();                      return `${day}/${month}/${year}`;                    })()}                  </div>
                 </div>

@@ -695,7 +695,6 @@ const TopUpManagement = () => {
       'topup': 'Nạp tiền (tự động)',
       'admin_topup': 'Nạp tiền (admin)',
       'request': 'Yêu cầu truyện mới',
-      'open': 'Mở chương/tập',
       'admin': 'Điều chỉnh thủ công',
       'contribution': 'Đóng góp',
       'gift': 'Quà tặng',
