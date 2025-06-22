@@ -100,6 +100,35 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
     return `${day}/${month}/${year}`;
   };
 
+  // Format contribution note for display
+  const formatContributionNote = (contribution) => {
+    if (contribution.type === 'gift') {
+      const note = contribution.note && contribution.note.trim();
+      if (!note) return 'Quà tặng';
+      
+      // Extract custom message from detailed gift note for backward compatibility
+      // Handle both old format "Quà tặng 🍰 Bánh ngọt" and new format "Custom message (Quà tặng 🍰 Bánh ngọt)"
+      const giftPattern = /^(.*?)\s*\(Quà tặng.*\)$/;
+      const match = note.match(giftPattern);
+      
+      if (match && match[1].trim()) {
+        // New format with custom message: show "Custom message (Quà tặng)"
+        return `${match[1].trim()} (Quà tặng)`;
+      } else if (note.startsWith('Quà tặng')) {
+        // Old format without custom message: show just "Quà tặng"
+        return 'Quà tặng';
+      } else {
+        // Fallback: show custom message + (Quà tặng)
+        return `${note} (Quà tặng)`;
+      }
+    }
+    
+    // For non-gift contributions, show the note as-is
+    return contribution.note && contribution.note.trim() 
+      ? contribution.note 
+      : contribution.description || 'Không có ghi chú';
+  };
+
   // Handle overlay click to close modal
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -141,10 +170,7 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
                     </td>
                     <td>{formatDate(contribution.createdAt || contribution.updatedAt)}</td>
                     <td>
-                      {contribution.note && contribution.note.trim() 
-                        ? contribution.note 
-                        : contribution.description || 'Không có ghi chú'
-                      }
+                      {formatContributionNote(contribution)}
                     </td>
                     <td className={`history-amount ${contribution.amount >= 0 ? 'positive' : 'negative'}`}>
                       {contribution.amount >= 0 ? '+' : ''}{contribution.amount.toLocaleString()}
