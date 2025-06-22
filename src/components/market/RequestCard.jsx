@@ -147,6 +147,39 @@ const RequestCard = ({
     setEditImage(request.illustration || '');
   };
 
+  // Function to process request note content - enable hyperlinks and preserve line breaks
+  const processNoteContent = (content) => {
+    if (!content) return '';
+    
+    let processedContent = content;
+    
+    // Convert line breaks to <br> tags
+    processedContent = processedContent.replace(/\n/g, '<br>');
+    
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s<>"]+)/gi;
+    processedContent = processedContent.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    // Convert www links to clickable links
+    const wwwRegex = /(^|[^\/])(www\.[^\s<>"]+)/gi;
+    processedContent = processedContent.replace(wwwRegex, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer">$2</a>');
+    
+    // Convert email addresses to mailto links
+    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
+    processedContent = processedContent.replace(emailRegex, '<a href="mailto:$1">$1</a>');
+    
+    // Support basic markdown-style formatting
+    // Bold text **text** or __text__
+    processedContent = processedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    processedContent = processedContent.replace(/__(.*?)__/g, '<strong>$1</strong>');
+    
+    // Italic text *text* or _text_
+    processedContent = processedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    processedContent = processedContent.replace(/_(.*?)_/g, '<em>$1</em>');
+    
+    return processedContent;
+  };
+
   // Calculate progress percentage without capping at 100%
   const goalAmount = request.type === 'web' ? (request.goalBalance || 1000) : 1000;
   
@@ -247,7 +280,7 @@ const RequestCard = ({
               }}
             />
           ) : (
-            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processNoteContent(request.note)) }} />
           )}
         </div>
       )}
@@ -294,7 +327,9 @@ const RequestCard = ({
                 <span className="donor-amount">{contribution.amount} 🌾</span>
               </div>
               {contribution.note && (
-                <div className="donor-message">"{contribution.note}"</div>
+                <div className="donor-message" dangerouslySetInnerHTML={{ 
+                  __html: `"${DOMPurify.sanitize(processNoteContent(contribution.note))}"` 
+                }} />
               )}
             </div>
           ))}

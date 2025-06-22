@@ -208,7 +208,10 @@ const MarketRequestForm = ({
                      (requestType === 'web' && (!goalAmount || Number(goalAmount) <= 0)) ||
                      (requestType !== 'web' && depositAmount && Number(depositAmount) > userBalance)}
           >
-            {submitting ? 'Đang gửi...' : 'Gửi Yêu Cầu'}
+            {submitting 
+              ? (requestType === 'web' ? 'Đang đăng...' : 'Đang gửi...')
+              : (requestType === 'web' ? 'Đăng yêu cầu' : 'Gửi yêu cầu')
+            }
           </button>
           <button 
             type="button" 

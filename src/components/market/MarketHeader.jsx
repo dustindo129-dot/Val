@@ -29,7 +29,7 @@ const MarketHeader = () => {
           <h3>Yêu cầu truyện mới:</h3>
           <ul>
             <li>Điền tên bộ truyện bạn muốn yêu cầu + nhắn nhủ thêm nếu có</li>
-            <li>Cọc một số 🌾 bất kì (tối thiểu 100). Nếu dịch giả quyết định chạy bộ truyện yêu cầu, sẽ dựa vào con số này để quyết định làm bao nhiêu khi mới bắt đầu chạy, ví dụ 100 🌾 thì chắc vừa đủ mở project hoặc cùng lắm làm cái mở đầu hoặc đăng minh họa, nên cách tốt nhất hãy kêu gọi mọi người góp 🌾 cùng.</li>
+            <li>Cọc một số 🌾 bất kì (tối thiểu 100). Dịch giả sẽ dựa vào con số này để quyết định sẽ làm bao nhiêu khi tiếp nhận bộ truyện. </li>
             <li>Đăng yêu cầu và chờ đợi. Bên nhóm dịch sẽ chỉ chấp nhận yêu cầu khi có thể đảm bảo tiến độ và chất lượng, nên sẽ mất chút thời gian để tìm được người dịch phù hợp nhất tùy theo yêu cầu.</li>
             <li>Dịch giả chỉ có thể chấp nhận yêu cầu sau khi project được tạo trên trang web (cơ chế bắt buộc), nếu chấp nhận sẽ nhận về toàn bộ số 🌾 từ yêu cầu bao gồm cả cọc lẫn đóng góp, tức là làm thì ăn cả hoặc không làm, không được nửa vời.</li>
             <li>Số 🌾 mục tiêu để mở truyện mới mặc định là 1000 (tương đương khoảng 100k), đây chỉ là con số mang tính minh họa, không phải yêu cầu bắt buộc.</li>
@@ -58,6 +58,10 @@ const MarketHeader = () => {
             <p className="faq-question"><strong>Hỏi:</strong> Nếu muốn ủng hộ một bộ truyện có sẵn trên web nhưng bộ đó hiện không có kho lúa thì phải làm thế nào?</p>
             <p className="faq-answer"><strong>Đáp:</strong> Hãy tạo yêu cầu ở mục đề xuất, khi yêu cầu được chấp nhận lúa sẽ tự động được thêm vào kho lúa của bộ đó (lưu ý "tên truyện bạn muốn yêu cầu" phải khớp hoàn toàn tên bộ truyện trên web)</p>
           </div>
+          <div className="faq-item">
+            <p className="faq-question"><strong>Hỏi:</strong> Số lúa góp có nhất thiết bằng số chữ sẽ được dịch cho mỗi yêu cầu không?</p>
+            <p className="faq-answer"><strong>Đáp:</strong> Không, số chữ dịch có thể nhiều hơn (theo yêu cầu của web mỗi bộ phải đảm bảo số chữ nhất định mới được khóa lúa). Yêu cầu là nơi để đề xuất bộ truyện bạn yêu thích, không phải mục đích chính để thu lúa. Hãy thoải mái yêu cầu vì có thể cũng có người cùng chí hướng như bạn!</p>
+          </div>
         </div>
 
         <div className="overview-section">
@@ -65,7 +69,7 @@ const MarketHeader = () => {
         </div>
 
         <div className="update-date">
-          <em>Cập nhật ngày 29/05/2025</em>
+          <em>Cập nhật ngày 22/06/2025</em>
         </div>
       </div>
     </section>
