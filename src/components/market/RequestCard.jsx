@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DOMPurify from 'dompurify';
 import { formatRelativeTime } from './utils';
+import cdnConfig from '../../config/bunny';
+import bunnyUploadService from '../../services/bunnyUploadService';
+import axios from 'axios';
+import config from '../../config/config';
 
 /**
  * Request Card Component
@@ -25,6 +29,7 @@ import { formatRelativeTime } from './utils';
  * @param {number} props.showContributionForm - ID of request with visible contribution form
  * @param {Function} props.setShowContributionForm - Function to set which request shows contributions
  * @param {boolean} props.isAdminRequest - Whether this is an admin request
+ * @param {Function} props.onRequestUpdate - Function to handle request updates
  * @returns {JSX.Element} Request card component
  */
 const RequestCard = ({
@@ -44,8 +49,104 @@ const RequestCard = ({
   contributions,
   showContributionForm,
   setShowContributionForm,
-  isAdminRequest
+  isAdminRequest,
+  onRequestUpdate
 }) => {
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editNote, setEditNote] = useState(request.note || '');
+  const [editImage, setEditImage] = useState(request.illustration || '');
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Update edit state when request changes (for real-time updates)
+  React.useEffect(() => {
+    if (!isEditing) {
+      setEditNote(request.note || '');
+      setEditImage(request.illustration || '');
+    }
+  }, [request.note, request.illustration, isEditing]);
+  
+  // Check if user can edit (admin or moderator)
+  const canEdit = user && (user.role === 'admin' || user.role === 'moderator') && 
+                  (request.type === 'new' || request.type === 'web');
+
+  // Handle image upload for editing
+  const handleEditImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng tải lên tệp ảnh');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh phải nhỏ hơn 5MB');
+      return;
+    }
+
+    try {
+      setIsImageUploading(true);
+      
+      // Upload using bunny CDN service
+      const imageUrl = await bunnyUploadService.uploadFile(
+        file, 
+        'request'
+      );
+
+      setEditImage(imageUrl);
+    } catch (err) {
+      console.error('Không thể tải lên ảnh:', err);
+      alert('Không thể tải lên ảnh');
+    } finally {
+      setIsImageUploading(false);
+    }
+  };
+
+  // Handle save edit
+  const handleSaveEdit = async () => {
+    try {
+      setIsSaving(true);
+      
+      const response = await axios.put(
+        `${config.backendUrl}/api/requests/${request._id}`,
+        {
+          note: editNote,
+          illustration: editImage
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      // Update the request in the parent component
+      if (onRequestUpdate) {
+        onRequestUpdate(response.data.request);
+      }
+
+      setIsEditing(false);
+      alert('Yêu cầu đã được cập nhật thành công');
+    } catch (err) {
+      console.error('Không thể cập nhật yêu cầu:', err);
+      alert(err.response?.data?.message || 'Không thể cập nhật yêu cầu');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditNote(request.note || '');
+    setEditImage(request.illustration || '');
+  };
+
   // Calculate progress percentage without capping at 100%
   const goalAmount = request.type === 'web' ? (request.goalBalance || 1000) : 1000;
   
@@ -68,12 +169,86 @@ const RequestCard = ({
         </div>
         <div className="request-info">
           <span className="request-time">{formatRelativeTime(request.createdAt)}</span>
+          {request.isEdited && (
+            <div className="edit-indicator">(Đã chỉnh sửa)</div>
+          )}
         </div>
       </div>
       
-      {request.note && (
+      {/* Request Image */}
+      <div className="request-image-container">
+        {isEditing ? (
+          <div className="edit-image-section">
+            <img
+              src={editImage || cdnConfig.defaultImages.novel}
+              alt={request.title || "Yêu cầu truyện"}
+              className="request-image"
+              onError={(e) => {
+                e.target.src = cdnConfig.defaultImages.novel;
+              }}
+            />
+            <div className="image-upload-controls">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleEditImageUpload}
+                id={`edit-image-${request._id}`}
+                style={{ display: 'none' }}
+                disabled={isImageUploading || isSaving}
+              />
+              <label 
+                htmlFor={`edit-image-${request._id}`} 
+                className="upload-btn"
+                style={{
+                  display: 'inline-block',
+                  padding: '6px 12px',
+                  background: isImageUploading ? '#6c757d' : '#007bff',
+                  color: 'white',
+                  borderRadius: '4px',
+                  cursor: isImageUploading ? 'not-allowed' : 'pointer',
+                  fontSize: '0.8rem',
+                  marginTop: '8px'
+                }}
+              >
+                {isImageUploading ? 'Đang tải...' : 'Thay đổi ảnh'}
+              </label>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={request.illustration || cdnConfig.defaultImages.novel}
+            alt={request.title || "Yêu cầu truyện"}
+            className="request-image"
+            onError={(e) => {
+              e.target.src = cdnConfig.defaultImages.novel;
+            }}
+          />
+        )}
+      </div>
+      
+      {(request.note || isEditing) && (
         <div className="request-note">
-          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
+          {isEditing ? (
+            <textarea
+              value={editNote}
+              onChange={(e) => setEditNote(e.target.value)}
+              placeholder="Ghi chú cho yêu cầu..."
+              className="edit-note-textarea"
+              disabled={isSaving}
+              style={{
+                width: '100%',
+                minHeight: '80px',
+                padding: '8px',
+                border: '1px solid #ced4da',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+                fontSize: '0.9rem',
+                resize: 'vertical'
+              }}
+            />
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.note) }} />
+          )}
         </div>
       )}
       
@@ -127,27 +302,73 @@ const RequestCard = ({
       )}
       
       <div className="request-actions">
-        <div className="action-row">
-          <button 
-            className={`action-btn upvote-btn ${isLikedByCurrentUser ? 'active' : ''}`}
-            onClick={() => handleLikeRequest(request._id)}
-            disabled={!isAuthenticated || likingRequests.has(request._id)}
-          >
-            <i className={`fas fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>
-            <span>Thích</span>
-          </button>
-          
-          <button 
-            className="action-btn donate-btn"
-            onClick={() => handleShowContributionForm(request._id)}
-          >
-            <i className="fas fa-hand-holding-heart"></i>
-            <span>Góp 🌾</span>
-          </button>
-        </div>
+        {/* Like and Donate buttons - hidden in edit mode */}
+        {!isEditing && (
+          <div className="action-row">
+            <button 
+              className={`action-btn upvote-btn ${isLikedByCurrentUser ? 'active' : ''}`}
+              onClick={() => handleLikeRequest(request._id)}
+              disabled={!isAuthenticated || likingRequests.has(request._id)}
+            >
+              <i className={`fas fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>
+              <span>Thích</span>
+            </button>
+            
+            <button 
+              className="action-btn donate-btn"
+              onClick={() => handleShowContributionForm(request._id)}
+            >
+              <i className="fas fa-hand-holding-heart"></i>
+              <span>Góp 🌾</span>
+            </button>
+          </div>
+        )}
         
+        {/* Edit actions for admin/moderator */}
+        {canEdit && !isEditing && (
+          <div className="action-row">
+            <button 
+              className="action-btn edit-btn"
+              onClick={() => {
+                // Ensure we start with current values
+                setEditNote(request.note || '');
+                setEditImage(request.illustration || '');
+                setIsEditing(true);
+              }}
+              title="Chỉnh sửa yêu cầu"
+            >
+              <i className="fas fa-edit"></i>
+              <span>Chỉnh sửa</span>
+            </button>
+          </div>
+        )}
+
+        {/* Edit save/cancel buttons */}
+        {isEditing && (
+          <div className="action-row">
+            <button 
+              className="action-btn save-btn"
+              onClick={handleSaveEdit}
+              disabled={isSaving}
+              title="Lưu thay đổi"
+            >
+              <i className="fas fa-save"></i>
+              <span>{isSaving ? 'Đang lưu...' : 'Lưu'}</span>
+            </button>
+            <button 
+              className="action-btn cancel-btn"
+              onClick={handleCancelEdit}
+              disabled={isSaving}
+              title="Hủy chỉnh sửa"
+            >
+              <i className="fas fa-times"></i>
+              <span>Hủy</span>
+            </button>
+          </div>
+        )}
+
         {/* Admin actions */}
-        {isAdmin && (request.type === 'new' || request.type === 'web') && (
+        {isAdmin && (request.type === 'new' || request.type === 'web') && !isEditing && (
           <div className="action-row">
             <button 
               className="action-btn approve-btn"

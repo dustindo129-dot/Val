@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
+import cdnConfig from '../config/bunny';
+import bunnyUploadService from '../services/bunnyUploadService';
 import DOMPurify from 'dompurify';
 import '../styles/Market.css';
 
@@ -85,6 +87,8 @@ const Market = () => {
   const [requestType, setRequestType] = useState('new'); // 'new' or 'web'
   const [requestText, setRequestText] = useState('');
   const [requestNote, setRequestNote] = useState('');
+  const [requestImage, setRequestImage] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [goalAmount, setGoalAmount] = useState('1000'); // Default goal amount for web requests
   const [requests, setRequests] = useState([]);
@@ -310,6 +314,13 @@ const Market = () => {
       if (requestNote.trim()) {
         requestData.note = DOMPurify.sanitize(requestNote);
       }
+      
+      // Add image if provided, otherwise use default
+      if (requestImage) {
+        requestData.image = requestImage;
+      } else {
+        requestData.image = cdnConfig.defaultImages.novel;
+      }
 
       const response = await axios.post(
         `${config.backendUrl}/api/requests`,
@@ -339,6 +350,7 @@ const Market = () => {
       // Reset form in all cases
       setRequestText('');
       setRequestNote('');
+      setRequestImage('');
       setDepositAmount('');
       setGoalAmount('1000');
       
@@ -357,6 +369,7 @@ const Market = () => {
     // Clear inputs when switching types
     setRequestText('');
     setRequestNote('');
+    setRequestImage('');
     setDepositAmount('');
     setGoalAmount('1000');
   };
@@ -366,10 +379,46 @@ const Market = () => {
     setSortOrder(newSortOrder);
   };
 
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng tải lên tệp ảnh');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh phải nhỏ hơn 5MB');
+      return;
+    }
+
+    try {
+      setImageUploading(true);
+      
+      // Upload using bunny CDN service
+      const imageUrl = await bunnyUploadService.uploadFile(
+        file, 
+        'request'
+      );
+
+      setRequestImage(imageUrl);
+    } catch (err) {
+      console.error('Không thể tải lên ảnh:', err);
+      alert('Không thể tải lên ảnh');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   // Handle clearing form
   const handleClearForm = () => {
     setRequestText('');
     setRequestNote('');
+    setRequestImage('');
     setDepositAmount('');
     setGoalAmount('1000');
     setSelectedModule(null);
@@ -721,6 +770,15 @@ const Market = () => {
     }
   };
 
+  // Handle request update from edit
+  const handleRequestUpdate = (updatedRequest) => {
+    setRequests(prevRequests => 
+      prevRequests.map(req => 
+        req._id === updatedRequest._id ? updatedRequest : req
+      )
+    );
+  };
+
   // Fetch contributions for a request - modify to avoid duplicate fetches
   const fetchContributions = async (requestId) => {
     if (loadingContributions.has(requestId) || contributions[requestId]) {
@@ -886,6 +944,7 @@ const Market = () => {
             showContributionForm={showContributionForm}
             setShowContributionForm={setShowContributionForm}
             showHistory={showHistory}
+            onRequestUpdate={handleRequestUpdate}
           />
           
           {/* Request History */}
@@ -915,6 +974,9 @@ const Market = () => {
               setRequestText={setRequestText}
               requestNote={requestNote}
               setRequestNote={setRequestNote}
+              requestImage={requestImage}
+              handleImageUpload={handleImageUpload}
+              imageUploading={imageUploading}
               depositAmount={depositAmount}
               setDepositAmount={setDepositAmount}
               goalAmount={goalAmount}

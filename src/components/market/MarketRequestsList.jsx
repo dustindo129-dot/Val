@@ -27,6 +27,7 @@ import LoadingSpinner from '../LoadingSpinner';
  * @param {number} props.showContributionForm - ID of request with visible contribution form
  * @param {Function} props.setShowContributionForm - Function to set which request shows contributions
  * @param {boolean} props.showHistory - Whether to show request history
+ * @param {Function} props.onRequestUpdate - Function to handle request updates
  * @returns {JSX.Element} Market requests list component
  */
 const MarketRequestsList = ({
@@ -48,7 +49,8 @@ const MarketRequestsList = ({
   contributions,
   showContributionForm,
   setShowContributionForm,
-  showHistory
+  showHistory,
+  onRequestUpdate
 }) => {
   if (showHistory) return null;
 
@@ -133,6 +135,7 @@ const MarketRequestsList = ({
                 showContributionForm={showContributionForm}
                 setShowContributionForm={setShowContributionForm}
                 isAdminRequest={true}
+                onRequestUpdate={onRequestUpdate}
               />
             );
           })
@@ -187,6 +190,7 @@ const MarketRequestsList = ({
                 showContributionForm={showContributionForm}
                 setShowContributionForm={setShowContributionForm}
                 isAdminRequest={false}
+                onRequestUpdate={onRequestUpdate}
               />
             );
           })

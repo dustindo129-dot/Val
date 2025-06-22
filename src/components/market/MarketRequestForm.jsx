@@ -14,6 +14,9 @@ import React from 'react';
  * @param {Function} props.setRequestText - Function to update request text
  * @param {string} props.requestNote - Request note input value
  * @param {Function} props.setRequestNote - Function to update request note
+ * @param {string} props.requestImage - Request image URL
+ * @param {Function} props.handleImageUpload - Function to handle image upload
+ * @param {boolean} props.imageUploading - Whether image is uploading
  * @param {string} props.depositAmount - Deposit amount input value
  * @param {Function} props.setDepositAmount - Function to update deposit amount
  * @param {string} props.goalAmount - Goal amount input value for web requests
@@ -35,6 +38,9 @@ const MarketRequestForm = ({
   setRequestText,
   requestNote,
   setRequestNote,
+  requestImage,
+  handleImageUpload,
+  imageUploading,
   depositAmount,
   setDepositAmount,
   goalAmount,
@@ -124,6 +130,39 @@ const MarketRequestForm = ({
             />
           </>
         )}
+        
+        {/* Image Upload Section */}
+        <div className="form-group">
+          <label>Ảnh minh họa:</label>
+          <div className="cover-upload">
+            {requestImage && (
+              <img
+                src={requestImage}
+                alt="Request image preview"
+                className="cover-preview"
+              />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              id="request-image-upload"
+              style={{ display: 'none' }}
+              disabled={submitting || imageUploading}
+            />
+            <label 
+              htmlFor="request-image-upload" 
+              className={`market-upload-btn ${imageUploading ? 'uploading' : ''}`}
+            >
+              {imageUploading ? 'Đang tải lên...' : 'Tải ảnh minh họa'}
+            </label>
+            {!requestImage && (
+              <p className="upload-helper-text">
+                Nếu không tải ảnh, sẽ sử dụng ảnh mặc định
+              </p>
+            )}
+          </div>
+        </div>
         
         {requestType === 'web' && user && user.role === 'admin' ? (
           <div className="deposit-input-container">

@@ -2124,6 +2124,245 @@
 
 /* End contribution modal styles */
 
+/* Request image upload styles */
+.form-group {
+  margin: 1rem 0;
+}
+
+.form-group label {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #343a40;
+}
+
+.cover-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cover-preview {
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 200px;
+  max-height: 200px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.upload-btn {
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+  text-align: center;
+}
+
+.upload-btn:hover:not([style*="cursor: not-allowed"]) {
+  background: #3367d6 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group .market-upload-btn {
+  display: inline-block !important;
+  padding: 6px 12px !important;
+  background: #4285f4 !important;
+  color: white !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+  text-decoration: none !important;
+  text-align: center !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  margin-bottom: 0 !important;
+}
+
+.form-group .market-upload-btn.uploading {
+  background: #6c757d !important;
+  cursor: not-allowed !important;
+}
+
+.form-group .market-upload-btn:hover:not(.uploading) {
+  background: #3367d6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.upload-helper-text {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin: 5px 0 0 0;
+}
+
+/* Dark mode styles for image upload */
+:root.dark-mode .form-group label {
+  color: #f8f9fa;
+}
+
+:root.dark-mode .cover-preview {
+  border-color: #495057;
+}
+
+:root.dark-mode .upload-btn {
+  background: #0d6efd !important;
+}
+
+:root.dark-mode .upload-btn:hover:not([style*="cursor: not-allowed"]) {
+  background: #0b5ed7 !important;
+}
+
+:root.dark-mode .form-group .market-upload-btn {
+  background: #0d6efd !important;
+}
+
+:root.dark-mode .form-group .market-upload-btn.uploading {
+  background: #495057 !important;
+}
+
+:root.dark-mode .form-group .market-upload-btn:hover:not(.uploading) {
+  background: #0b5ed7 !important;
+}
+
+:root.dark-mode .upload-helper-text {
+  color: #adb5bd;
+}
+
+/* Request image styles */
+.request-image-container {
+  width: 100%;
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.request-image {
+  max-width: 100%;
+  max-height: 250px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+
+/* Dark mode styles for request image */
+:root.dark-mode .request-image {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Edit indicator styles */
+.edit-indicator {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* Edit form styles */
+.edit-image-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image-upload-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.edit-note-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.edit-note-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Edit action buttons */
+.edit-btn {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.edit-btn:hover {
+  background-color: #e0a800;
+}
+
+.save-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.save-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.cancel-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.cancel-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Dark mode styles for edit functionality */
+:root.dark-mode .edit-indicator {
+  color: #adb5bd;
+}
+
+:root.dark-mode .edit-note-textarea {
+  background-color: #2c3237;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+:root.dark-mode .edit-note-textarea:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+:root.dark-mode .edit-btn {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+:root.dark-mode .edit-btn:hover {
+  background-color: #e0a800;
+}
+
 :root.dark-mode .history-title {
   color: #e9ecef;
 }
