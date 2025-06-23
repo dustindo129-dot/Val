@@ -345,6 +345,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  padding-right: 120px; /* Space for chapter count overlay */
 }
 
 .rd-alt-title {
@@ -1218,18 +1219,16 @@
   }
 
   .rd-chapter-count-overlay {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 8px;
-      text-align: center;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      z-index: 20;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      padding: 6px 10px;
+      font-size: 12px;
+  }
+
+  .rd-chapter-count-label {
+      font-size: 10px;
+  }
+
+  .rd-chapter-count-value {
+      font-size: 16px;
   }
 
   .rd-novel-cover {
@@ -1261,7 +1260,7 @@
   }
 
   .rd-novel-info {
-      padding: 0 10px;
+      padding: 0 100px 0 10px; /* Add right padding for chapter count overlay */
       width: 100%;
   }
 
@@ -1372,22 +1371,22 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 576px) {
   .rd-novel-title {
       font-size: 1.6rem;
   }
 
   .rd-chapter-count-overlay {
-      padding: 6px 10px;
-      margin-bottom: 10px;
+      padding: 4px 8px;
+      font-size: 10px;
   }
 
   .rd-chapter-count-label {
-      font-size: 9px;
+      font-size: 8px;
   }
 
   .rd-chapter-count-value {
-      font-size: 16px;
+      font-size: 14px;
   }
 
   .rd-alt-title {
@@ -1403,7 +1402,7 @@
   }
 
   .rd-novel-info {
-      padding: 0 5px;
+      padding: 0 90px 0 5px; /* Add right padding for chapter count overlay */
   }
 
   .rd-genres-list {
