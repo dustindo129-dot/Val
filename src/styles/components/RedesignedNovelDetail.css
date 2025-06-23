@@ -345,7 +345,6 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding-right: 120px; /* Space for chapter count overlay */
 }
 
 .rd-alt-title {
@@ -357,6 +356,7 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   flex-shrink: 0;
+  padding-right: 120px; 
 }
 
 .rd-info-rows {
@@ -1262,6 +1262,10 @@
   .rd-novel-info {
       padding: 0 100px 0 10px; /* Add right padding for chapter count overlay */
       width: 100%;
+  }
+
+  .rd-alt-title {
+    padding-right: 0;
   }
 
   .rd-info-rows {
