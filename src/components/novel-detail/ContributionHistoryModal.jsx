@@ -76,7 +76,7 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
         setIsLoading(true);
         try {
           const response = await axios.get(
-            `${config.backendUrl}/api/novels/${novelId}/contribution-history`
+              `${config.backendUrl}/api/novels/${novelId}/contribution-history`
           );
           setContributions(response.data.contributions || []);
         } catch (error) {
@@ -100,33 +100,19 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
     return `${day}/${month}/${year}`;
   };
 
-  // Format contribution note for display
+  // Format contribution note with gift indicator for backward compatibility
   const formatContributionNote = (contribution) => {
-    if (contribution.type === 'gift') {
-      const note = contribution.note && contribution.note.trim();
-      if (!note) return 'Quà tặng';
-      
-      // Extract custom message from detailed gift note for backward compatibility
-      // Handle both old format "Quà tặng 🍰 Bánh ngọt" and new format "Custom message (Quà tặng 🍰 Bánh ngọt)"
-      const giftPattern = /^(.*?)\s*\(Quà tặng.*\)$/;
-      const match = note.match(giftPattern);
-      
-      if (match && match[1].trim()) {
-        // New format with custom message: show "Custom message (Quà tặng)"
-        return `${match[1].trim()} (Quà tặng)`;
-      } else if (note.startsWith('Quà tặng')) {
-        // Old format without custom message: show just "Quà tặng"
-        return 'Quà tặng';
-      } else {
-        // Fallback: show custom message + (Quà tặng)
-        return `${note} (Quà tặng)`;
-      }
+    let note = contribution.note && contribution.note.trim()
+        ? contribution.note
+        : contribution.description || 'Không có ghi chú';
+    
+    // Add "(Quà tặng)" for gift contributions if "Quà tặng" is not already present
+    // This handles backward compatibility for old gift records
+    if (contribution.type === 'gift' && !note.includes('Quà tặng')) {
+      note = `${note} (Quà tặng)`;
     }
     
-    // For non-gift contributions, show the note as-is
-    return contribution.note && contribution.note.trim() 
-      ? contribution.note 
-      : contribution.description || 'Không có ghi chú';
+    return note;
   };
 
   // Handle overlay click to close modal
@@ -140,59 +126,69 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
 
   // Render modal content with portal
   const modalContent = (
-    <div className="vt-contribution-history-modal-overlay" onClick={handleOverlayClick}>
-      <div className="vt-contribution-history-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="contribution-history-modal-header">
-          <h3 className="modal-title">Lịch sử đóng góp</h3>
-          <button className="close-modal" onClick={onClose}>&times;</button>
-        </div>
-        <div className="vt-contribution-history-modal-body">
-          {isLoading ? (
-            <LoadingSpinner size="small" text="Đang tải..." />
-          ) : contributions.length > 0 ? (
-            <table className="history-table">
-              <thead>
-                <tr>
-                  <th>Người đóng góp</th>
-                  <th>Ngày</th>
-                  <th>Ghi chú</th>
-                  <th>Số lúa</th>
-                  <th>Kho lúa</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contributions.map((contribution, index) => (
-                  <tr key={contribution._id || index} className={contribution.type === 'system' ? 'system-row' : ''}>
-                    <td>
-                      <div className={contribution.type === 'system' ? 'system-user' : 'history-user'}>
-                        {contribution.type === 'system' ? 'Hệ thống' : (contribution.user?.username || 'Người dùng ẩn danh')}
-                      </div>
-                    </td>
-                    <td>{formatDate(contribution.createdAt || contribution.updatedAt)}</td>
-                    <td>
-                      {formatContributionNote(contribution)}
-                    </td>
-                    <td className={`history-amount ${contribution.amount >= 0 ? 'positive' : 'negative'}`}>
-                      {contribution.amount >= 0 ? '+' : ''}{contribution.amount.toLocaleString()}
-                    </td>
-                    <td className="history-balance">{contribution.budgetAfter?.toLocaleString() || 0}</td>
+      <div className="vt-contribution-history-modal-overlay" onClick={handleOverlayClick}>
+        <div className="vt-contribution-history-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="contribution-history-modal-header">
+            <h3 className="modal-title">Lịch sử đóng góp</h3>
+            <button className="close-modal" onClick={onClose}>&times;</button>
+          </div>
+          <div className="vt-contribution-history-modal-body">
+            {isLoading ? (
+                <LoadingSpinner size="small" text="Đang tải..." />
+            ) : contributions.length > 0 ? (
+                <table className="history-table">
+                  <thead>
+                  <tr>
+                    <th>Người đóng góp</th>
+                    <th>Ghi chú</th>
+                    <th>Số lúa</th>
+                    <th>Kho lúa</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-state-icon">📊</div>
-              <p>Chưa có lịch sử đóng góp nào</p>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                  {contributions.map((contribution, index) => (
+                      <tr key={contribution._id || index} className={contribution.type === 'system' ? 'system-row' : ''}>
+                        <td>
+                          <div className="contributor-info">
+                            <div className={contribution.type === 'system' ? 'system-user' : 'history-user'}>
+                              {contribution.type === 'system' ? (
+                                  <>
+                                    <i className="fas fa-cog system-icon"></i>
+                                    Hệ thống
+                                  </>
+                              ) : (
+                                  contribution.user?.username || 'Người dùng ẩn danh'
+                              )}
+                            </div>
+                            <div className="contribution-date">
+                              {formatDate(contribution.createdAt || contribution.updatedAt)}
+                            </div>
+                          </div>
+                        </td>
+                        <td className={`contribution-note ${contribution.type === 'system' ? 'system-note' : ''}`}>
+                          {formatContributionNote(contribution)}
+                        </td>
+                        <td className={`history-amount ${contribution.amount >= 0 ? 'positive' : 'negative'}`}>
+                          {contribution.amount >= 0 ? '+' : ''}{contribution.amount.toLocaleString()}
+                        </td>
+                        <td className="history-balance">{contribution.budgetAfter?.toLocaleString() || 0}</td>
+                      </tr>
+                  ))}
+                  </tbody>
+                </table>
+            ) : (
+                <div className="empty-state">
+                  <div className="empty-state-icon">📊</div>
+                  <p>Chưa có lịch sử đóng góp nào</p>
+                </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
   );
 
   // Use createPortal to render outside the component tree
   return createPortal(modalContent, portalContainer);
 };
 
-export default ContributionHistoryModal; 
+export default ContributionHistoryModal;

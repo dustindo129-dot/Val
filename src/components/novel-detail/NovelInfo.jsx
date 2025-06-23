@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
-import { useAuth } from '../../context/AuthContext';
-import { processDescription } from '../../utils/helpers';
-import { BookmarkIcon, BookmarkActiveIcon, HeartIcon, HeartFilledIcon, ViewsIcon, StarIcon } from './NovelIcons';
+import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
+import {Link} from 'react-router-dom';
+import {useQueryClient, useMutation, useQuery} from '@tanstack/react-query';
+import {useAuth} from '../../context/AuthContext';
+import {processDescription} from '../../utils/helpers';
+import {BookmarkIcon, BookmarkActiveIcon, HeartIcon, HeartFilledIcon, ViewsIcon, StarIcon} from './NovelIcons';
 import api from '../../services/api';
 import RatingModal from '../../components/RatingModal';
-import { useBookmarks } from '../../context/BookmarkContext';
+import {useBookmarks} from '../../context/BookmarkContext';
 import GiftRow from './GiftRow';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
     faFacebookF,
     faTwitter,
@@ -34,8 +34,8 @@ import {
     faBookmark
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
-import { createUniqueSlug, generateChapterUrl } from '../../utils/slugUtils';
-import { translateStatus, getStatusForCSS } from '../../utils/statusTranslation';
+import {createUniqueSlug, generateChapterUrl} from '../../utils/slugUtils';
+import {translateStatus, getStatusForCSS} from '../../utils/statusTranslation';
 import DOMPurify from 'dompurify';
 
 // Helper function to convert colors to hex
@@ -242,7 +242,7 @@ const processContent = (content) => {
             let finalContent = processedContent;
             // Just ensure empty paragraphs have non-breaking space
             finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '<p$1>&nbsp;</p>');
-            
+
             return DOMPurify.sanitize(finalContent, {
                 ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
                 ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
@@ -295,15 +295,18 @@ const processContent = (content) => {
     }
 };
 
-const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar }) => {
+const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar}) => {
     const queryClient = useQueryClient();
-    const { user } = useAuth();
-    const { updateBookmarkStatus } = useBookmarks();
+    const {user} = useAuth();
+    const {updateBookmarkStatus} = useBookmarks();
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isNoteExpanded, setIsNoteExpanded] = useState(false);
     const [lastLikeTime, setLastLikeTime] = useState(0);
     const [isModuleNavOpen, setIsModuleNavOpen] = useState(false);
+    const [expandedGenres, setExpandedGenres] = useState(false);
+    const [needsGenreToggle, setNeedsGenreToggle] = useState(false);
+    const genreTagsRef = useRef(null);
     const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
 
     // Create a safe local copy of userInteraction with defaults
@@ -320,7 +323,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     const novelId = novelData?._id;  // Get the ID directly
 
     // Query for novel stats
-    const { data: novelStats = { totalLikes: 0, totalRatings: 0, totalBookmarks: 0, averageRating: '0.0' } } = useQuery({
+    const {data: novelStats = {totalLikes: 0, totalRatings: 0, totalBookmarks: 0, averageRating: '0.0'}} = useQuery({
         queryKey: ['novel-stats', novelId],
         queryFn: () => api.getNovelStats(novelId),
         enabled: !!novelId,
@@ -331,7 +334,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     });
 
     // Query for bookmarked chapter
-    const { data: bookmarkData } = useQuery({
+    const {data: bookmarkData} = useQuery({
         queryKey: ['bookmarked-chapter', novelId, user?.id],
         queryFn: () => api.getBookmarkedChapter(novelId),
         enabled: !!novelId && !!user,
@@ -350,6 +353,23 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
             novelIdRef.current = novelId;
         }
     }, [novelId]);
+
+    // Check if genre list needs a toggle button
+    useEffect(() => {
+        if (novelData?.genres && novelData.genres.length > 8) {
+            const timer = setTimeout(() => {
+                const maxVisibleTags = 5;
+
+                if (novelData.genres.length > maxVisibleTags) {
+                    setNeedsGenreToggle(true);
+                } else {
+                    setNeedsGenreToggle(false);
+                }
+            }, 100);
+
+            return () => clearTimeout(timer);
+        }
+    }, [novelData?.genres]);
 
     // Mutations for bookmark and like toggling
     const bookmarkMutation = useMutation({
@@ -382,7 +402,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
             }));
 
             // Return a context object with the snapshotted values
-            return { previousStats, previousInteraction };
+            return {previousStats, previousInteraction};
         },
         onError: (err, variables, context) => {
             // If the mutation fails, use the context we saved to roll back
@@ -469,7 +489,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
             }));
 
             // Return a context object with the snapshotted values
-            return { previousStats, previousInteraction };
+            return {previousStats, previousInteraction};
         },
         onError: (err, variables, context) => {
             // If the mutation fails, use the context we saved to roll back
@@ -524,7 +544,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
             }));
 
             // Return a context object with the snapshotted value
-            return { previousInteraction };
+            return {previousInteraction};
         },
         onError: (err, variables, context) => {
             // If the mutation fails, use the context we saved to roll back
@@ -664,6 +684,11 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
         setIsDescriptionExpanded(!isDescriptionExpanded);
     };
 
+    // Toggle genres expansion
+    const toggleGenres = () => {
+        setExpandedGenres(!expandedGenres);
+    };
+
     // Calculate total chapter count
     const totalChapters = chaptersData?.chapters?.length || 0;
 
@@ -786,12 +811,60 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
         );
 
         if (hasVietnameseNovel) {
-            return { type: 'original', label: 'Truyện Sáng Tác' };
+            return {type: 'original', label: 'Truyện Sáng Tác'};
         } else if (hasTranslatedNovel) {
-            return { type: 'translated', label: 'Truyện Dịch' };
+            return {type: 'translated', label: 'Truyện Dịch'};
         }
 
         return null;
+    };
+
+    // Get genre tags with proper styling and sorting
+    const getGenreTags = () => {
+        if (!novelData.genres || novelData.genres.length === 0) {
+            return [];
+        }
+
+        return novelData.genres.map(genre => {
+            let className = '';
+            let type = 'other';
+
+            if (genre.includes('Novel') && !['Web Novel', 'One shot'].includes(genre)) {
+                type = 'format-origin';
+                if (genre.includes('Japanese')) className = 'japanese-novel';
+                else if (genre.includes('Chinese')) className = 'chinese-novel';
+                else if (genre.includes('Korean')) className = 'korean-novel';
+                else if (genre.includes('English')) className = 'english-novel';
+                else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
+            } else if (genre === 'Mature') {
+                type = 'mature';
+                className = 'mature';
+            } else if (genre === 'AI-assisted') {
+                type = 'ai-assisted';
+                className = 'ai-assisted';
+            } else if (genre === 'Web Novel' || genre === 'One shot') {
+                type = 'web-format';
+                className = genre.toLowerCase().replace(' ', '-');
+            } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
+                type = 'target-audience';
+            }
+
+            return {
+                name: genre,
+                type: type,
+                class: className
+            };
+        }).sort((a, b) => {
+            const typeOrder = {
+                'format-origin': 1,
+                'mature': 2,
+                'ai-assisted': 3,
+                'web-format': 4,
+                'target-audience': 5,
+                'other': 6
+            };
+            return typeOrder[a.type] - typeOrder[b.type];
+        });
     };
 
     // Get modules data for navigation
@@ -815,6 +888,8 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
     const currentRating = safeUserInteraction.rating || 0;
     // Novel type banner
     const novelType = getNovelType();
+    // Genre tags
+    const genreTags = getGenreTags();
 
     return (
         <>
@@ -832,24 +907,29 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                             >
                                 {followMutation.isPending ? '...' : (isFollowed ? '✓' : '+')}
                             </button>
-                            <span className={`rd-status-badge-inline rd-status-${getStatusForCSS(novelData.status)?.toLowerCase() || 'ongoing'}`}>
+                            <span
+                                className={`rd-status-badge-inline rd-status-${getStatusForCSS(novelData.status)?.toLowerCase() || 'ongoing'}`}>
                                 {translateStatus(novelData.status)}
                             </span>
                         </h1>
                     </div>
 
                     <div className="rd-social-share">
-                        <a href="#" className="rd-share-btn rd-facebook" title="Share on Facebook" onClick={(e) => handleShare('facebook', e)}>
-                            <FontAwesomeIcon icon={faFacebookF} />
+                        <a href="#" className="rd-share-btn rd-facebook" title="Share on Facebook"
+                           onClick={(e) => handleShare('facebook', e)}>
+                            <FontAwesomeIcon icon={faFacebookF}/>
                         </a>
-                        <a href="#" className="rd-share-btn rd-twitter" title="Share on Twitter" onClick={(e) => handleShare('twitter', e)}>
-                            <FontAwesomeIcon icon={faTwitter} />
+                        <a href="#" className="rd-share-btn rd-twitter" title="Share on Twitter"
+                           onClick={(e) => handleShare('twitter', e)}>
+                            <FontAwesomeIcon icon={faTwitter}/>
                         </a>
-                        <a href="#" className="rd-share-btn rd-pinterest" title="Share on Pinterest" onClick={(e) => handleShare('pinterest', e)}>
-                            <FontAwesomeIcon icon={faPinterestP} />
+                        <a href="#" className="rd-share-btn rd-pinterest" title="Share on Pinterest"
+                           onClick={(e) => handleShare('pinterest', e)}>
+                            <FontAwesomeIcon icon={faPinterestP}/>
                         </a>
-                        <a href="#" className="rd-share-btn rd-telegram" title="Share on Telegram" onClick={(e) => handleShare('telegram', e)}>
-                            <FontAwesomeIcon icon={faTelegramPlane} />
+                        <a href="#" className="rd-share-btn rd-telegram" title="Share on Telegram"
+                           onClick={(e) => handleShare('telegram', e)}>
+                            <FontAwesomeIcon icon={faTelegramPlane}/>
                         </a>
                     </div>
                 </div>
@@ -859,8 +939,10 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                     <div className="rd-novel-main">
                         {/* Novel Card with Cover and Info */}
                         <div className="rd-novel-card">
+
                             {/* Header with cover and info */}
                             <div className="rd-novel-header-content">
+
                                 <div className="rd-novel-cover">
                                     {novelType && (
                                         <div className={`rd-novel-type-banner ${novelType.type}`}>
@@ -878,18 +960,15 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     <div className="rd-update-time">
                                         Cập nhật: {formatTimeAgo(novelData.updatedAt)}
                                     </div>
+
+
+                                </div>
+                                <div className="rd-chapter-count-overlay">
+                                    <div className="rd-chapter-count-label">SỐ CHƯƠNG</div>
+                                    <div className="rd-chapter-count-value">{totalChapters}</div>
                                 </div>
 
                                 <div className="rd-novel-info">
-                                    <div className="rd-chapter-count">
-                                        <div className="rd-chapter-count-label">
-                                            SỐ CHƯƠNG
-                                        </div>
-                                        <div className="rd-chapter-count-value">
-                                            {totalChapters}
-                                        </div>
-                                    </div>
-
                                     {novelData.alternativeTitles && novelData.alternativeTitles.length > 0 && (
                                         <h2 className="rd-alt-title">
                                             Tên khác: {novelData.alternativeTitles.join('; ')}
@@ -913,82 +992,65 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                             </div>
                                         )}
 
-                                        {novelData.genres && novelData.genres.length > 0 && (
+                                        {genreTags.length > 0 && (
                                             <div className="rd-genres-row">
                                                 <div className="rd-genres-label">Thể loại:</div>
                                                 <div className="rd-info-value">
-                                                    <div className="rd-genres-list">
-                                                        {(() => {
-                                                            // Sort genres using the new logic
-                                                            const sortedGenres = (novelData.genres || []).map(genre => {
-                                                                if (genre === 'Mature' || genre === 'AI-assisted' || genre === 'Web Novel' || genre === 'One Shot' || genre === 'Fanfiction') {
-                                                                    return {
-                                                                        name: genre,
-                                                                        type: 'mature',
-                                                                        class: genre === 'Mature' ? 'mature' : genre === 'AI-assisted' ? 'ai-assisted' : genre.toLowerCase().replace(' ', '-')
-                                                                    };
-                                                                } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
-                                                                    return {
-                                                                        name: genre,
-                                                                        type: 'target-audience',
-                                                                        class: ''
-                                                                    };
-                                                                } else if (genre.includes('Novel')) {
-                                                                    let className = '';
-                                                                    if (genre.includes('Japanese')) className = 'japanese-novel';
-                                                                    else if (genre.includes('Chinese')) className = 'chinese-novel';
-                                                                    else if (genre.includes('Korean')) className = 'korean-novel';
-                                                                    else if (genre.includes('English')) className = 'english-novel';
-                                                                    else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
-
-                                                                    return {
-                                                                        name: genre,
-                                                                        type: 'format-origin',
-                                                                        class: className
-                                                                    };
-                                                                } else {
-                                                                    return {
-                                                                        name: genre,
-                                                                        type: 'other',
-                                                                        class: ''
-                                                                    };
-                                                                }
-                                                            }).sort((a, b) => {
-                                                                const typeOrder = {
-                                                                    'format-origin': 1,
-                                                                    'mature': 2,
-                                                                    'target-audience': 3,
-                                                                    'other': 4
-                                                                };
-                                                                return typeOrder[a.type] - typeOrder[b.type];
-                                                            });
-
-                                                            return sortedGenres.map((genre, index) => (
+                                                    <div
+                                                        ref={genreTagsRef}
+                                                        className={`rd-genres-list ${expandedGenres ? 'rd-expanded' : ''}`}
+                                                    >
+                                                        {expandedGenres ? (
+                                                            // Show all genres when expanded
+                                                            genreTags.map((genre, index) => (
                                                                 <span
                                                                     className={`rd-genre-tag ${genre.class}`}
                                                                     key={index}
                                                                 >
-                                  {genre.name}
-                                </span>
-                                                            ));
-                                                        })()}
+                  {genre.name}
+                </span>
+                                                            ))
+                                                        ) : (
+                                                            // Show limited genres when collapsed
+                                                            <>
+                                                                {genreTags.slice(0, needsGenreToggle ? 8 : genreTags.length).map((genre, index) => (
+                                                                    <span
+                                                                        className={`rd-genre-tag ${genre.class}`}
+                                                                        key={index}
+                                                                    >
+                    {genre.name}
+                  </span>
+                                                                ))}
+
+                                                                {needsGenreToggle && (
+                                                                    <span
+                                                                        className="rd-toggle-genres"
+                                                                        onClick={toggleGenres}
+                                                                    >
+                    (...)
+                  </span>
+                                                                )}
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
                                         )}
-                                    </div>
 
-                                    {/* Gift Row */}
-                                    <div className="rd-gift-container">
-                                        <GiftRow
-                                            novelId={novelId}
-                                            onGiftSuccess={() => {
-                                                // Refresh novel data when gifts are sent
-                                                queryClient.invalidateQueries(['novel', novelId]);
-                                            }}
-                                        />
+                                        {/* Gift Row - nằm trong rd-info-rows nhưng luôn ở cuối */}
+                                        <div className="rd-gift-container">
+                                            <GiftRow
+                                                novelId={novelId}
+                                                onGiftSuccess={() => {
+                                                    // Refresh novel data when gifts are sent
+                                                    queryClient.invalidateQueries(['novel', novelId]);
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
+
+
                             </div>
 
                             <div className="rd-card-footer">
@@ -997,10 +1059,11 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     <div className="rd-stat-item">
                                         <div className="rd-stat-group">
                                             <div className="rd-stat-icon">
-                                                <FontAwesomeIcon icon={faEye} />
+                                                <FontAwesomeIcon icon={faEye}/>
                                             </div>
                                             <div className="rd-stat-content">
-                                                <div className="rd-stat-value">{novelData.views?.total?.toLocaleString() || '0'}</div>
+                                                <div
+                                                    className="rd-stat-value">{novelData.views?.total?.toLocaleString() || '0'}</div>
                                                 <div className="rd-stat-label">Lượt xem</div>
                                             </div>
                                         </div>
@@ -1009,10 +1072,11 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     <div className="rd-stat-item">
                                         <div className="rd-stat-group">
                                             <div className="rd-stat-icon">
-                                                <FontAwesomeIcon icon={faFileAlt} />
+                                                <FontAwesomeIcon icon={faFileAlt}/>
                                             </div>
                                             <div className="rd-stat-content">
-                                                <div className="rd-stat-value">{(novelData.wordCount || 0).toLocaleString()}</div>
+                                                <div
+                                                    className="rd-stat-value">{(novelData.wordCount || 0).toLocaleString()}</div>
                                                 <div className="rd-stat-label">Từ</div>
                                             </div>
                                         </div>
@@ -1021,10 +1085,12 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     <div className="rd-stat-item clickable" onClick={toggleLike}>
                                         <div className="rd-stat-group">
                                             <div className="rd-stat-icon">
-                                                <FontAwesomeIcon icon={isLiked ? faHeartSolid : faHeart} style={{ color: isLiked ? '#e74c3c' : undefined }} />
+                                                <FontAwesomeIcon icon={isLiked ? faHeartSolid : faHeart}
+                                                                 style={{color: isLiked ? '#e74c3c' : undefined}}/>
                                             </div>
                                             <div className="rd-stat-content">
-                                                <div className="rd-stat-value">{novelStats.totalLikes?.toLocaleString() || '0'}</div>
+                                                <div
+                                                    className="rd-stat-value">{novelStats.totalLikes?.toLocaleString() || '0'}</div>
                                                 <div className="rd-stat-label">Lượt thích</div>
                                             </div>
                                         </div>
@@ -1033,7 +1099,8 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     <div className="rd-stat-item clickable" onClick={handleRatingClick}>
                                         <div className="rd-stat-group">
                                             <div className="rd-stat-icon">
-                                                <FontAwesomeIcon icon={currentRating > 0 ? faStarSolid : faStar} style={{ color: currentRating > 0 ? '#f1c40f' : undefined }} />
+                                                <FontAwesomeIcon icon={currentRating > 0 ? faStarSolid : faStar}
+                                                                 style={{color: currentRating > 0 ? '#f1c40f' : undefined}}/>
                                             </div>
                                             <div className="rd-stat-content">
                                                 <div className="rd-stat-value">
@@ -1050,17 +1117,17 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     {chaptersData?.chapters?.length > 0 ? (
                                         <Link
                                             to={generateChapterUrl(
-                                                { _id: novelId, title: novelData.title },
+                                                {_id: novelId, title: novelData.title},
                                                 chaptersData.chapters[0]
                                             )}
                                             className="rd-btn rd-btn-primary"
                                         >
-                                            <FontAwesomeIcon icon={faChevronRight} />
+                                            <FontAwesomeIcon icon={faChevronRight}/>
                                             Chương đầu tiên
                                         </Link>
                                     ) : (
                                         <button className="rd-btn rd-btn-primary" disabled>
-                                            <FontAwesomeIcon icon={faChevronRight} />
+                                            <FontAwesomeIcon icon={faChevronRight}/>
                                             Không có chương
                                         </button>
                                     )}
@@ -1069,30 +1136,33 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                         bookmarkData?.bookmarkedChapter ? (
                                             <Link
                                                 to={generateChapterUrl(
-                                                    { _id: novelId, title: novelData.title },
-                                                    { _id: bookmarkData.bookmarkedChapter.id, title: bookmarkData.bookmarkedChapter.title }
+                                                    {_id: novelId, title: novelData.title},
+                                                    {
+                                                        _id: bookmarkData.bookmarkedChapter.id,
+                                                        title: bookmarkData.bookmarkedChapter.title
+                                                    }
                                                 )}
                                                 className="rd-btn rd-btn-primary"
                                                 title={`Continue from: ${bookmarkData.bookmarkedChapter.title}`}
                                             >
-                                                <FontAwesomeIcon icon={faForward} />
+                                                <FontAwesomeIcon icon={faForward}/>
                                                 Tiếp tục đọc
                                             </Link>
                                         ) : (
                                             <Link
                                                 to={generateChapterUrl(
-                                                    { _id: novelId, title: novelData.title },
+                                                    {_id: novelId, title: novelData.title},
                                                     chaptersData.chapters[chaptersData.chapters.length - 1]
                                                 )}
                                                 className="rd-btn rd-btn-primary"
                                             >
-                                                <FontAwesomeIcon icon={faForward} />
+                                                <FontAwesomeIcon icon={faForward}/>
                                                 Chương mới nhất
                                             </Link>
                                         )
                                     ) : (
                                         <button className="rd-btn rd-btn-primary" disabled>
-                                            <FontAwesomeIcon icon={faForward} />
+                                            <FontAwesomeIcon icon={faForward}/>
                                             Không có chương
                                         </button>
                                     )}
@@ -1101,7 +1171,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                         className={`rd-btn rd-btn-bookmark ${isBookmarked ? 'active' : ''}`}
                                         onClick={toggleBookmark}
                                     >
-                                        <FontAwesomeIcon icon={isBookmarked ? faBookmarkSolid : faBookmark} />
+                                        <FontAwesomeIcon icon={isBookmarked ? faBookmarkSolid : faBookmark}/>
                                         {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu'} ({novelStats.totalBookmarks?.toLocaleString() || '0'})
                                     </button>
                                 </div>
@@ -1116,14 +1186,12 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     __html: isDescriptionExpanded
                                         ? novelData.description
                                         : truncateHTML(novelData.description, 300)
-                                }} />
+                                }}/>
                             </div>
                             <a href="#" className="rd-show-toggle" onClick={toggleDescription}>
                                 {isDescriptionExpanded ? 'Hiển thị ít hơn' : 'Hiển thị thêm'}
                             </a>
                         </div>
-
-
                     </div>
 
                     <div className="rd-novel-sidebar">
@@ -1143,7 +1211,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     {/* Translators */}
                                     <div className="rd-staff-role rd-role-translator">
                   <span className="rd-role-badge rd-translator-badge">
-                    <FontAwesomeIcon icon={faLanguage} style={{ marginRight: '4px' }} /> Dịch giả:
+                    <FontAwesomeIcon icon={faLanguage} style={{marginRight: '4px'}}/> Dịch giả:
                   </span>
                                     </div>
                                     <div className="rd-staff-members">
@@ -1161,7 +1229,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     {/* Editors */}
                                     <div className="rd-staff-role rd-role-editor">
                   <span className="rd-role-badge rd-editor-badge">
-                    <FontAwesomeIcon icon={faEdit} style={{ marginRight: '4px' }} /> Biên tập:
+                    <FontAwesomeIcon icon={faEdit} style={{marginRight: '4px'}}/> Biên tập:
                   </span>
                                     </div>
                                     <div className="rd-staff-members">
@@ -1179,7 +1247,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                     {/* Proofreaders */}
                                     <div className="rd-staff-role rd-role-qc">
                   <span className="rd-role-badge rd-qc-badge">
-                    <FontAwesomeIcon icon={faCheckDouble} style={{ marginRight: '4px' }} /> Kiểm tra chất lượng:
+                    <FontAwesomeIcon icon={faCheckDouble} style={{marginRight: '4px'}}/> Kiểm tra chất lượng:
                   </span>
                                     </div>
                                     <div className="rd-staff-members">
@@ -1199,14 +1267,15 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                         novelData.inactive?.editor?.length > 0 ||
                                         novelData.inactive?.proofreader?.length > 0) && (
                                         <>
-                                            <div className="rd-staff-category rd-inactive-category">Không hoạt động</div>
+                                            <div className="rd-staff-category rd-inactive-category">Không hoạt động
+                                            </div>
 
                                             {/* Inactive Translators */}
                                             {novelData.inactive?.translator && novelData.inactive.translator.length > 0 && (
                                                 <>
                                                     <div className="rd-staff-role rd-role-translator">
                           <span className="rd-role-badge rd-translator-badge">
-                            <FontAwesomeIcon icon={faLanguage} style={{ marginRight: '4px' }} /> Dịch giả:
+                            <FontAwesomeIcon icon={faLanguage} style={{marginRight: '4px'}}/> Dịch giả:
                           </span>
                                                     </div>
                                                     <div className="rd-staff-members">
@@ -1224,7 +1293,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                                 <>
                                                     <div className="rd-staff-role rd-role-editor">
                           <span className="rd-role-badge rd-editor-badge">
-                            <FontAwesomeIcon icon={faEdit} style={{ marginRight: '4px' }} /> Biên tập:
+                            <FontAwesomeIcon icon={faEdit} style={{marginRight: '4px'}}/> Biên tập:
                           </span>
                                                     </div>
                                                     <div className="rd-staff-members">
@@ -1242,7 +1311,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                                 <>
                                                     <div className="rd-staff-role rd-role-qc">
                           <span className="rd-role-badge rd-qc-badge">
-                            <FontAwesomeIcon icon={faCheckDouble} style={{ marginRight: '4px' }} /> Kiểm tra chất lượng:
+                            <FontAwesomeIcon icon={faCheckDouble} style={{marginRight: '4px'}}/> Kiểm tra chất lượng:
                           </span>
                                                     </div>
                                                     <div className="rd-staff-members">
@@ -1269,7 +1338,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                                         __html: isNoteExpanded
                                             ? processContent(novelData.note)
                                             : truncateHTML(processContent(novelData.note), 300)
-                                    }} />
+                                    }}/>
                                     {novelData.note && (
                                         (() => {
                                             const div = document.createElement('div');
@@ -1303,7 +1372,7 @@ const NovelInfo = ({ novel, readingProgress, chaptersData, userInteraction = {},
                         onClick={handleModuleNavToggle}
                         title="Danh sách tập"
                     >
-                        <FontAwesomeIcon icon={faList} />
+                        <FontAwesomeIcon icon={faList}/>
                     </button>
 
                     {/* Module Navigation Sidebar */}
