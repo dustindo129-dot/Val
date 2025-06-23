@@ -1,13 +1,13 @@
 /**
- * AdminDashboard Component
- * 
+ * AdminDashboard Component - Enhanced with Floating Labels
+ *
  * Administrative interface for managing the entire novel platform including:
  * - Novel management (CRUD operations)
  * - User management
  * - Content moderation
  * - Platform statistics
  * - System settings
- * 
+ *
  * Features:
  * - Novel listing and management
  * - User listing and management
@@ -16,6 +16,7 @@
  * - Bulk actions
  * - Search and filtering
  * - Role-based access control
+ * - Enhanced floating labels for all inputs
  */
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
@@ -35,8 +36,248 @@ import LoadingSpinner from './LoadingSpinner';
 import { FixedSizeList as List } from 'react-window';
 
 /**
+ * FloatingLabelInput Component
+ *
+ * Input component with floating label animation
+ */
+const FloatingLabelInput = React.memo(({
+                                         type = "text",
+                                         name,
+                                         value,
+                                         onChange,
+                                         label,
+                                         required = false,
+                                         disabled = false,
+                                         className = "",
+                                         ...props
+                                       }) => {
+  const [hasContent, setHasContent] = useState(false);
+
+  // Check if input has content when value changes
+  useEffect(() => {
+    setHasContent(Boolean(value && value.toString().trim()));
+  }, [value]);
+
+  // Handle input change and update content state
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    setHasContent(Boolean(newValue && newValue.trim()));
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  return (
+      <div className="form-group">
+        <input
+            type={type}
+            name={name}
+            value={value || ''}
+            onChange={handleChange}
+            required={required}
+            disabled={disabled}
+            className={`${hasContent ? 'has-content' : ''} ${disabled ? 'disabled-field' : ''} ${className}`}
+            placeholder="" // Remove placeholder to allow floating label
+            {...props}
+        />
+        <label>{label}{required && ' *'}</label>
+      </div>
+  );
+});
+
+FloatingLabelInput.displayName = 'FloatingLabelInput';
+
+/**
+ * FloatingLabelTextarea Component
+ *
+ * Textarea component with floating label animation
+ */
+const FloatingLabelTextarea = React.memo(({
+                                            name,
+                                            value,
+                                            onChange,
+                                            label,
+                                            required = false,
+                                            disabled = false,
+                                            className = "",
+                                            ...props
+                                          }) => {
+  const [hasContent, setHasContent] = useState(false);
+
+  // Check if textarea has content when value changes
+  useEffect(() => {
+    setHasContent(Boolean(value && value.toString().trim()));
+  }, [value]);
+
+  // Handle textarea change and update content state
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    setHasContent(Boolean(newValue && newValue.trim()));
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  return (
+      <div className="form-group textarea-group">
+      <textarea
+          name={name}
+          value={value || ''}
+          onChange={handleChange}
+          required={required}
+          disabled={disabled}
+          className={`${hasContent ? 'has-content' : ''} ${disabled ? 'disabled-field' : ''} ${className}`}
+          placeholder="" // Remove placeholder to allow floating label
+          {...props}
+      />
+        <label>{label}{required && ' *'}</label>
+      </div>
+  );
+});
+
+FloatingLabelTextarea.displayName = 'FloatingLabelTextarea';
+
+/**
+ * StaffInputWithSearch Component
+ *
+ * Staff input component with user search and floating label
+ */
+const StaffInputWithSearch = React.memo(({
+                                           item,
+                                           searchResults = [],
+                                           isSearching = false,
+                                           onSearchChange,
+                                           onUserSelect,
+                                           onClearResults,
+                                           disabled = false,
+                                           containerRef
+                                         }) => {
+  const [hasContent, setHasContent] = useState(false);
+
+  // Update content state when search query changes
+  useEffect(() => {
+    setHasContent(Boolean(item.searchQuery && item.searchQuery.trim()));
+  }, [item.searchQuery]);
+
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    setHasContent(Boolean(newValue && newValue.trim()));
+    if (onSearchChange) {
+      onSearchChange(newValue);
+    }
+  };
+
+  return (
+      <div
+          className="user-search-container"
+          ref={containerRef}
+      >
+        <div className="form-group">
+          <input
+              type="text"
+              value={item.searchQuery || ''}
+              onChange={handleInputChange}
+              disabled={disabled}
+              className={`${hasContent ? 'has-content' : ''} ${disabled ? 'disabled-field' : ''}`}
+              placeholder=""
+          />
+          <label>Tên User</label>
+        </div>
+        {item.selectedUser && (
+            <div className="user-selected-indicator">
+              ✓
+            </div>
+        )}
+        {isSearching && (
+            <div className="search-loading">Đang tìm...</div>
+        )}
+        {searchResults && searchResults.length > 0 && !disabled && (
+            <div className="user-search-results">
+              {searchResults.map(user => (
+                  <div
+                      key={user._id}
+                      className="user-search-result"
+                      onClick={() => onUserSelect && onUserSelect(user)}
+                  >
+                    <div className="user-info">
+                      <span className="admin-user-display-name">{user.displayName || user.username}</span>
+                      <span className="user-username">@{user.username}</span>
+                    </div>
+                  </div>
+              ))}
+              <div className="search-help-text">
+                Nhấp bên ngoài để đóng hoặc nhập tên trực tiếp nếu người này chưa có tài khoản
+              </div>
+            </div>
+        )}
+      </div>
+  );
+});
+
+StaffInputWithSearch.displayName = 'StaffInputWithSearch';
+
+/**
+ * BalanceEditInput Component
+ *
+ * Balance edit input with floating label
+ */
+const BalanceEditInput = React.memo(({
+                                       value,
+                                       onChange,
+                                       onSave,
+                                       onCancel
+                                     }) => {
+  const [hasContent, setHasContent] = useState(false);
+
+  useEffect(() => {
+    setHasContent(Boolean(value && value.toString().trim()));
+  }, [value]);
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    setHasContent(Boolean(newValue && newValue.trim()));
+    if (onChange) {
+      onChange(newValue);
+    }
+  };
+
+  return (
+      <div className="balance-edit-container">
+        <span>Số dư truyện: </span>
+        <div className="form-group">
+          <input
+              type="number"
+              min="0"
+              step="1"
+              value={value}
+              onChange={(e) => handleChange(e)}
+              className={hasContent ? 'has-content' : ''}
+          />
+          <label>Số dư</label>
+        </div>
+        <div className="balance-edit-actions">
+          <button
+              onClick={onSave}
+              className="save-balance-btn"
+          >
+            Lưu
+          </button>
+          <button
+              onClick={onCancel}
+              className="cancel-balance-btn"
+          >
+            Hủy bỏ
+          </button>
+        </div>
+      </div>
+  );
+});
+
+BalanceEditInput.displayName = 'BalanceEditInput';
+
+/**
  * AdminDashboardSEO Component
- * 
+ *
  * Provides SEO optimization for the AdminDashboard page including:
  * - Meta title and description
  * - Keywords
@@ -44,192 +285,173 @@ import { FixedSizeList as List } from 'react-window';
  */
 const AdminDashboardSEO = () => {
   return (
-    <Helmet>
-      {/* Basic meta tags */}
-      <title>Bảng Quản Trị - Dành cho Admin và Mod | Valvrareteam</title>
-      <meta name="description" content="Trang quản trị dành cho admin và moderator Valvrareteam. Quản lý truyện, thêm/sửa/xóa Light Novel, quản lý thể loại và nội dung website." />
-      <meta name="keywords" content="bảng quản trị, admin dashboard, quản lý truyện, light novel management, valvrareteam, admin panel" />
-      <meta name="robots" content="noindex, nofollow" />
-      
-      {/* Language and charset */}
-      <meta httpEquiv="Content-Language" content="vi-VN" />
-      <meta name="language" content="Vietnamese" />
-      
-      {/* Open Graph meta tags */}
-      <meta property="og:title" content="Bảng Quản Trị - Dành cho Admin và Mod | Valvrareteam" />
-      <meta property="og:description" content="Trang quản trị dành cho admin và moderator Valvrareteam." />
-      <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-      <meta property="og:url" content="https://valvrareteam.net/bang-quan-tri" />
-      <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="Valvrareteam" />
-      <meta property="og:locale" content="vi_VN" />
-      
-      {/* Twitter Card meta tags */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="BBảng Quản Trị - Dành cho Admin và Mod| Valvrareteam" />
-      <meta name="twitter:description" content="Trang quản trị dành cho admin và moderator Valvrareteam." />
-      <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-    </Helmet>
+      <Helmet>
+        {/* Basic meta tags */}
+        <title>Bảng Quản Trị - Dành cho Admin và Mod | Valvrareteam</title>
+        <meta name="description" content="Trang quản trị dành cho admin và moderator Valvrareteam. Quản lý truyện, thêm/sửa/xóa Light Novel, quản lý thể loại và nội dung website." />
+        <meta name="keywords" content="bảng quản trị, admin dashboard, quản lý truyện, light novel management, valvrareteam, admin panel" />
+        <meta name="robots" content="noindex, nofollow" />
+
+        {/* Language and charset */}
+        <meta httpEquiv="Content-Language" content="vi-VN" />
+        <meta name="language" content="Vietnamese" />
+
+        {/* Open Graph meta tags */}
+        <meta property="og:title" content="Bảng Quản Trị - Dành cho Admin và Mod | Valvrareteam" />
+        <meta property="og:description" content="Trang quản trị dành cho admin và moderator Valvrareteam." />
+        <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+        <meta property="og:url" content="https://valvrareteam.net/bang-quan-tri" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Valvrareteam" />
+        <meta property="og:locale" content="vi_VN" />
+
+        {/* Twitter Card meta tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="BBảng Quản Trị - Dành cho Admin và Mod| Valvrareteam" />
+        <meta name="twitter:description" content="Trang quản trị dành cho admin và moderator Valvrareteam." />
+        <meta name="twitter:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
+      </Helmet>
   );
 };
 
 /**
  * DeleteConfirmationModal Component
- * 
+ *
  * Modal component that requires typing the novel title to confirm deletion.
  */
 const DeleteConfirmationModal = ({ novel, onConfirm, onCancel }) => {
   const [confirmText, setConfirmText] = useState('');
   const [isMatch, setIsMatch] = useState(false);
-  
+
   useEffect(() => {
     setIsMatch(confirmText === novel.title);
   }, [confirmText, novel.title]);
-  
+
   return (
-    <div className="delete-confirmation-modal-overlay">
-      <div className="delete-confirmation-modal">
-        <h3>Xác nhận xóa truyện</h3>
-        <p>Hành động này không thể hoàn tác. Để xác nhận, hãy nhập chính xác tiêu đề truyện: <strong className="non-selectable-text">{novel.title}</strong></p>
-        
-        <input
-          type="text"
-          value={confirmText}
-          onChange={(e) => setConfirmText(e.target.value)}
-          placeholder="Nhập tiêu đề truyện"
-          className="confirmation-input"
-        />
-        
-        <div className="confirmation-actions">
-          <button 
-            onClick={onConfirm} 
-            disabled={!isMatch}
-            className={`confirm-delete-btn ${isMatch ? 'enabled' : 'disabled'}`}
-          >
-            Xóa truyện
-          </button>
-          <button onClick={onCancel} className="cancel-delete-btn">
-            Hủy bỏ
-          </button>
+      <div className="delete-confirmation-modal-overlay">
+        <div className="delete-confirmation-modal">
+          <h3>Xác nhận xóa truyện</h3>
+          <p>Hành động này không thể hoàn tác. Để xác nhận, hãy nhập chính xác tiêu đề truyện: <strong className="non-selectable-text">{novel.title}</strong></p>
+
+          <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Nhập tiêu đề truyện"
+              className="confirmation-input"
+          />
+
+          <div className="confirmation-actions">
+            <button
+                onClick={onConfirm}
+                disabled={!isMatch}
+                className={`confirm-delete-btn ${isMatch ? 'enabled' : 'disabled'}`}
+            >
+              Xóa truyện
+            </button>
+            <button onClick={onCancel} className="cancel-delete-btn">
+              Hủy bỏ
+            </button>
+          </div>
         </div>
       </div>
-    </div>
   );
 };
 
 /**
  * VirtualNovelItem Component
- * 
+ *
  * Individual novel item component for virtual scrolling.
  * Renders a single novel with all its actions and controls.
  */
-const VirtualNovelItem = React.memo(({ 
-  index, 
-  style, 
-  data: { 
-    novels, 
-    user,
-    canEditNovels,
-    canDeleteNovels,
-    canEditBalances,
-    handleEdit,
-    handleDelete,
-    handleStatusChange,
-    editingBalanceId,
-    balanceValue,
-    setBalanceValue,
-    handleEditBalance,
-    cancelEditBalance,
-    saveBalanceChange
-  }
-}) => {
+const VirtualNovelItem = React.memo(({
+                                       index,
+                                       style,
+                                       data: {
+                                         novels,
+                                         user,
+                                         canEditNovels,
+                                         canDeleteNovels,
+                                         canEditBalances,
+                                         handleEdit,
+                                         handleDelete,
+                                         handleStatusChange,
+                                         editingBalanceId,
+                                         balanceValue,
+                                         setBalanceValue,
+                                         handleEditBalance,
+                                         cancelEditBalance,
+                                         saveBalanceChange
+                                       }
+                                     }) => {
   const novel = novels[index];
-  
+
   if (!novel) return null;
 
   return (
-    <div style={style} className="virtual-list-item">
-      <li className="novel-list-item">
-        <div className="novel-title-section">
-          <div className="novel-info">
-            <Link 
-              to={generateNovelUrl(novel)}
-              className="novel-title-link"
-            >
-              {novel.title}
-            </Link>
-            <div className="novel-balance">
-              <div className="balance-info">
-                <div className="budget-display">
-                  Kho lúa: {novel.novelBudget || 0} 🌾
-                </div>
-                <div className="balance-display">
-                  {editingBalanceId === novel._id ? (
-                    <div className="balance-edit-container">
-                      <span>Số dư truyện: </span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={balanceValue}
-                        onChange={(e) => setBalanceValue(e.target.value)}
-                        className="balance-edit-input"
-                      />
-                      <div className="balance-edit-actions">
-                        <button 
-                          onClick={() => saveBalanceChange(novel._id)}
-                          className="save-balance-btn"
-                        >
-                          Lưu
-                        </button>
-                        <button 
-                          onClick={cancelEditBalance}
-                          className="cancel-balance-btn"
-                        >
-                          Hủy bỏ
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      Số dư truyện: {novel.novelBalance || 0} 🌾
-                      {canEditBalances && (
-                        <button
-                          onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
-                          className="edit-balance-btn"
-                        >
-                          Chỉnh sửa
-                        </button>
-                      )}
-                    </>
-                  )}
+      <div style={style} className="virtual-list-item">
+        <li className="novel-list-item">
+          <div className="novel-title-section">
+            <div className="novel-info">
+              <Link
+                  to={generateNovelUrl(novel)}
+                  className="novel-title-link"
+              >
+                {novel.title}
+              </Link>
+              <div className="novel-balance">
+                <div className="balance-info">
+                  <div className="budget-display">
+                    Kho lúa: {novel.novelBudget || 0} 🌾
+                  </div>
+                  <div className="balance-display">
+                    {editingBalanceId === novel._id ? (
+                        <BalanceEditInput
+                            value={balanceValue}
+                            onChange={setBalanceValue}
+                            onSave={() => saveBalanceChange(novel._id)}
+                            onCancel={cancelEditBalance}
+                        />
+                    ) : (
+                        <>
+                          Số dư truyện: {novel.novelBalance || 0} 🌾
+                          {canEditBalances && (
+                              <button
+                                  onClick={() => handleEditBalance(novel._id, novel.novelBalance || 0)}
+                                  className="edit-balance-btn"
+                              >
+                                Chỉnh sửa
+                              </button>
+                          )}
+                        </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="novel-actions">
-          <select
-            className="status-dropdown"
-            value={novel.status || 'Ongoing'}
-            onChange={(e) => handleStatusChange(novel._id, e.target.value)}
-          >
-            <option value="Ongoing">Đang tiến hành</option>
-            <option value="Completed">Đã hoàn thành</option>
-            <option value="Hiatus">Tạm ngưng</option>
-          </select>
-          {canEditNovels && (
-            <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
-          )}
-          {canDeleteNovels && (
-            <button 
-              className="delete"
-              onClick={() => handleDelete(novel)}
-            >Xóa</button>
-          )}
-        </div>
-      </li>
-    </div>
+          <div className="novel-actions">
+            <select
+                className="status-dropdown"
+                value={novel.status || 'Ongoing'}
+                onChange={(e) => handleStatusChange(novel._id, e.target.value)}
+            >
+              <option value="Ongoing">Đang tiến hành</option>
+              <option value="Completed">Đã hoàn thành</option>
+              <option value="Hiatus">Tạm ngưng</option>
+            </select>
+            {canEditNovels && (
+                <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
+            )}
+            {canDeleteNovels && (
+                <button
+                    className="delete"
+                    onClick={() => handleDelete(novel)}
+                >Xóa</button>
+            )}
+          </div>
+        </li>
+      </div>
   );
 });
 
@@ -237,10 +459,10 @@ VirtualNovelItem.displayName = 'VirtualNovelItem';
 
 /**
  * AdminDashboard Component
- * 
+ *
  * Main component that provides administrative interface for managing
  * the entire novel platform
- * 
+ *
  * @param {Object} props - No props required
  */
 const AdminDashboard = () => {
@@ -255,17 +477,17 @@ const AdminDashboard = () => {
     // Only clear cache if user actually changed (not on initial load)
     const currentUserKey = user ? `${user.id}_${user.role}` : null;
     const previousUserKey = previousUserRef.current ? `${previousUserRef.current.id}_${previousUserRef.current.role}` : null;
-    
+
     if (previousUserRef.current !== null && currentUserKey !== previousUserKey) {
       // Clear all novels cache when user actually changes
       console.log('User changed, clearing novels cache');
       queryClient.removeQueries({ queryKey: ['novels'] });
     }
-    
+
     previousUserRef.current = user;
   }, [user?.id, user?.role, queryClient]);
 
-  // Genre categories and options
+  // Genre categories and options - Updated with Fanfiction removed
   const genreCategories = {
     'Thể Loại Chính': [
       'Action', 'Adventure', 'Comedy', 'Drama', 'Ecchi', 'Fantasy',
@@ -288,15 +510,15 @@ const AdminDashboard = () => {
     ],
     'Định Dạng và Nguồn gốc': [
       'Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel',
-      'Web Novel', 'One shot', 'Fanfiction', 'AI-assisted'
+      'Web Novel', 'One shot', 'AI-assisted'
     ]
   };
 
   // State management for novels
-  const [newNovel, setNewNovel] = useState({ 
-    title: '', 
+  const [newNovel, setNewNovel] = useState({
+    title: '',
     alternativeTitles: '',
-    author: '', 
+    author: '',
     illustrator: '',
     active: {
       pj_user: [],
@@ -313,20 +535,20 @@ const AdminDashboard = () => {
     genres: [],
     description: '',
     note: '',
-    illustration: '' 
+    illustration: ''
   });
   const [editingNovel, setEditingNovel] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Staff management state
   const [activeStaffItems, setActiveStaffItems] = useState([]);
   const [inactiveStaffItems, setInactiveStaffItems] = useState([]);
-  
+
   // User search state for active staff
   const [userSearchResults, setUserSearchResults] = useState({});
   const [searchingUsers, setSearchingUsers] = useState({});
-  
+
   const [description, setDescription] = useState('');
   const editorRef = useRef(null);
   const noteEditorRef = useRef(null);
@@ -372,12 +594,12 @@ const AdminDashboard = () => {
       const containerHeight = window.innerHeight - 300; // Account for header, form, etc.
       const maxHeight = Math.max(400, Math.min(800, containerHeight));
       setVirtualListHeight(maxHeight);
-      
+
       // Adjust item size based on screen width to match CSS min-heights
       const width = window.innerWidth;
       const isVerySmallMobile = width <= 576;
       const isMobile = width <= 768;
-      
+
       let newItemSize;
       if (isVerySmallMobile) {
         newItemSize = 180; // Match CSS: .virtual-list-item min-height: 180px
@@ -386,9 +608,9 @@ const AdminDashboard = () => {
       } else {
         newItemSize = 120; // Match CSS: .virtual-list-item min-height: 120px
       }
-      
+
       setItemSize(newItemSize);
-      
+
       // Mark dimensions as ready after first calculation
       if (!dimensionsReady) {
         setDimensionsReady(true);
@@ -400,9 +622,9 @@ const AdminDashboard = () => {
     const timeoutId = setTimeout(() => {
       calculateDimensions();
     }, 100);
-    
+
     window.addEventListener('resize', calculateDimensions);
-    
+
     return () => {
       window.removeEventListener('resize', calculateDimensions);
       clearTimeout(timeoutId);
@@ -429,7 +651,7 @@ const AdminDashboard = () => {
 
     // Add event listener
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     // Cleanup
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -445,11 +667,11 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch novels');
       }
-      
+
       const data = await response.json();
       return Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
     },
@@ -464,7 +686,7 @@ const AdminDashboard = () => {
   // Sort and filter novels by selected criteria and search query
   const sortedNovels = useMemo(() => {
     if (!novels || novels.length === 0) return [];
-    
+
     // First filter by search query
     let filteredNovels = novels;
     if (searchQuery.trim()) {
@@ -472,25 +694,25 @@ const AdminDashboard = () => {
       filteredNovels = novels.filter(novel => {
         // Search in title
         const titleMatch = novel.title?.toLowerCase().includes(query);
-        
+
         // Search in alternative titles (handle array)
         let altTitlesMatch = false;
         if (novel.alternativeTitles) {
           if (Array.isArray(novel.alternativeTitles)) {
             // If it's an array, search through each alternative title
-            altTitlesMatch = novel.alternativeTitles.some(altTitle => 
-              altTitle?.toLowerCase().includes(query)
+            altTitlesMatch = novel.alternativeTitles.some(altTitle =>
+                altTitle?.toLowerCase().includes(query)
             );
           } else if (typeof novel.alternativeTitles === 'string') {
             // If it's a string, search directly
             altTitlesMatch = novel.alternativeTitles.toLowerCase().includes(query);
           }
         }
-        
+
         return titleMatch || altTitlesMatch;
       });
     }
-    
+
     // Then sort the filtered results
     return filteredNovels.sort((a, b) => {
       if (sortType === 'balance') {
@@ -515,6 +737,41 @@ const AdminDashboard = () => {
   const canEditStaff = user && (user.role === 'admin' || user.role === 'moderator'); // Only admin/mod can modify staff assignments
   const canEditTitle = user && (user.role === 'admin' || user.role === 'moderator'); // Only admin/mod can edit novel titles
 
+  // Helper function to get genre color class
+  const getGenreColorClass = (genre) => {
+    if (genre.includes('Novel') && !['Web Novel', 'One shot'].includes(genre)) {
+      if (genre.includes('Japanese')) return 'japanese-novel';
+      else if (genre.includes('Chinese')) return 'chinese-novel';
+      else if (genre.includes('Korean')) return 'korean-novel';
+      else if (genre.includes('English')) return 'english-novel';
+      else if (genre.includes('Vietnamese')) return 'vietnamese-novel';
+    } else if (genre === 'Mature') {
+      return 'mature';
+    } else if (genre === 'AI-assisted') {
+      return 'ai-assisted';
+    } else if (genre === 'Web Novel' || genre === 'One shot') {
+      return genre.toLowerCase().replace(' ', '-');
+    }
+    return '';
+  };
+
+  // Function to check if a genre can be unchecked by current user
+  const canUncheckGenre = (genre) => {
+    if ((genre === 'Mature' || genre === 'AI-assisted') && user?.role === 'pj_user') {
+      return false; // pj_user cannot uncheck Mature or AI-assisted
+    }
+    return true;
+  };
+
+  // Function to validate language novel selection
+  const validateLanguageGenres = () => {
+    const target = editingNovel ? editingNovel : newNovel;
+    const languageGenres = ['Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel'];
+    const selectedLanguageGenres = target.genres.filter(genre => languageGenres.includes(genre));
+
+    return selectedLanguageGenres.length === 1;
+  };
+
   /**
    * Handles input changes in the novel form
    * @param {React.ChangeEvent<HTMLInputElement>} e - Change event
@@ -522,12 +779,12 @@ const AdminDashboard = () => {
   const handleInputChange = (e) => {
     const target = editingNovel ? editingNovel : newNovel;
     const value = e.target.value;
-    
+
     const updatedNovel = {
       ...target,
       [e.target.name]: value
     };
-    
+
     if (editingNovel) {
       setEditingNovel(updatedNovel);
     } else {
@@ -540,22 +797,45 @@ const AdminDashboard = () => {
    * @param {string} genre - The genre being toggled
    */
   const handleGenreChange = (genre) => {
-    const target = editingNovel ? editingNovel : newNovel;
-    const updatedGenres = target.genres.includes(genre)
-      ? target.genres.filter(g => g !== genre)
-      : [...target.genres, genre];
-    
-    const updatedNovel = {
-      ...target,
-      genres: updatedGenres
-    };
-    
-    if (editingNovel) {
-      setEditingNovel(updatedNovel);
-    } else {
-      setNewNovel(updatedNovel);
-    }
-  };
+        const target = editingNovel ? editingNovel : newNovel;
+
+        // Check if user can uncheck this genre
+        if (target.genres.includes(genre) && !canUncheckGenre(genre)) {
+          alert('Bạn không có quyền gỡ bỏ thể loại này');
+          return;
+        }
+
+        // Handle language novel exclusivity
+        const languageGenres = ['Chinese Novel', 'English Novel', 'Japanese Novel', 'Korean Novel', 'Vietnamese Novel'];
+
+        let updatedGenres;
+        if (languageGenres.includes(genre)) {
+          if (target.genres.includes(genre)) {
+            // Removing a language genre
+            updatedGenres = target.genres.filter(g => g !== genre);
+          } else {
+            // Adding a language genre - remove other language genres first
+            updatedGenres = target.genres.filter(g => !languageGenres.includes(g));
+            updatedGenres.push(genre);
+          }
+        } else {
+          // Normal genre handling
+          updatedGenres = target.genres.includes(genre)
+              ? target.genres.filter(g => g !== genre)
+              : [...target.genres, genre];
+        }
+
+        const updatedNovel = {
+          ...target,
+          genres: updatedGenres
+        };
+
+        if (editingNovel) {
+          setEditingNovel(updatedNovel);
+        } else {
+          setNewNovel(updatedNovel);
+        }
+      };
 
   /**
    * Adds a new staff item to either active or inactive staff
@@ -564,22 +844,22 @@ const AdminDashboard = () => {
   const addStaffItem = (status) => {
     // Prevent pj_user from adding staff
     if (user?.role === 'pj_user') return;
-    
+
     if (status === 'active') {
       // Active staff items have user search functionality
-      const newItem = { 
-        id: Date.now(), 
-        selectedUser: null, 
+      const newItem = {
+        id: Date.now(),
+        selectedUser: null,
         searchQuery: '',
-        role: 'pj_user' 
+        role: 'pj_user'
       };
       setActiveStaffItems([...activeStaffItems, newItem]);
     } else {
       // Inactive staff items are simple name strings
-      const newItem = { 
-        id: Date.now(), 
-        name: '', 
-        role: 'pj_user' 
+      const newItem = {
+        id: Date.now(),
+        name: '',
+        role: 'pj_user'
       };
       setInactiveStaffItems([...inactiveStaffItems, newItem]);
     }
@@ -593,7 +873,7 @@ const AdminDashboard = () => {
   const removeStaffItem = (status, id) => {
     // Prevent pj_user from removing staff
     if (user?.role === 'pj_user') return;
-    
+
     if (status === 'active') {
       setActiveStaffItems(activeStaffItems.filter(item => item.id !== id));
     } else {
@@ -611,12 +891,12 @@ const AdminDashboard = () => {
   const handleStaffItemChange = (status, id, field, value) => {
     // Prevent pj_user from modifying staff
     if (user?.role === 'pj_user') return;
-    
+
     if (status === 'active') {
       if (field === 'searchQuery') {
         // Handle user search for active staff
-        setActiveStaffItems(activeStaffItems.map(item => 
-          item.id === id ? { ...item, searchQuery: value, selectedUser: null } : item
+        setActiveStaffItems(activeStaffItems.map(item =>
+            item.id === id ? { ...item, searchQuery: value, selectedUser: null } : item
         ));
         // Clear previous timeout
         if (searchTimeoutRef.current) {
@@ -628,14 +908,14 @@ const AdminDashboard = () => {
         }, 300); // 300ms debounce delay
       } else if (field === 'role') {
         // Handle role change for active staff
-        setActiveStaffItems(activeStaffItems.map(item => 
-          item.id === id ? { ...item, [field]: value } : item
+        setActiveStaffItems(activeStaffItems.map(item =>
+            item.id === id ? { ...item, [field]: value } : item
         ));
       }
     } else {
       // Handle inactive staff (simple name/role fields)
-      setInactiveStaffItems(inactiveStaffItems.map(item => 
-        item.id === id ? { ...item, [field]: value } : item
+      setInactiveStaffItems(inactiveStaffItems.map(item =>
+          item.id === id ? { ...item, [field]: value } : item
       ));
     }
   };
@@ -660,7 +940,7 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (response.ok) {
         const userData = await response.json();
         return userData;
@@ -671,18 +951,18 @@ const AdminDashboard = () => {
     return null;
   };
 
-  // Initialize staff items from novel data when editing
+// Initialize staff items from novel data when editing
   useEffect(() => {
     if (editingNovel) {
       // Reset current staff items
       const activeItems = [];
       const inactiveItems = [];
-      
+
       // Helper function to check if a value looks like a MongoDB ObjectId
       const isObjectId = (str) => {
         return typeof str === 'string' && /^[0-9a-fA-F]{24}$/.test(str);
       };
-      
+
       // Helper function to fetch user data and create active staff item
       const createActiveStaffItem = async (item, role) => {
         if (isObjectId(item)) {
@@ -690,48 +970,48 @@ const AdminDashboard = () => {
           try {
             const userData = await fetchUserById(item);
             if (userData) {
-              return { 
-                id: Date.now() + Math.random(), 
+              return {
+                id: Date.now() + Math.random(),
                 selectedUser: userData, // Set the actual user data
                 searchQuery: userData.displayName || userData.username, // Show the user's name
                 userId: item, // Store the actual user ID
-                role 
+                role
               };
             } else {
               // User not found, show placeholder
-              return { 
-                id: Date.now() + Math.random(), 
+              return {
+                id: Date.now() + Math.random(),
                 selectedUser: null,
                 searchQuery: `[User Not Found: ${item}]`,
                 userId: item,
-                role 
+                role
               };
             }
           } catch (error) {
             // On error, show placeholder
-            return { 
-              id: Date.now() + Math.random(), 
+            return {
+              id: Date.now() + Math.random(),
               selectedUser: null,
               searchQuery: `[Error Loading User: ${item}]`,
               userId: item,
-              role 
+              role
             };
           }
         } else {
           // This is a text string - treat as regular text input
-          return { 
-            id: Date.now() + Math.random(), 
+          return {
+            id: Date.now() + Math.random(),
             selectedUser: null, // No selected user
             searchQuery: item, // Use the text as search query
-            role 
+            role
           };
         }
       };
-      
+
       // Process active staff asynchronously
       const processActiveStaff = async () => {
         const activeItemsPromises = [];
-        
+
         ['pj_user', 'translator', 'editor', 'proofreader'].forEach(role => {
           if (editingNovel.active && Array.isArray(editingNovel.active[role])) {
             editingNovel.active[role].forEach((item) => {
@@ -739,12 +1019,12 @@ const AdminDashboard = () => {
             });
           }
         });
-        
+
         // Wait for all user data to be fetched
         const resolvedActiveItems = await Promise.all(activeItemsPromises);
         setActiveStaffItems(resolvedActiveItems);
       };
-      
+
       // Process inactive staff (these are always text strings)
       ['pj_user', 'translator', 'editor', 'proofreader'].forEach(role => {
         if (editingNovel.inactive && Array.isArray(editingNovel.inactive[role])) {
@@ -753,10 +1033,10 @@ const AdminDashboard = () => {
           });
         }
       });
-      
+
       // Set inactive items immediately
       setInactiveStaffItems(inactiveItems);
-      
+
       // Process active staff asynchronously
       processActiveStaff().catch(error => {
         // On error, fall back to the old behavior
@@ -765,19 +1045,19 @@ const AdminDashboard = () => {
           if (editingNovel.active && Array.isArray(editingNovel.active[role])) {
             editingNovel.active[role].forEach((item) => {
               if (isObjectId(item)) {
-                fallbackActiveItems.push({ 
-                  id: Date.now() + Math.random(), 
+                fallbackActiveItems.push({
+                  id: Date.now() + Math.random(),
                   selectedUser: null,
                   searchQuery: `[Linked User: ${item}]`,
                   userId: item,
-                  role 
+                  role
                 });
               } else {
-                fallbackActiveItems.push({ 
-                  id: Date.now() + Math.random(), 
+                fallbackActiveItems.push({
+                  id: Date.now() + Math.random(),
                   selectedUser: null,
                   searchQuery: item,
-                  role 
+                  role
                 });
               }
             });
@@ -792,7 +1072,7 @@ const AdminDashboard = () => {
     }
   }, [editingNovel?._id]);
 
-  // Cleanup search timeout on unmount
+// Cleanup search timeout on unmount
   useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {
@@ -823,11 +1103,11 @@ const AdminDashboard = () => {
 
     try {
       setLoading(true);
-      
+
       // Upload using bunny CDN service
       const imageUrl = await bunnyUploadService.uploadFile(
-        file, 
-        'illustrations'
+          file,
+          'illustrations'
       );
 
       // Update the novel state with the new illustration URL
@@ -860,22 +1140,32 @@ const AdminDashboard = () => {
     setLoading(true);
     setError('');
 
+    // Validate language genre requirement
+    if (!validateLanguageGenres()) {
+      setError('Bắt buộc phải chọn đúng 1 loại ngôn ngữ gốc (Chinese Novel, English Novel, Japanese Novel, Korean Novel, hoặc Vietnamese Novel)');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const url = editingNovel 
-        ? `${config.backendUrl}/api/novels/${editingNovel._id}`
-        : `${config.backendUrl}/api/novels`;
-      
+      const url = editingNovel
+          ? `${config.backendUrl}/api/novels/${editingNovel._id}`
+          : `${config.backendUrl}/api/novels`;
+
       const method = editingNovel ? 'PUT' : 'POST';
-      
+
       // Compile staff data from staff items
       const staffData = compileStaffToNovel();
-      
+
+      const target = editingNovel ? editingNovel : newNovel;
+      const allGenres = target.genres || [];
+
       // Create novel data with all required fields
       const novelData = {
-        title: editingNovel ? editingNovel.title : newNovel.title,
-        alternativeTitles: editingNovel ? editingNovel.alternativeTitles : newNovel.alternativeTitles,
-        author: editingNovel ? editingNovel.author : newNovel.author,
-        illustrator: editingNovel ? editingNovel.illustrator : newNovel.illustrator,
+        title: target.title,
+        alternativeTitles: target.alternativeTitles,
+        author: target.author,
+        illustrator: target.illustrator,
         active: {
           pj_user: staffData.active.pj_user || [],
           translator: staffData.active.translator || [],
@@ -888,10 +1178,10 @@ const AdminDashboard = () => {
           editor: staffData.inactive.editor || [],
           proofreader: staffData.inactive.proofreader || []
         },
-        genres: editingNovel ? editingNovel.genres : newNovel.genres,
+        genres: allGenres,
         description: editorRef.current.getContent(),
         note: noteEditorRef.current.getContent(),
-        illustration: editingNovel ? editingNovel.illustration : newNovel.illustration,
+        illustration: target.illustration,
         status: editingNovel ? editingNovel.status : "Ongoing"
       };
 
@@ -922,14 +1212,14 @@ const AdminDashboard = () => {
       }
 
       const responseData = await response.json();
-      
+
       // Reset form first
       resetForm();
-      
+
       // Force clear and refetch to ensure UI is in sync
       // We use remove and refetch instead of invalidate to ensure fresh data
       queryClient.removeQueries(['novels', user?.id, user?.role]);
-      
+
       // Manually fetch fresh data to update the UI immediately
       try {
         const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&skipPopulation=true&t=${Date.now()}`, {
@@ -937,11 +1227,11 @@ const AdminDashboard = () => {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
-        
+
         if (fetchResponse.ok) {
           const data = await fetchResponse.json();
           const novelsList = Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
-          
+
           // Update cache with fresh data that includes the new novel
           queryClient.setQueryData(['novels', user?.id, user?.role], novelsList);
         }
@@ -963,7 +1253,9 @@ const AdminDashboard = () => {
   const handleEdit = (novel) => {
     // Reset form first to discard any unsaved work
     resetForm();
-    
+
+    const predefinedGenres = novel.genres || [];
+
     // Ensure staff arrays are properly initialized with empty arrays if undefined
     const novelWithDefaults = {
       ...novel,
@@ -983,15 +1275,15 @@ const AdminDashboard = () => {
         editor: novel.inactive?.editor || [],
         proofreader: novel.inactive?.proofreader || []
       },
-      genres: novel.genres || [],
+      genres: predefinedGenres,
       description: novel.description || '',
       note: novel.note || '',
       illustration: novel.illustration || ''
     };
-    
+
     setEditingNovel(novelWithDefaults);
     setNewNovel(novelWithDefaults);
-    
+
     if (editorRef.current) {
       editorRef.current.setContent(novelWithDefaults.description);
     }
@@ -1035,22 +1327,22 @@ const AdminDashboard = () => {
    */
   const confirmDelete = async () => {
     const id = deleteConfirmationModal.novelToDelete._id;
-    
+
     // Reset form first to discard any unsaved work
     resetForm();
-    
+
     try {
       // Get current cache data
       const previousData = queryClient.getQueryData(['novels', user?.id, user?.role]) || [];
-      
+
       // Create updated list without the deleted novel
-      const updatedNovels = Array.isArray(previousData) 
-        ? previousData.filter(novel => novel._id !== id) 
-        : [];
-      
+      const updatedNovels = Array.isArray(previousData)
+          ? previousData.filter(novel => novel._id !== id)
+          : [];
+
       // Immediately update the cache
       queryClient.setQueryData(['novels', user?.id, user?.role], updatedNovels);
-      
+
       // Perform the actual deletion
       const response = await fetch(`${config.backendUrl}/api/novels/${id}`, {
         method: 'DELETE',
@@ -1067,10 +1359,10 @@ const AdminDashboard = () => {
 
       // Remove all cached data related to this novel
       queryClient.removeQueries(['novel', id]);
-      
+
       // Lock in our updated novels list - this is the key to making the deletion stick
       queryClient.setQueryData(['novels', user?.id, user?.role], updatedNovels);
-      
+
       setError('');
       // Close the modal
       closeDeleteConfirmation();
@@ -1086,10 +1378,10 @@ const AdminDashboard = () => {
    * Resets the novel form to initial state
    */
   const resetForm = () => {
-    setNewNovel({ 
-      title: '', 
+    setNewNovel({
+      title: '',
       alternativeTitles: '',
-      author: '', 
+      author: '',
       illustrator: '',
       active: {
         pj_user: [],
@@ -1106,7 +1398,7 @@ const AdminDashboard = () => {
       genres: [],
       description: '',
       note: '',
-      illustration: '' 
+      illustration: ''
     });
     setEditingNovel(null);
     setLoading(false);
@@ -1132,25 +1424,25 @@ const AdminDashboard = () => {
   const handleStatusChange = async (id, status) => {
     // Reset form first to discard any unsaved work
     resetForm();
-    
+
     try {
       // Get current cache data
       const previousData = queryClient.getQueryData(['novels', user?.id, user?.role]);
-      
+
       // Create a timestamp for the status update (this should update updatedAt)
       const updatedAt = new Date().toISOString();
-      
+
       // Find the novel in the current data
       const currentNovel = previousData.find(novel => novel._id === id);
       if (!currentNovel) {
         throw new Error('Novel not found');
       }
-      
+
       // Optimistically update the cache
-      queryClient.setQueryData(['novels', user?.id, user?.role], old => 
-        Array.isArray(old) 
-          ? old.map(novel => novel._id === id ? { ...novel, status, updatedAt } : novel)
-          : []
+      queryClient.setQueryData(['novels', user?.id, user?.role], old =>
+          Array.isArray(old)
+              ? old.map(novel => novel._id === id ? { ...novel, status, updatedAt } : novel)
+              : []
       );
 
       // Update the status in the context
@@ -1163,7 +1455,7 @@ const AdminDashboard = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           ...currentNovel, // Include all existing novel data
           status,
           updatedAt,
@@ -1178,15 +1470,15 @@ const AdminDashboard = () => {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Không thể cập nhật trạng thái truyện');
       }
-      
+
       // Get updated novel data
       const updatedNovel = await response.json();
-      
+
       // Update cache with complete novel data
-      queryClient.setQueryData(['novels', user?.id, user?.role], old => 
-        Array.isArray(old) 
-          ? old.map(novel => novel._id === id ? { ...novel, ...updatedNovel } : novel)
-          : []
+      queryClient.setQueryData(['novels', user?.id, user?.role], old =>
+          Array.isArray(old)
+              ? old.map(novel => novel._id === id ? { ...novel, ...updatedNovel } : novel)
+              : []
       );
 
       // Also invalidate novel list and hot novels queries to ensure they're updated
@@ -1239,8 +1531,8 @@ const AdminDashboard = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ 
-          novelBalance: parseFloat(balanceValue) 
+        body: JSON.stringify({
+          novelBalance: parseFloat(balanceValue)
         })
       });
 
@@ -1255,13 +1547,13 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       if (freshDataResponse.ok) {
         const freshData = await freshDataResponse.json();
         const freshNovels = Array.isArray(freshData.novels) ? freshData.novels : (Array.isArray(freshData) ? freshData : []);
         queryClient.setQueryData(['novels', user?.id, user?.role], freshNovels);
       }
-      
+
       // Force invalidation of the queries to ensure fresh data on next render
       queryClient.invalidateQueries(['novels', user?.id, user?.role]);
 
@@ -1314,97 +1606,97 @@ const AdminDashboard = () => {
    * @param {Object} user - Selected user object
    */
   const selectUserForActiveStaff = (itemId, user) => {
-    setActiveStaffItems(activeStaffItems.map(item => 
-      item.id === itemId ? { 
-        ...item, 
-        selectedUser: user,
-        searchQuery: user.displayName || user.username
-      } : item
+    setActiveStaffItems(activeStaffItems.map(item =>
+        item.id === itemId ? {
+          ...item,
+          selectedUser: user,
+          searchQuery: user.displayName || user.username
+        } : item
     ));
     // Clear search results for this item
     setUserSearchResults(prev => ({ ...prev, [itemId]: [] }));
   };
 
-  // Convert staff items arrays to the novel staff structure
+// Convert staff items arrays to the novel staff structure
   const compileStaffToNovel = () => {
     const active = {
       pj_user: [
         // User IDs for selected users
         ...activeStaffItems
-          .filter(item => item.role === 'pj_user' && item.selectedUser)
-          .map(item => item.selectedUser._id),
+            .filter(item => item.role === 'pj_user' && item.selectedUser)
+            .map(item => item.selectedUser._id),
         // User IDs for previously linked users (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'pj_user' && !item.selectedUser && item.userId)
-          .map(item => item.userId),
+            .filter(item => item.role === 'pj_user' && !item.selectedUser && item.userId)
+            .map(item => item.userId),
         // Text names for non-selected entries (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'pj_user' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
-          .map(item => item.searchQuery.trim())
+            .filter(item => item.role === 'pj_user' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+            .map(item => item.searchQuery.trim())
       ],
       translator: [
         // User IDs for selected users
         ...activeStaffItems
-          .filter(item => item.role === 'translator' && item.selectedUser)
-          .map(item => item.selectedUser._id),
+            .filter(item => item.role === 'translator' && item.selectedUser)
+            .map(item => item.selectedUser._id),
         // User IDs for previously linked users (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'translator' && !item.selectedUser && item.userId)
-          .map(item => item.userId),
+            .filter(item => item.role === 'translator' && !item.selectedUser && item.userId)
+            .map(item => item.userId),
         // Text names for non-selected entries (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'translator' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
-          .map(item => item.searchQuery.trim())
+            .filter(item => item.role === 'translator' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+            .map(item => item.searchQuery.trim())
       ],
       editor: [
         // User IDs for selected users
         ...activeStaffItems
-          .filter(item => item.role === 'editor' && item.selectedUser)
-          .map(item => item.selectedUser._id),
+            .filter(item => item.role === 'editor' && item.selectedUser)
+            .map(item => item.selectedUser._id),
         // User IDs for previously linked users (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'editor' && !item.selectedUser && item.userId)
-          .map(item => item.userId),
+            .filter(item => item.role === 'editor' && !item.selectedUser && item.userId)
+            .map(item => item.userId),
         // Text names for non-selected entries (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'editor' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
-          .map(item => item.searchQuery.trim())
+            .filter(item => item.role === 'editor' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+            .map(item => item.searchQuery.trim())
       ],
       proofreader: [
         // User IDs for selected users
         ...activeStaffItems
-          .filter(item => item.role === 'proofreader' && item.selectedUser)
-          .map(item => item.selectedUser._id),
+            .filter(item => item.role === 'proofreader' && item.selectedUser)
+            .map(item => item.selectedUser._id),
         // User IDs for previously linked users (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'proofreader' && !item.selectedUser && item.userId)
-          .map(item => item.userId),
+            .filter(item => item.role === 'proofreader' && !item.selectedUser && item.userId)
+            .map(item => item.userId),
         // Text names for non-selected entries (backward compatibility)
         ...activeStaffItems
-          .filter(item => item.role === 'proofreader' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
-          .map(item => item.searchQuery.trim())
+            .filter(item => item.role === 'proofreader' && !item.selectedUser && !item.userId && item.searchQuery?.trim())
+            .map(item => item.searchQuery.trim())
       ]
     };
-    
+
     const inactive = {
       pj_user: inactiveStaffItems
-        .filter(item => item.role === 'pj_user' && item.name.trim())
-        .map(item => item.name.trim()),
+          .filter(item => item.role === 'pj_user' && item.name.trim())
+          .map(item => item.name.trim()),
       translator: inactiveStaffItems
-        .filter(item => item.role === 'translator' && item.name.trim())
-        .map(item => item.name.trim()),
+          .filter(item => item.role === 'translator' && item.name.trim())
+          .map(item => item.name.trim()),
       editor: inactiveStaffItems
-        .filter(item => item.role === 'editor' && item.name.trim())
-        .map(item => item.name.trim()),
+          .filter(item => item.role === 'editor' && item.name.trim())
+          .map(item => item.name.trim()),
       proofreader: inactiveStaffItems
-        .filter(item => item.role === 'proofreader' && item.name.trim())
-        .map(item => item.name.trim())
+          .filter(item => item.role === 'proofreader' && item.name.trim())
+          .map(item => item.name.trim())
     };
-    
+
     return { active, inactive };
   };
 
-  // Add a function to handle sorting
+// Add a function to handle sorting
   const handleSortChange = (newSortOrder) => {
     setSortType(newSortOrder);
   };
@@ -1425,509 +1717,504 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-dashboard">
-      <AdminDashboardSEO />
-      <h2 className="section-title">Quản lý truyện</h2>
-      {error && <div className="error">{error}</div>}
-      
-      {/* Delete Confirmation Modal */}
-      {deleteConfirmationModal.isOpen && (
-        <DeleteConfirmationModal 
-          novel={deleteConfirmationModal.novelToDelete}
-          onConfirm={confirmDelete}
-          onCancel={closeDeleteConfirmation}
-        />
-      )}
-      
-      <div className="dashboard-grid">
-        {/* Novel Form Section */}
-        <div className="novel-form">
-          <h3 className="section-title">
-            {editingNovel ? 'Chỉnh sửa truyện' : (canCreateNovels ? 'Thêm truyện mới' : 'Quản lý truyện')}
-          </h3>
-          {(editingNovel || canCreateNovels) && (
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                name="title"
-                placeholder="Tiêu đề"
-                value={editingNovel ? editingNovel.title : newNovel.title}
-                onChange={handleInputChange}
-                disabled={!canEditTitle}
-                className={!canEditTitle ? 'disabled-field' : ''}
-                required
-              />
-              <input
-                type="text"
-                name="alternativeTitles"
-                placeholder="Tiêu đề khác"
-                value={editingNovel ? editingNovel.alternativeTitles || '' : newNovel.alternativeTitles}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                name="author"
-                placeholder="Tác giả"
-                value={editingNovel ? editingNovel.author : newNovel.author}
-                onChange={handleInputChange}
-                required
-              />
-              <input
-                type="text"
-                name="illustrator"
-                placeholder="Họa sĩ"
-                value={editingNovel ? editingNovel.illustrator : newNovel.illustrator}
-                onChange={handleInputChange}
-              />
-              
-              {/* Staff Section - Active */}
-              <div className="staff-section">
-                <div className="staff-header">
-                  <h4>Nhân sự hoạt động</h4>
-                  {canEditStaff && (
-                    <button 
-                      type="button" 
-                      className="add-staff-btn" 
-                      onClick={() => addStaffItem('active')}
-                    >
-                      +
-                    </button>
-                  )}
-                </div>
-                
-                {!canEditStaff && (
-                  <div className="staff-edit-note">
-                    <em>Liên hệ admin/mod hoặc fanpage để chỉnh sửa mục nhân sự</em>
-                  </div>
-                )}
-                
-                <div className="staff-items-grid">
-                  {activeStaffItems.map((item, index) => (
-                    <div key={item.id} className="staff-item" data-role={item.role}>
-                      <div 
-                        className="user-search-container"
-                        ref={(ref) => {
-                          if (ref) {
-                            searchContainerRefs.current[item.id] = ref;
-                          } else {
-                            delete searchContainerRefs.current[item.id];
-                          }
-                        }}
-                      >
-                        <input
-                          type="text"
-                          placeholder="Tìm người dùng..."
-                          value={item.searchQuery || ''}
-                          onChange={(e) => handleStaffItemChange('active', item.id, 'searchQuery', e.target.value)}
-                          disabled={!canEditStaff}
-                        />
-                        {item.selectedUser && (
-                          <div className="user-selected-indicator">
-                            ✓
-                          </div>
-                        )}
-                        {searchingUsers[item.id] && (
-                          <div className="search-loading">Đang tìm...</div>
-                        )}
-                        {userSearchResults[item.id] && userSearchResults[item.id].length > 0 && canEditStaff && (
-                          <div className="user-search-results">
-                            {userSearchResults[item.id].map(user => (
-                              <div 
-                                key={user._id} 
-                                className="user-search-result"
-                                onClick={() => selectUserForActiveStaff(item.id, user)}
-                              >
-                                <div className="user-info">
-                                  <span className="admin-user-display-name">{user.displayName || user.username}</span>
-                                  <span className="user-username">@{user.username}</span>
-                                </div>
-                              </div>
-                            ))}
-                            <div className="search-help-text">
-                              Nhấp bên ngoài để đóng hoặc nhập tên trực tiếp nếu người này chưa có tài khoản
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <select
-                        value={item.role}
-                        onChange={(e) => handleStaffItemChange('active', item.id, 'role', e.target.value)}
-                        disabled={!canEditStaff}
-                      >
-                        <option value="pj_user">Quản lý dự án</option>
-                        <option value="translator">Dịch giả</option>
-                        <option value="editor">Biên tập</option>
-                        <option value="proofreader">Kiểm tra chất lượng</option>
-                      </select>
+      <div className="admin-dashboard">
+        <AdminDashboardSEO />
+        <h2 className="section-title">Quản lý truyện</h2>
+        {error && <div className="error">{error}</div>}
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirmationModal.isOpen && (
+            <DeleteConfirmationModal
+                novel={deleteConfirmationModal.novelToDelete}
+                onConfirm={confirmDelete}
+                onCancel={closeDeleteConfirmation}
+            />
+        )}
+
+        <div className="dashboard-grid">
+          {/* Enhanced Novel Form Section with Floating Labels */}
+          <div className="novel-form">
+            <h3 className="section-title">
+              {editingNovel ? 'Chỉnh sửa truyện' : (canCreateNovels ? 'Thêm truyện mới' : 'Quản lý truyện')}
+            </h3>
+            {(editingNovel || canCreateNovels) && (
+                <form onSubmit={handleSubmit}>
+                  <FloatingLabelInput
+                      type="text"
+                      name="title"
+                      label="Tiêu đề"
+                      value={editingNovel ? editingNovel.title : newNovel.title}
+                      onChange={handleInputChange}
+                      disabled={!canEditTitle}
+                      required
+                  />
+
+                  <FloatingLabelInput
+                      type="text"
+                      name="alternativeTitles"
+                      label="Tiêu đề khác"
+                      value={editingNovel ? editingNovel.alternativeTitles || '' : newNovel.alternativeTitles}
+                      onChange={handleInputChange}
+                  />
+
+                  <FloatingLabelInput
+                      type="text"
+                      name="author"
+                      label="Tác giả"
+                      value={editingNovel ? editingNovel.author : newNovel.author}
+                      onChange={handleInputChange}
+                      required
+                  />
+
+                  <FloatingLabelInput
+                      type="text"
+                      name="illustrator"
+                      label="Họa sĩ"
+                      value={editingNovel ? editingNovel.illustrator : newNovel.illustrator}
+                      onChange={handleInputChange}
+                  />
+
+                  {/* Staff Section - Active */}
+                  <div className="staff-section">
+                    <div className="staff-header">
+                      <h4>Nhân sự hoạt động</h4>
                       {canEditStaff && (
-                        <button 
-                          type="button" 
-                          className="remove-staff-btn" 
-                          onClick={() => removeStaffItem('active', item.id)}
-                          aria-label="Remove staff member"
-                        >
-                          ×
-                        </button>
+                          <button
+                              type="button"
+                              className="add-staff-btn"
+                              onClick={() => addStaffItem('active')}
+                          >
+                            +
+                          </button>
                       )}
                     </div>
-                  ))}
-                </div>
-                
-                {/* Staff Section - Inactive */}
-                <div className="staff-header">
-                  <h4>Nhân sự không hoạt động</h4>
-                  {canEditStaff && (
-                    <button 
-                      type="button" 
-                      className="add-staff-btn" 
-                      onClick={() => addStaffItem('inactive')}
-                    >
-                      +
-                    </button>
-                  )}
-                </div>
-                
-                <div className="staff-items-grid">
-                  {inactiveStaffItems.map((item, index) => (
-                    <div key={item.id} className="staff-item" data-role={item.role}>
-                      <input
-                        type="text"
-                        placeholder="Name"
-                        value={item.name}
-                        onChange={(e) => handleStaffItemChange('inactive', item.id, 'name', e.target.value)}
-                        disabled={!canEditStaff}
-                      />
-                      <select
-                        value={item.role}
-                        onChange={(e) => handleStaffItemChange('inactive', item.id, 'role', e.target.value)}
-                        disabled={!canEditStaff}
-                      >
-                        <option value="pj_user">Quản lý dự án</option>
-                        <option value="translator">Dịch giả</option>
-                        <option value="editor">Biên tập viên</option>
-                        <option value="proofreader">Người kiểm tra chất lượng</option>
-                      </select>
-                      {canEditStaff && (
-                        <button 
-                          type="button" 
-                          className="remove-staff-btn" 
-                          onClick={() => removeStaffItem('inactive', item.id)}
-                          aria-label="Remove staff member"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Genres Section */}
-              <div className="genres-section">
-                <input
-                  type="text"
-                  name="genres"
-                  placeholder="Thể loại đã chọn"
-                  value={(editingNovel ? editingNovel.genres : newNovel.genres)?.join('; ') || ''}
-                  readOnly
-                />
-                <div className="genre-columns">
-                  {Object.entries(genreCategories).map(([category, genres]) => (
-                    <div key={category} className="genre-column">
-                      <h4>{category}</h4>
-                      {genres.map(genre => (
-                        <label key={genre} className="genre-checkbox">
-                          <input
-                            type="checkbox"
-                            checked={(editingNovel ? editingNovel.genres : newNovel.genres)?.includes(genre) || false}
-                            onChange={() => handleGenreChange(genre)}
-                          />
-                          {genre}
-                        </label>
+
+                    {!canEditStaff && (
+                        <div className="staff-edit-note">
+                          <em>Liên hệ admin/mod hoặc fanpage để chỉnh sửa mục nhân sự</em>
+                        </div>
+                    )}
+
+                    <div className="staff-items-grid">
+                      {activeStaffItems.map((item, index) => (
+                          <div key={item.id} className="staff-item" data-role={item.role}>
+                            <StaffInputWithSearch
+                                item={item}
+                                searchResults={userSearchResults[item.id] || []}
+                                isSearching={searchingUsers[item.id] || false}
+                                onSearchChange={(value) => handleStaffItemChange('active', item.id, 'searchQuery', value)}
+                                onUserSelect={(user) => selectUserForActiveStaff(item.id, user)}
+                                disabled={!canEditStaff}
+                                containerRef={(ref) => {
+                                  if (ref) {
+                                    searchContainerRefs.current[item.id] = ref;
+                                  } else {
+                                    delete searchContainerRefs.current[item.id];
+                                  }
+                                }}
+                            />
+                            <select
+                                value={item.role}
+                                onChange={(e) => handleStaffItemChange('active', item.id, 'role', e.target.value)}
+                                disabled={!canEditStaff}
+                            >
+                              <option value="pj_user">Quản lý dự án</option>
+                              <option value="translator">Dịch giả</option>
+                              <option value="editor">Biên tập</option>
+                              <option value="proofreader">Kiểm tra chất lượng</option>
+                            </select>
+                            {canEditStaff && (
+                                <button
+                                    type="button"
+                                    className="remove-staff-btn"
+                                    onClick={() => removeStaffItem('active', item.id)}
+                                    aria-label="Remove staff member"
+                                >
+                                  ×
+                                </button>
+                            )}
+                          </div>
                       ))}
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Description Editor */}
-              <div className="description-editor">
-                <Editor
-                  onInit={(evt, editor) => editorRef.current = editor}
-                  initialValue={editingNovel ? editingNovel.description : newNovel.description}
-                  scriptLoading={{ async: true, load: "domainBased" }}
-                  init={{
-                    script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
-                    license_key: 'gpl',
-                    height: 300,
-                    menubar: false,
-                    remove_empty_elements: false,
-                    forced_root_block: 'p',
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
-                      'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic underline strikethrough | ' +
-                      'alignleft aligncenter alignright alignjustify | ' +
-                      'bullist numlist outdent indent | ' +
-                      'link | code preview | removeformat | help',
-                    contextmenu: 'cut copy paste | link | removeformat',
-                    content_style: `
+                    {/* Staff Section - Inactive */}
+                    <div className="staff-header">
+                      <h4>Nhân sự không hoạt động</h4>
+                      {canEditStaff && (
+                          <button
+                              type="button"
+                              className="add-staff-btn"
+                              onClick={() => addStaffItem('inactive')}
+                          >
+                            +
+                          </button>
+                      )}
+                    </div>
+
+                    <div className="staff-items-grid">
+                      {inactiveStaffItems.map((item, index) => (
+                          <div key={item.id} className="staff-item" data-role={item.role}>
+                            <div className="form-group">
+                              <input
+                                  type="text"
+                                  value={item.name}
+                                  onChange={(e) => handleStaffItemChange('inactive', item.id, 'name', e.target.value)}
+                                  disabled={!canEditStaff}
+                                  className={`${item.name ? 'has-content' : ''} ${!canEditStaff ? 'disabled-field' : ''}`}
+                                  placeholder=""
+                              />
+                              <label>Tên nhân sự</label>
+                            </div>
+                            <select
+                                value={item.role}
+                                onChange={(e) => handleStaffItemChange('inactive', item.id, 'role', e.target.value)}
+                                disabled={!canEditStaff}
+                            >
+                              <option value="pj_user">Quản lý dự án</option>
+                              <option value="translator">Dịch giả</option>
+                              <option value="editor">Biên tập viên</option>
+                              <option value="proofreader">Người kiểm tra chất lượng</option>
+                            </select>
+                            {canEditStaff && (
+                                <button
+                                    type="button"
+                                    className="remove-staff-btn"
+                                    onClick={() => removeStaffItem('inactive', item.id)}
+                                    aria-label="Remove staff member"
+                                >
+                                  ×
+                                </button>
+                            )}
+                          </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Genres Section */}
+                  <div className="genres-section">
+                    <div className="genre-display-container">
+                      <div className="form-group">
+                        <input
+                            type="text"
+                            name="genres"
+                            value={(() => {
+                              const target = editingNovel ? editingNovel : newNovel;
+                              const allGenres = target.genres || [];
+                              return allGenres.join('; ') || '';
+                            })()}
+                            readOnly
+                            className={`genre-display-input ${(() => {
+                              const target = editingNovel ? editingNovel : newNovel;
+                              const allGenres = target.genres || [];
+                              return allGenres.length > 0 ? 'has-content' : '';
+                            })()}`}
+                            placeholder=""
+                        />
+                        <label>Thể loại đã chọn</label>
+                      </div>
+                    </div>
+
+                    <div className="genre-columns">
+                      {Object.entries(genreCategories).map(([category, genres]) => (
+                          <div key={category} className="genre-column">
+                            <h4>{category}</h4>
+                            {genres.map(genre => {
+                              const target = editingNovel ? editingNovel : newNovel;
+                              const isChecked = (target.genres || []).includes(genre);
+                              const colorClass = getGenreColorClass(genre);
+                              const canUncheck = canUncheckGenre(genre);
+
+                              return (
+                                  <label key={genre} className={`genre-checkbox ${colorClass}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => handleGenreChange(genre)}
+                                        disabled={isChecked && !canUncheck}
+                                    />
+                                    <span className={`genre-label ${colorClass}`}>
+                              {genre}
+                                      {(genre === 'Mature' || genre === 'AI-assisted') && user?.role === 'pj_user' && isChecked && (
+                                          <span className="locked-indicator" title="Chỉ admin/mod mới có thể gỡ">
+                                  🔒
+                                </span>
+                                      )}
+                            </span>
+                                  </label>
+                              );
+                            })}
+                          </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Description Editor */}
+                  <div className="description-editor">
+                    <Editor
+                        onInit={(evt, editor) => editorRef.current = editor}
+                        initialValue={editingNovel ? editingNovel.description : newNovel.description}
+                        scriptLoading={{ async: true, load: "domainBased" }}
+                        init={{
+                          script_src: config.tinymce.scriptPath,
+                          license_key: 'gpl',
+                          height: 300,
+                          menubar: false,
+                          remove_empty_elements: false,
+                          forced_root_block: 'p',
+                          plugins: [
+                            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+                            'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                          ],
+                          toolbar: 'undo redo | formatselect | ' +
+                              'bold italic underline strikethrough | ' +
+                              'alignleft aligncenter alignright alignjustify | ' +
+                              'bullist numlist outdent indent | ' +
+                              'link | code preview | removeformat | help',
+                          contextmenu: 'cut copy paste | link | removeformat',
+                          content_style: `
                       body { font-family:Helvetica,Arial,sans-serif; font-size:14px }
                       em, i { font-style: italic; }
                       strong, b { font-weight: bold; }
                     `,
-                    skin: 'oxide',
-                    content_css: 'default',
-                    placeholder: 'Viết mô tả truyện... (tối đa 1000 từ)',
-                    statusbar: false,
-                    resize: false,
-                    branding: false,
-                    promotion: false,
-                    wordcount_countcharacters: true,
-                    wordcount_countwords: true,
-                    wordcount_countspaces: false,
-                    wordcount_alwaysshown: true,
-                    max_words: 1000,
-                    setup: function(editor) {
-                      editor.on('KeyUp', function(e) {
-                        const wordCount = editor.plugins.wordcount.getCount();
-                        if (wordCount > 1000) {
-                          const content = editor.getContent();
-                          const words = content.split(/\s+/);
-                          editor.setContent(words.slice(0, 1000).join(' '));
-                        }
-                      });
-                    },
-                    // Completely disable TinyMCE's paste processing - preserve HTML exactly as-is
-                    paste_data_images: true,
-                    paste_as_text: false,
-                    paste_auto_cleanup_on_paste: false,
-                    paste_remove_styles: false,
-                    paste_remove_spans: false,
-                    paste_strip_class_attributes: 'none',
-                    paste_merge_formats: false,
-                    paste_webkit_styles: 'all',
-                    // Allow all HTML elements and attributes without restriction
-                    valid_elements: '*[*]',
-                    valid_children: '*[*]',
-                    extended_valid_elements: '*[*]',
-                    // Handle footnote markers only - don't touch anything else
-                    paste_preprocess: function(plugin, args) {
-                      // Only handle footnote markers, absolutely nothing else
-                      args.content = args.content.replace(
-                        /\[(\d+)\]/g,
-                        '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
-                      );
-                      // Don't modify the content at all otherwise
-                    },
-                    images_upload_handler: (blobInfo) => {
-                      return new Promise((resolve, reject) => {
-                        const file = blobInfo.blob();
-                        
-                        // Use bunny CDN service
-                        bunnyUploadService.uploadFile(file, 'illustrations')
-                          .then(url => {
-                            resolve(url);
-                          })
-                          .catch(error => {
-                            console.error('Image upload error:', error);
-                            reject('Image upload failed');
-                          });
-                      });
-                    },
-                    images_upload_base_path: '/',
-                    automatic_uploads: true
-                  }}
-                />
-              </div>
+                          skin: 'oxide',
+                          content_css: 'default',
+                          placeholder: 'Viết mô tả truyện... (tối đa 1000 từ)',
+                          statusbar: false,
+                          resize: false,
+                          branding: false,
+                          promotion: false,
+                          wordcount_countcharacters: true,
+                          wordcount_countwords: true,
+                          wordcount_countspaces: false,
+                          wordcount_alwaysshown: true,
+                          max_words: 1000,
+                          setup: function(editor) {
+                            editor.on('KeyUp', function(e) {
+                              const wordCount = editor.plugins.wordcount.getCount();
+                              if (wordCount > 1000) {
+                                const content = editor.getContent();
+                                const words = content.split(/\s+/);
+                                editor.setContent(words.slice(0, 1000).join(' '));
+                              }
+                            });
+                          },
+                          paste_data_images: true,
+                          paste_as_text: false,
+                          paste_auto_cleanup_on_paste: false,
+                          paste_remove_styles: false,
+                          paste_remove_spans: false,
+                          paste_strip_class_attributes: 'none',
+                          paste_merge_formats: false,
+                          paste_webkit_styles: 'all',
+                          valid_elements: '*[*]',
+                          valid_children: '*[*]',
+                          extended_valid_elements: '*[*]',
+                          paste_preprocess: function(plugin, args) {
+                            args.content = args.content.replace(
+                                /\[(\d+)\]/g,
+                                '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
+                            );
+                          },
+                          images_upload_handler: (blobInfo) => {
+                            return new Promise((resolve, reject) => {
+                              const file = blobInfo.blob();
 
-              {/* Note Editor */}
-              <div className="note-editor">
-                <Editor
-                  onInit={(evt, editor) => noteEditorRef.current = editor}
-                  initialValue={editingNovel ? editingNovel.note : newNovel.note}
-                  scriptLoading={{ async: true, load: "domainBased" }}
-                  init={{
-                    script_src: config.tinymce.scriptPath, // Path to self-hosted TinyMCE
-                    license_key: 'gpl',
-                    height: 200,
-                    menubar: false,
-                    remove_empty_elements: false,
-                    forced_root_block: 'p',
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'charmap',
-                      'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic underline | ' +
-                      'bullist numlist | ' +
-                      'link | code preview | removeformat | help',
-                    contextmenu: 'cut copy paste | link | removeformat',
-                    content_style: `
+                              bunnyUploadService.uploadFile(file, 'illustrations')
+                                  .then(url => {
+                                    resolve(url);
+                                  })
+                                  .catch(error => {
+                                    console.error('Image upload error:', error);
+                                    reject('Image upload failed');
+                                  });
+                            });
+                          },
+                          images_upload_base_path: '/',
+                          automatic_uploads: true
+                        }}
+                    />
+                  </div>
+
+                  {/* Note Editor */}
+                  <div className="note-editor">
+                    <Editor
+                        onInit={(evt, editor) => noteEditorRef.current = editor}
+                        initialValue={editingNovel ? editingNovel.note : newNovel.note}
+                        scriptLoading={{ async: true, load: "domainBased" }}
+                        init={{
+                          script_src: config.tinymce.scriptPath,
+                          license_key: 'gpl',
+                          height: 200,
+                          menubar: false,
+                          remove_empty_elements: false,
+                          forced_root_block: 'p',
+                          plugins: [
+                            'advlist', 'autolink', 'lists', 'link', 'charmap',
+                            'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                          ],
+                          toolbar: 'undo redo | formatselect | ' +
+                              'bold italic underline | ' +
+                              'bullist numlist | ' +
+                              'link | code preview | removeformat | help',
+                          contextmenu: 'cut copy paste | link | removeformat',
+                          content_style: `
                       body { font-family:Helvetica,Arial,sans-serif; font-size:14px }
                       em, i { font-style: italic; }
                       strong, b { font-weight: bold; }
                     `,
-                    skin: 'oxide',
-                    content_css: 'default',
-                    placeholder: 'Viết ghi chú của bạn ở đây...',
-                    statusbar: true,
-                    resize: false,
-                    branding: false,
-                    promotion: false,
-                    wordcount_countcharacters: true,
-                    wordcount_countwords: true,
-                    wordcount_countspaces: false,
-                    wordcount_alwaysshown: true,
-                    // Completely disable TinyMCE's paste processing - preserve HTML exactly as-is
-                    paste_data_images: true,
-                    paste_as_text: false,
-                    paste_auto_cleanup_on_paste: false,
-                    paste_remove_styles: false,
-                    paste_remove_spans: false,
-                    paste_strip_class_attributes: 'none',
-                    paste_merge_formats: false,
-                    paste_webkit_styles: 'all',
-                    // Allow all HTML elements and attributes without restriction
-                    valid_elements: '*[*]',
-                    valid_children: '*[*]',
-                    extended_valid_elements: '*[*]',
-                    // Handle footnote markers only - don't touch anything else
-                    paste_preprocess: function(plugin, args) {
-                      // Only handle footnote markers, absolutely nothing else
-                      args.content = args.content.replace(
-                        /\[(\d+)\]/g,
-                        '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
-                      );
-                      // Don't modify the content at all otherwise
-                    }
-                  }}
-                />
-              </div>
+                          skin: 'oxide',
+                          content_css: 'default',
+                          placeholder: 'Viết ghi chú của bạn ở đây...',
+                          statusbar: true,
+                          resize: false,
+                          branding: false,
+                          promotion: false,
+                          wordcount_countcharacters: true,
+                          wordcount_countwords: true,
+                          wordcount_countspaces: false,
+                          wordcount_alwaysshown: true,
+                          paste_data_images: true,
+                          paste_as_text: false,
+                          paste_auto_cleanup_on_paste: false,
+                          paste_remove_styles: false,
+                          paste_remove_spans: false,
+                          paste_strip_class_attributes: 'none',
+                          paste_merge_formats: false,
+                          paste_webkit_styles: 'all',
+                          valid_elements: '*[*]',
+                          valid_children: '*[*]',
+                          extended_valid_elements: '*[*]',
+                          paste_preprocess: function(plugin, args) {
+                            args.content = args.content.replace(
+                                /\[(\d+)\]/g,
+                                '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
+                            );
+                          }
+                        }}
+                    />
+                  </div>
 
-              <div className="illustration-upload">
-                {(editingNovel?.illustration || newNovel.illustration) && (
-                  <img
-                    src={editingNovel ? editingNovel.illustration : newNovel.illustration}
-                    alt="Illustration preview"
-                    className="illustration-preview"
-                  />
-                )}
-                <label className="illustration-upload-label">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleIllustrationUpload}
-                    disabled={loading}
-                    className="hidden-file-input"
-                  />
-                  {loading ? 'Đang tải...' : 'Tải ảnh bìa'}
-                </label>
-              </div>
-              <div className="form-buttons">
-                <button type="submit" disabled={loading}>
-                  {loading ? 'Đang xử lý...' : (editingNovel ? 'Cập nhật truyện' : 'Thêm truyện')}
-                </button>
-                {editingNovel ? (
-                  <button type="button" onClick={resetForm} className="cancel-button">
-                    Hủy bỏ
-                  </button>
-                ) : (
-                  <button type="button" onClick={resetForm} className="discard-button">
-                    Hủy bỏ bản nháp
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
-        </div>
+                  <div className="illustration-upload">
+                    {(editingNovel?.illustration || newNovel.illustration) && (
+                        <img
+                            src={editingNovel ? editingNovel.illustration : newNovel.illustration}
+                            alt="Illustration preview"
+                            className="illustration-preview"
+                        />
+                    )}
+                    <label className="illustration-upload-label">
+                      <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleIllustrationUpload}
+                          disabled={loading}
+                          className="hidden-file-input"
+                      />
+                      {loading ? 'Đang tải...' : 'Tải ảnh bìa'}
+                    </label>
+                  </div>
 
-        {/* Novel List Section */}
-        <div className="novel-list">
-          <div className="novel-list-header">
-            <h3 className="section-title">
-              Danh sách truyện {sortedNovels.length > 0 && `(${sortedNovels.length})`}
-            </h3>
-            <div className="sort-control">
-              <label htmlFor="sort-select">Sắp xếp theo:</label>
-              <select
-                id="sort-select"
-                value={sortType}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className="sort-dropdown"
+                  <div className="form-buttons">
+                    <button type="submit" disabled={loading}>
+                      {loading ? 'Đang xử lý...' : (editingNovel ? 'Cập nhật truyện' : 'Thêm truyện')}
+                    </button>
+                    {editingNovel ? (
+                        <button type="button" onClick={resetForm} className="cancel-button">
+                          Hủy bỏ
+                        </button>
+                    ) : (
+                        <button type="button" onClick={resetForm} className="discard-button">
+                          Hủy bỏ bản nháp
+                        </button>
+                    )}
+                  </div>
+                </form>
+            )}
+          </div>
+
+          {/* Enhanced Novel List Section with Search */}
+          <div className="novel-list">
+            <div className="novel-list-header">
+              <h3 className="section-title">
+                Danh sách truyện {sortedNovels.length > 0 && `(${sortedNovels.length})`}
+              </h3>
+              <div className="sort-control">
+                <label htmlFor="sort-select">Sắp xếp theo:</label>
+                <select
+                    id="sort-select"
+                    value={sortType}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="sort-dropdown"
+                >
+                  <option value="updated">Mới cập nhật</option>
+                  <option value="balance">Số dư nhiều nhất</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Enhanced Search Bar with Floating Label */}
+            <div className="novel-search-container">
+              <FloatingLabelInput
+                  type="text"
+                  label="Tìm kiếm theo tên truyện hoặc tiêu đề khác"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button
+                  className="search-clear-btn"
+                  onClick={() => setSearchQuery('')}
+                  disabled={!searchQuery.trim()}
               >
-                <option value="updated">Mới cập nhật</option>
-                <option value="balance">Số dư nhiều nhất</option>
-              </select>
+                Xóa tìm kiếm
+              </button>
             </div>
+
+            {/* Search Results Info */}
+            {searchQuery.trim() && (
+                <div className="search-results-info">
+                  {sortedNovels.length === 0
+                      ? `Không tìm thấy kết quả nào cho "${searchQuery}"`
+                      : `Tìm thấy ${sortedNovels.length} kết quả cho "${searchQuery}"`
+                  }
+                </div>
+            )}
+
+            {novelsLoading || !dimensionsReady ? (
+                <div className="novel-list-loading-container">
+                  <LoadingSpinner size="medium" text="Đang tải danh sách truyện..." />
+                </div>
+            ) : (
+                <List
+                    height={virtualListHeight}
+                    itemCount={sortedNovels.length}
+                    itemSize={itemSize}
+                    width="100%"
+                    itemData={{
+                      novels: sortedNovels,
+                      user,
+                      canEditNovels,
+                      canDeleteNovels,
+                      canEditBalances,
+                      handleEdit,
+                      handleDelete,
+                      handleStatusChange,
+                      editingBalanceId,
+                      balanceValue,
+                      setBalanceValue,
+                      handleEditBalance,
+                      cancelEditBalance,
+                      saveBalanceChange
+                    }}
+                    ref={novelListContainerRef}
+                >
+                  {VirtualNovelItem}
+                </List>
+            )}
           </div>
-
-          {/* Search Bar */}
-          <div className="novel-search-container">
-            <input
-              type="text"
-              className="novel-search-input"
-              placeholder="Tìm kiếm theo tên truyện hoặc tiêu đề khác..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-            <button
-              className="search-clear-btn"
-              onClick={clearSearch}
-              disabled={!searchQuery.trim()}
-            >
-              Xóa tìm kiếm
-            </button>
-          </div>
-
-          {/* Search Results Info */}
-          {searchQuery.trim() && (
-            <div className="search-results-info">
-              {sortedNovels.length === 0 
-                ? `Không tìm thấy kết quả nào cho "${searchQuery}"`
-                : `Tìm thấy ${sortedNovels.length} kết quả cho "${searchQuery}"`
-              }
-            </div>
-          )}
-
-          {novelsLoading || !dimensionsReady ? (
-            <div className="novel-list-loading-container">
-              <LoadingSpinner size="medium" text="Đang tải danh sách truyện..." />
-            </div>
-          ) : (
-            <List
-              height={virtualListHeight}
-              itemCount={sortedNovels.length}
-              itemSize={itemSize}
-              width="100%"
-              itemData={{
-                novels: sortedNovels,
-                user,
-                canEditNovels,
-                canDeleteNovels,
-                canEditBalances,
-                handleEdit,
-                handleDelete,
-                handleStatusChange,
-                editingBalanceId,
-                balanceValue,
-                setBalanceValue,
-                handleEditBalance,
-                cancelEditBalance,
-                saveBalanceChange
-              }}
-              ref={novelListContainerRef}
-            >
-              {VirtualNovelItem}
-            </List>
-          )}
         </div>
       </div>
-    </div>
   );
 };
 
