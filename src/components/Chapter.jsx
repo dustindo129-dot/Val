@@ -262,11 +262,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   const [showChapterList, setShowChapterList] = useState(false);
   const [showNavControls, setShowNavControls] = useState(false);
-  const [errorState, setError] = useState(null);
 
   // Modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+
+  // Add notification states for chapter editing
+  const [notification, setNotification] = useState({ type: '', message: '', show: false });
 
   // Interaction state
   const [isLiked, setIsLiked] = useState(false);
@@ -894,7 +896,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       
       // Validate minimum chapter balance for paid chapters
       if (updatedMode === 'paid' && updatedChapterBalance < 1) {
-        setError('Số lúa chương tối thiểu là 1 🌾 cho chương trả phí.');
+        setNotification({ 
+          type: 'error', 
+          message: 'Số lúa chương tối thiểu là 1 🌾 cho chương trả phí.', 
+          show: true 
+        });
         setIsSaving(false);
         return;
       }
@@ -956,6 +962,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       // Exit edit mode
       setIsEditing(false);
 
+      // Show success notification
+      setNotification({ 
+        type: 'success', 
+        message: 'Chương đã được cập nhật thành công!', 
+        show: true 
+      });
+
       // Update with server data for consistency
       queryClient.setQueryData(['chapter', chapterId], {
         ...previousChapterData,
@@ -967,7 +980,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
     } catch (err) {
       console.error('Không thể cập nhật chương:', err);
-      setError('Không thể cập nhật chương. Vui lòng thử lại.');
+      
+      // Show error notification instead of full-screen error
+      setNotification({ 
+        type: 'error', 
+        message: err.response?.data?.message || 'Không thể cập nhật chương. Vui lòng thử lại.', 
+        show: true 
+      });
 
       // Refetch data to ensure consistency
       queryClient.refetchQueries({queryKey: ['chapter', chapterId]});
@@ -1140,6 +1159,16 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Check if user can delete
   const canDelete = user && (user.role === 'admin' || user.role === 'moderator');
 
+  // Auto-hide notification after 5 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ type: '', message: '', show: false });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
+
   // Show loading state with animation
   if (isLoading) {
     return (
@@ -1149,9 +1178,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     );
   }
 
-  // Show error state
-  if (chapterError || errorState) {
-    return <div className="error">{chapterError?.message || errorState}</div>;
+  // Show error state only for loading/data errors, not for edit operation errors
+  if (chapterError) {
+    return <div className="error">{chapterError.message}</div>;
   }
 
   // Show not found state
@@ -1163,6 +1192,20 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     <div className="chapter-container">
       {/* SEO optimization for this chapter */}
       <ChapterSEO novel={novel} chapter={chapter} />
+      
+      {/* Notification for chapter editing operations */}
+      {notification.show && (
+        <div className={`chapter-notification ${notification.type === 'error' ? 'error-notification' : 'success-notification'}`}>
+          <span>{notification.message}</span>
+          <button 
+            className="notification-close-btn"
+            onClick={() => setNotification({ type: '', message: '', show: false })}
+            aria-label="Đóng thông báo"
+          >
+            ×
+          </button>
+        </div>
+      )}
       
       {/* Chapter header */}
       <ChapterHeader

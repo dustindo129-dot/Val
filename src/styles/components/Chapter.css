@@ -101,6 +101,76 @@
   background: var(--secondary-hover, #545b62);
 }
 
+/* Notification styles for chapter editing operations */
+.chapter-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 500;
+  z-index: 9999;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  margin-left: auto;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.notification-close-btn:hover {
+  opacity: 1;
+}
+
+.success-notification {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.error-notification {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+:root.dark-mode .success-notification {
+  background-color: #155724;
+  border-color: #0f4c1b;
+  color: #d4edda;
+}
+
+:root.dark-mode .error-notification {
+  background-color: #721c24;
+  border-color: #5a1e24;
+  color: #f8d7da;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 /* Main container styles */
 .chapter-container {
   max-width: 1200px;
@@ -1750,6 +1820,20 @@
 @media (max-width: 768px) {
   .chapter-container {
     padding: 0;
+  }
+
+  .chapter-notification {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: none;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .notification-close-btn {
+    font-size: 16px;
   }
 
   .header-nav-container {
