@@ -412,6 +412,7 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 5px;
+  padding-right: 120px; 
 }
 
 .rd-genre-tag {
@@ -1361,6 +1362,7 @@
 
   .rd-genres-list {
       gap: 6px;
+      padding-right: 0;
   }
 
   .rd-genre-tag {
