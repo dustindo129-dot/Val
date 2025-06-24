@@ -150,11 +150,18 @@ const Market = () => {
     
     try {
       // Fetch user balance
-      const userResponse = await axios.get(
-        `${config.backendUrl}/api/users/${user.username}/profile`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setUserBalance(userResponse.data.balance || 0);
+      let userBalance = 0;
+              try {
+          const userResponse = await axios.get(
+            `${config.backendUrl}/api/users/${user.displayName || user.username}/profile`,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          userBalance = userResponse.data.balance || 0;
+              } catch (balanceErr) {
+          // Try to get balance from user object if available
+          userBalance = user.balance || 0;
+        }
+      setUserBalance(userBalance);
       
       // Fetch requests with sort option
       const requestsResponse = await axios.get(
