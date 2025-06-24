@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAuthHeaders } from '../utils/auth';
 import { Editor } from '@tinymce/tinymce-react';
 import bunnyUploadService from '../services/bunnyUploadService';
-import { createUniqueSlug } from '../utils/slugUtils';
+import { createUniqueSlug, generateUserProfileUrl } from '../utils/slugUtils';
 
 /**
  * Comment section component for novels
@@ -981,10 +981,19 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           <div className="comment-header">
             <div className="comment-user-info">
               <div className="comment-user-line">
-                <span className="comment-username">
-                  {comment.isDeleted && !comment.adminDeleted ? '[đã xóa]' : (comment.user.displayName || comment.user.username)}
-                  {comment.isPinned && <span className="pinned-indicator">📌</span>}
-                </span>
+                {comment.isDeleted && !comment.adminDeleted ? (
+                  <span className="comment-username">[đã xóa]</span>
+                ) : (
+                  <Link 
+                    to={generateUserProfileUrl(comment.user)} 
+                    className="comment-username-link"
+                  >
+                    <span className="comment-username">
+                      {comment.user.displayName || comment.user.username}
+                      {comment.isPinned && <span className="pinned-indicator">📌</span>}
+                    </span>
+                  </Link>
+                )}
                 <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
               </div>
               {/* Show chapter link for chapter comments on novel detail page */}

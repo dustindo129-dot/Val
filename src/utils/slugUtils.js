@@ -129,32 +129,70 @@ export const generateLocalizedChapterUrl = (novel, chapter) => {
 
 /**
  * Generates a user profile URL (Primary)
- * @param {string} username - The username
+ * @param {Object} user - User object with displayName and username
  * @returns {string} User profile URL
  */
-export const generateUserProfileUrl = (username) => {
-  if (!username) return '/';
-  return `/nguoi-dung/${username}/trang-ca-nhan`;
+export const generateUserProfileUrl = (user) => {
+  if (!user) return '/';
+  
+  // Use displayName, fallback to username
+  const displayName = user.displayName || user.username;
+  if (!displayName) return '/';
+  
+  // Convert displayName to URL-safe slug
+  const urlSafeIdentifier = createSlug(displayName) || displayName;
+  return `/nguoi-dung/${urlSafeIdentifier}/trang-ca-nhan`;
+};
+
+/**
+ * Generates a user settings URL (Primary)
+ * @param {Object} user - User object with displayName and username
+ * @returns {string} User settings URL
+ */
+export const generateUserSettingsUrl = (user) => {
+  if (!user) return '/';
+  
+  // Use displayName, fallback to username
+  const displayName = user.displayName || user.username;
+  if (!displayName) return '/';
+  
+  // Convert displayName to URL-safe slug
+  const urlSafeIdentifier = createSlug(displayName) || displayName;
+  return `/nguoi-dung/${urlSafeIdentifier}/cai-dat`;
 };
 
 /**
  * Generates a user bookmarks URL (Primary)
- * @param {string} username - The username
+ * @param {Object} user - User object with displayName and username
  * @returns {string} User bookmarks URL
  */
-export const generateUserBookmarksUrl = (username) => {
-  if (!username) return '/';
-  return `/nguoi-dung/${username}/truyen-danh-dau`;
+export const generateUserBookmarksUrl = (user) => {
+  if (!user) return '/';
+  
+  // Use displayName, fallback to username
+  const displayName = user.displayName || user.username;
+  if (!displayName) return '/';
+  
+  // Convert displayName to URL-safe slug
+  const urlSafeIdentifier = createSlug(displayName) || displayName;
+  return `/nguoi-dung/${urlSafeIdentifier}/truyen-danh-dau`;
 };
 
 /**
  * Generates a user change password URL (Primary)
- * @param {string} username - The username
+ * @param {Object} user - User object with displayName and username
  * @returns {string} User change password URL
  */
-export const generateUserChangePasswordUrl = (username) => {
-  if (!username) return '/';
-  return `/nguoi-dung/${username}/thay-doi-mat-khau`;
+export const generateUserChangePasswordUrl = (user) => {
+  if (!user) return '/';
+  
+  // Use displayName, fallback to username
+  const displayName = user.displayName || user.username;
+  if (!displayName) return '/';
+  
+  // Convert displayName to URL-safe slug
+  const urlSafeIdentifier = createSlug(displayName) || displayName;
+  return `/nguoi-dung/${urlSafeIdentifier}/thay-doi-mat-khau`;
 };
 
 /**

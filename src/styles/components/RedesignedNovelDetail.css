@@ -967,11 +967,6 @@
   border-radius: 3px;
 }
 
-.rd-staff-name:hover {
-  background-color: var(--rd-name-color);
-  color: white;
-}
-
 .rd-staff-empty {
   font-style: italic;
   color: #7f8c8d;

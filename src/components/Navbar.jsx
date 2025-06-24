@@ -30,7 +30,7 @@ import '../styles/Navbar.css';
 import config from '../config/config';
 import Modal from './auth/Modal';
 import cdnConfig from '../config/bunny';
-import { createUniqueSlug, generateUserBookmarksUrl, generateUserProfileUrl, generateNovelUrl } from '../utils/slugUtils';
+import { createUniqueSlug, generateUserBookmarksUrl, generateUserSettingsUrl, generateUserProfileUrl, generateNovelUrl } from '../utils/slugUtils';
 import { translateStatus } from '../utils/statusTranslation';
 import api from '../services/api';
 import sseService from '../services/sseService';
@@ -452,7 +452,7 @@ const Navbar = () => {
                     user={user}
                   />
                 </div>
-                <Link to={generateUserBookmarksUrl(user.username)} className="bookmark-icon-only">
+                <Link to={generateUserBookmarksUrl(user)} className="bookmark-icon-only">
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
                     width="24" 
@@ -481,21 +481,24 @@ const Navbar = () => {
                         className="avatar-image"
                       />
                     </div>
-                    {showDropdown && (
-                      <div className="user-dropdown">
-                        <Link to={generateUserProfileUrl(user.username)} className="dropdown-item" onClick={closeDropdown}>
-                          Trang cá nhân
-                        </Link>
-                        {user?.role === 'admin' && (
-                          <Link to="/topup-management" className="dropdown-item" onClick={closeDropdown}>
-                            Quản lý giao dịch
+                                          {showDropdown && (
+                        <div className="user-dropdown">
+                          <Link to={generateUserProfileUrl(user)} className="dropdown-item" onClick={closeDropdown}>
+                            Trang cá nhân
                           </Link>
-                        )}
-                        <button onClick={() => {handleLogout(); closeDropdown();}} className="dropdown-item">
-                          Đăng xuất
-                        </button>
-                      </div>
-                    )}
+                          {user?.role === 'admin' && (
+                            <Link to="/topup-management" className="dropdown-item" onClick={closeDropdown}>
+                              Quản lý giao dịch
+                            </Link>
+                          )}
+                          <Link to={generateUserSettingsUrl(user)} className="dropdown-item" onClick={closeDropdown}>
+                            Cài đặt
+                          </Link>
+                          <button onClick={() => {handleLogout(); closeDropdown();}} className="dropdown-item">
+                            Đăng xuất
+                          </button>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>

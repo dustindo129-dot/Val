@@ -10,6 +10,7 @@ Allow: /bang-yeu-cau
 Allow: /nap-tien
 Allow: /oln
 Allow: /nguoi-dung/*/trang-ca-nhan
+Disallow: /nguoi-dung/*/cai-dat
 Allow: /nguoi-dung/*/truyen-danh-dau
 
 # Allow Vietnamese slug-based URLs for novels and chapters

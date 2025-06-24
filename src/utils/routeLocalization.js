@@ -22,6 +22,7 @@ export const PATH_MAPPINGS = {
   // User-related paths
   'user': 'nguoi-dung',
   'profile': 'trang-ca-nhan',
+  'settings': 'cai-dat',
   'bookmarks': 'truyen-danh-dau',
   'change-password': 'thay-doi-mat-khau',
   'reset-password': 'phuc-hoi-mat-khau',
@@ -130,6 +131,16 @@ export const generateLocalizedAddChapterUrl = (novel, module, createUniqueSlug) 
 export const generateLocalizedUserProfileUrl = (username) => {
   if (!username) return '/';
   return `/nguoi-dung/${username}/trang-ca-nhan`;
+};
+
+/**
+ * Generates a localized user settings URL
+ * @param {string} username - The username
+ * @returns {string} Localized user settings URL
+ */
+export const generateLocalizedUserSettingsUrl = (username) => {
+  if (!username) return '/';
+  return `/nguoi-dung/${username}/cai-dat`;
 };
 
 /**

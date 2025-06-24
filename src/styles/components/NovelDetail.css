@@ -1825,18 +1825,42 @@
   font-size: 13px;
 }
 
-.rd-staff-name {
+/* Active staff names - clickable with hover effects */
+.rd-staff-name-active {
   color: var(--rd-name-color);
-  text-decoration: none;
-  transition: all 0.2s ease;
   background-color: rgba(22, 160, 133, 0.1);
-  padding: 2px 5px;
-  border-radius: 3px;
 }
 
-.rd-staff-name:hover {
+.rd-staff-name-active:hover {
   background-color: var(--rd-name-color);
   color: white;
+}
+
+/* Inactive staff names - plain text, no hover effects */
+.rd-staff-name-inactive {
+  color: #7f8c8d;
+  background-color: rgba(127, 140, 141, 0.1);
+  cursor: default;
+}
+
+/* No hover state for inactive staff - they stay the same */
+
+.rd-staff-name-link {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.rd-staff-name-link:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.rd-staff-name-link:hover .rd-staff-name-active {
+  background-color: var(--rd-primary-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .rd-inactive-staff {
@@ -1946,6 +1970,11 @@
 
 :root.dark-mode .rd-staff-empty {
   color: #777;
+}
+
+:root.dark-mode .rd-staff-name-inactive {
+  color: #999;
+  background-color: rgba(153, 153, 153, 0.1);
 }
 
 :root.dark-mode .rd-show-toggle {

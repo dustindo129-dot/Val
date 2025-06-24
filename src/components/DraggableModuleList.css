@@ -1,0 +1,90 @@
+/* Drag and Drop Styles */
+.drag-handle {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: grab;
+  color: #666;
+  font-size: 14px;
+  z-index: 10;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Adjust module item for drag handle */
+.module-item {
+  position: relative;
+  padding-left: 40px; /* Make room for drag handle */
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.module-item.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+/* Hover effects for better UX */
+.module-item:hover .drag-handle {
+  opacity: 1;
+}
+
+/* Hide drag handle for non-managers */
+.module-item:not(.can-manage) .drag-handle {
+  display: none;
+}
+
+.module-item:not(.can-manage) {
+  padding-left: 0;
+}
+
+/* Sortable context styling */
+.novels-grid {
+  position: relative;
+}
+
+/* Visual feedback during drag */
+.dnd-overlay {
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .drag-handle {
+    left: 4px;
+    font-size: 12px;
+  }
+  
+  .module-item {
+    padding-left: 32px;
+  }
+  
+  .module-item:not(.can-manage) {
+    padding-left: 0;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .drag-handle {
+    color: #ccc;
+  }
+  
+  .drag-handle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+} 

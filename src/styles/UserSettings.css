@@ -1,7 +1,7 @@
 /**
- * UserProfile.css
+ * UserSettings.css
  * 
- * Styles for the user profile page component.
+ * Styles for the user settings page component.
  * Features:
  * - Profile avatar management
  * - Account settings forms
@@ -10,8 +10,8 @@
  * - Responsive design
  */
 
-/* Main profile container */
-.profile-container {
+/* Main settings container */
+.settings-container {
   max-width: 1200px;
   margin: 20px auto;
   padding: 20px;
@@ -20,21 +20,21 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Profile header section */
-.profile-header {
+/* Settings header section */
+.settings-header {
   margin-bottom: 30px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 1rem;
 }
 
-/* Profile header title */
-.profile-header h1 {
+/* Settings header title */
+.settings-header h1 {
   font-size: 24px;
   margin: 0;
 }
 
-/* Profile content grid layout */
-.profile-content {
+/* Settings content grid layout */
+.settings-content {
   display: grid;
   grid-template-columns: 1fr 2fr;
   grid-template-rows: auto auto;
@@ -158,24 +158,24 @@
 }
 
 /* Form group container */
-.profile-form-group {
+.settings-form-group {
   margin-bottom: 16px;
 }
 
 /* Form label styling */
-.profile-form-group label {
+.settings-form-group label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
   color: #333;
 }
 
-:root.dark-mode .profile-form-group label {
+:root.dark-mode .settings-form-group label {
   color: #fff;
 }
 
 /* Form input styling */
-.profile-form-group .form-control {
+.settings-form-group .form-control {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ced4da;
@@ -206,14 +206,14 @@
   color: #ffc107;
 }
 
-:root.dark-mode .profile-form-group .form-control {
+:root.dark-mode .settings-form-group .form-control {
   background-color: #1a1a1a;
   border-color: #444;
   color: #fff;
 }
 
 /* Form input focus state */
-.profile-form-group .form-control:focus {
+.settings-form-group .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
@@ -268,7 +268,7 @@
 }
 
 /* Dark theme styles */
-[data-theme='dark'] .profile-container {
+[data-theme='dark'] .settings-container {
   background-color: var(--bg-color-dark);
 }
 
@@ -419,7 +419,7 @@
 /* Mobile responsive styles */
 @media (max-width: 768px) {
   /* Switch to single column layout */
-  .profile-content {
+  .settings-content {
     grid-template-columns: 1fr;
     grid-template-areas: 
       "avatar"
@@ -429,7 +429,7 @@
   }
 
   /* Adjust container margins and padding */
-  .profile-container {
+  .settings-container {
     margin: 1rem;
     padding: 1rem;
   }

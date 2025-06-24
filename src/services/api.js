@@ -1091,6 +1091,182 @@ const api = {
       throw error;
     }
   },
+
+  // Module search and management
+  searchModules: async (query, limit = 5) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.get(
+        `${config.backendUrl}/api/modules/search`,
+        {
+          params: { query, limit },
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getOngoingModules: async (displayNameSlug) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/users/${displayNameSlug}/ongoing-modules`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getCompletedModules: async (displayNameSlug) => {
+    try {
+      const response = await axios.get(
+        `${config.backendUrl}/api/users/${displayNameSlug}/completed-modules`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  addOngoingModule: async (displayNameSlug, moduleId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.post(
+        `${config.backendUrl}/api/users/${displayNameSlug}/ongoing-modules`,
+        { moduleId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  addCompletedModule: async (displayNameSlug, moduleId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.post(
+        `${config.backendUrl}/api/users/${displayNameSlug}/completed-modules`,
+        { moduleId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  removeOngoingModule: async (displayNameSlug, moduleId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.delete(
+        `${config.backendUrl}/api/users/${displayNameSlug}/ongoing-modules/${moduleId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  removeCompletedModule: async (displayNameSlug, moduleId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.delete(
+        `${config.backendUrl}/api/users/${displayNameSlug}/completed-modules/${moduleId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // User module reordering functions
+  reorderOngoingModules: async (displayNameSlug, moduleIds) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.put(
+        `${config.backendUrl}/api/users/${displayNameSlug}/ongoing-modules/reorder`,
+        { moduleIds },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  reorderCompletedModules: async (displayNameSlug, moduleIds) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.put(
+        `${config.backendUrl}/api/users/${displayNameSlug}/completed-modules/reorder`,
+        { moduleIds },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default api;

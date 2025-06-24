@@ -11,6 +11,7 @@ const NovelDetail = lazy(() => import('../components/NovelDetail'));
 const ChapterDashboard = lazy(() => import('../components/ChapterDashboard'));
 const AdminDashboard = lazy(() => import('../components/AdminDashboard.jsx'));
 const UserProfile = lazy(() => import('../pages/UserProfile'));
+const UserSettings = lazy(() => import('../pages/UserSettings'));
 const UserBookmarks = lazy(() => import('../pages/UserBookmarks'));
 const ChangePassword = lazy(() => import('../pages/ChangePassword'));
 const Chapter = lazy(() => import('../components/Chapter'));
@@ -52,6 +53,7 @@ function AppRoutes() {
         
         {/* Vietnamese User Routes */}
         <Route path="/nguoi-dung/:username/trang-ca-nhan" element={<LazyRoute><UserProfile /></LazyRoute>} />
+        <Route path="/nguoi-dung/:username/cai-dat" element={<LazyRoute><UserSettings /></LazyRoute>} />
         <Route path="/nguoi-dung/:username/truyen-danh-dau" element={<LazyRoute><UserBookmarks /></LazyRoute>} />
         <Route path="/nguoi-dung/:username/thay-doi-mat-khau" element={<LazyRoute><ChangePassword /></LazyRoute>} />
         

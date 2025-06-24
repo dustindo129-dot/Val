@@ -34,7 +34,7 @@ import {
     faBookmark
 } from '@fortawesome/free-regular-svg-icons';
 import cdnConfig from '../../config/bunny';
-import {createUniqueSlug, generateChapterUrl} from '../../utils/slugUtils';
+import {createUniqueSlug, generateChapterUrl, generateUserProfileUrl} from '../../utils/slugUtils';
 import {translateStatus, getStatusForCSS} from '../../utils/statusTranslation';
 import DOMPurify from 'dompurify';
 
@@ -293,6 +293,70 @@ const processContent = (content) => {
         console.error('Lỗi xử lý nội dung:', error);
         return DOMPurify.sanitize(content);
     }
+};
+
+// Helper function to render staff names (handles both user objects and text strings)
+const renderStaffName = (staffMember, index, isActive = false) => {
+  // Only make active staff clickable
+  if (isActive) {
+    // Check if it's a user object (from active staff with user data) or just a string
+    if (typeof staffMember === 'object' && staffMember.username) {
+      // It's a user object - make it clickable
+      return (
+        <Link 
+          to={generateUserProfileUrl(staffMember)} 
+          className="rd-staff-name-link" 
+          key={index}
+        >
+          <span className="rd-staff-name rd-staff-name-active">
+            {staffMember.displayName || staffMember.username}
+          </span>
+        </Link>
+      );
+    } else if (typeof staffMember === 'string') {
+      // It's a text string - check if it looks like a username (no spaces, reasonable length)
+      const isLikelyUsername = staffMember.length <= 30 && !staffMember.includes(' ') && staffMember.trim() === staffMember;
+      
+      if (isLikelyUsername) {
+        // Treat as username and make clickable
+        return (
+          <Link 
+            to={generateUserProfileUrl(staffMember)} 
+            className="rd-staff-name-link" 
+            key={index}
+          >
+            <span className="rd-staff-name rd-staff-name-active">
+              {staffMember}
+            </span>
+          </Link>
+        );
+      } else {
+        // Treat as display name (not clickable but still active)
+        return (
+          <span className="rd-staff-name rd-staff-name-active" key={index}>
+            {staffMember}
+          </span>
+        );
+      }
+    } else {
+      // Fallback for any other case
+      return (
+        <span className="rd-staff-name rd-staff-name-active" key={index}>
+          {String(staffMember)}
+        </span>
+      );
+    }
+  } else {
+    // Inactive staff - always plain text, no clickable links
+    return (
+      <span className="rd-staff-name rd-staff-name-inactive" key={index}>
+        {typeof staffMember === 'object' && staffMember.username 
+          ? (staffMember.displayName || staffMember.username)
+          : String(staffMember)
+        }
+      </span>
+    );
+  }
 };
 
 const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar}) => {
@@ -1216,11 +1280,9 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                     </div>
                                     <div className="rd-staff-members">
                                         {novelData.active?.translator && novelData.active.translator.length > 0 ? (
-                                            novelData.active.translator.map((translator, index) => (
-                                                <span className="rd-staff-name" key={index}>
-                        {translator}
-                      </span>
-                                            ))
+                                            novelData.active.translator.map((translator, index) => 
+                                                renderStaffName(translator, index, true)
+                                            )
                                         ) : (
                                             <span className="rd-staff-empty">Không có</span>
                                         )}
@@ -1234,11 +1296,9 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                     </div>
                                     <div className="rd-staff-members">
                                         {novelData.active?.editor && novelData.active.editor.length > 0 ? (
-                                            novelData.active.editor.map((editor, index) => (
-                                                <span className="rd-staff-name" key={index}>
-                        {editor}
-                      </span>
-                                            ))
+                                            novelData.active.editor.map((editor, index) => 
+                                                renderStaffName(editor, index, true)
+                                            )
                                         ) : (
                                             <span className="rd-staff-empty">Không có</span>
                                         )}
@@ -1252,11 +1312,9 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                     </div>
                                     <div className="rd-staff-members">
                                         {novelData.active?.proofreader && novelData.active.proofreader.length > 0 ? (
-                                            novelData.active.proofreader.map((proofreader, index) => (
-                                                <span className="rd-staff-name" key={index}>
-                        {proofreader}
-                      </span>
-                                            ))
+                                            novelData.active.proofreader.map((proofreader, index) => 
+                                                renderStaffName(proofreader, index, true)
+                                            )
                                         ) : (
                                             <span className="rd-staff-empty">Không có</span>
                                         )}
@@ -1279,11 +1337,9 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                           </span>
                                                     </div>
                                                     <div className="rd-staff-members">
-                                                        {novelData.inactive.translator.map((translator, index) => (
-                                                            <span className="rd-staff-name" key={index}>
-                              {translator}
-                            </span>
-                                                        ))}
+                                                        {novelData.inactive.translator.map((translator, index) => 
+                                                            renderStaffName(translator, index, false)
+                                                        )}
                                                     </div>
                                                 </>
                                             )}
@@ -1297,11 +1353,9 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                           </span>
                                                     </div>
                                                     <div className="rd-staff-members">
-                                                        {novelData.inactive.editor.map((editor, index) => (
-                                                            <span className="rd-staff-name" key={index}>
-                              {editor}
-                            </span>
-                                                        ))}
+                                                        {novelData.inactive.editor.map((editor, index) => 
+                                                            renderStaffName(editor, index, false)
+                                                        )}
                                                     </div>
                                                 </>
                                             )}
@@ -1315,11 +1369,9 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                           </span>
                                                     </div>
                                                     <div className="rd-staff-members">
-                                                        {novelData.inactive.proofreader.map((proofreader, index) => (
-                                                            <span className="rd-staff-name" key={index}>
-                              {proofreader}
-                            </span>
-                                                        ))}
+                                                        {novelData.inactive.proofreader.map((proofreader, index) => 
+                                                            renderStaffName(proofreader, index, false)
+                                                        )}
                                                     </div>
                                                 </>
                                             )}

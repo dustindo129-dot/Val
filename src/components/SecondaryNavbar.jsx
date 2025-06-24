@@ -23,6 +23,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/SecondaryNavbar.css';
 import axios from 'axios';
 import config from '../config/config';
+import { createSlug } from '../utils/slugUtils';
 
 /**
  * SecondaryNavbar Component
@@ -55,8 +56,12 @@ const SecondaryNavbar = () => {
     if (isAuthenticated && user) {
       try {
         const timestamp = Date.now();
+        // Create display name slug for URL
+        const displayName = user.displayName || user.username;
+        const displayNameSlug = createSlug(displayName) || displayName;
+        
         const response = await axios.get(
-          `${config.backendUrl}/api/users/${user.username}/profile`,
+          `${config.backendUrl}/api/users/${displayNameSlug}/profile`,
           { 
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
             params: { _t: timestamp } // Cache busting parameter

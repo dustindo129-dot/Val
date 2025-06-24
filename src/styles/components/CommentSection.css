@@ -189,6 +189,21 @@
   color: #343a40;
 }
 
+.comment-username-link {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.comment-username-link:hover {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.comment-username-link:hover .comment-username {
+  color: #007bff;
+}
+
 .comment-time {
   font-size: 0.8rem;
   color: #6c757d;
@@ -734,6 +749,14 @@
 
 :root.dark-mode .comment-username {
   color: #f8f9fa;
+}
+
+:root.dark-mode .comment-username-link:hover {
+  color: #66b0ff;
+}
+
+:root.dark-mode .comment-username-link:hover .comment-username {
+  color: #66b0ff;
 }
 
 :root.dark-mode .comment-text {
