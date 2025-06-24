@@ -2146,7 +2146,6 @@ const AdminDashboard = () => {
                           paste_strip_class_attributes: 'all',
                           paste_merge_formats: true,
                           paste_webkit_styles: 'none',
-                          paste_retain_style_properties: 'none',
                           paste_preprocess: function(plugin, args) {
                             // First handle footnote markers
                             args.content = args.content.replace(
@@ -2232,7 +2231,6 @@ const AdminDashboard = () => {
                           paste_strip_class_attributes: 'all',
                           paste_merge_formats: true,
                           paste_webkit_styles: 'none',
-                          paste_retain_style_properties: 'none',
                           paste_preprocess: function(plugin, args) {
                             // First handle footnote markers
                             args.content = args.content.replace(
