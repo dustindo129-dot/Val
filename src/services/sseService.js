@@ -333,6 +333,13 @@ class SSEService {
       return;
     }
     
+    // Don't schedule reconnect if there's no valid token
+    // since the backend requires authentication for all SSE connections
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+    
     const delay = customDelay || this.getReconnectDelay();
     
     this.reconnectTimeout = setTimeout(() => {
