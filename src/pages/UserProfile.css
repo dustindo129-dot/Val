@@ -278,6 +278,15 @@
   margin-bottom: 20px;
 }
 
+/* Introduction content image styling - same as chapter content */
+.intro-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem auto;
+  border-radius: 4px;
+}
+
 .intro-editor-actions {
   display: flex;
   gap: 0.75rem;
