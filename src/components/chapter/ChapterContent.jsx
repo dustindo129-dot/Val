@@ -34,7 +34,8 @@ const ChapterContent = ({
   setEditedEditor,
   editedProofreader,
   setEditedProofreader,
-  novelData = null
+  novelData = null,
+  onNetworkError
 }) => {
   const contentRef = useRef(null);
   const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
@@ -44,9 +45,37 @@ const ChapterContent = ({
   const [originalMode] = useState(chapter.mode || 'published');
   const [originalChapterBalance] = useState(chapter.chapterBalance || 0);
   const [modeError, setModeError] = useState('');
+  const [networkError, setNetworkError] = useState('');
 
   // Check if the current module is in paid mode
   const isModulePaid = moduleData?.mode === 'paid';
+
+  // Handle network errors with auto-hide
+  const handleNetworkError = useCallback((error) => {
+    let errorMessage = 'Network Error';
+    
+    if (error.message === 'Failed to fetch') {
+      errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+    } else if (error.message.includes('timeout')) {
+      errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
+    } else if (error.message.includes('NetworkError')) {
+      errorMessage = 'Lỗi kết nối mạng. Vui lòng kiểm tra internet và thử lại.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    setNetworkError(errorMessage);
+    
+    // Auto-hide network error after 5 seconds
+    setTimeout(() => {
+      setNetworkError('');
+    }, 5000);
+    
+    // Also call parent's onNetworkError callback if provided
+    if (onNetworkError) {
+      onNetworkError(error);
+    }
+  }, [onNetworkError]);
 
   // Effect to handle when module becomes paid - automatically change chapter mode
   useEffect(() => {
@@ -610,6 +639,19 @@ const ChapterContent = ({
               </div>
             )}
             
+            {networkError && (
+              <div className="network-error">
+                <span>{networkError}</span>
+                <button 
+                  className="network-error-close-btn"
+                  onClick={() => setNetworkError('')}
+                  title="Đóng thông báo"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            
             {editedMode === 'paid' && userRole === 'admin' && (
               <div className="chapter-balance-input">
                 <label>Số lúa chương (Tối thiểu 1 🌾):</label>
@@ -848,6 +890,7 @@ const ChapterContent = ({
                       })
                       .catch(error => {
                         console.error('Image upload error:', error);
+                        handleNetworkError(error);
                         reject('Image upload failed');
                       });
                   });
@@ -990,7 +1033,8 @@ ChapterContent.propTypes = {
   setEditedEditor: PropTypes.func,
   editedProofreader: PropTypes.string,
   setEditedProofreader: PropTypes.func,
-  novelData: PropTypes.shape({})
+  novelData: PropTypes.shape({}),
+  onNetworkError: PropTypes.func
 };
 
 export default ChapterContent; 
