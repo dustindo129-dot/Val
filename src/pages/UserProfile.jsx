@@ -9,7 +9,7 @@
  * This is different from UserSettings which handles account configuration.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
@@ -31,6 +31,16 @@ import api from '../services/api';
 import { createSlug } from '../utils/slugUtils';
 import './UserProfile.css';
 import '../components/DraggableModuleList.css';
+
+// Helper function to format numbers nicely
+const formatNumber = (num) => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+};
 
 /**
  * UserProfileSEO Component
@@ -91,6 +101,12 @@ const UserProfile = () => {
     completedModules: []
   });
 
+  // Introduction editing state
+  const [isEditingIntro, setIsEditingIntro] = useState(false);
+  const [introText, setIntroText] = useState('');
+  const [isSavingIntro, setIsSavingIntro] = useState(false);
+  const editorRef = useRef(null);
+
   // Check if current user is viewing their own profile
   const isOwnProfile = user && profileUser && user.username === profileUser.username;
   
@@ -131,11 +147,38 @@ const UserProfile = () => {
         setLoading(true);
         setError(null);
 
-        const response = await axios.get(
-          `${config.backendUrl}/api/users/${username}/public-profile`
-        );
+        // Check if profile was visited in the last 4 hours (same cooldown as novel views)
+        const visitKey = `user_${username}_last_visited`;
+        const lastVisited = localStorage.getItem(visitKey);
+        const now = Date.now();
+        const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+        
+        // Check if viewing own profile (before making request)
+        const isViewingOwnProfile = user && user.username === username;
+        
+        // Only count visit if:
+        // 1. Never visited before, or  
+        // 2. Last visited more than 4 hours ago
+        // 3. Not viewing own profile
+        const shouldCountVisit = !isViewingOwnProfile && 
+          (!lastVisited || (now - parseInt(lastVisited, 10)) > fourHours);
+
+        // Add skipVisitorTracking parameter if we shouldn't count this visit
+        const params = new URLSearchParams();
+        if (!shouldCountVisit) {
+          params.append('skipVisitorTracking', 'true');
+        }
+
+        const url = `${config.backendUrl}/api/users/${username}/public-profile${params.toString() ? '?' + params.toString() : ''}`;
+        const response = await axios.get(url);
+
+        // Update last visited timestamp if we counted a visit
+        if (shouldCountVisit) {
+          localStorage.setItem(visitKey, now.toString());
+        }
         
         setProfileUser(response.data);
+        setIntroText(response.data.intro || '');
         
         // Always fetch module data for display (visitors can see them)
         const displayNameSlug = response.data.displayName ? createSlug(response.data.displayName) : response.data.username;
@@ -219,6 +262,96 @@ const UserProfile = () => {
 
     checkNovelRoles();
   }, [user, isOwnProfile]);
+
+  // TinyMCE initialization and cleanup
+  useEffect(() => {
+    if (isEditingIntro && !editorRef.current) {
+      // Dynamically load TinyMCE script
+      const script = document.createElement('script');
+      script.src = '/tinymce/js/tinymce/tinymce.min.js';
+      script.onload = () => {
+        if (window.tinymce) {
+          window.tinymce.init({
+            selector: '#intro-editor',
+            height: 300,
+            menubar: false,
+            plugins: [
+              'lists', 'link', 'image', 'charmap', 'preview',
+              'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | formatselect | ' +
+              'bold italic backcolor | alignleft aligncenter ' +
+              'alignright alignjustify | bullist numlist outdent indent | ' +
+              'removeformat | help',
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size:14px }',
+            setup: (editor) => {
+              editorRef.current = editor;
+              editor.on('init', () => {
+                editor.setContent(introText);
+              });
+            }
+          });
+        }
+      };
+      document.head.appendChild(script);
+
+      return () => {
+        if (editorRef.current) {
+          editorRef.current.destroy();
+          editorRef.current = null;
+        }
+      };
+    }
+  }, [isEditingIntro, introText]);
+
+  // Handle introduction editing
+  const handleEditIntro = () => {
+    setIsEditingIntro(true);
+  };
+
+  const handleCancelEditIntro = () => {
+    setIsEditingIntro(false);
+    setIntroText(profileUser.intro || '');
+    if (editorRef.current) {
+      editorRef.current.destroy();
+      editorRef.current = null;
+    }
+  };
+
+  const handleSaveIntro = async () => {
+    if (!editorRef.current) return;
+
+    setIsSavingIntro(true);
+    try {
+      const content = editorRef.current.getContent();
+      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
+      
+      const response = await axios.put(
+        `${config.backendUrl}/api/users/${displayNameSlug}/intro`,
+        { intro: content },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      setIntroText(content);
+      setProfileUser(prev => ({ ...prev, intro: content }));
+      setIsEditingIntro(false);
+      
+      if (editorRef.current) {
+        editorRef.current.destroy();
+        editorRef.current = null;
+      }
+    } catch (error) {
+      console.error('Error updating introduction:', error);
+      alert('Không thể cập nhật giới thiệu. Vui lòng thử lại.');
+    } finally {
+      setIsSavingIntro(false);
+    }
+  };
 
   // Module management functions
   const handleMoveToCompleted = async (moduleId) => {
@@ -545,25 +678,32 @@ const UserProfile = () => {
                 
                 <div className="profile-stats">
                   <div className="stat-item">
-                    <span className="stat-number">{userStats.chaptersParticipated}</span>
+                    <span className="stat-number">{formatNumber(userStats.chaptersParticipated)}</span>
                     <span className="stat-label">Chương đã tham gia</span>
                   </div>
                   
                   <div className="stat-item">
-                    <span className="stat-number">{userStats.followingCount}</span>
+                    <span className="stat-number">{formatNumber(userStats.followingCount)}</span>
                     <span className="stat-label">Đang theo dõi</span>
                   </div>
                   
                   <div className="stat-item">
-                    <span className="stat-number">{userStats.commentsCount}</span>
+                    <span className="stat-number">{formatNumber(userStats.commentsCount)}</span>
                     <span className="stat-label">Bình luận</span>
                   </div>
                 </div>
 
                 <div className="profile-meta">
-                  <div className="meta-item">
-                    <i className="fa-solid fa-clock"></i>
-                    <span>Tham gia: {new Date(profileUser.createdAt).toLocaleDateString('vi-VN')}</span>
+                  <div className="meta-row">
+                    <div className="meta-item">
+                      <i className="fa-solid fa-clock"></i>
+                      <span>Tham gia: {new Date(profileUser.createdAt).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                    
+                    <div className="meta-item">
+                      <i className="fa-solid fa-eye"></i>
+                      <span>Lượt ghé thăm: {formatNumber(profileUser.visitors?.total || 0)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -576,16 +716,79 @@ const UserProfile = () => {
       <div className="profile-main-content">
         <div className="container">
           <div className="content-grid">
-            {/* Left Column - Notes/About Section */}
+            {/* Left Column - Introduction Section */}
             <div className="profile-notes-section">
               <div className="notes-card">
-                <h3>Ghi chú</h3>
+                <div className="notes-header">
+                  <h3>Giới thiệu</h3>
+                  {isOwnProfile && !isEditingIntro && (
+                    <button 
+                      className="edit-intro-btn"
+                      onClick={handleEditIntro}
+                      title="Chỉnh sửa giới thiệu"
+                    >
+                      <i className="fa-solid fa-edit"></i>
+                      Sửa
+                    </button>
+                  )}
+                </div>
+                
                 <div className="notes-content">
-                  <p>Thử nghiệm, chưa đúng chính thức.</p>
+                  {isEditingIntro ? (
+                    <div className="intro-editor-container">
+                      <textarea 
+                        id="intro-editor"
+                        defaultValue={introText}
+                        style={{ width: '100%', minHeight: '300px' }}
+                      />
+                      <div className="intro-editor-actions">
+                        <button 
+                          className="save-intro-btn"
+                          onClick={handleSaveIntro}
+                          disabled={isSavingIntro}
+                        >
+                          {isSavingIntro ? (
+                            <>
+                              <i className="fa-solid fa-spinner fa-spin"></i>
+                              Đang lưu...
+                            </>
+                          ) : (
+                            <>
+                              <i className="fa-solid fa-check"></i>
+                              Lưu
+                            </>
+                          )}
+                        </button>
+                        <button 
+                          className="cancel-intro-btn"
+                          onClick={handleCancelEditIntro}
+                          disabled={isSavingIntro}
+                        >
+                          <i className="fa-solid fa-times"></i>
+                          Hủy
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="intro-content">
+                      {profileUser.intro ? (
+                        <div 
+                          dangerouslySetInnerHTML={{ __html: profileUser.intro }}
+                        />
+                      ) : (
+                        <p className="no-intro">
+                          {isOwnProfile 
+                            ? 'Chưa có giới thiệu. Nhấn "Sửa" để thêm giới thiệu về bản thân.' 
+                            : 'Người dùng chưa có giới thiệu.'
+                          }
+                        </p>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="profile-interests-tags">
                     <span className="profile-interest-tag">Học Nghệ</span>
-                    <span className="profile-interest-tag">Nhà Mao Hiểm</span>
+                    <span className="profile-interest-tag">Nhà Mạo Hiểm</span>
                     <span className="profile-interest-tag">Chuyển Giả</span>
                     <span className="profile-interest-tag">Đại Sư</span>
                     <span className="profile-interest-tag">Thần Đấu</span>
