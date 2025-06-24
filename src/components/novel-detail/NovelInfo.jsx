@@ -321,7 +321,7 @@ const renderStaffName = (staffMember, index, isActive = false) => {
         // Treat as username and make clickable
         return (
           <Link 
-            to={generateUserProfileUrl(staffMember)} 
+            to={generateUserProfileUrl({ username: staffMember })} 
             className="rd-staff-name-link" 
             key={index}
           >
