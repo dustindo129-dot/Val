@@ -16,8 +16,17 @@ import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ModuleSearch from '../components/ModuleSearch';
+
 import DraggableModuleList from '../components/DraggableModuleList';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import api from '../services/api';
 import { createSlug } from '../utils/slugUtils';
 import './UserProfile.css';
@@ -85,6 +94,16 @@ const UserProfile = () => {
   // Check if current user is viewing their own profile
   const isOwnProfile = user && profileUser && user.username === profileUser.username;
   
+  // Drag and drop sensors for cross-section dragging
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before dragging starts
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+  
   // Check if user has permission to manage modules
   // System roles: admin, moderator, pj_user
   // Novel-specific roles: translator, editor, proofreader (checked via novel staff assignments)
@@ -116,9 +135,9 @@ const UserProfile = () => {
         const displayNameSlug = response.data.displayName ? createSlug(response.data.displayName) : response.data.username;
         
         try {
-          const [ongoingModules, completedModules, chaptersParticipated, followingCount, commentsCount] = await Promise.all([
-            api.getOngoingModules(displayNameSlug),
-            api.getCompletedModules(displayNameSlug),
+          const [userModules, chaptersParticipated, followingCount, commentsCount] = await Promise.all([
+            // Fetch user's modules based on their novel roles and existing preferences
+            axios.get(`${config.backendUrl}/api/users/${response.data._id}/role-modules`),
             // Fetch actual chapter participation count for this user (as translator, editor, or proofreader)
             axios.get(`${config.backendUrl}/api/chapters/participation/user/${response.data._id}`),
             // Fetch actual following count for this user
@@ -131,8 +150,8 @@ const UserProfile = () => {
             chaptersParticipated: chaptersParticipated.data.count || 0,
             followingCount: followingCount.data.count || 0,
             commentsCount: commentsCount.data.count || 0,
-            ongoingModules: ongoingModules || [],
-            completedModules: completedModules || []
+            ongoingModules: userModules.data.ongoingModules || [],
+            completedModules: userModules.data.completedModules || []
           });
         } catch (moduleError) {
           console.error('Error fetching user stats:', moduleError);
@@ -196,89 +215,69 @@ const UserProfile = () => {
   }, [user, isOwnProfile]);
 
   // Module management functions
-  const handleAddOngoingModule = async (module) => {
+  const handleMoveToCompleted = async (moduleId) => {
     if (!canManageModules) return;
     
-    // Check if module is already in ongoing list
-    const isAlreadyInOngoing = userStats.ongoingModules.some(
-      item => item.moduleId._id === module._id
-    );
-    
-    if (isAlreadyInOngoing) {
-      // Module is already in the list, do nothing
-      return;
-    }
-    
     try {
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
-      const result = await api.addOngoingModule(displayNameSlug, module._id);
+      await axios.post(`${config.backendUrl}/api/users/${profileUser._id}/move-module-to-completed`, {
+        moduleId: moduleId
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       
-      // If backend says it already exists, don't update the list
-      if (result.alreadyExists) {
-        return;
-      }
-      
-      // Update the state optimistically instead of refetching
-      setUserStats(prev => ({
-        ...prev,
-        ongoingModules: [
-          {
-            moduleId: module,
-            addedAt: new Date().toISOString()
-          },
-          ...prev.ongoingModules
-        ],
-        // Remove from completed if it was there
-        completedModules: prev.completedModules.filter(
-          item => item.moduleId._id !== module._id
-        )
-      }));
+      // Update local state
+      setUserStats(prev => {
+        const moduleToMove = prev.ongoingModules.find(item => item.moduleId._id === moduleId);
+        if (!moduleToMove) return prev;
+        
+        return {
+          ...prev,
+          ongoingModules: prev.ongoingModules.filter(item => item.moduleId._id !== moduleId),
+          completedModules: [
+            {
+              ...moduleToMove,
+              addedAt: new Date().toISOString()
+            },
+            ...prev.completedModules
+          ]
+        };
+      });
     } catch (error) {
-      console.error('Error adding ongoing module:', error);
-      alert('Không thể thêm tập vào danh sách đang tiến hành');
+      console.error('Error moving module to completed:', error);
+      alert('Không thể chuyển tập sang danh sách đã hoàn thành');
     }
   };
 
-  const handleAddCompletedModule = async (module) => {
+  const handleMoveToOngoing = async (moduleId) => {
     if (!canManageModules) return;
     
-    // Check if module is already in completed list
-    const isAlreadyInCompleted = userStats.completedModules.some(
-      item => item.moduleId._id === module._id
-    );
-    
-    if (isAlreadyInCompleted) {
-      // Module is already in the list, do nothing
-      return;
-    }
-    
     try {
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
-      const result = await api.addCompletedModule(displayNameSlug, module._id);
+      await axios.post(`${config.backendUrl}/api/users/${profileUser._id}/move-module-to-ongoing`, {
+        moduleId: moduleId
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       
-      // If backend says it already exists, don't update the list
-      if (result.alreadyExists) {
-        return;
-      }
-      
-      // Update the state optimistically instead of refetching
-      setUserStats(prev => ({
-        ...prev,
-        completedModules: [
-          {
-            moduleId: module,
-            addedAt: new Date().toISOString()
-          },
-          ...prev.completedModules
-        ],
-        // Remove from ongoing if it was there
-        ongoingModules: prev.ongoingModules.filter(
-          item => item.moduleId._id !== module._id
-        )
-      }));
+      // Update local state
+      setUserStats(prev => {
+        const moduleToMove = prev.completedModules.find(item => item.moduleId._id === moduleId);
+        if (!moduleToMove) return prev;
+        
+        return {
+          ...prev,
+          completedModules: prev.completedModules.filter(item => item.moduleId._id !== moduleId),
+          ongoingModules: [
+            {
+              ...moduleToMove,
+              addedAt: new Date().toISOString()
+            },
+            ...prev.ongoingModules
+          ]
+        };
+      });
     } catch (error) {
-      console.error('Error adding completed module:', error);
-      alert('Không thể thêm tập vào danh sách đã hoàn thành');
+      console.error('Error moving module to ongoing:', error);
+      alert('Không thể chuyển tập sang danh sách đang tiến hành');
     }
   };
 
@@ -286,8 +285,9 @@ const UserProfile = () => {
     if (!canManageModules) return;
     
     try {
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
-      await api.removeOngoingModule(displayNameSlug, moduleId);
+      await axios.delete(`${config.backendUrl}/api/users/${profileUser._id}/ongoing-modules/${moduleId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       
       // Update local state
       setUserStats(prev => ({
@@ -304,8 +304,9 @@ const UserProfile = () => {
     if (!canManageModules) return;
     
     try {
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
-      await api.removeCompletedModule(displayNameSlug, moduleId);
+      await axios.delete(`${config.backendUrl}/api/users/${profileUser._id}/completed-modules/${moduleId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
       
       // Update local state
       setUserStats(prev => ({
@@ -323,7 +324,6 @@ const UserProfile = () => {
     if (!canManageModules) return;
     
     try {
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
       const moduleIds = newOrder.map(item => item.moduleId._id);
       
       // Update local state immediately for better UX
@@ -333,18 +333,21 @@ const UserProfile = () => {
       }));
       
       // Send to backend
-      await api.reorderOngoingModules(displayNameSlug, moduleIds);
+      await axios.put(`${config.backendUrl}/api/users/${profileUser._id}/reorder-ongoing-modules`, {
+        moduleIds: moduleIds
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
     } catch (error) {
       console.error('Error reordering ongoing modules:', error);
       alert('Không thể sắp xếp lại danh sách đang tiến hành');
       
-      // Revert local state on error
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
+      // Revert local state on error - refetch user modules
       try {
-        const ongoingModules = await api.getOngoingModules(displayNameSlug);
+        const userModules = await axios.get(`${config.backendUrl}/api/users/${profileUser._id}/role-modules`);
         setUserStats(prev => ({
           ...prev,
-          ongoingModules: ongoingModules || []
+          ongoingModules: userModules.data.ongoingModules || []
         }));
       } catch (revertError) {
         console.error('Error reverting ongoing modules:', revertError);
@@ -356,7 +359,6 @@ const UserProfile = () => {
     if (!canManageModules) return;
     
     try {
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
       const moduleIds = newOrder.map(item => item.moduleId._id);
       
       // Update local state immediately for better UX
@@ -366,21 +368,86 @@ const UserProfile = () => {
       }));
       
       // Send to backend
-      await api.reorderCompletedModules(displayNameSlug, moduleIds);
+      await axios.put(`${config.backendUrl}/api/users/${profileUser._id}/reorder-completed-modules`, {
+        moduleIds: moduleIds
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
     } catch (error) {
       console.error('Error reordering completed modules:', error);
       alert('Không thể sắp xếp lại danh sách đã hoàn thành');
       
-      // Revert local state on error
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
+      // Revert local state on error - refetch user modules
       try {
-        const completedModules = await api.getCompletedModules(displayNameSlug);
+        const userModules = await axios.get(`${config.backendUrl}/api/users/${profileUser._id}/role-modules`);
         setUserStats(prev => ({
           ...prev,
-          completedModules: completedModules || []
+          completedModules: userModules.data.completedModules || []
         }));
       } catch (revertError) {
         console.error('Error reverting completed modules:', revertError);
+      }
+    }
+  };
+
+  // Handle cross-section dragging (ongoing <-> completed)
+  const handleCrossSectionDrag = (event) => {
+    const { active, over } = event;
+    
+    if (!over || !canManageModules) return;
+    
+    const activeId = active.id;
+    const overId = over.id;
+    
+    // Check which section the dragged item is from
+    const activeInOngoing = userStats.ongoingModules.some(item => item.moduleId._id === activeId);
+    const activeInCompleted = userStats.completedModules.some(item => item.moduleId._id === activeId);
+    
+    // Check which section we're dropping into
+    const overIsOngoingContainer = overId === 'ongoing' || over.data?.current?.containerId === 'ongoing';
+    const overIsCompletedContainer = overId === 'completed' || over.data?.current?.containerId === 'completed';
+    const overIsOngoingItem = userStats.ongoingModules.some(item => item.moduleId._id === overId);
+    const overIsCompletedItem = userStats.completedModules.some(item => item.moduleId._id === overId);
+    
+    // Determine target section
+    const droppingInOngoing = overIsOngoingContainer || overIsOngoingItem;
+    const droppingInCompleted = overIsCompletedContainer || overIsCompletedItem;
+    
+    // Cross-section moves
+    if (activeInOngoing && droppingInCompleted) {
+      handleMoveToCompleted(activeId);
+      return;
+    }
+    
+    if (activeInCompleted && droppingInOngoing) {
+      handleMoveToOngoing(activeId);
+      return;
+    }
+    
+    // Handle reordering within the same section
+    if (activeId !== overId && over) {
+      // Reorder within ongoing section
+      if (activeInOngoing && (overIsOngoingItem || overIsOngoingContainer)) {
+        const oldIndex = userStats.ongoingModules.findIndex(item => item.moduleId._id === activeId);
+        const newIndex = userStats.ongoingModules.findIndex(item => item.moduleId._id === overId);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newOrder = arrayMove(userStats.ongoingModules, oldIndex, newIndex);
+          handleReorderOngoingModules(newOrder);
+        }
+        return;
+      }
+      
+      // Reorder within completed section
+      if (activeInCompleted && (overIsCompletedItem || overIsCompletedContainer)) {
+        const oldIndex = userStats.completedModules.findIndex(item => item.moduleId._id === activeId);
+        const newIndex = userStats.completedModules.findIndex(item => item.moduleId._id === overId);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newOrder = arrayMove(userStats.completedModules, oldIndex, newIndex);
+          handleReorderCompletedModules(newOrder);
+        }
+        return;
       }
     }
   };
@@ -515,53 +582,49 @@ const UserProfile = () => {
 
             {/* Right Column - Modules Sections */}
             <div className="profile-novels-section">
-              {/* Ongoing Modules */}
-              <div className="novels-card ongoing-novels">
-                <div className="card-header">
-                  <h3>
-                    <span className="section-number">{userStats.ongoingModules.length}</span>
-                    Đang tiến hành
-                  </h3>
-                  {canManageModules && (
-                    <ModuleSearch 
-                      onModuleSelect={handleAddOngoingModule}
-                      placeholder="Thêm tập đang tiến hành..."
-                    />
-                  )}
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleCrossSectionDrag}
+              >
+                {/* Ongoing Modules */}
+                <div className="novels-card ongoing-novels">
+                  <div className="card-header">
+                    <h3>
+                      <span className="section-number">{userStats.ongoingModules.length}</span>
+                      Đang tiến hành
+                    </h3>
+                  </div>
+                  <DraggableModuleList
+                    modules={userStats.ongoingModules}
+                    canManageModules={canManageModules}
+                    onRemove={handleRemoveOngoingModule}
+                    onReorder={handleReorderOngoingModules}
+                    emptyMessage={canManageModules ? 'Chưa có tập đang tiến hành. Kéo tập từ "Đã hoàn thành" để thêm vào đây.' : 'Không có tập đang tiến hành'}
+                    type="ongoing"
+                    containerId="ongoing"
+                  />
                 </div>
-                <DraggableModuleList
-                  modules={userStats.ongoingModules}
-                  canManageModules={canManageModules}
-                  onRemove={handleRemoveOngoingModule}
-                  onReorder={handleReorderOngoingModules}
-                  emptyMessage={canManageModules ? 'Chưa có tập đang tiến hành' : 'Không có tập đang tiến hành'}
-                  type="ongoing"
-                />
-              </div>
 
-              {/* Completed Modules */}
-              <div className="novels-card completed-novels">
-                <div className="card-header">
-                  <h3>
-                    <span className="section-number">{userStats.completedModules.length}</span>
-                    Đã hoàn thành
-                  </h3>
-                  {canManageModules && (
-                    <ModuleSearch 
-                      onModuleSelect={handleAddCompletedModule}
-                      placeholder="Thêm tập đã hoàn thành..."
-                    />
-                  )}
+                {/* Completed Modules */}
+                <div className="novels-card completed-novels">
+                  <div className="card-header">
+                    <h3>
+                      <span className="section-number">{userStats.completedModules.length}</span>
+                      Đã hoàn thành
+                    </h3>
+                  </div>
+                  <DraggableModuleList
+                    modules={userStats.completedModules}
+                    canManageModules={canManageModules}
+                    onRemove={handleRemoveCompletedModule}
+                    onReorder={handleReorderCompletedModules}
+                    emptyMessage={canManageModules ? 'Chưa có tập đã hoàn thành. Kéo tập từ "Đang tiến hành" để thêm vào đây.' : 'Không có tập đã hoàn thành'}
+                    type="completed"
+                    containerId="completed"
+                  />
                 </div>
-                <DraggableModuleList
-                  modules={userStats.completedModules}
-                  canManageModules={canManageModules}
-                  onRemove={handleRemoveCompletedModule}
-                  onReorder={handleReorderCompletedModules}
-                  emptyMessage={canManageModules ? 'Chưa có tập đã hoàn thành' : 'Không có tập đã hoàn thành'}
-                  type="completed"
-                />
-              </div>
+              </DndContext>
             </div>
           </div>
         </div>

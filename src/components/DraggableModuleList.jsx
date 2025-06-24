@@ -1,16 +1,10 @@
 import React from 'react';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {
@@ -90,6 +84,30 @@ const SortableModuleItem = ({ moduleData, canManageModules, onRemove, isDragging
 };
 
 /**
+ * Droppable container component for cross-section dragging
+ */
+const DroppableContainer = ({ children, containerId, type, canManageModules }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: containerId,
+    data: {
+      type: `${type}-droppable`,
+      containerId,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`droppable-container ${isOver && canManageModules ? 'drag-over' : ''}`}
+      data-container-id={containerId}
+      data-container-type={type}
+    >
+      {children}
+    </div>
+  );
+};
+
+/**
  * Draggable module list component
  */
 const DraggableModuleList = ({ 
@@ -98,40 +116,10 @@ const DraggableModuleList = ({
   onRemove, 
   onReorder, 
   emptyMessage,
-  type 
+  type,
+  containerId
 }) => {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Require 8px of movement before dragging starts
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-
-    if (active.id !== over?.id) {
-      const oldIndex = modules.findIndex(item => item.moduleId._id === active.id);
-      const newIndex = modules.findIndex(item => item.moduleId._id === over.id);
-      
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newOrder = arrayMove(modules, oldIndex, newIndex);
-        onReorder(newOrder);
-      }
-    }
-  };
-
-  if (modules.length === 0) {
-    return (
-      <div className="empty-state">
-        <p>{emptyMessage}</p>
-      </div>
-    );
-  }
 
   // Add type to each module for display purposes
   const modulesWithType = modules.map(module => ({
@@ -139,28 +127,42 @@ const DraggableModuleList = ({
     type
   }));
 
-  return (
-    <DndContext 
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext 
-        items={modules.map(item => item.moduleId._id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className={`novels-grid ${canManageModules ? 'can-manage' : ''}`}>
-          {modulesWithType.map((moduleData) => (
-            <SortableModuleItem
-              key={moduleData.moduleId._id}
-              moduleData={moduleData}
-              canManageModules={canManageModules}
-              onRemove={onRemove}
-            />
-          ))}
+  const content = modules.length === 0 ? (
+    <div className={`empty-state ${canManageModules ? 'droppable-empty' : ''}`}>
+      <p>{emptyMessage}</p>
+      {canManageModules && (
+        <div className="drag-hint">
+          <i className="fa-solid fa-arrows-up-down"></i>
+          <span>Kéo thả tập vào đây</span>
         </div>
-      </SortableContext>
-    </DndContext>
+      )}
+    </div>
+  ) : (
+    <SortableContext 
+      items={modules.map(item => item.moduleId._id)}
+      strategy={verticalListSortingStrategy}
+    >
+      <div className={`novels-grid ${canManageModules ? 'can-manage' : ''}`}>
+        {modulesWithType.map((moduleData) => (
+          <SortableModuleItem
+            key={moduleData.moduleId._id}
+            moduleData={moduleData}
+            canManageModules={canManageModules}
+            onRemove={onRemove}
+          />
+        ))}
+      </div>
+    </SortableContext>
+  );
+
+  return (
+    <DroppableContainer 
+      containerId={containerId}
+      type={type}
+      canManageModules={canManageModules}
+    >
+      {content}
+    </DroppableContainer>
   );
 };
 
