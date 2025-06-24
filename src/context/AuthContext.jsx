@@ -263,7 +263,7 @@ export const AuthProvider = ({ children }) => {
             // Check if displayName is missing and refresh user data if needed
             if (!userData.displayName && userData.username) {
               try {
-                const response = await axios.get(`${config.backendUrl}/api/users/${userData.username}/profile`, {
+                const response = await axios.get(`${config.backendUrl}/api/users/${userData.displayName || userData.username}/profile`, {
                   headers: { Authorization: `Bearer ${storedToken}` }
                 });
                 

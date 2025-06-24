@@ -116,6 +116,12 @@ const UserProfile = () => {
     hasNovelRoles
   );
 
+  // Separate permission for remove buttons - admin/mod only
+  const canRemoveModules = user && ['admin', 'moderator'].includes(user.role);
+
+  // Separate permission for refresh button - admin/mod only
+  const canRefreshModules = user && ['admin', 'moderator'].includes(user.role);
+
   /**
    * Fetch user profile data
    */
@@ -282,7 +288,7 @@ const UserProfile = () => {
   };
 
   const handleRemoveOngoingModule = async (moduleId) => {
-    if (!canManageModules) return;
+    if (!canRemoveModules) return;
     
     try {
       await axios.delete(`${config.backendUrl}/api/users/${profileUser._id}/ongoing-modules/${moduleId}`, {
@@ -301,7 +307,7 @@ const UserProfile = () => {
   };
 
   const handleRemoveCompletedModule = async (moduleId) => {
-    if (!canManageModules) return;
+    if (!canRemoveModules) return;
     
     try {
       await axios.delete(`${config.backendUrl}/api/users/${profileUser._id}/completed-modules/${moduleId}`, {
@@ -316,6 +322,28 @@ const UserProfile = () => {
     } catch (error) {
       console.error('Error removing completed module:', error);
       alert('Không thể xóa tập khỏi danh sách đã hoàn thành');
+    }
+  };
+
+  // Module refresh function for admin/mod to repopulate modules
+  const handleRefreshModules = async () => {
+    if (!canRefreshModules) return;
+    
+    try {
+      // Refetch user modules from backend
+      const response = await axios.get(`${config.backendUrl}/api/users/${profileUser._id}/role-modules`);
+      
+      setUserStats(prev => ({
+        ...prev,
+        ongoingModules: response.data.ongoingModules || [],
+        completedModules: response.data.completedModules || []
+      }));
+      
+      // Show success message
+      alert('Đã làm mới danh sách tập thành công');
+    } catch (error) {
+      console.error('Error refreshing modules:', error);
+      alert('Không thể làm mới danh sách tập');
     }
   };
 
@@ -593,11 +621,21 @@ const UserProfile = () => {
                     <h3>
                       <span className="section-number">{userStats.ongoingModules.length}</span>
                       Đang tiến hành
+                      {canRefreshModules && (
+                        <button 
+                          className="refresh-modules-btn"
+                          onClick={handleRefreshModules}
+                          title="Làm mới danh sách tập"
+                        >
+                          <i className="fa-solid fa-refresh"></i>
+                        </button>
+                      )}
                     </h3>
                   </div>
                   <DraggableModuleList
                     modules={userStats.ongoingModules}
                     canManageModules={canManageModules}
+                    canRemoveModules={canRemoveModules}
                     onRemove={handleRemoveOngoingModule}
                     onReorder={handleReorderOngoingModules}
                     emptyMessage={canManageModules ? 'Chưa có tập đang tiến hành. Kéo tập từ "Đã hoàn thành" để thêm vào đây.' : 'Không có tập đang tiến hành'}
@@ -617,6 +655,7 @@ const UserProfile = () => {
                   <DraggableModuleList
                     modules={userStats.completedModules}
                     canManageModules={canManageModules}
+                    canRemoveModules={canRemoveModules}
                     onRemove={handleRemoveCompletedModule}
                     onReorder={handleReorderCompletedModules}
                     emptyMessage={canManageModules ? 'Chưa có tập đã hoàn thành. Kéo tập từ "Đang tiến hành" để thêm vào đây.' : 'Không có tập đã hoàn thành'}

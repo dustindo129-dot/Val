@@ -15,7 +15,7 @@ import { CSS } from '@dnd-kit/utilities';
 /**
  * Individual draggable module item component
  */
-const SortableModuleItem = ({ moduleData, canManageModules, onRemove, isDragging }) => {
+const SortableModuleItem = ({ moduleData, canManageModules, canRemoveModules, onRemove, isDragging }) => {
   const {
     attributes,
     listeners,
@@ -69,7 +69,7 @@ const SortableModuleItem = ({ moduleData, canManageModules, onRemove, isDragging
             {moduleData.type === 'completed' ? 'Hoàn thành' : 'Thêm vào'}: {new Date(moduleData.addedAt).toLocaleDateString('vi-VN')}
           </span>
         </div>
-        {canManageModules && (
+        {canRemoveModules && (
           <button 
             className="remove-module-btn"
             onClick={() => onRemove(moduleData.moduleId._id)}
@@ -109,10 +109,20 @@ const DroppableContainer = ({ children, containerId, type, canManageModules }) =
 
 /**
  * Draggable module list component
+ * 
+ * @param {Array} modules - Array of module objects to display
+ * @param {boolean} canManageModules - Whether user can drag/reorder modules (pj_user, translator, editor, proofreader, admin, mod)
+ * @param {boolean} canRemoveModules - Whether user can remove modules (admin, mod only)
+ * @param {Function} onRemove - Callback when removing a module
+ * @param {Function} onReorder - Callback when reordering modules
+ * @param {string} emptyMessage - Message to show when no modules
+ * @param {string} type - Type of list (ongoing/completed)
+ * @param {string} containerId - Unique ID for the droppable container
  */
 const DraggableModuleList = ({ 
   modules, 
   canManageModules, 
+  canRemoveModules = false, // Default to false if not provided
   onRemove, 
   onReorder, 
   emptyMessage,
@@ -148,6 +158,7 @@ const DraggableModuleList = ({
             key={moduleData.moduleId._id}
             moduleData={moduleData}
             canManageModules={canManageModules}
+            canRemoveModules={canRemoveModules}
             onRemove={onRemove}
           />
         ))}

@@ -93,15 +93,8 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
   };
 
   const fetchUserBalance = async () => {
-    try {
-      const response = await axios.get(
-          `${config.backendUrl}/api/users/${user.username}/profile`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setUserBalance(response.data.balance || 0);
-    } catch (error) {
-      console.error('Error fetching user balance:', error);
-    }
+    // Use balance directly from user object
+    setUserBalance(user.balance || 0);
   };
 
   const handleGiftSelect = (gift) => {

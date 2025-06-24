@@ -54,27 +54,28 @@ const SecondaryNavbar = () => {
    */
   const fetchUserBalance = useCallback(async () => {
     if (isAuthenticated && user) {
+      // If user object already has balance, use it
+      if (user.balance !== undefined) {
+        setUserBalance(user.balance);
+        return;
+      }
+      
+      // Otherwise, fetch it from the user's profile endpoint
       try {
-        const timestamp = Date.now();
-        // Create display name slug for URL
-        const displayName = user.displayName || user.username;
-        const displayNameSlug = createSlug(displayName) || displayName;
-        
         const response = await axios.get(
-          `${config.backendUrl}/api/users/${displayNameSlug}/profile`,
+          `${config.backendUrl}/api/users/${user.displayName || user.username}/profile`,
           { 
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-            params: { _t: timestamp } // Cache busting parameter
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           }
         );
-        const newBalance = response.data.balance || 0;
-        const oldBalance = userBalance;
-        setUserBalance(newBalance);
+        setUserBalance(response.data.balance || 0);
       } catch (error) {
         console.error('❌ [SecondaryNavbar] Failed to fetch user balance:', error);
+        // Fallback to 0 if we can't fetch balance
+        setUserBalance(0);
       }
     }
-  }, [isAuthenticated, user, userBalance]);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     fetchUserBalance();

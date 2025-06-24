@@ -117,7 +117,7 @@ const UserSettings = () => {
     
     try {
       const response = await axios.get(
-        `${config.backendUrl}/api/users/${username}/profile`,
+        `${config.backendUrl}/api/users/${user.displayName || user.username}/profile`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       

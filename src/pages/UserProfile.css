@@ -316,7 +316,8 @@
   border-bottom: none;
 }
 
-.module-cover {
+/* Profile-specific module cover styling - higher specificity to override NovelDetail.css */
+.user-profile-page .module-cover {
   width: 60px;
   height: 80px;
   object-fit: cover;
@@ -482,6 +483,9 @@
 
 .novels-card .card-header h3 {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 /* Module search specific styles within profile */
@@ -528,10 +532,9 @@
   background: transparent;
 }
 
-/* Ensure drag handle doesn't interfere with module content */
-.user-profile-page .novels-grid {
-  position: relative;
-  padding-left: 40px; /* Always make room for drag handles for consistent layout */
+/* Only add drag handle spacing when user can manage modules */
+.user-profile-page .novels-grid.can-manage {
+  padding-left: 40px; /* Make room for drag handles only when needed */
 }
 
 /* Adjust drag handle positioning for UserProfile layout */
@@ -544,9 +547,9 @@
   opacity: 1;
 }
 
-.user-profile-page .module-item {
+.user-profile-page .module-item.can-manage {
   padding-left: 0; /* Don't add extra padding since handle is positioned outside */
-  margin-left: 40px; /* Always add margin to make room for drag handle space */
+  margin-left: 40px; /* Add margin to make room for drag handle space only when needed */
 }
 
 /* Remove the conditional styling that was causing layout shifts */
@@ -565,20 +568,35 @@
     font-size: 12px;
   }
   
-  .user-profile-page .module-item {
-    margin-left: 32px; /* Always maintain margin on mobile */
+  .user-profile-page .module-item.can-manage {
+    margin-left: 32px; /* Only maintain margin on mobile when user can manage */
   }
   
-  .user-profile-page .novels-grid {
-    padding-left: 32px; /* Always maintain padding on mobile */
+  .user-profile-page .novels-grid.can-manage {
+    padding-left: 32px; /* Only maintain padding on mobile when user can manage */
   }
-  
-  /* Remove conditional responsive styles that cause layout shifts */
-  /* .user-profile-page .module-item:not(.can-manage) {
-    margin-left: 0;
-  }
-  
-  .user-profile-page .novels-grid:not(.can-manage) {
-    padding-left: 0;
-  } */
+}
+
+/* Refresh modules button */
+.refresh-modules-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.refresh-modules-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.refresh-modules-btn:active {
+  transform: translateY(0);
 } 

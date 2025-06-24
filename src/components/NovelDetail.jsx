@@ -449,23 +449,31 @@ const NovelDetail = ({ novelId }) => {
     queryClient.invalidateQueries(['novel', novelId]);
   }, [queryClient, novelId]);
 
-  // Fetch user balance when authenticated
+  // Set user balance when authenticated
   useEffect(() => {
-    const fetchUserBalance = async () => {
-      if (isAuthenticated && user?.username) {
+    if (isAuthenticated && user) {
+      // If user object already has balance, use it
+      if (user.balance !== undefined) {
+        setUserBalance(user.balance);
+        return;
+      }
+      
+      // Otherwise, fetch it from the profile endpoint
+      const fetchUserBalance = async () => {
         try {
           const userResponse = await axios.get(
-            `${config.backendUrl}/api/users/${user.username}/profile`,
+            `${config.backendUrl}/api/users/${user.displayName || user.username}/profile`,
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
           setUserBalance(userResponse.data.balance || 0);
         } catch (error) {
           console.error('Failed to fetch user balance:', error);
+          setUserBalance(0);
         }
-      }
-    };
-    
-    fetchUserBalance();
+      };
+      
+      fetchUserBalance();
+    }
   }, [isAuthenticated, user]);
 
   // Auto-show comments after delay (Option 1: Always show after delay)

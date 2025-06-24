@@ -360,8 +360,18 @@ class SSEService {
     this.recordConnectionAttempt();
 
     try {
-      // Use session ID instead of tab ID for connection
-      this.eventSource = new EventSource(`${config.backendUrl}/api/novels/sse?sessionId=${this.sessionId}&tabId=${this.tabId}`);
+      // Get authentication token for SSE connection
+      const token = localStorage.getItem('token');
+      
+      // Create EventSource with authentication headers (using URL params since EventSource doesn't support custom headers)
+      const sseUrl = new URL(`${config.backendUrl}/api/novels/sse`);
+      sseUrl.searchParams.set('sessionId', this.sessionId);
+      sseUrl.searchParams.set('tabId', this.tabId);
+      if (token) {
+        sseUrl.searchParams.set('token', token);
+      }
+      
+      this.eventSource = new EventSource(sseUrl.toString());
       
       this.eventSource.onopen = () => {
         this.isConnected = true;
