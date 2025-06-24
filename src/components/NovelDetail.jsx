@@ -459,7 +459,7 @@ const NovelDetail = ({ novelId }) => {
       }
       
       // Otherwise, fetch it from the profile endpoint
-      const fetchUserBalance = async () => {
+    const fetchUserBalance = async () => {
         try {
           const userResponse = await axios.get(
             `${config.backendUrl}/api/users/${user.displayName || user.username}/profile`,
@@ -469,10 +469,10 @@ const NovelDetail = ({ novelId }) => {
         } catch (error) {
           console.error('Failed to fetch user balance:', error);
           setUserBalance(0);
-        }
-      };
-      
-      fetchUserBalance();
+      }
+    };
+    
+    fetchUserBalance();
     }
   }, [isAuthenticated, user]);
 

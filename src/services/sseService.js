@@ -195,17 +195,7 @@ class SSEService {
         }
         break;
 
-      case 'TAB_COUNT_REQUEST':
-        // Respond to tab count requests
-        if (data.tabId !== this.tabId) {
-          this.broadcastChannel.postMessage({
-            type: 'TAB_COUNT_RESPONSE',
-            tabId: this.tabId,
-            sessionId: this.sessionId,
-            timestamp: Date.now()
-          });
-        }
-        break;
+
     }
   }
 
@@ -397,11 +387,6 @@ class SSEService {
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.clearReconnectTimeout();
-        
-        // Log connection with tab count
-        this.getTotalTabCount().then(totalTabs => {
-          console.log(`SSE Connected - Tab: ${this.tabId}, Session: ${this.sessionId}, Total Tabs: ${totalTabs}`);
-        });
       };
 
       this.eventSource.onerror = (error) => {
@@ -497,11 +482,6 @@ class SSEService {
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
-      
-      // Log disconnection with tab count
-      this.getTotalTabCount().then(totalTabs => {
-        console.log(`SSE Disconnected - Tab: ${this.tabId}, Session: ${this.sessionId}, Total Tabs: ${totalTabs}, Manual: ${manual}`);
-      });
     }
     this.isConnected = false;
     this.clearReconnectTimeout();
@@ -542,38 +522,7 @@ class SSEService {
     this.disconnect(true);
   }
 
-  // Get total tab count using BroadcastChannel
-  getTotalTabCount() {
-    return new Promise((resolve) => {
-      const responses = [];
-      const timeoutId = setTimeout(() => {
-        // Add 1 for current tab + responses from other tabs
-        resolve(responses.length + 1);
-      }, 100); // Wait 100ms for responses
 
-      const handleResponse = (event) => {
-        if (event.data.type === 'TAB_COUNT_RESPONSE' && event.data.sessionId === this.sessionId) {
-          responses.push(event.data.tabId);
-        }
-      };
-
-      this.broadcastChannel.addEventListener('message', handleResponse);
-      
-      // Request tab count from other tabs
-      this.broadcastChannel.postMessage({
-        type: 'TAB_COUNT_REQUEST',
-        tabId: this.tabId,
-        sessionId: this.sessionId,
-        timestamp: Date.now()
-      });
-
-      // Clean up after timeout
-      setTimeout(() => {
-        this.broadcastChannel.removeEventListener('message', handleResponse);
-        clearTimeout(timeoutId);
-      }, 150);
-    });
-  }
 
   addEventListener(eventName, callback) {
     if (!this.listeners.has(eventName)) {
