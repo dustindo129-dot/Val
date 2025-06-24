@@ -135,7 +135,7 @@ const ModuleSearch = ({ onModuleSelect, placeholder = "Tìm kiếm tập..." }) 
                     />
                     <div className="module-result-info">
                       <div className="module-result-title">
-                        {module.displayTitle}
+                        {module.novel?.title ? `${module.novel.title} - ${module.title}` : module.title}
                       </div>
                       <div className="module-result-meta">
                         {module.mode === 'paid' && (
