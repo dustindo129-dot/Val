@@ -2049,35 +2049,38 @@ const AdminDashboard = () => {
                               const isChecked = (target.genres || []).includes(genre);
                               const colorClass = getGenreColorClass(genre);
                               const canUncheck = canUncheckGenre(genre);
+                              
+                              // Define protected genres
+                              const protectedGenres = [
+                                'Mature',
+                                'AI-assisted',
+                                'Chinese Novel',
+                                'English Novel', 
+                                'Japanese Novel',
+                                'Korean Novel',
+                                'Vietnamese Novel',
+                                'Web Novel',
+                                'One shot'
+                              ];
+                              
+                              // Disable checkbox if genre is protected and user is pj_user
+                              const isProtectedForPJUser = protectedGenres.includes(genre) && user?.role === 'pj_user';
 
                               return (
-                                  <label key={genre} className={`genre-checkbox ${colorClass}`}>
+                                  <label key={genre} className={`genre-checkbox ${colorClass} ${isProtectedForPJUser ? 'disabled-genre' : ''}`}>
                                     <input
                                         type="checkbox"
                                         checked={isChecked}
                                         onChange={() => handleGenreChange(genre)}
-                                        disabled={isChecked && !canUncheck}
+                                        disabled={isProtectedForPJUser}
                                     />
                                     <span className={`genre-label ${colorClass}`}>
                               {genre}
-                                      {(() => {
-                                        const protectedGenres = [
-                                          'Mature',
-                                          'AI-assisted',
-                                          'Chinese Novel',
-                                          'English Novel', 
-                                          'Japanese Novel',
-                                          'Korean Novel',
-                                          'Vietnamese Novel',
-                                          'Web Novel',
-                                          'One shot'
-                                        ];
-                                        return protectedGenres.includes(genre) && user?.role === 'pj_user' && isChecked && (
-                                          <span className="locked-indicator" title="Chỉ admin/mod mới có thể gỡ">
-                                    🔒
-                                  </span>
-                                        );
-                                      })()}
+                                      {isProtectedForPJUser && (
+                                        <span className="locked-indicator" title="Chỉ admin/mod mới có thể thêm/gỡ">
+                                          🔒
+                                        </span>
+                                      )}
                             </span>
                                   </label>
                               );
