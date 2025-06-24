@@ -48,6 +48,10 @@ class SSEService {
     
     // Listen for beforeunload to handle leader handoff
     window.addEventListener('beforeunload', () => this.handleBeforeUnload());
+    
+    // Listen for authentication events
+    window.addEventListener('authLogin', () => this.onLogin());
+    window.addEventListener('authLogout', () => this.onLogout());
   }
 
   // Get or create session ID (shared across tabs for same user)
@@ -186,6 +190,18 @@ class SSEService {
             tabId: this.tabId,
             sessionId: this.sessionId,
             isLeader: true,
+            timestamp: Date.now()
+          });
+        }
+        break;
+
+      case 'TAB_COUNT_REQUEST':
+        // Respond to tab count requests
+        if (data.tabId !== this.tabId) {
+          this.broadcastChannel.postMessage({
+            type: 'TAB_COUNT_RESPONSE',
+            tabId: this.tabId,
+            sessionId: this.sessionId,
             timestamp: Date.now()
           });
         }
@@ -357,19 +373,23 @@ class SSEService {
       return;
     }
 
+    // Get authentication token for SSE connection
+    const token = localStorage.getItem('token');
+    
+    // Don't attempt to connect if there's no valid token
+    // since the backend requires authentication for all SSE connections
+    if (!token) {
+      return;
+    }
+
     this.recordConnectionAttempt();
 
     try {
-      // Get authentication token for SSE connection
-      const token = localStorage.getItem('token');
-      
       // Create EventSource with authentication headers (using URL params since EventSource doesn't support custom headers)
       const sseUrl = new URL(`${config.backendUrl}/api/novels/sse`);
       sseUrl.searchParams.set('sessionId', this.sessionId);
       sseUrl.searchParams.set('tabId', this.tabId);
-      if (token) {
-        sseUrl.searchParams.set('token', token);
-      }
+      sseUrl.searchParams.set('token', token);
       
       this.eventSource = new EventSource(sseUrl.toString());
       
@@ -377,6 +397,11 @@ class SSEService {
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.clearReconnectTimeout();
+        
+        // Log connection with tab count
+        this.getTotalTabCount().then(totalTabs => {
+          console.log(`SSE Connected - Tab: ${this.tabId}, Session: ${this.sessionId}, Total Tabs: ${totalTabs}`);
+        });
       };
 
       this.eventSource.onerror = (error) => {
@@ -472,6 +497,11 @@ class SSEService {
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
+      
+      // Log disconnection with tab count
+      this.getTotalTabCount().then(totalTabs => {
+        console.log(`SSE Disconnected - Tab: ${this.tabId}, Session: ${this.sessionId}, Total Tabs: ${totalTabs}, Manual: ${manual}`);
+      });
     }
     this.isConnected = false;
     this.clearReconnectTimeout();
@@ -485,10 +515,64 @@ class SSEService {
     // Only leader can force reconnect
     if (!this.isLeaderTab) return;
     
+    // Only reconnect if authenticated
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
     this.isManuallyDisconnected = false;
     this.reconnectAttempts = 0;
     this.disconnect();
     this.connect();
+  }
+
+  // Method to be called when user logs in to establish SSE connection
+  onLogin() {
+    // Reset any previous manual disconnection state
+    this.isManuallyDisconnected = false;
+    this.reconnectAttempts = 0;
+    
+    // If we're the leader tab and have listeners, connect
+    if (this.isLeaderTab && this.listeners.size > 0 && !this.isConnected) {
+      this.connect();
+    }
+  }
+
+  // Method to be called when user logs out to disconnect SSE
+  onLogout() {
+    this.disconnect(true);
+  }
+
+  // Get total tab count using BroadcastChannel
+  getTotalTabCount() {
+    return new Promise((resolve) => {
+      const responses = [];
+      const timeoutId = setTimeout(() => {
+        // Add 1 for current tab + responses from other tabs
+        resolve(responses.length + 1);
+      }, 100); // Wait 100ms for responses
+
+      const handleResponse = (event) => {
+        if (event.data.type === 'TAB_COUNT_RESPONSE' && event.data.sessionId === this.sessionId) {
+          responses.push(event.data.tabId);
+        }
+      };
+
+      this.broadcastChannel.addEventListener('message', handleResponse);
+      
+      // Request tab count from other tabs
+      this.broadcastChannel.postMessage({
+        type: 'TAB_COUNT_REQUEST',
+        tabId: this.tabId,
+        sessionId: this.sessionId,
+        timestamp: Date.now()
+      });
+
+      // Clean up after timeout
+      setTimeout(() => {
+        this.broadcastChannel.removeEventListener('message', handleResponse);
+        clearTimeout(timeoutId);
+      }, 150);
+    });
   }
 
   addEventListener(eventName, callback) {
@@ -497,9 +581,12 @@ class SSEService {
     }
     this.listeners.get(eventName).add(callback);
 
-    // If this is the first listener and we're leader, connect
+    // If this is the first listener and we're leader, connect (only if authenticated)
     if (!this.isConnected && !this.isManuallyDisconnected && this.isLeaderTab) {
-      this.connect();
+      const token = localStorage.getItem('token');
+      if (token) {
+        this.connect();
+      }
     }
     
     // If we're not leader but have listeners, check if leader exists
