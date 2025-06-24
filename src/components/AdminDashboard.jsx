@@ -458,6 +458,119 @@ const VirtualNovelItem = React.memo(({
 VirtualNovelItem.displayName = 'VirtualNovelItem';
 
 /**
+ * HTML Sanitization Utility
+ * 
+ * Cleans up messy HTML by removing excessive inline styles and attributes
+ * while preserving basic formatting elements and structure
+ */
+const sanitizeHTML = (html) => {
+  if (!html) return '';
+  
+  // Create a temporary DOM element to parse the HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  // Function to clean a single element
+  const cleanElement = (element) => {
+    // Remove all style attributes
+    element.removeAttribute('style');
+    
+    // Remove excessive attributes but keep essential ones
+    const allowedAttributes = {
+      'a': ['href', 'target', 'title'],
+      'img': ['src', 'alt', 'title', 'width', 'height'],
+      'sup': ['class', 'data-footnote'], // For footnotes
+      'sub': [],
+      'strong': [],
+      'b': [],
+      'em': [],
+      'i': [],
+      'u': [],
+      'p': [],
+      'br': [],
+      'h1': [], 'h2': [], 'h3': [], 'h4': [], 'h5': [], 'h6': [],
+      'ul': [],
+      'ol': [],
+      'li': [],
+      'blockquote': [],
+      'pre': [],
+      'code': []
+    };
+    
+    const tagName = element.tagName?.toLowerCase();
+    const allowed = allowedAttributes[tagName] || [];
+    
+    // Remove all attributes except allowed ones
+    const attributesToRemove = [];
+    for (let i = 0; i < element.attributes.length; i++) {
+      const attr = element.attributes[i];
+      if (!allowed.includes(attr.name)) {
+        attributesToRemove.push(attr.name);
+      }
+    }
+    
+    attributesToRemove.forEach(attrName => {
+      element.removeAttribute(attrName);
+    });
+  };
+  
+  // Function to unwrap unnecessary spans and other elements
+  const unwrapUnnecessaryElements = (element) => {
+    const unnecessaryTags = ['span', 'font', 'div'];
+    
+    if (unnecessaryTags.includes(element.tagName?.toLowerCase())) {
+      // Move all child nodes before this element
+      while (element.firstChild) {
+        element.parentNode.insertBefore(element.firstChild, element);
+      }
+      // Remove the now-empty element
+      element.parentNode.removeChild(element);
+      return true; // Element was removed
+    }
+    return false; // Element was not removed
+  };
+  
+  // Recursively clean all elements
+  const processElements = (container) => {
+    const elements = Array.from(container.querySelectorAll('*'));
+    
+    // Process in reverse order to handle nested elements properly
+    for (let i = elements.length - 1; i >= 0; i--) {
+      const element = elements[i];
+      
+      // First clean the element
+      cleanElement(element);
+      
+      // Then try to unwrap if unnecessary
+      const wasRemoved = unwrapUnnecessaryElements(element);
+      
+      // If element still exists, check for empty paragraphs
+      if (!wasRemoved && element.tagName?.toLowerCase() === 'p' && !element.textContent.trim()) {
+        element.remove();
+      }
+    }
+  };
+  
+  // Process all elements
+  processElements(tempDiv);
+  
+  // Clean up the HTML structure
+  let cleanedHTML = tempDiv.innerHTML;
+  
+  // Remove empty paragraphs and extra whitespace
+  cleanedHTML = cleanedHTML
+    .replace(/<p[^>]*>\s*<\/p>/gi, '') // Remove empty p tags
+    .replace(/<p[^>]*>\s*(&nbsp;|\u00A0|\s)*\s*<\/p>/gi, '') // Remove p tags with only nbsp
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/>\s+</g, '><') // Remove whitespace between tags
+    .trim();
+  
+  return cleanedHTML;
+};
+
+
+
+/**
  * AdminDashboard Component
  *
  * Main component that provides administrative interface for managing
@@ -757,8 +870,21 @@ const AdminDashboard = () => {
 
   // Function to check if a genre can be unchecked by current user
   const canUncheckGenre = (genre) => {
-    if ((genre === 'Mature' || genre === 'AI-assisted') && user?.role === 'pj_user') {
-      return false; // pj_user cannot uncheck Mature or AI-assisted
+    // Define protected genres that only admin/mod can remove
+    const protectedGenres = [
+      'Mature',
+      'AI-assisted',
+      'Chinese Novel',
+      'English Novel', 
+      'Japanese Novel',
+      'Korean Novel',
+      'Vietnamese Novel',
+      'Web Novel',
+      'One shot'
+    ];
+    
+    if (protectedGenres.includes(genre) && user?.role === 'pj_user') {
+      return false; // pj_user cannot uncheck protected genres
     }
     return true;
   };
@@ -1934,11 +2060,24 @@ const AdminDashboard = () => {
                                     />
                                     <span className={`genre-label ${colorClass}`}>
                               {genre}
-                                      {(genre === 'Mature' || genre === 'AI-assisted') && user?.role === 'pj_user' && isChecked && (
+                                      {(() => {
+                                        const protectedGenres = [
+                                          'Mature',
+                                          'AI-assisted',
+                                          'Chinese Novel',
+                                          'English Novel', 
+                                          'Japanese Novel',
+                                          'Korean Novel',
+                                          'Vietnamese Novel',
+                                          'Web Novel',
+                                          'One shot'
+                                        ];
+                                        return protectedGenres.includes(genre) && user?.role === 'pj_user' && isChecked && (
                                           <span className="locked-indicator" title="Chỉ admin/mod mới có thể gỡ">
-                                  🔒
-                                </span>
-                                      )}
+                                    🔒
+                                  </span>
+                                        );
+                                      })()}
                             </span>
                                   </label>
                               );
@@ -2001,21 +2140,31 @@ const AdminDashboard = () => {
                           },
                           paste_data_images: true,
                           paste_as_text: false,
-                          paste_auto_cleanup_on_paste: false,
-                          paste_remove_styles: false,
-                          paste_remove_spans: false,
-                          paste_strip_class_attributes: 'none',
-                          paste_merge_formats: false,
-                          paste_webkit_styles: 'all',
-                          valid_elements: '*[*]',
-                          valid_children: '*[*]',
-                          extended_valid_elements: '*[*]',
+                          paste_auto_cleanup_on_paste: true,
+                          paste_remove_styles: true,
+                          paste_remove_spans: true,
+                          paste_strip_class_attributes: 'all',
+                          paste_merge_formats: true,
+                          paste_webkit_styles: 'none',
+                          paste_retain_style_properties: 'none',
                           paste_preprocess: function(plugin, args) {
+                            // First handle footnote markers
                             args.content = args.content.replace(
                                 /\[(\d+)\]/g,
                                 '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
                             );
+                            
+                            // Then sanitize the content
+                            args.content = sanitizeHTML(args.content);
                           },
+                          paste_postprocess: function(plugin, args) {
+                            // Additional cleanup after paste
+                            const sanitizedContent = sanitizeHTML(args.node.innerHTML);
+                            args.node.innerHTML = sanitizedContent;
+                          },
+                          valid_elements: 'p,br,strong,b,em,i,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|target|title],img[src|alt|title|width|height],blockquote,pre,code,sup[class|data-footnote],sub',
+                          valid_children: '+p[strong|b|em|i|u|a|img|sup|sub|code],+li[p|strong|b|em|i|u|a|img|sup|sub|code]',
+                          extended_valid_elements: 'sup[class|data-footnote]',
                           images_upload_handler: (blobInfo) => {
                             return new Promise((resolve, reject) => {
                               const file = blobInfo.blob();
@@ -2077,21 +2226,31 @@ const AdminDashboard = () => {
                           wordcount_alwaysshown: true,
                           paste_data_images: true,
                           paste_as_text: false,
-                          paste_auto_cleanup_on_paste: false,
-                          paste_remove_styles: false,
-                          paste_remove_spans: false,
-                          paste_strip_class_attributes: 'none',
-                          paste_merge_formats: false,
-                          paste_webkit_styles: 'all',
-                          valid_elements: '*[*]',
-                          valid_children: '*[*]',
-                          extended_valid_elements: '*[*]',
+                          paste_auto_cleanup_on_paste: true,
+                          paste_remove_styles: true,
+                          paste_remove_spans: true,
+                          paste_strip_class_attributes: 'all',
+                          paste_merge_formats: true,
+                          paste_webkit_styles: 'none',
+                          paste_retain_style_properties: 'none',
                           paste_preprocess: function(plugin, args) {
+                            // First handle footnote markers
                             args.content = args.content.replace(
                                 /\[(\d+)\]/g,
                                 '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
                             );
-                          }
+                            
+                            // Then sanitize the content
+                            args.content = sanitizeHTML(args.content);
+                          },
+                          paste_postprocess: function(plugin, args) {
+                            // Additional cleanup after paste
+                            const sanitizedContent = sanitizeHTML(args.node.innerHTML);
+                            args.node.innerHTML = sanitizedContent;
+                          },
+                          valid_elements: 'p,br,strong,b,em,i,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|target|title],blockquote,pre,code,sup[class|data-footnote],sub',
+                          valid_children: '+p[strong|b|em|i|u|a|sup|sub|code],+li[p|strong|b|em|i|u|a|sup|sub|code]',
+                          extended_valid_elements: 'sup[class|data-footnote]'
                         }}
                     />
                   </div>
