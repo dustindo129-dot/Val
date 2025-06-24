@@ -231,37 +231,51 @@ const UserProfile = () => {
    */
   useEffect(() => {
     const checkNovelRoles = async () => {
-      if (!user || !isOwnProfile) {
+      if (!profileUser) {
         setHasNovelRoles(false);
         return;
       }
 
       // Skip check if user already has system-level permissions
-      if (['admin', 'moderator', 'pj_user'].includes(user.role)) {
+      if (['admin', 'moderator', 'pj_user'].includes(profileUser.role)) {
         setHasNovelRoles(true);
         return;
       }
 
       try {
-        // Check if user has any novel-specific roles
+        // Check if the profile user has any novel-specific roles
+        // This endpoint needs to be public or allow checking other users
         const response = await axios.get(
-          `${config.backendUrl}/api/users/${user._id}/novel-roles`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
+          `${config.backendUrl}/api/users/${profileUser._id}/novel-roles-public`
         );
         
         setHasNovelRoles(response.data.hasNovelRoles || false);
       } catch (error) {
-        console.error('Error checking novel roles:', error);
-        setHasNovelRoles(false);
+        // If the public endpoint doesn't exist, fall back to the auth endpoint for own profile
+        if (isOwnProfile && user) {
+          try {
+            const authResponse = await axios.get(
+              `${config.backendUrl}/api/users/${user._id}/novel-roles`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              }
+            );
+            setHasNovelRoles(authResponse.data.hasNovelRoles || false);
+          } catch (authError) {
+            console.error('Error checking novel roles:', authError);
+            setHasNovelRoles(false);
+          }
+        } else {
+          console.error('Error checking novel roles:', error);
+          setHasNovelRoles(false);
+        }
       }
     };
 
     checkNovelRoles();
-  }, [user, isOwnProfile]);
+  }, [profileUser, isOwnProfile, user]);
 
   // TinyMCE initialization and cleanup
   useEffect(() => {
@@ -669,7 +683,10 @@ const UserProfile = () => {
               <div className="profile-user-info">
                 <h1 className="profile-username">
                   {profileUser.displayName || profileUser.username}
-                  {(profileUser.role === 'admin' || profileUser.role === 'moderator') && (
+                  {(profileUser.role === 'admin' || 
+                    profileUser.role === 'moderator' || 
+                    profileUser.role === 'pj_user' || 
+                    hasNovelRoles) && (
                     <span className="verification-badge" title="Đã xác minh">
                       <i className="fa-solid fa-circle-check"></i>
                     </span>
