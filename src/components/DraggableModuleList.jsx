@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   useDroppable,
 } from '@dnd-kit/core';
@@ -11,6 +12,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 /**
  * Individual draggable module item component
@@ -30,6 +32,12 @@ const SortableModuleItem = ({ moduleData, canManageModules, canRemoveModules, on
     transition,
     opacity: isItemDragging ? 0.5 : 1,
   };
+
+  // Create the novel detail page URL
+  const novelSlug = createUniqueSlug(
+    moduleData.moduleId?.novelId?.title || 'novel',
+    moduleData.moduleId?.novelId?._id || moduleData.moduleId?.novelId
+  );
 
   return (
     <div
@@ -59,7 +67,13 @@ const SortableModuleItem = ({ moduleData, canManageModules, canRemoveModules, on
       />
       <div className="module-info">
         <h4 className="module-title">
-          {moduleData.moduleId?.novelId?.title} - {moduleData.moduleId?.title}
+          <Link 
+            to={`/truyen/${novelSlug}`}
+            className="module-title-link"
+            title={`Xem ${moduleData.moduleId?.novelId?.title} - ${moduleData.moduleId?.title}`}
+          >
+            {moduleData.moduleId?.novelId?.title} - {moduleData.moduleId?.title}
+          </Link>
         </h4>
         <div className="module-meta">
           {moduleData.moduleId?.mode === 'paid' && (
