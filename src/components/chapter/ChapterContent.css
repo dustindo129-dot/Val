@@ -308,4 +308,110 @@
   .chapter-controls .chapter-balance-input input {
     width: 100%;
   }
-} 
+}
+
+/* Staff Section Styles */
+.chapter-staff-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.chapter-staff-section h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chapter-staff-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.chapter-staff-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.chapter-staff-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+}
+
+.chapter-staff-dropdown {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  color: #333;
+  transition: border-color 0.2s ease;
+}
+
+.chapter-staff-dropdown:hover {
+  border-color: #007bff;
+}
+
+.chapter-staff-dropdown:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.chapter-staff-dropdown option {
+  padding: 8px;
+  color: #333;
+}
+
+/* Dark mode styles for staff section */
+:root.dark-mode .chapter-staff-section {
+  background-color: #2d2d2d;
+  border-color: #444;
+}
+
+:root.dark-mode .chapter-staff-section h4 {
+  color: #fff;
+}
+
+:root.dark-mode .chapter-staff-group label {
+  color: #ccc;
+}
+
+:root.dark-mode .chapter-staff-dropdown {
+  background-color: #333;
+  border-color: #555;
+  color: #fff;
+}
+
+:root.dark-mode .chapter-staff-dropdown:hover {
+  border-color: #60a5fa;
+}
+
+:root.dark-mode .chapter-staff-dropdown:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
+}
+
+:root.dark-mode .chapter-staff-dropdown option {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Responsive adjustments for staff section */
+@media (max-width: 768px) {
+  .chapter-staff-controls {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .chapter-staff-section {
+    margin-top: 15px;
+    padding: 12px;
+  }
+}

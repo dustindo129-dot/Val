@@ -260,6 +260,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const [isSaving, setIsSaving] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Staff editing state
+  const [editedTranslator, setEditedTranslator] = useState('');
+  const [editedEditor, setEditedEditor] = useState('');
+  const [editedProofreader, setEditedProofreader] = useState('');
+
   const [showChapterList, setShowChapterList] = useState(false);
   const [showNavControls, setShowNavControls] = useState(false);
 
@@ -294,6 +299,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     // Reset edited content when chapter changes
     setEditedContent({ content: '', footnotes: [] });
     setEditedTitle('');
+    setEditedTranslator('');
+    setEditedEditor('');
+    setEditedProofreader('');
     // Scroll to top when chapter changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chapterId]);
@@ -303,6 +311,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     if (!isEditing) {
       setEditedContent({ content: '', footnotes: [] });
       setEditedTitle('');
+      setEditedTranslator('');
+      setEditedEditor('');
+      setEditedProofreader('');
     }
   }, [isEditing]);
 
@@ -527,6 +538,15 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       bookmarked: false
     }
   };
+
+  // Initialize staff state when entering edit mode (after chapterData is available)
+  useEffect(() => {
+    if (isEditing && chapter) {
+      setEditedTranslator(chapter.translator || '');
+      setEditedEditor(chapter.editor || '');
+      setEditedProofreader(chapter.proofreader || '');
+    }
+  }, [isEditing, chapter]);
 
   // Query for module data when we have a moduleId
   const { data: moduleData } = useQuery({
@@ -919,7 +939,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         mode: updatedMode,
         footnotes: footnotes,
         chapterBalance: updatedMode === 'paid' ? updatedChapterBalance : 0,
-        wordCount: currentWordCount // Add TinyMCE word count to the update data
+        wordCount: currentWordCount, // Add TinyMCE word count to the update data
+        translator: editedTranslator,
+        editor: editedEditor,
+        proofreader: editedProofreader
       };
 
       // Optimistic UI update
@@ -937,6 +960,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           footnotes: footnotes,
           chapterBalance: updatedMode === 'paid' ? updatedChapterBalance : 0,
           wordCount: currentWordCount, // Update local cache with TinyMCE word count
+          translator: editedTranslator,
+          editor: editedEditor,
+          proofreader: editedProofreader,
           updatedAt: new Date().toISOString()
         }
       });
@@ -1268,6 +1294,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           userRole={user?.role || 'user'}
           moduleData={moduleData}
           onWordCountUpdate={updateWordCountFromEditor}
+          editedTranslator={editedTranslator}
+          setEditedTranslator={setEditedTranslator}
+          editedEditor={editedEditor}
+          setEditedEditor={setEditedEditor}
+          editedProofreader={editedProofreader}
+          setEditedProofreader={setEditedProofreader}
+          novelData={novelData?.novel || novelData}
         />
       </ChapterAccessGuard>
 

@@ -26,7 +26,15 @@ const ChapterContent = ({
   canEdit = false,
   userRole = 'user',
   moduleData = null,
-  onWordCountUpdate
+  onWordCountUpdate,
+  // Staff props
+  editedTranslator,
+  setEditedTranslator,
+  editedEditor,
+  setEditedEditor,
+  editedProofreader,
+  setEditedProofreader,
+  novelData = null
 }) => {
   const contentRef = useRef(null);
   const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
@@ -626,6 +634,65 @@ const ChapterContent = ({
             )}
           </div>
         )}
+        
+        {/* Staff Section - Only show in edit mode */}
+        {canEdit && isEditing && novelData && (
+          <div className="chapter-staff-section">
+            <h4>Nhân sự:</h4>
+            <div className="chapter-staff-controls">
+              {/* Translator dropdown */}
+              <div className="chapter-staff-group">
+                <label>Dịch giả:</label>
+                <select
+                  className="chapter-staff-dropdown"
+                  value={editedTranslator || ''}
+                  onChange={(e) => setEditedTranslator && setEditedTranslator(e.target.value)}
+                >
+                  <option value="">Không có</option>
+                  {novelData?.active?.translator?.map((staff, index) => (
+                    <option key={`translator-${index}`} value={staff}>
+                      {staff}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Editor dropdown */}
+              <div className="chapter-staff-group">
+                <label>Biên tập viên:</label>
+                <select
+                  className="chapter-staff-dropdown"
+                  value={editedEditor || ''}
+                  onChange={(e) => setEditedEditor && setEditedEditor(e.target.value)}
+                >
+                  <option value="">Không có</option>
+                  {novelData?.active?.editor?.map((staff, index) => (
+                    <option key={`editor-${index}`} value={staff}>
+                      {staff}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Proofreader dropdown */}
+              <div className="chapter-staff-group">
+                <label>Người kiểm tra chất lượng:</label>
+                <select
+                  className="chapter-staff-dropdown"
+                  value={editedProofreader || ''}
+                  onChange={(e) => setEditedProofreader && setEditedProofreader(e.target.value)}
+                >
+                  <option value="">Không có</option>
+                  {novelData?.active?.proofreader?.map((staff, index) => (
+                    <option key={`proofreader-${index}`} value={staff}>
+                      {staff}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {isEditing ? (
@@ -893,7 +960,15 @@ ChapterContent.propTypes = {
   moduleData: PropTypes.shape({
     mode: PropTypes.string
   }),
-  onWordCountUpdate: PropTypes.func
+  onWordCountUpdate: PropTypes.func,
+  // Staff props
+  editedTranslator: PropTypes.string,
+  setEditedTranslator: PropTypes.func,
+  editedEditor: PropTypes.string,
+  setEditedEditor: PropTypes.func,
+  editedProofreader: PropTypes.string,
+  setEditedProofreader: PropTypes.func,
+  novelData: PropTypes.shape({})
 };
 
 export default ChapterContent; 
