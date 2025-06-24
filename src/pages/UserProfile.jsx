@@ -76,7 +76,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userStats, setUserStats] = useState({
-    chaptersPosted: 0,
+    chaptersParticipated: 0,
     commentsCount: 0,
     ongoingModules: [],
     completedModules: []
@@ -116,22 +116,30 @@ const UserProfile = () => {
         const displayNameSlug = response.data.displayName ? createSlug(response.data.displayName) : response.data.username;
         
         try {
-          const [ongoingModules, completedModules] = await Promise.all([
+          const [ongoingModules, completedModules, chaptersParticipated, followingCount, commentsCount] = await Promise.all([
             api.getOngoingModules(displayNameSlug),
-            api.getCompletedModules(displayNameSlug)
+            api.getCompletedModules(displayNameSlug),
+            // Fetch actual chapter participation count for this user (as translator, editor, or proofreader)
+            axios.get(`${config.backendUrl}/api/chapters/participation/user/${response.data._id}`),
+            // Fetch actual following count for this user
+            axios.get(`${config.backendUrl}/api/usernovelinteractions/following/count/${response.data._id}`),
+            // Fetch actual comment count for this user (including replies)
+            axios.get(`${config.backendUrl}/api/comments/count/user/${response.data._id}`)
           ]);
           
           setUserStats({
-            chaptersPosted: 51, // Mock data - you can replace with real data
-            commentsCount: 435, // Mock data - you can replace with real data
+            chaptersParticipated: chaptersParticipated.data.count || 0,
+            followingCount: followingCount.data.count || 0,
+            commentsCount: commentsCount.data.count || 0,
             ongoingModules: ongoingModules || [],
             completedModules: completedModules || []
           });
         } catch (moduleError) {
-          console.error('Error fetching modules:', moduleError);
+          console.error('Error fetching user stats:', moduleError);
           setUserStats({
-            chaptersPosted: 51,
-            commentsCount: 435,
+            chaptersParticipated: 0,
+            followingCount: 0,
+            commentsCount: 0,
             ongoingModules: [],
             completedModules: []
           });
@@ -442,12 +450,12 @@ const UserProfile = () => {
                 
                 <div className="profile-stats">
                   <div className="stat-item">
-                    <span className="stat-number">{userStats.chaptersPosted}</span>
-                    <span className="stat-label">Chương đã đăng</span>
+                    <span className="stat-number">{userStats.chaptersParticipated}</span>
+                    <span className="stat-label">Chương đã tham gia</span>
                   </div>
                   
                   <div className="stat-item">
-                    <span className="stat-number">12</span>
+                    <span className="stat-number">{userStats.followingCount}</span>
                     <span className="stat-label">Đang theo dõi</span>
                   </div>
                   
@@ -458,10 +466,6 @@ const UserProfile = () => {
                 </div>
 
                 <div className="profile-meta">
-                  <div className="meta-item">
-                    <i className="fa-solid fa-calendar-days"></i>
-                    <span>Ngày sinh: {new Date(profileUser.createdAt).toLocaleDateString('vi-VN')}</span>
-                  </div>
                   <div className="meta-item">
                     <i className="fa-solid fa-clock"></i>
                     <span>Tham gia: {new Date(profileUser.createdAt).toLocaleDateString('vi-VN')}</span>
