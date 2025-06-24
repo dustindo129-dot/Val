@@ -74,10 +74,32 @@ const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) 
 
   // Set user balance when modal opens
   React.useEffect(() => {
-    if (isAuthenticated && user && isOpen) {
-      // Use balance directly from user object
-      setUserBalance(user.balance || 0);
-    }
+    const fetchUserBalance = async () => {
+      if (isAuthenticated && user && isOpen) {
+        // If user object already has balance, use it
+        if (user.balance !== undefined) {
+          setUserBalance(user.balance);
+          return;
+        }
+        
+        // Otherwise, fetch it from the user's profile endpoint
+        try {
+          const response = await axios.get(
+            `${config.backendUrl}/api/users/${user.displayName || user.username}/profile`,
+            { 
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            }
+          );
+          setUserBalance(response.data.balance || 0);
+        } catch (error) {
+          console.error('❌ [ContributionModal] Failed to fetch user balance:', error);
+          // Fallback to 0 if we can't fetch balance
+          setUserBalance(0);
+        }
+      }
+    };
+
+    fetchUserBalance();
   }, [isAuthenticated, user, isOpen]);
 
   const handleSubmit = async (e) => {
