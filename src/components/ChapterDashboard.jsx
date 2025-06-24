@@ -76,6 +76,9 @@ const ChapterDashboard = () => {
   const [translator, setTranslator] = useState('');
   const [editor, setEditor] = useState('');
   const [proofreader, setProofreader] = useState('');
+  
+  // Check if this is a Vietnamese novel (no active translators)
+  const isVietnameseNovel = !novel?.novel?.active?.translator?.length;
 
   // State for footnotes
   const [footnotes, setFootnotes] = useState([]);
@@ -288,15 +291,21 @@ const ChapterDashboard = () => {
         // Set default staff from active staff if available
         if (dashboardData.novel?.active && !isEditMode) {
           const { active } = dashboardData.novel;
-          // Set default translator
-          if (active.translator?.length > 0) {
-            setTranslator(active.translator[0]);
+          
+          // For Vietnamese novels, set author as default translator
+          if (!active.translator?.length && dashboardData.novel.author) {
+            setTranslator(dashboardData.novel.author);
+          } else {
+            // Set default translator for non-Vietnamese novels
+            if (active.translator?.length > 0) {
+              setTranslator(active.translator[0]);
+            }
+            // Set default editor
+            if (active.editor?.length > 0) {
+              setEditor(active.editor[0]);
+            }
+            // Proofreader defaults to none
           }
-          // Set default editor
-          if (active.editor?.length > 0) {
-            setEditor(active.editor[0]);
-          }
-          // Proofreader defaults to none
         }
 
         // Set module data if available
@@ -943,56 +952,78 @@ const ChapterDashboard = () => {
           {/* Staff section */}
           <div className="chapter-form-section chapter-staff-section">
             <div className="chapter-form-row">
-              {/* Translator dropdown */}
-              <div className="chapter-form-group">
-                <label className="chapter-form-label">Dịch giả:</label>
-                <select
-                    className="chapter-staff-dropdown mode-dropdown"
-                    value={translator}
-                    onChange={(e) => setTranslator(e.target.value)}
-                >
-                  <option value="">Không có</option>
-                  {novel?.novel?.active?.translator?.map((staff, index) => (
-                      <option key={`translator-${index}`} value={staff}>
-                        {staff}
+              {isVietnameseNovel ? (
+                /* Vietnamese novel - single author field */
+                <div className="chapter-form-group">
+                  <label className="chapter-form-label">Tác giả:</label>
+                  <select
+                      className="chapter-staff-dropdown mode-dropdown"
+                      value={translator}
+                      onChange={(e) => setTranslator(e.target.value)}
+                  >
+                    <option value="">Không có</option>
+                    {novel?.novel?.author && (
+                      <option value={novel.novel.author}>
+                        {novel.novel.author}
                       </option>
-                  ))}
-                </select>
-              </div>
+                    )}
+                  </select>
+                </div>
+              ) : (
+                /* Non-Vietnamese novel - translator, editor, proofreader */
+                <>
+                  {/* Translator dropdown */}
+                  <div className="chapter-form-group">
+                    <label className="chapter-form-label">Dịch giả:</label>
+                    <select
+                        className="chapter-staff-dropdown mode-dropdown"
+                        value={translator}
+                        onChange={(e) => setTranslator(e.target.value)}
+                    >
+                      <option value="">Không có</option>
+                      {novel?.novel?.active?.translator?.map((staff, index) => (
+                          <option key={`translator-${index}`} value={staff}>
+                            {staff}
+                          </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Editor dropdown */}
-              <div className="chapter-form-group">
-                <label className="chapter-form-label">Biên tập viên:</label>
-                <select
-                    className="chapter-staff-dropdown mode-dropdown"
-                    value={editor}
-                    onChange={(e) => setEditor(e.target.value)}
-                >
-                  <option value="">Không có</option>
-                  {novel?.novel?.active?.editor?.map((staff, index) => (
-                      <option key={`editor-${index}`} value={staff}>
-                        {staff}
-                      </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Editor dropdown */}
+                  <div className="chapter-form-group">
+                    <label className="chapter-form-label">Biên tập viên:</label>
+                    <select
+                        className="chapter-staff-dropdown mode-dropdown"
+                        value={editor}
+                        onChange={(e) => setEditor(e.target.value)}
+                    >
+                      <option value="">Không có</option>
+                      {novel?.novel?.active?.editor?.map((staff, index) => (
+                          <option key={`editor-${index}`} value={staff}>
+                            {staff}
+                          </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Proofreader dropdown */}
-              <div className="chapter-form-group">
-                <label className="chapter-form-label">Người kiểm tra chất lượng:</label>
-                <select
-                    className="chapter-staff-dropdown mode-dropdown"
-                    value={proofreader}
-                    onChange={(e) => setProofreader(e.target.value)}
-                >
-                  <option value="">Không có</option>
-                  {novel?.novel?.active?.proofreader?.map((staff, index) => (
-                      <option key={`proofreader-${index}`} value={staff}>
-                        {staff}
-                      </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Proofreader dropdown */}
+                  <div className="chapter-form-group">
+                    <label className="chapter-form-label">Người kiểm tra chất lượng:</label>
+                    <select
+                        className="chapter-staff-dropdown mode-dropdown"
+                        value={proofreader}
+                        onChange={(e) => setProofreader(e.target.value)}
+                    >
+                      <option value="">Không có</option>
+                      {novel?.novel?.active?.proofreader?.map((staff, index) => (
+                          <option key={`proofreader-${index}`} value={staff}>
+                            {staff}
+                          </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
