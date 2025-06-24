@@ -471,7 +471,7 @@
   flex: 1;
 }
 
-.module-title {
+.user-profile-page .module-title {
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 8px 0;
@@ -479,7 +479,7 @@
   line-height: 1.3;
 }
 
-:root.dark-mode .module-title {
+:root.dark-mode .user-profile-page .module-title {
   color: #fff;
 }
 
@@ -620,7 +620,7 @@
   position: relative;
 }
 
-.module-title {
+.user-profile-page .module-title {
   padding-right: 2rem; /* Make space for remove button */
 }
 
@@ -695,7 +695,7 @@
     font-size: 0.6rem;
   }
   
-  .module-title {
+  .user-profile-page .module-title {
     padding-right: 1.5rem;
   }
 }
