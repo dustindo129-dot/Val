@@ -186,7 +186,7 @@ const UserProfile = () => {
         try {
           const [userModules, chaptersParticipated, followingCount, commentsCount] = await Promise.all([
             // Fetch user's modules based on their novel roles and existing preferences
-            axios.get(`${config.backendUrl}/api/users/${response.data._id}/role-modules`),
+            axios.get(`${config.backendUrl}/api/users/id/${response.data._id}/role-modules`),
             // Fetch actual chapter participation count for this user (as translator, editor, or proofreader)
             axios.get(`${config.backendUrl}/api/chapters/participation/user/${response.data._id}`),
             // Fetch actual following count for this user
@@ -246,7 +246,7 @@ const UserProfile = () => {
         // Check if the profile user has any novel-specific roles
         // This endpoint needs to be public or allow checking other users
         const response = await axios.get(
-          `${config.backendUrl}/api/users/${profileUser._id}/novel-roles-public`
+          `${config.backendUrl}/api/users/id/${profileUser._id}/novel-roles-public`
         );
         
         setHasNovelRoles(response.data.hasNovelRoles || false);
@@ -255,7 +255,7 @@ const UserProfile = () => {
         if (isOwnProfile && user) {
           try {
             const authResponse = await axios.get(
-              `${config.backendUrl}/api/users/${user._id}/novel-roles`,
+              `${config.backendUrl}/api/users/id/${user._id}/novel-roles`,
               {
                 headers: {
                   'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -372,7 +372,7 @@ const UserProfile = () => {
     if (!canManageModules) return;
     
     try {
-      await axios.post(`${config.backendUrl}/api/users/${profileUser._id}/move-module-to-completed`, {
+      await axios.post(`${config.backendUrl}/api/users/id/${profileUser._id}/move-module-to-completed`, {
         moduleId: moduleId
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -405,7 +405,7 @@ const UserProfile = () => {
     if (!canManageModules) return;
     
     try {
-      await axios.post(`${config.backendUrl}/api/users/${profileUser._id}/move-module-to-ongoing`, {
+      await axios.post(`${config.backendUrl}/api/users/id/${profileUser._id}/move-module-to-ongoing`, {
         moduleId: moduleId
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -438,13 +438,14 @@ const UserProfile = () => {
     if (!canRemoveModules) return;
     
     try {
-      await axios.delete(`${config.backendUrl}/api/users/${profileUser._id}/ongoing-modules/${moduleId}`, {
+      // Use the new /id/ endpoint to avoid conflicts with displayNameSlug routes
+      await axios.delete(`${config.backendUrl}/api/users/id/${profileUser._id}/ongoing-modules/${moduleId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       
       // Update local state
       setUserStats(prev => ({
-        ...prev,
+        ...prev,  
         ongoingModules: prev.ongoingModules.filter(m => m.moduleId._id !== moduleId)
       }));
     } catch (error) {
@@ -457,7 +458,8 @@ const UserProfile = () => {
     if (!canRemoveModules) return;
     
     try {
-      await axios.delete(`${config.backendUrl}/api/users/${profileUser._id}/completed-modules/${moduleId}`, {
+      // Use the new /id/ endpoint to avoid conflicts with displayNameSlug routes
+      await axios.delete(`${config.backendUrl}/api/users/id/${profileUser._id}/completed-modules/${moduleId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       
@@ -477,8 +479,8 @@ const UserProfile = () => {
     if (!canRefreshModules) return;
     
     try {
-      // Refetch user modules from backend
-      const response = await axios.get(`${config.backendUrl}/api/users/${profileUser._id}/role-modules`);
+      // Refetch user modules from backend using the new /id/ endpoint
+      const response = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules`);
       
       setUserStats(prev => ({
         ...prev,
@@ -508,7 +510,7 @@ const UserProfile = () => {
       }));
       
       // Send to backend
-      await axios.put(`${config.backendUrl}/api/users/${profileUser._id}/reorder-ongoing-modules`, {
+      await axios.put(`${config.backendUrl}/api/users/id/${profileUser._id}/reorder-ongoing-modules`, {
         moduleIds: moduleIds
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -519,7 +521,7 @@ const UserProfile = () => {
       
       // Revert local state on error - refetch user modules
       try {
-        const userModules = await axios.get(`${config.backendUrl}/api/users/${profileUser._id}/role-modules`);
+        const userModules = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules`);
         setUserStats(prev => ({
           ...prev,
           ongoingModules: userModules.data.ongoingModules || []
@@ -543,7 +545,7 @@ const UserProfile = () => {
       }));
       
       // Send to backend
-      await axios.put(`${config.backendUrl}/api/users/${profileUser._id}/reorder-completed-modules`, {
+      await axios.put(`${config.backendUrl}/api/users/id/${profileUser._id}/reorder-completed-modules`, {
         moduleIds: moduleIds
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -554,7 +556,7 @@ const UserProfile = () => {
       
       // Revert local state on error - refetch user modules
       try {
-        const userModules = await axios.get(`${config.backendUrl}/api/users/${profileUser._id}/role-modules`);
+        const userModules = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules`);
         setUserStats(prev => ({
           ...prev,
           completedModules: userModules.data.completedModules || []
