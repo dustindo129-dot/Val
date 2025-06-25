@@ -46,8 +46,8 @@ const InterestTagsManager = ({
   const handleAddCustomInterest = async () => {
     if (!newInterest.trim()) return;
     
-    if (newInterest.length > 20) {
-      alert('Chức danh không được dài quá 20 ký tự');
+    if (newInterest.length > 40) {
+      alert('Chức danh không được dài quá 40 ký tự');
       return;
     }
 
@@ -135,7 +135,7 @@ const InterestTagsManager = ({
               value={newInterest}
               onChange={(e) => setNewInterest(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddCustomInterest()}
-              maxLength={20}
+              maxLength={40}
               disabled={isSaving}
             />
             <button
