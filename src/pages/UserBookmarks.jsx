@@ -165,7 +165,14 @@ const UserBookmarks = () => {
 
   // Memoize fetchBookmarks to prevent unnecessary recreations
   const fetchBookmarks = useCallback(async () => {
-    if (!user || user.username !== username) {
+    // Check if user can view bookmarks (same logic as main permission check)
+    const canViewBookmarks = user && (
+      user.username === username || 
+      user.displayName === username ||
+      (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/\s+/g, ''))
+    );
+    
+    if (!canViewBookmarks) {
       return;
     }
 
@@ -380,7 +387,14 @@ const UserBookmarks = () => {
   };
 
   // Check if user has permission to view these bookmarks
-  if (!user || user.username !== username) {
+  // The URL parameter might be either username or displayName, so check both
+  const canViewBookmarks = user && (
+    user.username === username || 
+    user.displayName === username ||
+    (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/\s+/g, ''))
+  );
+  
+  if (!canViewBookmarks) {
     return (
         <>
           <UserBookmarksSEO user={user} username={username} totalBookmarks={0} />
