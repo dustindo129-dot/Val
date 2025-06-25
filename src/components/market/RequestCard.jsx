@@ -346,8 +346,15 @@ const RequestCard = ({
           <div className="action-row">
             <button 
               className={`action-btn upvote-btn ${isLikedByCurrentUser ? 'active' : ''}`}
-              onClick={() => handleLikeRequest(request._id)}
-              disabled={!isAuthenticated || likingRequests.has(request._id)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  alert('Vui lòng đăng nhập để thích yêu cầu');
+                  window.dispatchEvent(new CustomEvent('openLoginModal'));
+                  return;
+                }
+                handleLikeRequest(request._id);
+              }}
+              disabled={likingRequests.has(request._id)}
             >
               <i className={`fas fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>
               <span>Thích</span>
@@ -355,7 +362,14 @@ const RequestCard = ({
             
             <button 
               className="action-btn donate-btn"
-              onClick={() => handleShowContributionForm(request._id)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  alert('Vui lòng đăng nhập để góp 🌾');
+                  window.dispatchEvent(new CustomEvent('openLoginModal'));
+                  return;
+                }
+                handleShowContributionForm(request._id);
+              }}
             >
               <i className="fas fa-hand-holding-heart"></i>
               <span>Góp 🌾</span>

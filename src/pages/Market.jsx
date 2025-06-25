@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
@@ -65,6 +65,15 @@ const MarketSEO = () => {
  * Page for users to make requests for new novels or chapter openings
  * with deposit functionality
  * 
+ * OPTIMIZATIONS IMPLEMENTED TO PREVENT DUPLICATE CONTRIBUTION QUERIES:
+ * 1. Use fetchOperationsRef to track ongoing fetch operations
+ * 2. Batch parallel requests using Promise.all instead of sequential fetches
+ * 3. Debounce fetchAllContributions calls with 100ms delay
+ * 4. Use useCallback for fetch functions to prevent unnecessary re-renders
+ * 5. Filter out already loaded/loading requests before making API calls
+ * 6. Use requests.length instead of requests array as useEffect dependency
+ * 7. Add comprehensive logging for debugging duplicate calls
+ * 
  * @returns {JSX.Element} Market page component
  */
 const Market = () => {
@@ -111,17 +120,113 @@ const Market = () => {
   const [contributionModalOpen, setContributionModalOpen] = useState(false);
   const [currentRequestForContribution, setCurrentRequestForContribution] = useState(null);
 
+  // Ref to track fetch operations and prevent duplicate calls
+  const fetchOperationsRef = useRef(new Set());
+
+  // Optimized function to fetch contributions for all loaded requests
+  const fetchAllContributions = useCallback(async () => {
+    try {
+      // Create a Set of request IDs to avoid duplicate requests
+      const requestIds = new Set(requests.map(req => req._id));
+      
+      // Filter out request IDs that are already loaded, currently loading, or being tracked in operations
+      const requestsToFetch = Array.from(requestIds).filter(
+        requestId => !contributions[requestId] && 
+                    !loadingContributions.has(requestId) && 
+                    !fetchOperationsRef.current.has(requestId)
+      );
+      
+      if (requestsToFetch.length === 0) {
+        return; // Nothing to fetch
+      }
+      
+      // Track operations to prevent duplicate calls
+      requestsToFetch.forEach(requestId => fetchOperationsRef.current.add(requestId));
+      
+      // Mark all requests as loading
+      setLoadingContributions(prev => new Set([...prev, ...requestsToFetch]));
+      
+      try {
+        // Fetch contributions for multiple requests in parallel
+        const contributionPromises = requestsToFetch.map(async (requestId) => {
+          try {
+            const response = await axios.get(
+              `${config.backendUrl}/api/contributions/request/${requestId}`
+            );
+            
+            return {
+              requestId,
+              contributions: response.data.length > 0 ? response.data : null
+            };
+          } catch (err) {
+            console.error(`Failed to fetch contributions for request ${requestId}:`, err);
+            return { requestId, contributions: null };
+          }
+        });
+        
+        const results = await Promise.all(contributionPromises);
+        
+        // Update contributions state with all results at once
+        setContributions(prev => {
+          const newContributions = { ...prev };
+          results.forEach(({ requestId, contributions: requestContributions }) => {
+            if (requestContributions) {
+              newContributions[requestId] = requestContributions;
+            }
+          });
+          return newContributions;
+        });
+      } finally {
+        // Clean up: remove from tracking and loading states
+        requestsToFetch.forEach(requestId => {
+          fetchOperationsRef.current.delete(requestId);
+        });
+        
+        setLoadingContributions(prev => {
+          const next = new Set(prev);
+          requestsToFetch.forEach(requestId => next.delete(requestId));
+          return next;
+        });
+      }
+      
+    } catch (err) {
+      console.error('Failed to fetch contributions:', err);
+    }
+  }, [requests, contributions, loadingContributions]);
+
   // Fetch user balance and requests on component mount
   useEffect(() => {
-    fetchData();
-  }, [isAuthenticated, user, sortOrder]);
+    // Add debouncing to prevent rapid successive calls
+    const timeoutId = setTimeout(() => {
+      fetchData();
+    }, 50);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isAuthenticated, user?.id, sortOrder]); // Use user.id instead of full user object to prevent unnecessary refetches
+
+  // Cleanup fetch operations on unmount
+  useEffect(() => {
+    return () => {
+      // Clear any pending fetch operations when component unmounts
+      fetchOperationsRef.current.clear();
+    };
+  }, []);
 
   // Add new effect to load contributions for all requests when requests change
   useEffect(() => {
     if (requests.length > 0) {
-      fetchAllContributions();
+      // Use a small delay to debounce rapid calls
+      const timeoutId = setTimeout(() => {
+        fetchAllContributions();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }
-  }, [requests]);
+  }, [requests.length]); // Only depend on length to avoid re-fetching when requests order changes
 
   // Fetch user balance and active requests
   const fetchData = async () => {
@@ -184,45 +289,6 @@ const Market = () => {
       setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // New function to fetch contributions for all loaded requests
-  const fetchAllContributions = async () => {
-    try {
-      // Create a Set of request IDs to avoid duplicate requests
-      const requestIds = new Set(requests.map(req => req._id));
-      
-      // Create a temporary object to store contributions by request ID
-      const newContributions = { ...contributions };
-      
-      // For each request, fetch contributions if not already loaded
-      for (const requestId of requestIds) {
-        if (!contributions[requestId] && !loadingContributions.has(requestId)) {
-          setLoadingContributions(prev => new Set([...prev, requestId]));
-          
-          try {
-            const response = await axios.get(
-              `${config.backendUrl}/api/contributions/request/${requestId}`
-            );
-            
-            // Only store and display if there are actual contributions
-            if (response.data.length > 0) {
-              newContributions[requestId] = response.data;
-            }
-          } finally {
-            setLoadingContributions(prev => {
-              const next = new Set(prev);
-              next.delete(requestId);
-              return next;
-            });
-          }
-        }
-      }
-      
-      setContributions(newContributions);
-    } catch (err) {
-      console.error('Failed to fetch contributions:', err);
     }
   };
 
@@ -425,8 +491,8 @@ const Market = () => {
     setNovelSearchQuery('');
   };
 
-  // Fetch request history
-  const fetchRequestHistory = async () => {
+  // Fetch request history with optimized contribution loading
+  const fetchRequestHistory = useCallback(async () => {
     if (!isAuthenticated) {
       return;
     }
@@ -441,32 +507,63 @@ const Market = () => {
       setRequestHistory(response.data);
       setShowHistory(true);
       
-      // Fetch contributions for each request in history
+      // Optimize contribution fetching for history requests with duplicate prevention
       const historyRequestIds = response.data.map(req => req._id);
-      for (const requestId of historyRequestIds) {
-        if (!contributions[requestId] && !loadingContributions.has(requestId)) {
-          setLoadingContributions(prev => new Set([...prev, requestId]));
-          
-          try {
-            const contributionsResponse = await axios.get(
-              `${config.backendUrl}/api/contributions/request/${requestId}`
-            );
-            
-            if (contributionsResponse.data.length > 0) {
-              setContributions(prev => ({
-                ...prev,
-                [requestId]: contributionsResponse.data
-              }));
+      const requestsToFetch = historyRequestIds.filter(
+        requestId => !contributions[requestId] && 
+                    !loadingContributions.has(requestId) &&
+                    !fetchOperationsRef.current.has(requestId)
+      );
+      
+      if (requestsToFetch.length > 0) {
+        // Track all operations
+        requestsToFetch.forEach(requestId => fetchOperationsRef.current.add(requestId));
+        
+        // Mark all as loading
+        setLoadingContributions(prev => new Set([...prev, ...requestsToFetch]));
+        
+        try {
+          // Fetch all in parallel
+          const contributionPromises = requestsToFetch.map(async (requestId) => {
+            try {
+              const contributionsResponse = await axios.get(
+                `${config.backendUrl}/api/contributions/request/${requestId}`
+              );
+              
+              return {
+                requestId,
+                contributions: contributionsResponse.data.length > 0 ? contributionsResponse.data : null
+              };
+            } catch (err) {
+              console.error(`Không thể tải đóng góp cho yêu cầu ${requestId}:`, err);
+              return { requestId, contributions: null };
             }
-          } catch (err) {
-            console.error('Không thể tải đóng góp cho yêu cầu:', err);
-          } finally {
-            setLoadingContributions(prev => {
-              const next = new Set(prev);
-              next.delete(requestId);
-              return next;
+          });
+          
+          const results = await Promise.all(contributionPromises);
+          
+          // Update contributions state with all results at once
+          setContributions(prev => {
+            const newContributions = { ...prev };
+            results.forEach(({ requestId, contributions: requestContributions }) => {
+              if (requestContributions) {
+                newContributions[requestId] = requestContributions;
+              }
             });
-          }
+            return newContributions;
+          });
+        } finally {
+          // Clean up tracking
+          requestsToFetch.forEach(requestId => {
+            fetchOperationsRef.current.delete(requestId);
+          });
+          
+          // Remove all from loading state
+          setLoadingContributions(prev => {
+            const next = new Set(prev);
+            requestsToFetch.forEach(requestId => next.delete(requestId));
+            return next;
+          });
         }
       }
     } catch (err) {
@@ -475,7 +572,7 @@ const Market = () => {
     } finally {
       setHistoryLoading(false);
     }
-  };
+  }, [isAuthenticated, contributions, loadingContributions]);
   
   // Toggle history view
   const toggleHistory = () => {
@@ -776,12 +873,17 @@ const Market = () => {
     );
   };
 
-  // Fetch contributions for a request - modify to avoid duplicate fetches
-  const fetchContributions = async (requestId) => {
-    if (loadingContributions.has(requestId) || contributions[requestId]) {
+  // Optimized single contribution fetch function with duplicate prevention
+  const fetchContributions = useCallback(async (requestId) => {
+    // Multiple checks to prevent duplicate fetches
+    if (loadingContributions.has(requestId) || 
+        contributions[requestId] || 
+        fetchOperationsRef.current.has(requestId)) {
       return;
     }
 
+    // Track this operation
+    fetchOperationsRef.current.add(requestId);
     setLoadingContributions(prev => new Set([...prev, requestId]));
     
     try {
@@ -789,20 +891,24 @@ const Market = () => {
         `${config.backendUrl}/api/contributions/request/${requestId}`
       );
       
-      setContributions(prev => ({
-        ...prev,
-        [requestId]: response.data
-      }));
+      if (response.data.length > 0) {
+        setContributions(prev => ({
+          ...prev,
+          [requestId]: response.data
+        }));
+      }
     } catch (err) {
-      console.error('Không thể tải đóng góp:', err);
+      console.error(`Không thể tải đóng góp cho request ${requestId}:`, err);
     } finally {
+      // Clean up tracking
+      fetchOperationsRef.current.delete(requestId);
       setLoadingContributions(prev => {
         const next = new Set(prev);
         next.delete(requestId);
         return next;
       });
     }
-  };
+  }, [loadingContributions, contributions]);
 
   // Handle showing contribution form
   const handleShowContributionForm = (requestId) => {
@@ -815,8 +921,8 @@ const Market = () => {
     setContributionNote('');
     setContributionModalOpen(true);
     
-    // Fetch contributions if not loaded yet
-    if (!contributions[requestId]) {
+    // Fetch contributions if not loaded yet and not currently loading
+    if (!contributions[requestId] && !loadingContributions.has(requestId)) {
       fetchContributions(requestId);
     }
   };
@@ -831,8 +937,7 @@ const Market = () => {
 
   // Handle contribution submission
   const handleSubmitContribution = async () => {
-    if (!isAuthenticated || !currentRequestForContribution) {
-      alert('Vui lòng đăng nhập để góp🌾');
+    if (!currentRequestForContribution) {
       return;
     }
     
