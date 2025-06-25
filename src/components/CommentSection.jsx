@@ -522,7 +522,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
 
       // Update local state efficiently without refetching
       setComments(prevComments => {
-        return prevComments.map(comment => {
+        const updatedComments = prevComments.map(comment => {
           // If this is the comment being pinned/unpinned
           if (comment._id === commentId) {
             return {
@@ -566,6 +566,18 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
           
           return comment;
         });
+        
+        // Re-sort comments to move pinned comments to the top immediately
+        const resortedComments = updatedComments.sort((a, b) => {
+          // First, check if either comment is pinned
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          
+          // If both are pinned or both are not pinned, sort by date (newest first)
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        
+        return resortedComments;
       });
     } catch (err) {
       console.error('Error pinning comment:', err);
@@ -953,8 +965,10 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       comment.likes && Array.isArray(comment.likes) && 
       comment.likes.some(likeId => likeId === userId);
 
-    // Check if user can pin comments (only for novel detail page)
-    const canPinComments = contentType === 'novels' && isAuthenticated && user && (
+    // Check if user can pin comments
+    // For novel detail pages: only novel-level comments can be pinned
+    // For chapter pages: chapter comments can be pinned
+    const canPinComments = isAuthenticated && user && (
       user.role === 'admin' || 
       user.role === 'moderator' || 
       (user.role === 'pj_user' && novel?.active?.pj_user && (
@@ -963,6 +977,12 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         novel.active.pj_user.includes(user.username) ||
         novel.active.pj_user.includes(user.displayName)
       ))
+    );
+
+    // Determine if this specific comment can be pinned based on context
+    const canPinThisComment = canPinComments && (
+      (contentType === 'novels' && comment.contentType === 'novels') || // Novel page: only novel comments
+      (contentType === 'chapters' && comment.contentType === 'chapters') // Chapter page: only chapter comments
     );
     
     return (
@@ -977,7 +997,10 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
               </div>
             )}
           </div>
-          <div className={`comment-content ${comment.isPinned ? 'pinned-comment' : ''}`}>
+          <div className={`comment-content ${comment.isPinned && (
+            (contentType === 'novels' && comment.contentType === 'novels') || 
+            (contentType === 'chapters' && comment.contentType === 'chapters')
+          ) ? 'pinned-comment' : ''}`}>
           <div className="comment-header">
             <div className="comment-user-info">
               <div className="comment-user-line">
@@ -990,7 +1013,10 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                   >
                     <span className="comment-username">
                       {comment.user.displayName || comment.user.username}
-                      {comment.isPinned && <span className="pinned-indicator">📌</span>}
+                      {comment.isPinned && (
+                        (contentType === 'novels' && comment.contentType === 'novels') || 
+                        (contentType === 'chapters' && comment.contentType === 'chapters')
+                      ) && <span className="pinned-indicator">📌</span>}
                     </span>
                   </Link>
                 )}
@@ -1008,7 +1034,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                 </div>
               )}
             </div>
-            {isAuthenticated && user && !comment.isDeleted && (comment.user.username !== user.username || canPinComments) && (
+            {isAuthenticated && user && !comment.isDeleted && (comment.user.username !== user.username || canPinThisComment) && (
               <div className="comment-dropdown" ref={dropdownRef}>
                 <button
                   className="comment-dropdown-trigger"
@@ -1019,7 +1045,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                 </button>
                 {showDropdown && (
                   <div className="comment-dropdown-menu">
-                    {canPinComments && (
+                    {canPinThisComment && (
                       <button
                         className="comment-dropdown-item"
                         onClick={() => {
@@ -1031,7 +1057,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
                         {pinningComments.has(comment._id) ? '⏳' : (comment.isPinned ? '📌' : '📌')} {comment.isPinned ? 'Bỏ ghim' : 'Ghim'}
                       </button>
                     )}
-                    {comment.user.username === user.username && comment.isPinned && (
+                    {comment.user.username === user.username && (
                       <button
                         className="comment-dropdown-item"
                         onClick={() => {

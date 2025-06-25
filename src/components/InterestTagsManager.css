@@ -1,0 +1,267 @@
+.interest-tags-manager {
+  margin-top: 20px;
+}
+
+.interest-tags-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.interest-tags-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+:root.dark-mode .interest-tags-header h4 {
+  color: #fff;
+}
+
+.edit-interests-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.edit-interests-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.edit-interests-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.interest-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.profile-interest-tag {
+  position: relative;
+  background: #f0f0f0;
+  color: #333;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:root.dark-mode .profile-interest-tag {
+  background: #444;
+  color: #e0e0e0;
+}
+
+.remove-interest-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.6rem;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.remove-interest-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+.remove-interest-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.no-interests {
+  color: #999;
+  font-style: italic;
+  margin: 0;
+}
+
+:root.dark-mode .no-interests {
+  color: #777;
+}
+
+.interest-editor {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+:root.dark-mode .interest-editor {
+  background: #2a2a2a;
+}
+
+.add-custom-interest {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.add-custom-interest input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.add-custom-interest input:focus {
+  border-color: #007bff;
+}
+
+:root.dark-mode .add-custom-interest input {
+  background: #333;
+  border-color: #555;
+  color: #fff;
+}
+
+:root.dark-mode .add-custom-interest input:focus {
+  border-color: #4db8ff;
+}
+
+.add-interest-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-interest-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.add-interest-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.suggested-interests {
+  margin-top: 15px;
+}
+
+.suggested-interests p {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #666;
+}
+
+:root.dark-mode .suggested-interests p {
+  color: #a0a0a0;
+}
+
+.suggestion-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.suggestion-tag {
+  background: #e9ecef;
+  color: #495057;
+  border: 1px solid #ced4da;
+  border-radius: 12px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.suggestion-tag:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  transform: translateY(-1px);
+}
+
+.suggestion-tag:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+:root.dark-mode .suggestion-tag {
+  background: #495057;
+  color: #e9ecef;
+  border-color: #6c757d;
+}
+
+:root.dark-mode .suggestion-tag:hover:not(:disabled) {
+  background: #4db8ff;
+  border-color: #4db8ff;
+}
+
+.saving-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #007bff;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+:root.dark-mode .saving-indicator {
+  color: #4db8ff;
+}
+
+/* Responsive design */
+@media (max-width: 576px) {
+  .interest-tags-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .add-custom-interest {
+    flex-direction: column;
+  }
+
+  .suggestion-tags {
+    gap: 4px;
+  }
+
+  .suggestion-tag {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+} 

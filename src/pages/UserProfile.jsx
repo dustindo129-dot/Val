@@ -9,7 +9,7 @@
  * This is different from UserSettings which handles account configuration.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
@@ -18,6 +18,7 @@ import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 import DraggableModuleList from '../components/DraggableModuleList';
+import InterestTagsManager from '../components/InterestTagsManager';
 import {
   DndContext,
   closestCenter,
@@ -181,10 +182,9 @@ const UserProfile = () => {
         setIntroText(response.data.intro || '');
         
         // Always fetch module data for display (visitors can see them)
-        const displayNameSlug = response.data.displayName ? createSlug(response.data.displayName) : response.data.username;
-        
         try {
-          const [userModules, chaptersParticipated, followingCount, commentsCount] = await Promise.all([
+          // Batch all user stats API calls to minimize database queries
+          const userStatsPromises = [
             // Fetch user's modules based on their novel roles and existing preferences
             axios.get(`${config.backendUrl}/api/users/id/${response.data._id}/role-modules`),
             // Fetch actual chapter participation count for this user (as translator, editor, or proofreader)
@@ -193,7 +193,10 @@ const UserProfile = () => {
             axios.get(`${config.backendUrl}/api/usernovelinteractions/following/count/${response.data._id}`),
             // Fetch actual comment count for this user (including replies)
             axios.get(`${config.backendUrl}/api/comments/count/user/${response.data._id}`)
-          ]);
+          ];
+
+          // Execute all API calls in parallel
+          const [userModules, chaptersParticipated, followingCount, commentsCount] = await Promise.all(userStatsPromises);
           
           setUserStats({
             chaptersParticipated: chaptersParticipated.data.count || 0,
@@ -475,8 +478,15 @@ const UserProfile = () => {
   };
 
   // Module refresh function for admin/mod to repopulate modules
-  const handleRefreshModules = async () => {
+  const handleRefreshModules = useCallback(async () => {
     if (!canRefreshModules) return;
+    
+    // Debounce rapid clicks
+    const now = Date.now();
+    if (handleRefreshModules.lastCall && (now - handleRefreshModules.lastCall) < 2000) {
+      return; // Ignore if called within 2 seconds
+    }
+    handleRefreshModules.lastCall = now;
     
     try {
       // Refetch user modules from backend using the new /id/ endpoint
@@ -494,7 +504,7 @@ const UserProfile = () => {
       console.error('Error refreshing modules:', error);
       alert('Không thể làm mới danh sách tập');
     }
-  };
+  }, [canRefreshModules, profileUser]);
 
   // Module reordering functions
   const handleReorderOngoingModules = async (newOrder) => {
@@ -805,27 +815,17 @@ const UserProfile = () => {
                     </div>
                   )}
                   
-                  <div className="profile-interests-tags">
-                    <span className="profile-interest-tag">Học Nghệ</span>
-                    <span className="profile-interest-tag">Nhà Mạo Hiểm</span>
-                    <span className="profile-interest-tag">Chuyển Giả</span>
-                    <span className="profile-interest-tag">Đại Sư</span>
-                    <span className="profile-interest-tag">Thần Đấu</span>
-                    <span className="profile-interest-tag">Quân Quân</span>
-                    <span className="profile-interest-tag">Truyền Kỳ</span>
-                    <span className="profile-interest-tag">Sử Thi</span>
-                    <span className="profile-interest-tag">Thần Thoại</span>
-                    <span className="profile-interest-tag">Vô Địch</span>
-                    <span className="profile-interest-tag">Phi Thăng</span>
-                    <span className="profile-interest-tag">Thành Vực</span>
-                    <span className="profile-interest-tag">Hàng Tình</span>
-                    <span className="profile-interest-tag">Thiên Hà</span>
-                    <span className="profile-interest-tag">Đại Vô Trụ</span>
-                    <span className="profile-interest-tag">Đại Vì Trụ</span>
-                    <span className="profile-interest-tag">Siêu Việt</span>
-                    <span className="profile-interest-tag">Toàn Tri</span>
-                    <span className="profile-interest-tag">Toàn Năng</span>
-                  </div>
+                  <InterestTagsManager
+                    userInterests={profileUser.interests || []}
+                    isOwnProfile={isOwnProfile}
+                    userId={profileUser._id}
+                    onInterestsUpdate={(updatedInterests) => {
+                      setProfileUser(prev => ({
+                        ...prev,
+                        interests: updatedInterests
+                      }));
+                    }}
+                  />
                 </div>
               </div>
             </div>

@@ -459,12 +459,39 @@
 }
 
 /* Profile-specific module cover styling - higher specificity to override NovelDetail.css */
+.user-profile-page .module-cover-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .user-profile-page .module-cover {
-  width: 60px;
-  height: 80px;
+  width: 80px;
+  height: 120px;
   object-fit: cover;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Module type banner - appears above module title */
+.user-profile-page .module-type-banner {
+  display: inline-block;
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  color: white;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+
+.user-profile-page .module-type-banner.original {
+  background: linear-gradient(45deg, #27ae60, #229954);
+}
+
+.user-profile-page .module-type-banner.translated {
+  background: linear-gradient(45deg, #3498db, #2980b9);
 }
 
 .module-info {
@@ -740,6 +767,16 @@
 
 /* Responsive adjustments for drag handles */
 @media (max-width: 768px) {
+  .user-profile-page .module-cover {
+    width: 60px;
+    height: 90px;
+  }
+  
+  .user-profile-page .module-type-banner {
+    font-size: 8px;
+    padding: 1px 6px;
+  }
+  
   .user-profile-page .drag-handle {
     left: -28px;
     font-size: 12px;

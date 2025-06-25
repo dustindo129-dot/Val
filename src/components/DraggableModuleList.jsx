@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   useDroppable,
@@ -13,6 +13,83 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { createUniqueSlug } from '../utils/slugUtils';
+import axios from 'axios';
+import config from '../config/config';
+
+// Simple cache to avoid fetching the same novel genres multiple times
+const genreCache = new Map();
+
+// Helper function to determine novel type based on genres
+const getNovelType = (genres) => {
+  if (!genres || !Array.isArray(genres)) return 'translated';
+
+  const hasVietnameseNovel = genres.some(genre => 
+    typeof genre === 'string' && genre.includes('Vietnamese Novel')
+  );
+  
+  if (hasVietnameseNovel) {
+    return 'original';
+  } else {
+    return 'translated';
+  }
+};
+
+/**
+ * Component to fetch and display novel type banner
+ */
+const NovelTypeBanner = ({ novelId }) => {
+  const [novelType, setNovelType] = useState('translated'); // Default to translated
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNovelGenres = async () => {
+      if (!novelId) {
+        setLoading(false);
+        return;
+      }
+
+      // Check cache first
+      if (genreCache.has(novelId)) {
+        const cachedType = genreCache.get(novelId);
+        setNovelType(cachedType);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Use the dashboard endpoint to get novel data including genres
+        const response = await axios.get(`${config.backendUrl}/api/novels/${novelId}/dashboard`);
+        
+        // Extract genres from the dashboard response
+        const genres = response.data.novel?.genres;
+        const type = getNovelType(genres);
+        
+        // Cache the result
+        genreCache.set(novelId, type);
+        setNovelType(type);
+      } catch (error) {
+        console.error('Error fetching novel genres:', error);
+        // Cache the default type on error to avoid repeated failed requests
+        genreCache.set(novelId, 'translated');
+        // Keep default 'translated' type on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNovelGenres();
+  }, [novelId]);
+
+  if (loading) {
+    return null; // Don't show banner while loading
+  }
+
+  return (
+    <div className={`module-type-banner ${novelType}`}>
+      {novelType === 'original' ? 'Truyện Sáng Tác' : 'Truyện Dịch'}
+    </div>
+  );
+};
 
 /**
  * Individual draggable module item component
@@ -39,6 +116,8 @@ const SortableModuleItem = ({ moduleData, canManageModules, canRemoveModules, on
     moduleData.moduleId?.novelId?._id || moduleData.moduleId?.novelId
   );
 
+  // We'll handle novel type detection in a separate component
+
   return (
     <div
       ref={setNodeRef}
@@ -57,15 +136,19 @@ const SortableModuleItem = ({ moduleData, canManageModules, canRemoveModules, on
         </div>
       )}
       
-      <img 
-        src={moduleData.moduleId?.illustration || moduleData.moduleId?.novelId?.illustration} 
-        alt={moduleData.moduleId?.title} 
-        className="module-cover" 
-        onError={(e) => {
-          e.target.src = 'https://Valvrareteam.b-cdn.net/defaults/missing-image.png';
-        }}
-      />
+      <div className="module-cover-container">
+        <img 
+          src={moduleData.moduleId?.illustration || moduleData.moduleId?.novelId?.illustration} 
+          alt={moduleData.moduleId?.title} 
+          className="module-cover" 
+          onError={(e) => {
+            e.target.src = 'https://Valvrareteam.b-cdn.net/defaults/missing-image.png';
+          }}
+        />
+      </div>
       <div className="module-info">
+        {/* Novel type banner above title */}
+        <NovelTypeBanner novelId={moduleData.moduleId?.novelId?._id} />
         <h4 className="module-title">
           <Link 
             to={`/truyen/${novelSlug}`}
