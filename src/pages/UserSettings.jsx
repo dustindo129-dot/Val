@@ -79,7 +79,8 @@ const UserSettings = () => {
   
   // State management for form data
   const [avatar, setAvatar] = useState('');
-  const [email, setEmail] = useState('');
+  const [currentEmail, setCurrentEmail] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [emailCurrentPassword, setEmailCurrentPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [passwordCurrentPassword, setPasswordCurrentPassword] = useState('');
@@ -127,7 +128,7 @@ const UserSettings = () => {
    */
   useEffect(() => {
     if (user && resolvedUser) {
-      setEmail(user.email || '');
+      setCurrentEmail(user.email || '');
       setAvatar(user.avatar || '');
       setDisplayName(user.displayName || user.username || '');
       
@@ -142,34 +143,32 @@ const UserSettings = () => {
     }
   }, [user, resolvedUser]);
 
+  /**
+   * Update currentEmail when user email changes
+   * This ensures the form shows the correct current email after email changes
+   */
+  useEffect(() => {
+    if (user?.email) {
+      setCurrentEmail(user.email);
+    }
+  }, [user?.email]);
+
   const checkDisplayNameChangeEligibility = async () => {
     if (!user) return;
     
     try {
       const response = await axios.get(
-        `${config.backendUrl}/api/users/${user.displayName || user.username}/profile`,
+        `${config.backendUrl}/api/users/${user.displayName || user.username}/display-name-eligibility`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
-      if (response.data.displayNameLastChanged) {
-        const lastChanged = new Date(response.data.displayNameLastChanged);
-        const oneMonthLater = new Date(lastChanged);
-        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-        
-        const now = new Date();
-        if (now < oneMonthLater) {
-          setCanChangeDisplayName(false);
-          setNextDisplayNameChange(oneMonthLater);
-        } else {
-          setCanChangeDisplayName(true);
-          setNextDisplayNameChange(null);
-        }
-      } else {
-        setCanChangeDisplayName(true);
-        setNextDisplayNameChange(null);
-      }
+      setCanChangeDisplayName(response.data.canChangeDisplayName);
+      setNextDisplayNameChange(response.data.nextDisplayNameChange ? new Date(response.data.nextDisplayNameChange) : null);
     } catch (error) {
       console.error('Error checking display name eligibility:', error);
+      // Fallback to allowing display name change if the check fails
+      setCanChangeDisplayName(true);
+      setNextDisplayNameChange(null);
     }
   };
 
@@ -372,9 +371,9 @@ const UserSettings = () => {
   const handleEmailUpdate = async (e) => {
     e.preventDefault();
     
-    // Validate email format
+    // Validate new email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(newEmail)) {
       setMessage({ type: 'error', text: 'Vui lòng nhập địa chỉ email hợp lệ' });
       return;
     }
@@ -401,18 +400,27 @@ const UserSettings = () => {
       const response = await api.put(
         `/api/users/${displayNameSlug}/email`,
         {
-          email,
+          email: newEmail,
           currentPassword: emailCurrentPassword
         }
       );
 
-      // Update user data in localStorage and AuthContext
-      const updatedUser = { ...user, email: response.data.email };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      updateUser(updatedUser);
-
-      setMessage({ type: 'success', text: 'Email đã được cập nhật thành công' });
-      setEmailCurrentPassword('');
+      // Check if response indicates confirmation is required
+      if (response.data.requiresConfirmation) {
+        setMessage({ 
+          type: 'info', 
+          text: 'Email xác nhận đã được gửi đến địa chỉ email hiện tại của bạn. Vui lòng kiểm tra email và nhấp vào liên kết xác nhận để hoàn tất thay đổi.' 
+        });
+        setNewEmail('');
+        setEmailCurrentPassword('');
+      } else {
+        // Fallback for direct email update (if confirmation is disabled)
+        const updatedUser = { ...user, email: response.data.email };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        updateUser(updatedUser);
+        setMessage({ type: 'success', text: 'Email đã được cập nhật thành công' });
+        setEmailCurrentPassword('');
+      }
     } catch (error) {
       console.error('Email update error:', error);
       setMessage({ 
@@ -525,13 +533,29 @@ const UserSettings = () => {
           <form onSubmit={handleEmailUpdate} className="settings-form">
             <h2>Cài đặt email</h2>
             <div className="settings-form-group">
-              <label>Địa chỉ Email</label>
+              <label>Email hiện tại</label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={currentEmail}
+                className="form-control"
+                disabled={true}
+                readOnly
+                style={{ 
+                  backgroundColor: '#f8f9fa', 
+                  cursor: 'not-allowed',
+                  color: '#6c757d'
+                }}
+              />
+            </div>
+            <div className="settings-form-group">
+              <label>Email mới</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
                 className="form-control"
                 disabled={isLoading}
+                placeholder="Nhập địa chỉ email mới"
                 required
               />
             </div>
@@ -543,10 +567,11 @@ const UserSettings = () => {
                 onChange={(e) => setEmailCurrentPassword(e.target.value)}
                 className="form-control"
                 disabled={isLoading}
+                placeholder="Nhập mật khẩu hiện tại để xác nhận"
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary" disabled={isLoading}>
+            <button type="submit" className="btn btn-primary" disabled={isLoading || !newEmail.trim()}>
               Cập nhật email
             </button>
           </form>
@@ -566,7 +591,7 @@ const UserSettings = () => {
                 required
               />
               <small className="form-text">
-                Tên hiển thị sẽ được hiển thị thay vì tên người dùng trong các bình luận và trang cá nhân.
+                Tên hiển thị sẽ được hiển thị thay vì tên người dùng trong các bình luận và trang cá nhân (Được phép cập nhật 1 lần mỗi tháng).
               </small>
               {!canChangeDisplayName && nextDisplayNameChange && (
                 <small className="form-text text-warning">
