@@ -49,7 +49,7 @@ const MarketHeader = () => {
 
         <div className="overview-section">
           <p className="important-note"><strong><em>Không có giới hạn cho bất kì yêu cầu nào của bạn, dù là truyện tiếng Anh, Nhật hay Trung, bất cứ gì cũng có thể được dịch ra tiếng Việt.</em></strong></p>
-          <p className="important-note"><strong><em>Giá niêm yết: 4đ/1 chữ với truyện tiếng Anh/Trung, 6đ/1 chữ với truyện tiếng Nhật.</em></strong></p>
+          <p className="important-note"><strong><em>Giá sàn: 4đ/1 chữ với truyện tiếng Anh/Trung, 6đ/1 chữ với truyện tiếng Nhật.</em></strong></p>
         </div>
 
         <div className="overview-section">
@@ -69,7 +69,7 @@ const MarketHeader = () => {
         </div>
 
         <div className="update-date">
-          <em>Cập nhật ngày 22/06/2025</em>
+          <em>Cập nhật ngày 26/06/2025</em>
         </div>
       </div>
     </section>

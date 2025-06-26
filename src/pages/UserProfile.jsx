@@ -185,7 +185,7 @@ const UserProfile = () => {
         try {
           // Batch all user stats API calls to minimize database queries
           const userStatsPromises = [
-            // Fetch user's modules based on their novel roles and existing preferences
+            // Fetch user's modules based on their novel roles and existing preferences (WITHOUT auto-adding new modules)
             axios.get(`${config.backendUrl}/api/users/id/${response.data._id}/role-modules`),
             // Fetch actual chapter participation count for this user (as translator, editor, or proofreader)
             axios.get(`${config.backendUrl}/api/chapters/participation/user/${response.data._id}`),
@@ -489,8 +489,8 @@ const UserProfile = () => {
     handleRefreshModules.lastCall = now;
     
     try {
-      // Refetch user modules from backend using the new /id/ endpoint
-      const response = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules`);
+      // Refetch user modules from backend using the new /id/ endpoint WITH autoAddNew=true
+      const response = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules?autoAddNew=true`);
       
       setUserStats(prev => ({
         ...prev,
@@ -498,8 +498,13 @@ const UserProfile = () => {
         completedModules: response.data.completedModules || []
       }));
       
-      // Show success message
-      alert('Đã làm mới danh sách tập thành công');
+      // Show success message with count of new modules added
+      const newModulesCount = response.data.newModulesCount || 0;
+      if (newModulesCount > 0) {
+        alert(`Đã làm mới danh sách tập thành công! Đã thêm ${newModulesCount} tập mới.`);
+      } else {
+        alert('Đã làm mới danh sách tập thành công! Không có tập mới.');
+      }
     } catch (error) {
       console.error('Error refreshing modules:', error);
       alert('Không thể làm mới danh sách tập');
@@ -529,7 +534,7 @@ const UserProfile = () => {
       console.error('Error reordering ongoing modules:', error);
       alert('Không thể sắp xếp lại danh sách đang tiến hành');
       
-      // Revert local state on error - refetch user modules
+      // Revert local state on error - refetch user modules (without auto-adding new modules)
       try {
         const userModules = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules`);
         setUserStats(prev => ({
@@ -564,7 +569,7 @@ const UserProfile = () => {
       console.error('Error reordering completed modules:', error);
       alert('Không thể sắp xếp lại danh sách đã hoàn thành');
       
-      // Revert local state on error - refetch user modules
+      // Revert local state on error - refetch user modules (without auto-adding new modules)
       try {
         const userModules = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules`);
         setUserStats(prev => ({

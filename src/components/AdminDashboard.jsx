@@ -878,9 +878,7 @@ const AdminDashboard = () => {
       'English Novel', 
       'Japanese Novel',
       'Korean Novel',
-      'Vietnamese Novel',
-      'Web Novel',
-      'One shot'
+      'Vietnamese Novel'
     ];
     
     if (protectedGenres.includes(genre) && user?.role === 'pj_user') {
@@ -2058,9 +2056,7 @@ const AdminDashboard = () => {
                                 'English Novel', 
                                 'Japanese Novel',
                                 'Korean Novel',
-                                'Vietnamese Novel',
-                                'Web Novel',
-                                'One shot'
+                                'Vietnamese Novel'
                               ];
                               
                               // Disable checkbox if genre is protected and user is pj_user

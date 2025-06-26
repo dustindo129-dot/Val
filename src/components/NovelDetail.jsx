@@ -186,7 +186,7 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
             <strong>Hỏi:</strong> Cách tính giá lúa của chương/tập?
           </div>
           <div className="faq-answer">
-            <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc.
+            <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc (chưa kèm phụ phí).
           </div>
         </div>
       )}

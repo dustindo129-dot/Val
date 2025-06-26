@@ -72,8 +72,8 @@ const UserSettingsSEO = ({ user, username }) => {
  * Main component for user settings management
  */
 const UserSettings = () => {
-  // Get username from URL parameters
-  const { username } = useParams();
+  // Get displayNameSlug from URL parameters
+  const { username: displayNameSlug } = useParams();
   // Get user context and update function
   const { user, updateUser, signOut } = useAuth();
   
@@ -91,12 +91,42 @@ const UserSettings = () => {
   const [bannedUsers, setBannedUsers] = useState([]);
   const [canChangeDisplayName, setCanChangeDisplayName] = useState(true);
   const [nextDisplayNameChange, setNextDisplayNameChange] = useState(null);
+  const [resolvedUser, setResolvedUser] = useState(null);
+  const [userResolutionLoading, setUserResolutionLoading] = useState(true);
+
+  /**
+   * Resolve user by display name slug from URL
+   */
+  useEffect(() => {
+    const resolveUser = async () => {
+      if (!displayNameSlug) return;
+      
+      try {
+        setUserResolutionLoading(true);
+        
+        // Try to resolve the display name slug to a user
+        const response = await axios.get(
+          `${config.backendUrl}/api/users/${displayNameSlug}/public-profile`,
+          { params: { skipVisitorTracking: 'true' } }
+        );
+        
+        setResolvedUser(response.data);
+      } catch (error) {
+        console.error('Error resolving user:', error);
+        setResolvedUser(null);
+      } finally {
+        setUserResolutionLoading(false);
+      }
+    };
+    
+    resolveUser();
+  }, [displayNameSlug]);
 
   /**
    * Initialize form data with user information
    */
   useEffect(() => {
-    if (user) {
+    if (user && resolvedUser) {
       setEmail(user.email || '');
       setAvatar(user.avatar || '');
       setDisplayName(user.displayName || user.username || '');
@@ -110,7 +140,7 @@ const UserSettings = () => {
         fetchBlockedUsers();
       }
     }
-  }, [user]);
+  }, [user, resolvedUser]);
 
   const checkDisplayNameChangeEligibility = async () => {
     if (!user) return;
@@ -146,7 +176,7 @@ const UserSettings = () => {
   const fetchBlockedUsers = async () => {
     try {
       const response = await axios.get(
-        `${config.backendUrl}/api/users/${username}/blocked`,
+        `${config.backendUrl}/api/users/${displayNameSlug}/blocked`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setBlockedUsers(response.data);
@@ -170,7 +200,7 @@ const UserSettings = () => {
   const handleUnblock = async (blockedUsername) => {
     try {
       await axios.delete(
-        `${config.backendUrl}/api/users/${username}/block/${blockedUsername}`,
+        `${config.backendUrl}/api/users/${displayNameSlug}/block/${blockedUsername}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setBlockedUsers(prev => prev.filter(user => user.username !== blockedUsername));
@@ -234,7 +264,7 @@ const UserSettings = () => {
 
       // Send avatar URL to backend
       await api.post(
-        `/api/users/${username}/avatar`,
+        `/api/users/${displayNameSlug}/avatar`,
         {
           avatar: newAvatarUrl
         }
@@ -297,7 +327,7 @@ const UserSettings = () => {
       });
 
       const response = await api.put(
-        `/api/users/${username}/display-name`,
+        `/api/users/${displayNameSlug}/display-name`,
         { displayName: displayName.trim() }
       );
 
@@ -369,7 +399,7 @@ const UserSettings = () => {
       });
 
       const response = await api.put(
-        `/api/users/${username}/email`,
+        `/api/users/${displayNameSlug}/email`,
         {
           email,
           currentPassword: emailCurrentPassword
@@ -408,7 +438,7 @@ const UserSettings = () => {
     try {
       setIsLoading(true);
       await axios.put(
-        `/api/users/${username}/password`,
+        `/api/users/${displayNameSlug}/password`,
         {
           currentPassword: passwordCurrentPassword,
           newPassword
@@ -439,14 +469,19 @@ const UserSettings = () => {
     }
   };
 
-  // Check if user has permission to view this profile
-  if (!user || user.username !== username) {
+  // Show loading while resolving user
+  if (userResolutionLoading) {
+    return <div className="container mt-4">Đang tải...</div>;
+  }
+
+  // Check if user exists and has permission to view this profile
+  if (!user || !resolvedUser || user.username !== resolvedUser.username) {
     return <div className="container mt-4">Bạn không có quyền xem trang cài đặt này.</div>;
   }
 
-  return (
-    <div className="settings-container">
-      <UserSettingsSEO user={user} username={username} />
+      return (
+      <div className="settings-container">
+        <UserSettingsSEO user={user} username={resolvedUser.displayName || resolvedUser.username} />
       {/* Settings header */}
       <div className="settings-header">
         <h1>Cài đặt tài khoản</h1>
@@ -480,7 +515,7 @@ const UserSettings = () => {
                 <i className="fa-solid fa-camera"></i>
               </label>
             </div>
-            <h2 className="profile-username">{user?.displayName || username}</h2>
+            <h2 className="profile-username">{user?.displayName || resolvedUser?.displayName || resolvedUser?.username}</h2>
           </div>
         </div>
 
