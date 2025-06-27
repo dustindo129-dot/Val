@@ -169,7 +169,8 @@ const UserBookmarks = () => {
     const canViewBookmarks = user && (
       user.username === username || 
       user.displayName === username ||
-      (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/\s+/g, ''))
+      (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/[-\s]+/g, '')) ||
+      (user.username && user.username.toLowerCase() === username.toLowerCase())
     );
     
     if (!canViewBookmarks) {
@@ -391,7 +392,8 @@ const UserBookmarks = () => {
   const canViewBookmarks = user && (
     user.username === username || 
     user.displayName === username ||
-    (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/\s+/g, ''))
+    (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/[-\s]+/g, '')) ||
+    (user.username && user.username.toLowerCase() === username.toLowerCase())
   );
   
   if (!canViewBookmarks) {
