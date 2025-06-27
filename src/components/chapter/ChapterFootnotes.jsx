@@ -42,26 +42,29 @@ const ChapterFootnotes = ({ footnotes, onFootnoteClick }) => {
     <div className="chapter-footnotes">
       <h3 className="footnotes-title">Chú thích</h3>
       <div className="footnotes-list">
-        {footnotes.map((footnote) => (
-          <div key={footnote.id} className="footnote-item" id={`note-${footnote.id}`}>
-            <sup>
-              <a 
-                href={`#ref-${footnote.id}`}
-                className="footnote-backref"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onFootnoteClick(`ref-${footnote.id}`);
-                }}
-              >
-                [{footnote.id}]
-              </a>
-            </sup>
+        {footnotes.map((footnote) => {
+          const footnoteName = footnote.name || `note${footnote.id}`;
+          return (
+            <div key={footnote.id} className="footnote-item" id={`note-${footnoteName}`}>
+              <sup>
+                <a 
+                  href={`#ref-${footnoteName}`}
+                  className="footnote-backref"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onFootnoteClick(`ref-${footnoteName}`);
+                  }}
+                >
+                  [{footnoteName}]
+                </a>
+              </sup>
             <span 
               className="footnote-content"
               dangerouslySetInnerHTML={{ __html: processFootnoteContent(footnote.content) }}
             />
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -71,6 +74,7 @@ ChapterFootnotes.propTypes = {
   footnotes: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
+      name: PropTypes.string,
       content: PropTypes.string.isRequired
     })
   ),

@@ -41,6 +41,7 @@ const ChapterContent = ({
   const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
   const [localFootnotes, setLocalFootnotes] = useState([]);
   const [nextFootnoteId, setNextFootnoteId] = useState(1);
+  const [nextFootnoteName, setNextFootnoteName] = useState('note1');
   const [editedChapterBalance, setEditedChapterBalance] = useState(chapter.chapterBalance || 0);
   const [originalMode] = useState(chapter.mode || 'published');
   const [originalChapterBalance] = useState(chapter.chapterBalance || 0);
@@ -107,8 +108,10 @@ const ChapterContent = ({
       if (hasChanged) {
         // Use a single batch update
         const nextId = Math.max(...footnotes.map(f => f.id).concat([0])) + 1;
+        const nextName = `note${nextId}`;
         setLocalFootnotes(footnotes);
         setNextFootnoteId(nextId);
+        setNextFootnoteName(nextName);
       }
     }
   }, [isEditing, chapter.footnotes, editedContent?.footnotes, localFootnotes]);
@@ -140,6 +143,14 @@ const ChapterContent = ({
       }
     }
   }, [localFootnotes, isEditing, setEditedContent, editedContent?.footnotes]);
+
+  // Provide access to current footnotes for TinyMCE editor
+  useEffect(() => {
+    window.getCurrentFootnotes = () => localFootnotes;
+    return () => {
+      delete window.getCurrentFootnotes;
+    };
+  }, [localFootnotes]);
 
   // Initialize editedTitle from parent component when entering edit mode
   useEffect(() => {
@@ -179,18 +190,19 @@ const ChapterContent = ({
     }
   };
 
-  const insertFootnoteMarker = useCallback((footnoteNumber) => {
+  const insertFootnoteMarker = useCallback((footnoteName) => {
     if (!editorRef.current) return;
     const editor = editorRef.current;
-    editor.insertContent(`<sup class="footnote-marker" data-footnote="${footnoteNumber}">[${footnoteNumber}]</sup>`);
+    editor.insertContent(`<sup class="footnote-marker" data-footnote="${footnoteName}">[${footnoteName}]</sup>`);
   }, []);
 
   const addFootnote = useCallback(() => {
     const newFootnoteId = nextFootnoteId;
-    setLocalFootnotes(prev => [...prev, { id: newFootnoteId, content: '' }]);
+    const newFootnoteName = nextFootnoteName;
+    setLocalFootnotes(prev => [...prev, { id: newFootnoteId, name: newFootnoteName, content: '' }]);
     setNextFootnoteId(newFootnoteId + 1);
-    insertFootnoteMarker(newFootnoteId);
-  }, [nextFootnoteId, insertFootnoteMarker]);
+    setNextFootnoteName(`note${newFootnoteId + 1}`);
+  }, [nextFootnoteId, nextFootnoteName]);
 
   const updateFootnote = useCallback((id, content) => {
     setLocalFootnotes(prev =>
@@ -205,43 +217,25 @@ const ChapterContent = ({
       const editor = editorRef.current;
       const content = editor.getContent();
 
+      // Find the footnote to be deleted to get its name
+      const footnoteToDelete = localFootnotes.find(f => f.id === id);
+      if (!footnoteToDelete) return;
+
       // Create a temporary div to modify the HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = content;
 
-      // Remove the marker for the deleted footnote
-      const markerToDelete = tempDiv.querySelector(`sup[data-footnote="${id}"]`);
+      // Remove the marker for the deleted footnote using both name and id for compatibility
+      const markerToDelete = tempDiv.querySelector(`sup[data-footnote="${footnoteToDelete.name || footnoteToDelete.id}"]`);
       if (markerToDelete) {
         markerToDelete.remove();
       }
 
-      // Update remaining footnote markers
-      const remainingMarkers = Array.from(tempDiv.querySelectorAll('sup[data-footnote]'))
-        .sort((a, b) => {
-          return parseInt(a.getAttribute('data-footnote')) - parseInt(b.getAttribute('data-footnote'));
-        });
-
-      // Renumber the remaining markers
-      remainingMarkers.forEach((marker, index) => {
-        const newNumber = index + 1;
-        marker.setAttribute('data-footnote', newNumber);
-        marker.textContent = `[${newNumber}]`;
-      });
-
-      // Update the editor content
+      // Update the editor content (no renumbering needed for named footnotes)
       editor.setContent(tempDiv.innerHTML);
       
-      // Prepare updated footnotes without triggering the useEffect that updates editedContent
-      const updatedFootnotes = localFootnotes
-        .filter(footnote => footnote.id !== id)
-        .sort((a, b) => a.id - b.id)
-        .map((footnote, index) => ({
-          ...footnote,
-          id: index + 1
-        }));
-      
-      // Batch our state updates to prevent cascading renders
-      const newNextId = remainingMarkers.length + 1;
+      // Remove the footnote from the list
+      const updatedFootnotes = localFootnotes.filter(footnote => footnote.id !== id);
       
       // Update both the local state and parent's state in one operation
       if (setEditedContent) {
@@ -252,9 +246,8 @@ const ChapterContent = ({
         }));
       }
       
-      // Update local state separately from the parent state
+      // Update local state
       setLocalFootnotes(updatedFootnotes);
-      setNextFootnoteId(newNextId);
     }
   }, [localFootnotes, setEditedContent]);
 
@@ -311,12 +304,12 @@ const ChapterContent = ({
         try {
             const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
 
-            // Replace footnote markers
+            // Replace footnote markers - supports both [1], [note1], and existing HTML markers
             let processedContent = contentString.replace(
-                /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
-                (match, simpleNum, dataNum, supNum) => {
-                    const footnoteNum = simpleNum || dataNum || supNum;
-                    return `<sup><a href="#note-${footnoteNum}" id="ref-${footnoteNum}" class="footnote-ref" data-footnote="${footnoteNum}">[${footnoteNum}]</a></sup>`;
+                /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]|\<sup class="footnote-marker" data-footnote="([^"]+)"\>\[([^\]]+)\]\<\/sup\>/g,
+                (match, simpleMarker, dataMarker, supMarker) => {
+                    const footnoteMarker = simpleMarker || dataMarker || supMarker;
+                    return `<sup><a href="#note-${footnoteMarker}" id="ref-${footnoteMarker}" class="footnote-ref" data-footnote="${footnoteMarker}">[${footnoteMarker}]</a></sup>`;
                 }
             );
 
@@ -884,6 +877,36 @@ const ChapterContent = ({
                       }
                     }, 100);
                   });
+
+                  // Auto-convert typed footnote markers in real-time (only if footnote exists)
+                  editor.on('keyup', function() {
+                    // Get the current footnotes from the component state
+                    const currentFootnotes = window.getCurrentFootnotes ? window.getCurrentFootnotes() : [];
+                    
+                    if (currentFootnotes.length === 0) {
+                      return; // No footnotes exist, don't convert anything
+                    }
+                    
+                    const content = editor.getContent();
+                    const existingFootnoteNames = currentFootnotes.map(f => f.name || `note${f.id}`);
+                    
+                    const updatedContent = content.replace(
+                      /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\](?![^<]*<\/sup>)/g,
+                      (match, marker) => {
+                        // Only convert if there's a corresponding footnote
+                        if (existingFootnoteNames.includes(marker)) {
+                          return `<sup class="footnote-marker" data-footnote="${marker}">[${marker}]</sup>`;
+                        }
+                        return match; // Keep as plain text if no footnote exists
+                      }
+                    );
+                    
+                    if (updatedContent !== content) {
+                      const bookmark = editor.selection.getBookmark();
+                      editor.setContent(updatedContent);
+                      editor.selection.moveToBookmark(bookmark);
+                    }
+                  });
                 },
                 // Completely disable TinyMCE's paste processing - preserve HTML exactly as-is
                 paste_data_images: true,
@@ -896,9 +919,9 @@ const ChapterContent = ({
                 paste_webkit_styles: 'all',
                 // Handle footnote markers only - don't touch anything else
                 paste_preprocess: (plugin, args) => {
-                  // Only handle footnote markers, absolutely nothing else
+                  // Handle both numbered and named footnote markers
                   args.content = args.content.replace(
-                    /\[(\d+)\]/g,
+                    /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]/g,
                     '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
                   );
                   // Don't modify the content at all otherwise
@@ -951,17 +974,34 @@ const ChapterContent = ({
 
           {/* Add Footnotes Section in Edit Mode */}
           <div className="footnote-section">
-            <h3>Footnotes</h3>
+            <h3>Chú thích</h3>
             {localFootnotes.length > 0 ? (
               <div className="footnote-list">
                 {localFootnotes.map((footnote) => (
                   <div key={`footnote-${footnote.id}`} className="footnote-item">
-                    <div className="footnote-number">{footnote.id}</div>
+                    <div className="footnote-number">
+                      <input 
+                        type="text" 
+                        value={`[${footnote.name || `note${footnote.id}`}]`}
+                        readOnly
+                        style={{
+                          width: '80px',
+                          padding: '2px 4px',
+                          fontSize: '12px',
+                          fontFamily: 'monospace',
+                          border: '1px solid #ccc',
+                          borderRadius: '3px',
+                          backgroundColor: '#f9f9f9'
+                        }}
+                        onClick={(e) => e.target.select()}
+                        title="Click để chọn tất cả, sau đó copy"
+                      />
+                    </div>
                     <div className="footnote-content">
                       <textarea
                         value={footnote.content}
                         onChange={(e) => updateFootnote(footnote.id, e.target.value)}
-                        placeholder={`Nhập chú thích ${footnote.id}...`}
+                        placeholder={`Nhập chú thích [${footnote.name || `note${footnote.id}`}]...`}
                       />
                     </div>
                     <div className="footnote-controls">
@@ -979,11 +1019,10 @@ const ChapterContent = ({
               </div>
             ) : (
               <p>Hướng dẫn chỉnh sửa chú thích:
-                 <br />1. Nếu muốn xóa hoặc chỉnh sửa chú thích hãy thao tác ở khu vực bên dưới,
-                  không nên xóa chú thích bằng tay ở khu vực chữ bên trên,
-                   có thể gây ra mâu thuẫn dữ liệu và làm hỏng nội dung.
-                   <br />2. Tương tự như mục thêm chương, các thay đổi chỉ ấn định sau khi bấm Lưu chương,
-                    nên nếu lỡ tay hãy Hủy bỏ thay đổi và làm lại.</p>
+                 <br />1. Nếu muốn thêm chú thích thì thêm ở dưới trước rồi sao chép [note1] vào nội dung hoặc thậm chí gõ tay trực tiếp vào cũng được.
+                 <br />2. Khi dán nội dung từ chỗ khác, chỉ cần giữ nguyên các [note1], [note2] trong văn bản, hoặc sao chép lại từ chỗ cạnh chú thích bên dưới.
+                 <br />3. Nếu chú thích không được tạo trước khi nhập [note1], [note2], v.v. thì [note1] sẽ hiển thị như văn bản thông thường.
+                 <br />4. Các thay đổi chỉ được lưu sau khi bấm "Lưu chương".</p>
             )}
 
             <button
@@ -1033,6 +1072,7 @@ ChapterContent.propTypes = {
     footnotes: PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,
+        name: PropTypes.string,
         content: PropTypes.string.isRequired
       })
     )
@@ -1045,6 +1085,7 @@ ChapterContent.propTypes = {
     footnotes: PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,
+        name: PropTypes.string,
         content: PropTypes.string.isRequired
       })
     )

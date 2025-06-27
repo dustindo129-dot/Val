@@ -1840,6 +1840,16 @@ const AdminDashboard = () => {
     setSearchQuery('');
   };
 
+  const [novelsDeletionInProgress, setNovelsDeletionInProgress] = useState(false);
+  const [novelAnalyticsData, setNovelAnalyticsData] = useState(null);
+  const [userAnalyticsData, setUserAnalyticsData] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  
+  // Add footnote migration state
+
+
+
+
   return (
       <div className="admin-dashboard">
         <AdminDashboardSEO />
@@ -2289,6 +2299,8 @@ const AdminDashboard = () => {
                 </form>
             )}
           </div>
+
+
 
           {/* Enhanced Novel List Section with Search */}
           <div className="novel-list">

@@ -83,6 +83,7 @@ const ChapterDashboard = () => {
   // State for footnotes
   const [footnotes, setFootnotes] = useState([]);
   const [nextFootnoteId, setNextFootnoteId] = useState(1);
+  const [nextFootnoteName, setNextFootnoteName] = useState('note1');
 
   // Reference to the editor
   const editorRef = useRef(null);
@@ -117,14 +118,14 @@ const ChapterDashboard = () => {
 
   /**
    * Adds a footnote marker to the editor content at the current cursor position
-   * @param {number} footnoteNumber - The footnote number to insert
+   * @param {string} footnoteName - The footnote name to insert
    */
-  const insertFootnoteMarker = useCallback((footnoteNumber) => {
+  const insertFootnoteMarker = useCallback((footnoteName) => {
     if (!editorRef.current) return;
 
     const editor = editorRef.current;
     // Insert superscript footnote marker at current cursor position
-    editor.insertContent(`<sup class="footnote-marker" data-footnote="${footnoteNumber}">[${footnoteNumber}]</sup>`);
+    editor.insertContent(`<sup class="footnote-marker" data-footnote="${footnoteName}">[${footnoteName}]</sup>`);
   }, []);
 
   /**
@@ -132,17 +133,16 @@ const ChapterDashboard = () => {
    */
   const addFootnote = useCallback(() => {
     const newFootnoteId = nextFootnoteId;
+    const newFootnoteName = nextFootnoteName;
 
     setFootnotes(prev => [
       ...prev,
-      { id: newFootnoteId, content: '' }
+      { id: newFootnoteId, name: newFootnoteName, content: '' }
     ]);
 
     setNextFootnoteId(newFootnoteId + 1);
-
-    // Insert the footnote marker in the editor
-    insertFootnoteMarker(newFootnoteId);
-  }, [nextFootnoteId, insertFootnoteMarker]);
+    setNextFootnoteName(`note${newFootnoteId + 1}`);
+  }, [nextFootnoteId, nextFootnoteName]);
 
   /**
    * Updates a footnote's content
@@ -162,6 +162,10 @@ const ChapterDashboard = () => {
    * @param {number} id - ID of the footnote to delete
    */
   const deleteFootnote = useCallback((id) => {
+    // Find the footnote to be deleted to get its name
+    const footnoteToDelete = footnotes.find(f => f.id === id);
+    if (!footnoteToDelete) return;
+
     // Remove the footnote from the array
     setFootnotes(prev => prev.filter(footnote => footnote.id !== id));
 
@@ -174,41 +178,16 @@ const ChapterDashboard = () => {
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = content;
 
-      // Find and remove the marker for the deleted footnote
-      const markerToDelete = tempDiv.querySelector(`sup.footnote-marker[data-footnote="${id}"]`);
+      // Find and remove the marker for the deleted footnote using both name and id for compatibility
+      const markerToDelete = tempDiv.querySelector(`sup.footnote-marker[data-footnote="${footnoteToDelete.name || footnoteToDelete.id}"]`);
       if (markerToDelete) {
         markerToDelete.remove();
       }
 
-      // Update the remaining footnote markers
-      const remainingMarkers = tempDiv.querySelectorAll('sup.footnote-marker');
-      let newNumber = 1;
-
-      remainingMarkers.forEach(marker => {
-        const oldNumber = marker.getAttribute('data-footnote');
-        marker.setAttribute('data-footnote', newNumber);
-        marker.textContent = `[${newNumber}]`;
-        newNumber++;
-      });
-
-      // Update the editor content
+      // Update the editor content (no renumbering needed for named footnotes)
       editor.setContent(tempDiv.innerHTML);
-
-      // Renumber the footnotes array
-      setFootnotes(prev => {
-        const updatedFootnotes = prev.filter(footnote => footnote.id !== id)
-            .sort((a, b) => a.id - b.id)
-            .map((footnote, index) => ({
-              ...footnote,
-              id: index + 1
-            }));
-        return updatedFootnotes;
-      });
-
-      // Update the next footnote ID
-      setNextFootnoteId(newNumber);
     }
-  }, []);
+  }, [footnotes]);
 
   /**
    * Fetches novel and module data when component mounts
@@ -335,42 +314,19 @@ const ChapterDashboard = () => {
             setProofreader(chapterData.proofreader || '');
             setChapterBalance(chapterData.chapterBalance || 0);
 
-            // Extract footnotes from content directly without using the callback
-            if (chapterData.content) {
-              // Inline footnote extraction to avoid circular dependency
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = chapterData.content;
-              const footnoteMarkers = tempDiv.querySelectorAll('sup.footnote-marker');
-              const extractedFootnotes = [];
-              let maxId = 0;
-
-              footnoteMarkers.forEach(marker => {
-                const id = parseInt(marker.getAttribute('data-footnote'), 10);
-                if (!isNaN(id)) {
-                  extractedFootnotes.push({ id, content: '' });
-                  if (id > maxId) maxId = id;
-                }
-              });
-
-              // Sort by ID
-              extractedFootnotes.sort((a, b) => a.id - b.id);
+            // Use existing footnotes from chapter data if available
+            if (chapterData.footnotes && Array.isArray(chapterData.footnotes)) {
+              setFootnotes(chapterData.footnotes);
               
-              // Update the next ID
+              // Find the highest ID to set next footnote ID
+              const maxId = Math.max(...chapterData.footnotes.map(f => f.id), 0);
               setNextFootnoteId(maxId + 1);
-
-              // Merge with existing footnote content if available
-              if (chapterData.footnotes && Array.isArray(chapterData.footnotes)) {
-                const mergedFootnotes = extractedFootnotes.map(footnote => {
-                  const existingFootnote = chapterData.footnotes.find(f => f.id === footnote.id);
-                  return {
-                    id: footnote.id,
-                    content: existingFootnote ? existingFootnote.content : ''
-                  };
-                });
-                setFootnotes(mergedFootnotes);
-              } else {
-                setFootnotes(extractedFootnotes);
-              }
+              setNextFootnoteName(`note${maxId + 1}`);
+            } else {
+              // If no footnotes in chapter data, start fresh
+              setFootnotes([]);
+              setNextFootnoteId(1);
+              setNextFootnoteName('note1');
             }
           } catch (err) {
             console.error('Error loading chapter data:', err);
@@ -395,6 +351,14 @@ const ChapterDashboard = () => {
       pendingModuleResolutions.current.clear();
     };
   }, []);
+
+  // Provide access to current footnotes for TinyMCE editor
+  useEffect(() => {
+    window.getChapterDashboardFootnotes = () => footnotes;
+    return () => {
+      delete window.getChapterDashboardFootnotes;
+    };
+  }, [footnotes]);
 
   /**
    * Handles chapter form submission
@@ -443,12 +407,20 @@ const ChapterDashboard = () => {
       // Process content with consistent formatting preservation (matching ChapterContent)
       let processedContent = content;
 
-      // Replace footnote markers
+      // Replace footnote markers - handle both numbered and named footnotes
+      // This handles plain text markers like [note1] and existing sup markers
       processedContent = processedContent.replace(
-          /\[(\d+)\]|\<sup class="footnote-marker" data-footnote="(\d+)"\>\[(\d+)\]\<\/sup\>/g,
-          (match, simpleNum, dataNum, supNum) => {
-            const footnoteNum = simpleNum || dataNum || supNum;
-            return `<sup class="footnote-marker" data-footnote="${footnoteNum}">[${footnoteNum}]</sup>`;
+          /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]/g,
+          (match, marker) => {
+            return `<sup class="footnote-marker" data-footnote="${marker}">[${marker}]</sup>`;
+          }
+      );
+      
+      // Also handle already formatted sup markers (in case of mixed content)
+      processedContent = processedContent.replace(
+          /\<sup class="footnote-marker" data-footnote="([^"]+)"\>\[([^\]]+)\]\<\/sup\>/g,
+          (match, dataMarker, displayMarker) => {
+            return `<sup class="footnote-marker" data-footnote="${dataMarker}">[${dataMarker}]</sup>`;
           }
       );
 
@@ -690,24 +662,24 @@ const ChapterDashboard = () => {
       tempDiv.innerHTML = cleanedContent;
       const markersInContent = tempDiv.querySelectorAll('sup.footnote-marker');
 
-      const footnoteIdsInContent = Array.from(markersInContent).map(marker =>
-          parseInt(marker.getAttribute('data-footnote'), 10)
+      const footnoteMarkersInContent = Array.from(markersInContent).map(marker =>
+          marker.getAttribute('data-footnote')
       );
 
-      const footnoteIdsInState = footnotes.map(footnote => footnote.id);
+      const footnoteNamesInState = footnotes.map(footnote => footnote.name || `note${footnote.id}`);
 
       // Check for markers without footnotes
-      const missingFootnotes = footnoteIdsInContent.filter(id => !footnoteIdsInState.includes(id));
+      const missingFootnotes = footnoteMarkersInContent.filter(marker => !footnoteNamesInState.includes(marker));
       if (missingFootnotes.length > 0) {
-        setError(`Có chú thích trong chương không có nội dung (IDs: ${missingFootnotes.join(', ')}). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
+        setError(`Có chú thích trong chương không có nội dung (Names: ${missingFootnotes.join(', ')}). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
         setSaving(false);
         return;
       }
 
       // Check for footnotes without markers
-      const orphanedFootnotes = footnoteIdsInState.filter(id => !footnoteIdsInContent.includes(id));
+      const orphanedFootnotes = footnoteNamesInState.filter(name => !footnoteMarkersInContent.includes(name));
       if (orphanedFootnotes.length > 0) {
-        setError(`Có chú thích trong chương không có dấu chú thích (IDs: ${orphanedFootnotes.join(', ')}). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
+        setError(`Có chú thích trong chương không có dấu chú thích (Names: ${orphanedFootnotes.join(', ')}). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
         setSaving(false);
         return;
       }
@@ -1122,9 +1094,9 @@ const ChapterDashboard = () => {
                       paste_webkit_styles: 'all',
                       // Handle footnote markers only - don't touch anything else
                       paste_preprocess: (plugin, args) => {
-                        // Only handle footnote markers, absolutely nothing else
+                        // Handle both numbered and named footnote markers
                         args.content = args.content.replace(
-                          /\[(\d+)\]/g,
+                          /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]/g,
                           '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
                         );
                         // Don't modify the content at all otherwise
@@ -1160,6 +1132,36 @@ const ChapterDashboard = () => {
                             callback(items);
                           }
                         });
+
+                        // Auto-convert typed footnote markers in real-time (only if footnote exists)
+                        editor.on('keyup', function() {
+                          // Get the current footnotes directly from the state
+                          const currentFootnotes = window.getChapterDashboardFootnotes ? window.getChapterDashboardFootnotes() : [];
+                          
+                          if (currentFootnotes.length === 0) {
+                            return; // No footnotes exist, don't convert anything
+                          }
+                          
+                          const content = editor.getContent();
+                          const existingFootnoteNames = currentFootnotes.map(f => f.name || `note${f.id}`);
+                          
+                          const updatedContent = content.replace(
+                            /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\](?![^<]*<\/sup>)/g,
+                            (match, marker) => {
+                              // Only convert if there's a corresponding footnote
+                              if (existingFootnoteNames.includes(marker)) {
+                                return `<sup class="footnote-marker" data-footnote="${marker}">[${marker}]</sup>`;
+                              }
+                              return match; // Keep as plain text if no footnote exists
+                            }
+                          );
+                          
+                          if (updatedContent !== content) {
+                            const bookmark = editor.selection.getBookmark();
+                            editor.setContent(updatedContent);
+                            editor.selection.moveToBookmark(bookmark);
+                          }
+                        });
                       },
                       images_upload_handler: (blobInfo) => {
                         return new Promise((resolve, reject) => {
@@ -1192,12 +1194,29 @@ const ChapterDashboard = () => {
                 <div className="footnote-list">
                   {footnotes.map((footnote) => (
                       <div key={`footnote-${footnote.id}`} className="footnote-item">
-                        <div className="footnote-number">{footnote.id}</div>
+                        <div className="footnote-number">
+                          <input 
+                            type="text" 
+                            value={`[${footnote.name || `note${footnote.id}`}]`}
+                            readOnly
+                            style={{
+                              width: '80px',
+                              padding: '2px 4px',
+                              fontSize: '12px',
+                              fontFamily: 'monospace',
+                              border: '1px solid #ccc',
+                              borderRadius: '3px',
+                              backgroundColor: '#f9f9f9'
+                            }}
+                            onClick={(e) => e.target.select()}
+                            title="Click để chọn tất cả, sau đó copy"
+                          />
+                        </div>
                         <div className="footnote-content">
                     <textarea
                         value={footnote.content}
                         onChange={(e) => updateFootnote(footnote.id, e.target.value)}
-                        placeholder={`Nhập nội dung footnote ${footnote.id}...`}
+                        placeholder={`Nhập chú thích [${footnote.name || `note${footnote.id}`}]...`}
                     />
                         </div>
                         <div className="footnote-controls">
@@ -1215,11 +1234,10 @@ const ChapterDashboard = () => {
                 </div>
             ) : (
               <p>Hướng dẫn sử dụng chú thích:
-                 <br />1. Nhập toàn bộ nội dung chương vào trước.
-                 <br />2. Bấm vào chỗ muốn thêm chú thích trong nội dung.
-                 <br />3. + Thêm chú thích
-                 <br />4. Lặp lại bước 2 và 3 đến khi đầy đủ chú thích.
-                 <br />5. Nếu thêm nhầm có thể bấm xóa, tất cả nội dung và chú thích chỉ ấn định sau khi bấm Lưu chương.</p>
+                 <br />1. Bấm "+ Thêm chú thích" để tạo chú thích trước.
+                 <br />2. Sau đó có thể nhập trực tiếp [note1], [note2], v.v. vào nội dung chương (hoặc sao chép chỗ bên trái chú thích) và chúng sẽ tự động liên kết với chú thích tương ứng.
+                 <br />3. Nếu chú thích không được tạo trước khi nhập [note1], [note2], v.v. thì [note1] sẽ hiển thị như văn bản thông thường.
+                 <br />4. Các thay đổi chỉ được lưu sau khi bấm "Lưu chương".</p>
             )}
 
             <button
