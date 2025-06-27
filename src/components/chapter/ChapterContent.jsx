@@ -41,7 +41,7 @@ const ChapterContent = ({
   const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
   const [localFootnotes, setLocalFootnotes] = useState([]);
   const [nextFootnoteId, setNextFootnoteId] = useState(1);
-  const [nextFootnoteName, setNextFootnoteName] = useState('note1');
+  const [nextFootnoteName, setNextFootnoteName] = useState('1');
   const [editedChapterBalance, setEditedChapterBalance] = useState(chapter.chapterBalance || 0);
   const [originalMode] = useState(chapter.mode || 'published');
   const [originalChapterBalance] = useState(chapter.chapterBalance || 0);
@@ -108,7 +108,7 @@ const ChapterContent = ({
       if (hasChanged) {
         // Use a single batch update
         const nextId = Math.max(...footnotes.map(f => f.id).concat([0])) + 1;
-        const nextName = `note${nextId}`;
+        const nextName = nextId.toString();
         setLocalFootnotes(footnotes);
         setNextFootnoteId(nextId);
         setNextFootnoteName(nextName);
@@ -201,7 +201,7 @@ const ChapterContent = ({
     const newFootnoteName = nextFootnoteName;
     setLocalFootnotes(prev => [...prev, { id: newFootnoteId, name: newFootnoteName, content: '' }]);
     setNextFootnoteId(newFootnoteId + 1);
-    setNextFootnoteName(`note${newFootnoteId + 1}`);
+    setNextFootnoteName((newFootnoteId + 1).toString());
   }, [nextFootnoteId, nextFootnoteName]);
 
   const updateFootnote = useCallback((id, content) => {
@@ -306,7 +306,7 @@ const ChapterContent = ({
 
             // Replace footnote markers - supports both [1], [note1], and existing HTML markers
             let processedContent = contentString.replace(
-                /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]|\<sup class="footnote-marker" data-footnote="([^"]+)"\>\[([^\]]+)\]\<\/sup\>/g,
+                /\[(\d+|note\d+|note[a-zA-Z0-9_-]+)\]|\<sup class="footnote-marker" data-footnote="([^"]+)"\>\[([^\]]+)\]\<\/sup\>/g,
                 (match, simpleMarker, dataMarker, supMarker) => {
                     const footnoteMarker = simpleMarker || dataMarker || supMarker;
                     return `<sup><a href="#note-${footnoteMarker}" id="ref-${footnoteMarker}" class="footnote-ref" data-footnote="${footnoteMarker}">[${footnoteMarker}]</a></sup>`;
@@ -891,7 +891,7 @@ const ChapterContent = ({
                     const existingFootnoteNames = currentFootnotes.map(f => f.name || `note${f.id}`);
                     
                     const updatedContent = content.replace(
-                      /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\](?![^<]*<\/sup>)/g,
+                      /\[(\d+|note\d+|note[a-zA-Z0-9_-]+)\](?![^<]*<\/sup>)/g,
                       (match, marker) => {
                         // Only convert if there's a corresponding footnote
                         if (existingFootnoteNames.includes(marker)) {
@@ -917,15 +917,15 @@ const ChapterContent = ({
                 paste_strip_class_attributes: 'none',
                 paste_merge_formats: false,
                 paste_webkit_styles: 'all',
-                // Handle footnote markers only - don't touch anything else
-                paste_preprocess: (plugin, args) => {
-                  // Handle both numbered and named footnote markers
-                  args.content = args.content.replace(
-                    /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]/g,
-                    '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
-                  );
-                  // Don't modify the content at all otherwise
-                },
+                                      // Handle footnote markers only - don't touch anything else
+                      paste_preprocess: (plugin, args) => {
+                        // Handle both numbered and named footnote markers
+                        args.content = args.content.replace(
+                          /\[(\d+|note\d+|note[a-zA-Z0-9_-]+)\]/g,
+                          '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
+                        );
+                        // Don't modify the content at all otherwise
+                      },
                 // Add custom CSS for footnote styling
                 content_css: [
                   'default',
@@ -982,7 +982,7 @@ const ChapterContent = ({
                     <div className="footnote-number">
                       <input 
                         type="text" 
-                        value={`[${footnote.name || `note${footnote.id}`}]`}
+                        value={`[${footnote.name || footnote.id}]`}
                         readOnly
                         style={{
                           width: '80px',
@@ -1001,7 +1001,7 @@ const ChapterContent = ({
                       <textarea
                         value={footnote.content}
                         onChange={(e) => updateFootnote(footnote.id, e.target.value)}
-                        placeholder={`Nhập chú thích [${footnote.name || `note${footnote.id}`}]...`}
+                        placeholder={`Nhập chú thích [${footnote.name || footnote.id}]...`}
                       />
                     </div>
                     <div className="footnote-controls">
@@ -1019,9 +1019,9 @@ const ChapterContent = ({
               </div>
             ) : (
               <p>Hướng dẫn chỉnh sửa chú thích:
-                 <br />1. Nếu muốn thêm chú thích thì thêm ở dưới trước rồi sao chép [note1] vào nội dung hoặc thậm chí gõ tay trực tiếp vào cũng được.
-                 <br />2. Khi dán nội dung từ chỗ khác, chỉ cần giữ nguyên các [note1], [note2] trong văn bản, hoặc sao chép lại từ chỗ cạnh chú thích bên dưới.
-                 <br />3. Nếu chú thích không được tạo trước khi nhập [note1], [note2], v.v. thì [note1] sẽ hiển thị như văn bản thông thường.
+                 <br />1. Nếu muốn thêm chú thích thì thêm ở dưới trước rồi sao chép [1] vào nội dung hoặc thậm chí gõ tay trực tiếp vào cũng được.
+                 <br />2. Khi dán nội dung từ chỗ khác, chỉ cần giữ nguyên các [1], [2] trong văn bản, hoặc sao chép lại từ chỗ cạnh chú thích bên dưới.
+                 <br />3. Nếu chú thích không được tạo trước khi nhập [1], [2], v.v. thì [1] sẽ hiển thị như văn bản thông thường.
                  <br />4. Các thay đổi chỉ được lưu sau khi bấm "Lưu chương".</p>
             )}
 

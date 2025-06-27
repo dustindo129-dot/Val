@@ -83,7 +83,7 @@ const ChapterDashboard = () => {
   // State for footnotes
   const [footnotes, setFootnotes] = useState([]);
   const [nextFootnoteId, setNextFootnoteId] = useState(1);
-  const [nextFootnoteName, setNextFootnoteName] = useState('note1');
+  const [nextFootnoteName, setNextFootnoteName] = useState('1');
 
   // Reference to the editor
   const editorRef = useRef(null);
@@ -141,7 +141,7 @@ const ChapterDashboard = () => {
     ]);
 
     setNextFootnoteId(newFootnoteId + 1);
-    setNextFootnoteName(`note${newFootnoteId + 1}`);
+    setNextFootnoteName((newFootnoteId + 1).toString());
   }, [nextFootnoteId, nextFootnoteName]);
 
   /**
@@ -321,12 +321,12 @@ const ChapterDashboard = () => {
               // Find the highest ID to set next footnote ID
               const maxId = Math.max(...chapterData.footnotes.map(f => f.id), 0);
               setNextFootnoteId(maxId + 1);
-              setNextFootnoteName(`note${maxId + 1}`);
+              setNextFootnoteName((maxId + 1).toString());
             } else {
               // If no footnotes in chapter data, start fresh
               setFootnotes([]);
               setNextFootnoteId(1);
-              setNextFootnoteName('note1');
+              setNextFootnoteName('1');
             }
           } catch (err) {
             console.error('Error loading chapter data:', err);
@@ -408,9 +408,9 @@ const ChapterDashboard = () => {
       let processedContent = content;
 
       // Replace footnote markers - handle both numbered and named footnotes
-      // This handles plain text markers like [note1] and existing sup markers
+      // This handles plain text markers like [1] and existing sup markers
       processedContent = processedContent.replace(
-          /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]/g,
+          /\[(\d+|note\d+|note[a-zA-Z0-9_-]+)\]/g,
           (match, marker) => {
             return `<sup class="footnote-marker" data-footnote="${marker}">[${marker}]</sup>`;
           }
@@ -671,7 +671,7 @@ const ChapterDashboard = () => {
       // Check for markers without footnotes
       const missingFootnotes = footnoteMarkersInContent.filter(marker => !footnoteNamesInState.includes(marker));
       if (missingFootnotes.length > 0) {
-        setError(`Có chú thích trong chương không có nội dung (Names: ${missingFootnotes.join(', ')}). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
+        setError(`Có chú thích trong chương không có nội dung ([${missingFootnotes.join('], [')}]). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
         setSaving(false);
         return;
       }
@@ -679,7 +679,7 @@ const ChapterDashboard = () => {
       // Check for footnotes without markers
       const orphanedFootnotes = footnoteNamesInState.filter(name => !footnoteMarkersInContent.includes(name));
       if (orphanedFootnotes.length > 0) {
-        setError(`Có chú thích trong chương không có dấu chú thích (Names: ${orphanedFootnotes.join(', ')}). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
+        setError(`Có chú thích trong chương không có dấu chú thích ([${orphanedFootnotes.join('], [')}]). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
         setSaving(false);
         return;
       }
@@ -1096,7 +1096,7 @@ const ChapterDashboard = () => {
                       paste_preprocess: (plugin, args) => {
                         // Handle both numbered and named footnote markers
                         args.content = args.content.replace(
-                          /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\]/g,
+                          /\[(\d+|note\d+|note[a-zA-Z0-9_-]+)\]/g,
                           '<sup class="footnote-marker" data-footnote="$1">[$1]</sup>'
                         );
                         // Don't modify the content at all otherwise
@@ -1146,7 +1146,7 @@ const ChapterDashboard = () => {
                           const existingFootnoteNames = currentFootnotes.map(f => f.name || `note${f.id}`);
                           
                           const updatedContent = content.replace(
-                            /\[(note\d+|note[a-zA-Z0-9_-]+|\d+)\](?![^<]*<\/sup>)/g,
+                            /\[(\d+|note\d+|note[a-zA-Z0-9_-]+)\](?![^<]*<\/sup>)/g,
                             (match, marker) => {
                               // Only convert if there's a corresponding footnote
                               if (existingFootnoteNames.includes(marker)) {
@@ -1197,7 +1197,7 @@ const ChapterDashboard = () => {
                         <div className="footnote-number">
                           <input 
                             type="text" 
-                            value={`[${footnote.name || `note${footnote.id}`}]`}
+                            value={`[${footnote.name || footnote.id}]`}
                             readOnly
                             style={{
                               width: '80px',
@@ -1216,7 +1216,7 @@ const ChapterDashboard = () => {
                     <textarea
                         value={footnote.content}
                         onChange={(e) => updateFootnote(footnote.id, e.target.value)}
-                        placeholder={`Nhập chú thích [${footnote.name || `note${footnote.id}`}]...`}
+                        placeholder={`Nhập chú thích [${footnote.name || footnote.id}]...`}
                     />
                         </div>
                         <div className="footnote-controls">
@@ -1235,8 +1235,8 @@ const ChapterDashboard = () => {
             ) : (
               <p>Hướng dẫn sử dụng chú thích:
                  <br />1. Bấm "+ Thêm chú thích" để tạo chú thích trước.
-                 <br />2. Sau đó có thể nhập trực tiếp [note1], [note2], v.v. vào nội dung chương (hoặc sao chép chỗ bên trái chú thích) và chúng sẽ tự động liên kết với chú thích tương ứng.
-                 <br />3. Nếu chú thích không được tạo trước khi nhập [note1], [note2], v.v. thì [note1] sẽ hiển thị như văn bản thông thường.
+                 <br />2. Sau đó có thể nhập trực tiếp [1], [2], v.v. vào nội dung chương (hoặc sao chép chỗ bên trái chú thích) và chúng sẽ tự động liên kết với chú thích tương ứng.
+                 <br />3. Nếu chú thích không được tạo trước khi nhập [1], [2], v.v. thì [1] sẽ hiển thị như văn bản thông thường.
                  <br />4. Các thay đổi chỉ được lưu sau khi bấm "Lưu chương".</p>
             )}
 
