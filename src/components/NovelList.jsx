@@ -1,22 +1,3 @@
-/**
- * NovelList Component
- *
- * Displays a paginated grid of novels with their details including:
- * - Cover images with status indicators
- * - Novel titles and descriptions
- * - Latest chapter updates
- * - Pagination controls
- * - Search functionality
- *
- * Features:
- * - Responsive grid layout
- * - Lazy loading of images
- * - Expandable descriptions
- * - Chapter previews
- * - Status indicators
- * - First chapter quick links
- */
-
 import {useState, useEffect, memo, useRef} from 'react';
 import {Link, useNavigate, useParams, useLocation} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
@@ -36,21 +17,8 @@ import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
 
 /**
  * NovelImage Component
- *
- * Memoized component for displaying novel cover images with:
- * - Fallback image handling
- * - Status indicator overlay
- * - Lazy loading
- *
- * @param {Object} props
- * @param {string} props.src - Image source URL
- * @param {string} props.alt - Alt text for the image
- * @param {string} props.status - Novel status (e.g., 'ONGOING', 'COMPLETED')
- * @param {string} props.novelId - ID of the novel
  */
-
-// NovelImage Component
-const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
+const NovelImage = memo(({src, alt, status, novelId}) => {
     const [imgSrc, setImgSrc] = useState(src);
 
     useEffect(() => {
@@ -63,29 +31,25 @@ const NovelImage = memo(({src, alt, status, novelId, firstChapter}) => {
 
     return (
         <div className="cover-container">
-            <img
-                src={imgSrc}
-                alt={alt}
-                onError={handleError}
-                loading="lazy"
-                className="novel-cover"
-            />
-            <span className="status-badge" data-status={getStatusForCSS(status)}>
-        {translateStatus(status)}
-      </span>
-            {firstChapter && (
-                <Link to={generateChapterUrl({ _id: novelId, title: alt }, firstChapter)} className="first-chapter">
-                    &gt;&gt; Chương đầu
-                </Link>
-            )}
+            <div className="novel-cover-wrapper">
+                <img
+                    src={imgSrc}
+                    alt={alt}
+                    onError={handleError}
+                    loading="lazy"
+                    className="novel-cover"
+                />
+                <span className="status-badge" data-status={getStatusForCSS(status)}>
+                    {translateStatus(status)}
+                </span>
+            </div>
         </div>
     );
 }, (prevProps, nextProps) => {
     return prevProps.src === nextProps.src &&
         prevProps.alt === nextProps.alt &&
         prevProps.status === nextProps.status &&
-        prevProps.novelId === nextProps.novelId &&
-        prevProps.firstChapter?._id === nextProps.firstChapter?._id;
+        prevProps.novelId === nextProps.novelId;
 });
 
 // FacebookPlugin Component
@@ -95,17 +59,15 @@ const FacebookPlugin = memo(() => {
     const iframeRef = useRef(null);
 
     useEffect(() => {
-        // Intercept errors as early as possible - before the component fully mounts
         const originalConsoleError = console.error;
         const originalConsoleWarn = console.warn;
-        
-        // More aggressive global error handler to catch all Facebook-related errors
+
         window.addEventListener('error', function(event) {
             const errorMsg = event.message || '';
             if (
-                errorMsg.includes('u_1_') || 
-                errorMsg.includes('Could not find element') || 
-                errorMsg.includes('FB') || 
+                errorMsg.includes('u_1_') ||
+                errorMsg.includes('Could not find element') ||
+                errorMsg.includes('FB') ||
                 errorMsg.includes('facebook') ||
                 errorMsg.includes('DataStore') ||
                 errorMsg.includes('__elem_')
@@ -115,48 +77,42 @@ const FacebookPlugin = memo(() => {
                 return true;
             }
         }, true);
-        
-        // Override console.error to suppress specific Facebook-related errors
+
         console.error = function(...args) {
             const errorMsg = args[0]?.toString() || '';
             if (
-                errorMsg.includes('u_1_') || 
-                errorMsg.includes('Could not find element') || 
-                errorMsg.includes('FB') || 
+                errorMsg.includes('u_1_') ||
+                errorMsg.includes('Could not find element') ||
+                errorMsg.includes('FB') ||
                 errorMsg.includes('facebook') ||
                 errorMsg.includes('DataStore') ||
                 errorMsg.includes('__elem_')
             ) {
-                // Suppress Facebook-related errors
                 return;
             }
             originalConsoleError.apply(console, args);
         };
-        
-        // Override console.warn to suppress specific Facebook-related warnings
+
         console.warn = function(...args) {
             const warnMsg = args[0]?.toString() || '';
             if (
-                warnMsg.includes('u_1_') || 
-                warnMsg.includes('Could not find element') || 
-                warnMsg.includes('FB') || 
+                warnMsg.includes('u_1_') ||
+                warnMsg.includes('Could not find element') ||
+                warnMsg.includes('FB') ||
                 warnMsg.includes('facebook') ||
                 warnMsg.includes('DataStore') ||
                 warnMsg.includes('mutation event') ||
                 warnMsg.includes('__elem_')
             ) {
-                // Suppress Facebook-related warnings
                 return;
             }
             originalConsoleWarn.apply(console, args);
         };
-        
-        // Set a timeout to mark as loaded after 3 seconds, regardless of actual load status
+
         const timeoutId = setTimeout(() => {
             setIsLoaded(true);
         }, 3000);
 
-        // Cleanup function
         return () => {
             console.error = originalConsoleError;
             console.warn = originalConsoleWarn;
@@ -164,7 +120,6 @@ const FacebookPlugin = memo(() => {
         };
     }, []);
 
-    // Handle iframe load and error events
     const handleLoad = () => {
         setIsLoaded(true);
         setHasError(false);
@@ -178,18 +133,20 @@ const FacebookPlugin = memo(() => {
     return (
         <div className="facebook-plugin">
             {!isLoaded && (
-                                <div className="fb-loading">                    <LoadingSpinner size="large" text="Đang tải bảng tin Facebook..." />                </div>
+                <div className="fb-loading">
+                    <LoadingSpinner size="large" text="Đang tải bảng tin Facebook..." />
+                </div>
             )}
-            
-            <iframe 
+
+            <iframe
                 ref={iframeRef}
                 src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100064392503502&tabs=timeline&width=400&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&lazy=true"
                 width="400"
                 height="800"
-                style={{ 
-                    border: 'none', 
+                style={{
+                    border: 'none',
                     overflow: 'hidden',
-                    display: isLoaded ? 'block' : 'none' 
+                    display: isLoaded ? 'block' : 'none'
                 }}
                 scrolling="no"
                 frameBorder="0"
@@ -199,13 +156,13 @@ const FacebookPlugin = memo(() => {
                 onError={handleError}
                 title="Facebook Page Timeline"
             ></iframe>
-            
+
             {hasError && (
                 <div className="fb-error">
                     <p>Không thể tải nội dung Facebook.</p>
-                    <a 
-                        href="https://www.facebook.com/profile.php?id=100064392503502" 
-                        target="_blank" 
+                    <a
+                        href="https://www.facebook.com/profile.php?id=100064392503502"
+                        target="_blank"
                         rel="noopener noreferrer"
                     >
                         Truy cập trang Facebook
@@ -216,101 +173,79 @@ const FacebookPlugin = memo(() => {
     );
 });
 
-
-
 /**
  * NovelListSEO Component
- *
- * Provides SEO optimization for the NovelList/Homepage including:
- * - Dynamic title based on current page
- * - Meta description
- * - Keywords
- * - Open Graph tags
  */
 const NovelListSEO = ({ currentPage = 1 }) => {
-  const generateSEOTitle = () => {
-    let baseTitle = 'Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất';
-    
-    if (currentPage > 1) {
-      baseTitle = `Valvrareteam - Trang ${currentPage} | Light Novel Tiếng Việt`;
-    }
-    
-    return baseTitle;
-  };
+    const generateSEOTitle = () => {
+        let baseTitle = 'Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất';
 
-  const generateSEODescription = () => {
-    if (currentPage === 1) {
-      return 'Thư viện Light Novel vietsub lớn nhất Việt Nam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh, dịch chất lượng cao. Hàng nghìn Light Novel hay đang chờ bạn khám phá!';
-    }
-    return `Danh sách Light Novel vietsub trang ${currentPage} tại Valvrareteam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh chóng.`;
-  };
+        if (currentPage > 1) {
+            baseTitle = `Valvrareteam - Trang ${currentPage} | Light Novel Tiếng Việt`;
+        }
 
-  const generateKeywords = () => {
-    const baseKeywords = [
-      'light novel vietsub',
-      'light novel tiếng việt', 
-      'đọc light novel vietsub',
-      'light novel việt nam',
-      'truyện light novel',
-      'ln vietsub',
-      'light novel online',
-      'đọc ln online',
-      'light novel dịch việt',
-      'novel tiếng việt',
-      'valvrareteam',
-      'light novel hay',
-      'light novel mới',
-      'light novel full vietsub'
-    ];
-    
-    if (currentPage > 1) {
-      baseKeywords.push(`trang ${currentPage}`);
-    }
-    
-    return baseKeywords.join(', ');
-  };
+        return baseTitle;
+    };
 
-  return (
-    <Helmet>
-      <title>{generateSEOTitle()}</title>
-      <meta name="description" content={generateSEODescription()} />
-      <meta name="keywords" content={generateKeywords()} />
-      
-      {/* Open Graph tags */}
-      <meta property="og:title" content={generateSEOTitle()} />
-      <meta property="og:description" content={generateSEODescription()} />
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content={currentPage === 1 ? "https://valvrareteam.net" : `https://valvrareteam.net/trang/${currentPage}`} />
-      <meta property="og:site_name" content="Valvrareteam" />
-      <meta property="og:locale" content="vi_VN" />
-      
-      {/* Twitter Card tags */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={generateSEOTitle()} />
-      <meta name="twitter:description" content={generateSEODescription()} />
-      
-      {/* Additional SEO meta */}
-      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
-      <meta name="author" content="Valvrareteam" />
-      <meta name="language" content="Vietnamese" />
-    </Helmet>
-  );
+    const generateSEODescription = () => {
+        if (currentPage === 1) {
+            return 'Thư viện Light Novel vietsub lớn nhất Việt Nam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh, dịch chất lượng cao. Hàng nghìn Light Novel hay đang chờ bạn khám phá!';
+        }
+        return `Danh sách Light Novel vietsub trang ${currentPage} tại Valvrareteam. Đọc Light Novel tiếng Việt miễn phí, cập nhật nhanh chóng.`;
+    };
+
+    const generateKeywords = () => {
+        const baseKeywords = [
+            'light novel vietsub',
+            'light novel tiếng việt',
+            'đọc light novel vietsub',
+            'light novel việt nam',
+            'truyện light novel',
+            'ln vietsub',
+            'light novel online',
+            'đọc ln online',
+            'light novel dịch việt',
+            'novel tiếng việt',
+            'valvrareteam',
+            'light novel hay',
+            'light novel mới',
+            'light novel full vietsub'
+        ];
+
+        if (currentPage > 1) {
+            baseKeywords.push(`trang ${currentPage}`);
+        }
+
+        return baseKeywords.join(', ');
+    };
+
+    return (
+        <Helmet>
+            <title>{generateSEOTitle()}</title>
+            <meta name="description" content={generateSEODescription()} />
+            <meta name="keywords" content={generateKeywords()} />
+
+            <meta property="og:title" content={generateSEOTitle()} />
+            <meta property="og:description" content={generateSEODescription()} />
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content={currentPage === 1 ? "https://valvrareteam.net" : `https://valvrareteam.net/trang/${currentPage}`} />
+            <meta property="og:site_name" content="Valvrareteam" />
+            <meta property="og:locale" content="vi_VN" />
+
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={generateSEOTitle()} />
+            <meta name="twitter:description" content={generateSEODescription()} />
+
+            <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+            <meta name="author" content="Valvrareteam" />
+            <meta name="language" content="Vietnamese" />
+        </Helmet>
+    );
 };
 
 /**
  * NovelList Component
- *
- * Main component that manages the display and pagination of novels
- *
- * Features:
- * - Server-side pagination
- * - Search parameter integration
- * - Loading and error states
- * - Novel data caching
- * - Description expansion
- * - Date formatting
  */
-
 const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
     const navigate = useNavigate();
     const {page} = useParams();
@@ -321,17 +256,18 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
     const [descriptionNeedsReadMore, setDescriptionNeedsReadMore] = useState({});
     const currentPage = parseInt(page) || 1;
     const tagListRefs = useRef({});
-    const descriptionRefs = useRef({});
+    const desktopDescriptionRefs = useRef({});
+    const mobileDescriptionRefs = useRef({});
     const { setSEOFooterHTML } = useSEO();
 
-    // Redirect /trang/1 to / for SEO purposes (avoid duplicate content)
+    // Redirect /trang/1 to / for SEO purposes
     useEffect(() => {
         if (page === '1' && location.pathname === '/trang/1') {
             navigate('/', { replace: true });
         }
     }, [page, location.pathname, navigate]);
 
-    // Set SEO footer HTML when component mounts (for homepage and bots only)
+    // Set SEO footer HTML when component mounts
     useEffect(() => {
         if (currentPage === 1 && seoFooterHTML) {
             setSEOFooterHTML(seoFooterHTML);
@@ -339,12 +275,9 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
             setSEOFooterHTML(null);
         }
         return () => {
-            // Clean up when component unmounts
             setSEOFooterHTML(null);
         };
     }, [seoFooterHTML, currentPage, setSEOFooterHTML]);
-
-
 
     const {data, isLoading, error} = useQuery({
         queryKey: ['novels', currentPage],
@@ -368,7 +301,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
         totalItems: 0
     };
 
-    // Add scroll to top effect when page changes
+    // Scroll to top when page changes
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [currentPage]);
@@ -380,36 +313,88 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                 const updatedNeedsToggle = {};
                 const updatedDescriptionNeedsReadMore = {};
 
-                // Check tag list
                 novels.forEach(novel => {
-                    const tagListRef = tagListRefs.current[novel._id];
-                    if (tagListRef) {
-                        const {scrollHeight, clientHeight} = tagListRef;
-                        const tagCount = novel.genres?.length || 0;
+                    const genreTags = getGenreTags(novel);
+                    const maxVisibleTags = 6;
 
-                        const isSignificantOverflow = scrollHeight > clientHeight + 5;
-                        const hasManyTags = tagCount > 3;
-
-                        updatedNeedsToggle[novel._id] = isSignificantOverflow && hasManyTags;
+                    if (genreTags.length > maxVisibleTags) {
+                        updatedNeedsToggle[novel._id] = {
+                            needed: true,
+                            visibleCount: maxVisibleTags - 1
+                        };
+                    } else {
+                        updatedNeedsToggle[novel._id] = {
+                            needed: false,
+                            visibleCount: genreTags.length
+                        };
                     }
 
-                    // Check description
-                    const descriptionRef = descriptionRefs.current[novel._id];
-                    if (descriptionRef) {
-                        const {scrollHeight, clientHeight} = descriptionRef;
-                        // Thêm threshold nhỏ để tránh lỗi hiển thị với sự khác biệt nhỏ
-                        const isOverflowing = scrollHeight > clientHeight + 2;
-                        updatedDescriptionNeedsReadMore[novel._id] = isOverflowing;
-                    }
+                    // Check description for both mobile and desktop
+                    const checkDescriptionNeedsReadMore = () => {
+                        const isMobile = window.innerWidth <= 640;
+                        const targetRef = isMobile
+                            ? mobileDescriptionRefs.current[novel._id]
+                            : desktopDescriptionRefs.current[novel._id];
+
+                        if (targetRef) {
+                            const computedStyle = window.getComputedStyle(targetRef);
+                            if (computedStyle.display !== 'none') {
+                                const { scrollHeight, clientHeight } = targetRef;
+                                const lineHeight = parseInt(computedStyle.lineHeight) || 20;
+                                const maxHeight = lineHeight * 3;
+                                return scrollHeight > maxHeight + 5;
+                            }
+                        }
+                        return false;
+                    };
+
+                    updatedDescriptionNeedsReadMore[novel._id] = checkDescriptionNeedsReadMore();
                 });
 
                 setNeedsToggle(updatedNeedsToggle);
                 setDescriptionNeedsReadMore(updatedDescriptionNeedsReadMore);
             }
-        }, 100);
+        }, 200);
 
         return () => clearTimeout(timer);
     }, [novels, data]);
+
+    // resize listener to recheck when screen size changes
+    useEffect(() => {
+        const handleResize = () => {
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(() => {
+                if (novels.length > 0) {
+                    const updatedDescriptionNeedsReadMore = {};
+
+                    novels.forEach(novel => {
+                        const isMobile = window.innerWidth <= 640;
+                        const targetRef = isMobile
+                            ? mobileDescriptionRefs.current[novel._id]
+                            : desktopDescriptionRefs.current[novel._id];
+
+                        if (targetRef) {
+                            const computedStyle = window.getComputedStyle(targetRef);
+                            if (computedStyle.display !== 'none') {
+                                const { scrollHeight, clientHeight } = targetRef;
+                                const lineHeight = parseInt(computedStyle.lineHeight) || 20;
+                                const maxHeight = lineHeight * 3;
+                                updatedDescriptionNeedsReadMore[novel._id] = scrollHeight > maxHeight + 5;
+                            }
+                        }
+                    });
+
+                    setDescriptionNeedsReadMore(updatedDescriptionNeedsReadMore);
+                }
+            }, 150);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            clearTimeout(window.resizeTimer);
+        };
+    }, [novels]);
 
     const handlePageChange = (page) => {
         if (page === 1) {
@@ -502,8 +487,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
     };
 
     /**
-     * Toggles description expansion state
-     * @param {string} novelId - ID of the novel
+     * Toggle description expansion state
      */
     const toggleDescription = (novelId) => {
         setExpandedDescriptions(prev => ({
@@ -517,18 +501,6 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
             ...prev,
             [novelId]: !prev[novelId]
         }));
-    };
-    /**
-     * Formats date for display in Vietnamese format (DD/MM/YYYY)
-     * @param {string} dateString - Date string to format
-     * @returns {string} Formatted date string
-     */
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
     };
 
     const getTimeAgo = (dateString) => {
@@ -550,53 +522,50 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
         return 'Vừa xong';
     };
 
-    // Function to get genre tags with proper styling
+    // Function to get genre tags with proper styling and sorting
     const getGenreTags = (novel) => {
         if (!novel.genres || novel.genres.length === 0) {
             return [];
         }
 
         return novel.genres.map(genre => {
+            let className = '';
+            let type = 'other';
+
             if (genre.includes('Novel') && !['Web Novel', 'One shot'].includes(genre)) {
-                let className = '';
+                type = 'format-origin';
                 if (genre.includes('Japanese')) className = 'japanese-novel';
                 else if (genre.includes('Chinese')) className = 'chinese-novel';
                 else if (genre.includes('Korean')) className = 'korean-novel';
                 else if (genre.includes('English')) className = 'english-novel';
                 else if (genre.includes('Vietnamese')) className = 'vietnamese-novel';
-
-                return {
-                    name: genre,
-                    type: 'format-origin',
-                    class: className
-                };
-            } else if (genre === 'Mature' || genre === 'Web Novel' || genre === 'One shot' || genre === 'Fanfiction' || genre === 'AI-assisted') {
-                return {
-                    name: genre,
-                    type: 'mature',
-                    class: genre === 'Mature' ? 'mature' : ''
-                };
+            } else if (genre === 'Mature') {
+                type = 'mature';
+                className = 'mature';
+            } else if (genre === 'AI-assisted') {
+                type = 'ai-assisted';
+                className = 'ai-assisted';
+            } else if (genre === 'Web Novel' || genre === 'One shot') {
+                type = 'web-format';
+                className = genre.toLowerCase().replace(' ', '-');
             } else if (['Shounen', 'Shoujo', 'Seinen', 'Josei'].includes(genre)) {
-                return {
-                    name: genre,
-                    type: 'target-audience',
-                    class: ''
-                };
-            } else {
-                return {
-                    name: genre,
-                    type: 'other',
-                    class: ''
-                };
+                type = 'target-audience';
             }
+
+            return {
+                name: genre,
+                type: type,
+                class: className
+            };
         }).sort((a, b) => {
             const typeOrder = {
                 'format-origin': 1,
                 'mature': 2,
-                'target-audience': 3,
-                'other': 4
+                'ai-assisted': 3,
+                'web-format': 4,
+                'target-audience': 5,
+                'other': 6
             };
-
             return typeOrder[a.type] - typeOrder[b.type];
         });
     };
@@ -609,7 +578,6 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
         div.innerHTML = html;
         const text = div.textContent || div.innerText || '';
 
-        // If text is shorter than maxLength, return original HTML
         if (text.length <= maxLength) {
             return {
                 html: html,
@@ -648,13 +616,13 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
             </div>
         </div>
     );
-    
+
     if (error) return (
         <div className="novel-list-wrapper">
             <div className="error">{error.message}</div>
         </div>
     );
-    
+
     if (!novels || novels.length === 0) return (
         <div className="novel-list-wrapper">
             <div className="loading">Không có truyện nào.</div>
@@ -664,29 +632,13 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
     return (
         <div className="novel-list-wrapper">
             <NovelListSEO currentPage={currentPage} />
-            
-            {/* Featured Banner - only show on homepage */}
-            {/* Temporarily commented out - will add different banner image later
-            {currentPage === 1 && (
-                <div className="featured-banner">
-                    <Link to="/truyen/tinh-vuc-hai-the-gioi-7edd33ad" className="banner-link">
-                        <img
-                            src="https://Valvrareteam.b-cdn.net/BIA%20TINH%20VUC%20typo%2001.png"
-                            alt="Tịnh Vực Hai Thế Giới - Light Novel mới nhất"
-                            className="banner-image"
-                            loading="lazy"
-                        />
-                    </Link>
-                </div>
-            )}
-            */}
-            
+
             {/* Discord Button - only show on homepage */}
             {currentPage === 1 && (
                 <div className="discord-button-container">
-                    <a 
-                        href="https://discord.gg/NDv9wz9ZQN" 
-                        target="_blank" 
+                    <a
+                        href="https://discord.gg/NDv9wz9ZQN"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="discord-button"
                         title="Discord mới chính thức của team, nơi để hối chương, thảo luận, tương tác và bú sự kiện!"
@@ -696,7 +648,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                     </a>
                 </div>
             )}
-            
+
             <div className="novel-list-container">
                 {/* SEO Header - rendered for bots */}
                 {currentPage === 1 && seoHeaderHTML && (
@@ -719,106 +671,97 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                                 // Get genres for this novel
                                 const genreTags = getGenreTags(novel);
 
-                                // Find the first chapter (lowest chapter number)
-                                const firstChapter = novel.firstChapter ||
-                                    (novel.chapters && novel.chapters.length > 0
-                                        ? novel.chapters.reduce((prev, curr) =>
-                                            (prev.chapterNumber < curr.chapterNumber) ? prev : curr
-                                        )
-                                        : null);
-
                                 return (
-                                    <div key={novel._id} className="novel-card" 
-                                    /* Temporarily commented out background image - can be restored later
-                                    style={{
-                                        backgroundImage: "var(--novel-card-bg)",
-                                        backgroundSize: "cover",
-                                        backgroundPosition: "center"
-                                    }}
-                                    */
-                                    >
-                                        {/* Novel header with title and update time */}
+                                    <div key={novel._id} className="novel-card">
+                                        {/* Updated: Novel header without update time */}
                                         <div className="novel-header">
                                             <Link to={generateNovelUrl(novel)} className="novel-list-title-link">
                                                 <h3 className="novel-title">{novel.title}</h3>
                                             </Link>
-                                            <div className="update-time">
-                                                <i className="far fa-clock"></i> {getTimeAgo(novel.updatedAt || new Date())}
-                                            </div>
+                                            {/* Removed update-time div completely */}
                                         </div>
 
                                         {/* Novel main content area */}
                                         <div className="novel-main">
-                                            {/* Novel cover image with status and first chapter link */}
+                                            {/* Novel cover image with status */}
                                             <NovelImage
                                                 src={novel.illustration || cdnConfig.defaultImages.novel}
                                                 alt={novel.title}
                                                 status={novel.status}
                                                 novelId={novel._id}
-                                                firstChapter={firstChapter}
                                             />
 
                                             {/* Novel info section */}
                                             <div className="novel-info">
-                                                {/* Genre tags section - Với class needs-toggle động dựa trên state */}
+                                                {/* Genre tags section */}
                                                 {genreTags.length > 0 && (
                                                     <div
                                                         ref={el => tagListRefs.current[novel._id] = el}
-                                                        className={`tag-list ${expandedTags[novel._id] ? 'expanded' : ''} ${needsToggle[novel._id] ? 'needs-toggle' : ''}`}
+                                                        className={`tag-list ${expandedTags[novel._id] ? 'expanded' : ''} ${needsToggle[novel._id]?.needed ? 'needs-toggle' : ''}`}
                                                         id={`tag-list-${novel._id}`}
                                                     >
-                                                        {genreTags.map((genre, index) => (
-                                                            <span key={index} className={`tag ${genre.class}`}>
-                                {genre.name}
-                              </span>
-                                                        ))}
-                                                        <span
-                                                            className="toggle-tags"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                toggleTags(novel._id);
-                                                            }}
-                                                        >
-                              ...
-                            </span>
+                                                        {expandedTags[novel._id] ? (
+                                                            genreTags.map((genre, index) => (
+                                                                <span key={index} className={`tag ${genre.class}`}>
+                                                                    {genre.name}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <>
+                                                                {genreTags.slice(0, needsToggle[novel._id]?.visibleCount || genreTags.length).map((genre, index) => (
+                                                                    <span key={index} className={`tag ${genre.class}`}>
+                                                                        {genre.name}
+                                                                    </span>
+                                                                ))}
+
+                                                                {needsToggle[novel._id]?.needed && (
+                                                                    <span
+                                                                        className="toggle-tags"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            toggleTags(novel._id);
+                                                                        }}
+                                                                    >
+                                                                        (...)
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        )}
                                                     </div>
                                                 )}
 
-                                                {/* Novel description with height-based overflow check */}
+                                                {/* Description - desktop only */}
                                                 <div
-                                                    className={`description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
-                                                    ref={el => descriptionRefs.current[novel._id] = el}
+                                                    className={`description desktop-description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                                                    ref={el => desktopDescriptionRefs.current[novel._id] = el}
                                                 >
                                                     {(() => {
                                                         const truncatedResult = truncateHTML(novel.description, 1000);
                                                         return (
-                                                            <div dangerouslySetInnerHTML={{ 
-                                                                __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html 
+                                                            <div dangerouslySetInnerHTML={{
+                                                                __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html
                                                             }} />
                                                         );
                                                     })()}
                                                 </div>
 
-                                                {/* Read more button - only show when description is actually truncated */}
-                                                {(() => {
-                                                    const truncatedResult = truncateHTML(novel.description, 1000);
-                                                    return truncatedResult.isTruncated && descriptionNeedsReadMore[novel._id] && (
-                                                        <div className="read-more-container">
-                                                            <a
-                                                                href="#"
-                                                                className="read-more"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    toggleDescription(novel._id);
-                                                                }}
-                                                            >
-                                                                {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
-                                                            </a>
-                                                        </div>
-                                                    );
-                                                })()}
+                                                {/* Read more button for desktop */}
+                                                {descriptionNeedsReadMore[novel._id] && (
+                                                    <div className="read-more-container desktop-read-more">
+                                                        <a
+                                                            href="#"
+                                                            className="read-more"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                toggleDescription(novel._id);
+                                                            }}
+                                                        >
+                                                            {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
+                                                        </a>
+                                                    </div>
+                                                )}
 
-                                                {/* Latest chapters list */}
+                                                {/* Updated: Latest chapters list with relative time */}
                                                 <div className="chapter-list">
                                                     {sortedChapters.map(chapter => (
                                                         <div key={chapter._id} className="novel-list-chapter-item">
@@ -828,15 +771,47 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                                                             >
                                                                 {chapter.title}
                                                             </Link>
+                                                            {/* Updated: Show relative time instead of formatted date */}
                                                             <span className="novel-list-chapter-date">
-                                {formatDate(chapter.createdAt)}
-                              </span>
+                                                                {getTimeAgo(chapter.createdAt)}
+                                                            </span>
                                                         </div>
                                                     ))}
                                                 </div>
 
                                             </div>
                                         </div>
+
+                                        {/* Mobile description section - outside novel-main */}
+                                        <div
+                                            className={`description mobile-description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                                            ref={el => mobileDescriptionRefs.current[novel._id] = el}
+                                        >
+                                            {(() => {
+                                                const truncatedResult = truncateHTML(novel.description, 1000);
+                                                return (
+                                                    <div dangerouslySetInnerHTML={{
+                                                        __html: expandedDescriptions[novel._id] ? novel.description : truncatedResult.html
+                                                    }} />
+                                                );
+                                            })()}
+                                        </div>
+
+                                        {/* Read more button for mobile */}
+                                        {descriptionNeedsReadMore[novel._id] && (
+                                            <div className="read-more-container mobile-read-more">
+                                                <a
+                                                    href="#"
+                                                    className="read-more"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        toggleDescription(novel._id);
+                                                    }}
+                                                >
+                                                    {expandedDescriptions[novel._id] ? 'Thu gọn' : 'Đọc tiếp'}
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
