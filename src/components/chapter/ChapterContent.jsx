@@ -48,8 +48,179 @@ const ChapterContent = ({
   const [modeError, setModeError] = useState('');
   const [networkError, setNetworkError] = useState('');
 
+  // Add auto-save state management
+  const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  const [lastSaved, setLastSaved] = useState(null);
+  const autoSaveTimeoutRef = useRef(null);
+  const restoredContentRef = useRef(null); // Add ref to store restored content
+  const isLoadingRestoredContent = useRef(false); // Flag to prevent immediate overwrite
+
   // Check if the current module is in paid mode
   const isModulePaid = moduleData?.mode === 'paid';
+
+  // Auto-save key for localStorage
+  const autoSaveKey = `chapter_autosave_${chapter._id}`;
+  const AUTO_SAVE_EXPIRY_HOURS = 24; // Auto-saves expire after 24 hours
+
+  // Load auto-saved content on component mount
+  useEffect(() => {
+    if (isEditing && chapter._id) {
+      const savedContent = localStorage.getItem(autoSaveKey);
+      if (savedContent) {
+        try {
+          const parsedContent = JSON.parse(savedContent);
+          const savedTime = new Date(parsedContent.timestamp);
+          const chapterUpdatedTime = new Date(chapter.updatedAt || 0);
+          
+          // Check if auto-save is too old (older than expiry time)
+          const ageHours = (Date.now() - savedTime.getTime()) / (1000 * 60 * 60);
+          const isTooOld = ageHours > AUTO_SAVE_EXPIRY_HOURS;
+          
+          // Only restore if auto-save is newer than chapter's last update AND not too old
+          if (savedTime > chapterUpdatedTime && !isTooOld) {
+
+            setAutoSaveStatus('Nội dung đã lưu tự động được khôi phục');
+            setTimeout(() => setAutoSaveStatus(''), 3000);
+            
+            // Store restored content in ref for immediate TinyMCE access
+            restoredContentRef.current = parsedContent;
+            
+            // Restore content to editor if available
+            if (parsedContent.content && setEditedContent) {
+              setEditedContent(prev => ({
+                ...prev,
+                content: parsedContent.content,
+                footnotes: parsedContent.footnotes || []
+              }));
+            }
+            
+            if (parsedContent.title && setEditedTitle) {
+              setEditedTitle(parsedContent.title);
+            }
+            
+            // Also restore mode and balance if they were changed
+            if (parsedContent.mode) {
+              setEditedMode(parsedContent.mode);
+            }
+            
+            if (parsedContent.chapterBalance !== undefined) {
+              setEditedChapterBalance(parsedContent.chapterBalance);
+            }
+          } else if (isTooOld) {
+            localStorage.removeItem(autoSaveKey);
+            setAutoSaveStatus(`Auto-save quá cũ (${Math.round(ageHours)} giờ) - đã xóa tự động`);
+            setTimeout(() => setAutoSaveStatus(''), 3000);
+          } else {
+            // Clear outdated auto-save
+            localStorage.removeItem(autoSaveKey);
+          }
+        } catch (error) {
+          localStorage.removeItem(autoSaveKey);
+        }
+      }
+    }
+  }, [isEditing, chapter._id, chapter.updatedAt, autoSaveKey, setEditedContent, setEditedTitle]);
+
+  // Clean up expired auto-saves on component mount
+  useEffect(() => {
+    if (isEditing) {
+      const cleanupExpiredAutoSaves = () => {
+        const now = Date.now();
+        const expiredKeys = [];
+        
+        // Check all auto-save keys in localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('chapter_autosave_')) {
+            try {
+              const saved = localStorage.getItem(key);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                const savedTime = new Date(parsed.timestamp).getTime();
+                const ageHours = (now - savedTime) / (1000 * 60 * 60);
+                
+                if (ageHours > AUTO_SAVE_EXPIRY_HOURS) {
+                  expiredKeys.push({ key, ageHours: Math.round(ageHours) });
+                }
+              }
+            } catch (error) {
+              // If parsing fails, it's corrupted - remove it
+              expiredKeys.push({ key, ageHours: 'corrupted' });
+            }
+          }
+        }
+        
+        // Remove expired auto-saves
+        expiredKeys.forEach(({ key, ageHours }) => {
+          localStorage.removeItem(key);
+        });
+      };
+      
+      cleanupExpiredAutoSaves();
+    }
+  }, [isEditing, AUTO_SAVE_EXPIRY_HOURS]);
+
+  // Auto-save function
+  const autoSave = useCallback(() => {
+    if (!isEditing || !chapter._id) return;
+    
+    try {
+      const dataToSave = {
+        content: editedContent?.content || '',
+        title: editedTitle || '',
+        footnotes: localFootnotes || [],
+        mode: editedMode,
+        chapterBalance: editedChapterBalance,
+        timestamp: new Date().toISOString(),
+        chapterId: chapter._id
+      };
+      
+      localStorage.setItem(autoSaveKey, JSON.stringify(dataToSave));
+      setLastSaved(new Date());
+      setAutoSaveStatus('Đã tự động lưu');
+      setTimeout(() => setAutoSaveStatus(''), 2000);
+          } catch (error) {
+        console.error('Auto-save error:', error);
+      }
+  }, [isEditing, chapter._id, editedContent?.content, editedTitle, localFootnotes, editedMode, editedChapterBalance, autoSaveKey]);
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!isEditing) return;
+    
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    // Set new timeout for auto-save (5 seconds after last change)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave();
+    }, 5000);
+    
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [editedContent?.content, editedTitle, localFootnotes, editedMode, editedChapterBalance, autoSave]);
+
+  // Clear auto-save when successfully saved (call this from parent component)
+  const clearAutoSave = useCallback(() => {
+    localStorage.removeItem(autoSaveKey);
+    setAutoSaveStatus('');
+    setLastSaved(null);
+  }, [autoSaveKey]);
+
+  // Expose clearAutoSave to parent component
+  useEffect(() => {
+    if (isEditing && chapter._id) {
+      window[`clearAutoSave_${chapter._id}`] = clearAutoSave;
+      return () => {
+        delete window[`clearAutoSave_${chapter._id}`];
+      };
+    }
+  }, [isEditing, chapter._id, clearAutoSave]);
 
   // Handle network errors with auto-hide
   const handleNetworkError = useCallback((error) => {
@@ -77,6 +248,284 @@ const ChapterContent = ({
       onNetworkError(error);
     }
   }, [onNetworkError]);
+
+  // Enhanced save operation with retry logic and connection checks
+  const handleSaveWithRetry = useCallback(async (saveFunction, maxRetries = 3) => {
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      try {
+        // Check authentication token before save
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        }
+        
+        // Check token expiry
+        try {
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          const tokenExp = tokenPayload.exp * 1000;
+          const now = Date.now();
+          
+          if (tokenExp <= now) {
+            throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          }
+          
+          // Warn if token expires soon (less than 5 minutes)
+          if (tokenExp - now < 300000) {
+            setNetworkError('Phiên đăng nhập sắp hết hạn. Vui lòng lưu và đăng nhập lại.');
+          }
+        } catch (tokenError) {
+          throw new Error('Token không hợp lệ. Vui lòng đăng nhập lại.');
+        }
+        
+        // Check online status
+        if (!navigator.onLine) {
+          throw new Error('Không có kết nối internet. Vui lòng kiểm tra kết nối mạng.');
+        }
+        
+        // Execute the save function
+        const result = await saveFunction();
+        
+        // Clear auto-save on successful save
+        clearAutoSave();
+        setNetworkError('');
+        
+        return result;
+        
+      } catch (error) {
+        attempt++;
+        
+
+        
+        // Check if this is a retryable error
+        const isRetryableError = 
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('NetworkError') ||
+          error.message.includes('timeout') ||
+          error.status >= 500; // Server errors
+        
+        if (isRetryableError && attempt < maxRetries) {
+          setNetworkError(`Lưu thất bại (lần thử ${attempt}/${maxRetries}). Đang thử lại...`);
+          
+          // Wait before retry with exponential backoff
+          const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+          continue;
+        }
+        
+        // Final failure
+        const finalError = attempt >= maxRetries 
+          ? `Lưu thất bại sau ${maxRetries} lần thử. Nội dung đã được tự động lưu. ${error.message}`
+          : error.message;
+          
+        handleNetworkError(new Error(finalError));
+        throw error;
+      }
+    }
+  }, [clearAutoSave, handleNetworkError]);
+
+  // Expose the enhanced save function to parent component
+  useEffect(() => {
+    if (isEditing && chapter._id) {
+      window[`saveWithRetry_${chapter._id}`] = handleSaveWithRetry;
+      return () => {
+        delete window[`saveWithRetry_${chapter._id}`];
+      };
+    }
+  }, [isEditing, chapter._id, handleSaveWithRetry]);
+
+  // Manual auto-save trigger (available but no UI button)
+  const triggerManualAutoSave = useCallback(() => {
+    autoSave();
+    setAutoSaveStatus('Đã lưu thủ công');
+    setTimeout(() => setAutoSaveStatus(''), 2000);
+  }, [autoSave]);
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = useCallback(() => {
+    const currentContent = editedContent?.content || '';
+    const currentTitle = editedTitle || '';
+    const originalContent = chapter.content || '';
+    const originalTitle = chapter.title || '';
+    
+    return currentContent !== originalContent || 
+           currentTitle !== originalTitle ||
+           localFootnotes.length !== (chapter.footnotes || []).length ||
+           editedMode !== (chapter.mode || 'published');
+  }, [editedContent?.content, editedTitle, chapter.content, chapter.title, localFootnotes, chapter.footnotes, editedMode, chapter.mode]);
+
+  // Warn user before leaving if there are unsaved changes
+  useEffect(() => {
+    if (!isEditing) return;
+    
+    const handleBeforeUnload = (event) => {
+      if (hasUnsavedChanges()) {
+        const message = 'Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời khỏi trang này?';
+        event.preventDefault();
+        event.returnValue = message;
+        return message;
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isEditing, hasUnsavedChanges]);
+
+  // Expose utility methods to parent component
+  useEffect(() => {
+    if (isEditing && chapter._id) {
+      window[`chapterUtils_${chapter._id}`] = {
+        triggerManualAutoSave,
+        hasUnsavedChanges,
+        clearAutoSave,
+        getAutoSaveStatus: () => autoSaveStatus,
+        getLastSaved: () => lastSaved
+      };
+      
+      // Add debug function to window for manual testing
+      window[`debugAutoSave_${chapter._id}`] = () => {
+        const savedContent = localStorage.getItem(autoSaveKey);
+        
+        if (savedContent) {
+          try {
+            const parsed = JSON.parse(savedContent);
+            const ageHours = (Date.now() - new Date(parsed.timestamp).getTime()) / (1000 * 60 * 60);
+            const debugData = {
+              contentLength: parsed.content?.length || 0,
+              title: parsed.title,
+              timestamp: parsed.timestamp,
+              ageHours: Math.round(ageHours * 10) / 10,
+              footnotes: parsed.footnotes?.length || 0,
+              mode: parsed.mode,
+              chapterBalance: parsed.chapterBalance,
+              isExpired: ageHours > AUTO_SAVE_EXPIRY_HOURS
+            };
+            return parsed;
+          } catch (error) {
+            return null;
+          }
+        }
+        return null;
+      };
+      
+      // Add global auto-save management functions
+      if (!window.autoSaveManager) {
+        window.autoSaveManager = {
+          // List all auto-saves
+          listAll: () => {
+            const autoSaves = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('chapter_autosave_')) {
+                try {
+                  const saved = localStorage.getItem(key);
+                  if (saved) {
+                    const parsed = JSON.parse(saved);
+                    const ageHours = (Date.now() - new Date(parsed.timestamp).getTime()) / (1000 * 60 * 60);
+                    autoSaves.push({
+                      key,
+                      chapterId: parsed.chapterId,
+                      contentLength: parsed.content?.length || 0,
+                      title: parsed.title,
+                      timestamp: parsed.timestamp,
+                      ageHours: Math.round(ageHours * 10) / 10,
+                      isExpired: ageHours > AUTO_SAVE_EXPIRY_HOURS
+                    });
+                  }
+                } catch (error) {
+                  autoSaves.push({
+                    key,
+                    error: 'Corrupted data',
+                    ageHours: 'unknown'
+                  });
+                }
+              }
+            }
+            return autoSaves;
+          },
+          
+          // Clear all auto-saves
+          clearAll: () => {
+            const keys = Object.keys(localStorage).filter(key => key.startsWith('chapter_autosave_'));
+            keys.forEach(key => localStorage.removeItem(key));
+            return keys.length;
+          },
+          
+          // Clear expired auto-saves only
+          clearExpired: () => {
+            const expiredKeys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('chapter_autosave_')) {
+                try {
+                  const saved = localStorage.getItem(key);
+                  if (saved) {
+                    const parsed = JSON.parse(saved);
+                    const ageHours = (Date.now() - new Date(parsed.timestamp).getTime()) / (1000 * 60 * 60);
+                    if (ageHours > AUTO_SAVE_EXPIRY_HOURS) {
+                      expiredKeys.push(key);
+                    }
+                  }
+                } catch (error) {
+                  expiredKeys.push(key);
+                }
+              }
+            }
+            expiredKeys.forEach(key => localStorage.removeItem(key));
+            return expiredKeys.length;
+          }
+        };
+      }
+      
+      return () => {
+        delete window[`chapterUtils_${chapter._id}`];
+        delete window[`debugAutoSave_${chapter._id}`];
+      };
+    }
+  }, [isEditing, chapter._id, triggerManualAutoSave, hasUnsavedChanges, clearAutoSave, autoSaveStatus, lastSaved, autoSaveKey]);
+
+  // Check connection and auth status periodically while editing
+  useEffect(() => {
+    if (!isEditing) return;
+    
+    const checkConnectionStatus = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNetworkError('Phiên đăng nhập đã hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+        return;
+      }
+      
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const tokenExp = tokenPayload.exp * 1000;
+        const now = Date.now();
+        const timeUntilExpiry = tokenExp - now;
+        
+        if (timeUntilExpiry <= 0) {
+          setNetworkError('Phiên đăng nhập đã hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+        } else if (timeUntilExpiry < 300000) { // Less than 5 minutes
+          setNetworkError('Phiên đăng nhập sắp hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+        }
+      } catch (error) {
+        setNetworkError('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+      }
+      
+      if (!navigator.onLine) {
+        setNetworkError('Mất kết nối internet. Thay đổi sẽ được tự động lưu.');
+      }
+    };
+    
+    // Check immediately and then every 2 minutes
+    checkConnectionStatus();
+    const interval = setInterval(checkConnectionStatus, 120000);
+    
+    return () => clearInterval(interval);
+  }, [isEditing]);
 
   // Effect to handle when module becomes paid - automatically change chapter mode
   useEffect(() => {
@@ -613,9 +1062,9 @@ const ChapterContent = ({
               <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
               <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng nhập)</option>
               {userRole === 'admin' && (
-                <option value="paid" disabled={isModulePaid}>
-                  {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
-                </option>
+                                 <option value="paid" disabled={isModulePaid}>
+                   {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
+                 </option>
               )}
             </select>
             
@@ -642,6 +1091,20 @@ const ChapterContent = ({
                 >
                   ×
                 </button>
+              </div>
+            )}
+            
+            {/* Auto-save status indicator */}
+            {isEditing && (autoSaveStatus || lastSaved) && (
+              <div className="auto-save-status">
+                {autoSaveStatus && (
+                  <span className="auto-save-message">{autoSaveStatus}</span>
+                )}
+                {lastSaved && !autoSaveStatus && (
+                  <span className="last-saved">
+                    Lần cuối tự động lưu: {lastSaved.toLocaleTimeString('vi-VN')}
+                  </span>
+                )}
               </div>
             )}
             
@@ -795,12 +1258,45 @@ const ChapterContent = ({
             <Editor
               onInit={(evt, editor) => {
                 editorRef.current = editor;
-                if (editedContent?.content || chapter?.content) {
-                  editor.setContent(editedContent?.content || chapter.content);
+                
+                // Check for restored content first (immediate access via ref)
+                const restoredContent = restoredContentRef.current;
+                const contentToLoad = restoredContent?.content || editedContent?.content || chapter?.content || '';
+                
+
+                
+                if (contentToLoad) {
+                  editor.setContent(contentToLoad);
+                  
+                  // If we used restored content, clear the ref to prevent re-use
+                  if (restoredContent) {
+
+                    isLoadingRestoredContent.current = true; // Set flag to prevent immediate overwrite
+                    restoredContentRef.current = null;
+                    
+                    // Ensure state is synced with restored content to prevent immediate overwrite
+                    if (setEditedContent && restoredContent.content !== editedContent?.content) {
+
+                      setEditedContent(prev => ({
+                        ...prev,
+                        content: restoredContent.content,
+                        footnotes: restoredContent.footnotes || []
+                      }));
+                    }
+                    
+                    // Clear the loading flag after a short delay to allow normal editing
+                                          setTimeout(() => {
+                        isLoadingRestoredContent.current = false;
+                      }, 100);
+                  }
                 }
               }}
               value={editedContent?.content || ''}
               onEditorChange={(content, editor) => {
+                // Skip updates if we're currently loading restored content
+                if (isLoadingRestoredContent.current) {
+                  return;
+                }
                 if (setEditedContent) {
                   setEditedContent(prev => ({
                     ...prev,

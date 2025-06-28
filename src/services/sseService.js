@@ -53,15 +53,7 @@ class SSEService {
     window.addEventListener('authLogin', () => this.onLogin());
     window.addEventListener('authLogout', () => this.onLogout());
     
-    // Log initialization
-    console.info(`🚀 [SSE] Service initialized:`, {
-      tabId: this.tabId,
-      sessionId: this.sessionId,
-      circuitBreakerThreshold: this.circuitBreakerThreshold,
-      circuitBreakerWindow: this.circuitBreakerWindow,
-      circuitBreakerCooldown: this.circuitBreakerCooldown,
-      maxReconnectAttempts: this.maxReconnectAttempts
-    });
+
   }
 
   // Get or create session ID (shared across tabs for same user)
@@ -119,7 +111,7 @@ class SSEService {
   becomeLeader() {
     this.isLeaderTab = true;
     
-    console.info(`👑 [SSE] Tab ${this.tabId} became LEADER`);
+
     
     // Announce leadership
     this.broadcastChannel.postMessage({
@@ -134,7 +126,7 @@ class SSEService {
     
     // Connect to SSE if we have listeners
     if (this.listeners.size > 0) {
-      console.info(`🔌 [SSE] Leader tab ${this.tabId} connecting (has ${this.listeners.size} listeners)`);
+
       this.connect();
     }
   }
@@ -171,7 +163,7 @@ class SSEService {
         if (data.isLeader && data.tabId !== this.tabId) {
           // Another tab is already leader
           this.isLeaderTab = false;
-          console.info(`📢 [SSE] Tab ${this.tabId} stepped down - tab ${data.tabId} is leader`);
+
         }
         break;
 
@@ -180,7 +172,7 @@ class SSEService {
           // Another tab became leader
           this.isLeaderTab = false;
           this.lastHeartbeat = data.timestamp;
-          console.info(`📢 [SSE] Tab ${this.tabId} recognized new leader: ${data.tabId}`);
+
         }
         break;
 
@@ -272,30 +264,14 @@ class SSEService {
 
   handleVisibilityChange() {
     if (document.hidden) {
-      console.info(`👁️ [SSE] Tab ${this.tabId} became HIDDEN - clearing reconnect timeout`);
       this.clearReconnectTimeout();
     } else {
-      console.info(`👁️ [SSE] Tab ${this.tabId} became VISIBLE - checking connection status`);
-      
       // Check if leader is still alive when tab becomes visible
       if (!this.isLeaderTab) {
-        console.debug(`[SSE] Tab ${this.tabId} is not leader, checking leader health`);
         this.checkLeaderHealth();
       } else if (!this.isConnected && !this.isManuallyDisconnected && this.listeners.size > 0) {
-        console.info(`🔄 [SSE] Leader tab ${this.tabId} reconnecting after becoming visible`, {
-          reconnectAttempts: this.reconnectAttempts,
-          adjustedAttempts: Math.max(0, this.reconnectAttempts - 2),
-          listenersCount: this.listeners.size
-        });
         this.reconnectAttempts = Math.max(0, this.reconnectAttempts - 2);
         this.scheduleReconnect(2000);
-      } else {
-        console.debug(`[SSE] Tab ${this.tabId} visibility change - no action needed:`, {
-          isLeader: this.isLeaderTab,
-          isConnected: this.isConnected,
-          manuallyDisconnected: this.isManuallyDisconnected,
-          listenersCount: this.listeners.size
-        });
       }
     }
   }
@@ -339,19 +315,10 @@ class SSEService {
       if (!this.isCircuitBreakerOpen) {
         this.isCircuitBreakerOpen = true;
         
-        console.warn(`🚨 [SSE] Circuit breaker ACTIVATED for tab ${this.tabId}:`, {
-          recentConnections: this.recentConnections.length,
-          threshold: this.circuitBreakerThreshold,
-          window: this.circuitBreakerWindow,
-          cooldown: this.circuitBreakerCooldown,
-          blockedUntil: new Date(now + this.circuitBreakerCooldown).toISOString()
-        });
-        
         setTimeout(() => {
           this.isCircuitBreakerOpen = false;
           this.recentConnections = [];
           this.reconnectAttempts = 0;
-          console.info(`✅ [SSE] Circuit breaker DEACTIVATED for tab ${this.tabId} - connections allowed again`);
         }, this.circuitBreakerCooldown);
       }
       return true;
@@ -362,38 +329,25 @@ class SSEService {
 
   recordConnectionAttempt() {
     this.recentConnections.push(Date.now());
-    console.debug(`[SSE] Connection attempt recorded for tab ${this.tabId}:`, {
-      recentAttempts: this.recentConnections.length,
-      threshold: this.circuitBreakerThreshold,
-      window: this.circuitBreakerWindow,
-      willTriggerCircuitBreaker: this.recentConnections.length >= this.circuitBreakerThreshold
-    });
   }
 
   scheduleReconnect(customDelay = null) {
     // Only leader tab should reconnect
     if (!this.isLeaderTab) {
-      console.debug(`[SSE] Reconnect skipped - not leader tab (${this.tabId})`);
       return;
     }
     
     this.clearReconnectTimeout();
     
     if (this.isManuallyDisconnected || !navigator.onLine) {
-      console.debug(`[SSE] Reconnect skipped for tab ${this.tabId}:`, {
-        manuallyDisconnected: this.isManuallyDisconnected,
-        online: navigator.onLine
-      });
       return;
     }
     
     if (document.hidden) {
-      console.debug(`[SSE] Reconnect skipped - tab ${this.tabId} is hidden`);
       return;
     }
 
     if (this.isCircuitBreakerOpen) {
-      console.warn(`🚫 [SSE] Reconnect BLOCKED by circuit breaker for tab ${this.tabId}`);
       return;
     }
     
@@ -401,28 +355,20 @@ class SSEService {
     // since the backend requires authentication for all SSE connections
     const token = localStorage.getItem('token');
     if (!token) {
-      console.warn(`🚫 [SSE] Reconnect BLOCKED - no auth token for tab ${this.tabId}`);
       return;
     }
     
     const delay = customDelay || this.getReconnectDelay();
     
-    console.info(`⏳ [SSE] Scheduling reconnect for tab ${this.tabId}:`, {
-      attempt: this.reconnectAttempts + 1,
-      maxAttempts: this.maxReconnectAttempts,
-      delay: delay,
-      customDelay: customDelay !== null
-    });
+
     
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
       
       if (this.reconnectAttempts <= this.maxReconnectAttempts) {
-        console.info(`🔄 [SSE] Attempting reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts} for tab ${this.tabId}`);
         this.disconnect();
         this.connect();
       } else {
-        console.error(`❌ [SSE] Max reconnection attempts (${this.maxReconnectAttempts}) exceeded for tab ${this.tabId} - giving up`);
         this.clearReconnectTimeout();
       }
     }, delay);
@@ -431,25 +377,18 @@ class SSEService {
   connect() {
     // Only leader tab should maintain SSE connection
     if (!this.isLeaderTab) {
-      console.debug(`[SSE] Connect skipped - not leader tab (${this.tabId})`);
       return;
     }
     
     if (this.isManuallyDisconnected || this.eventSource) {
-      console.debug(`[SSE] Connect skipped for tab ${this.tabId}:`, {
-        manuallyDisconnected: this.isManuallyDisconnected,
-        existingConnection: !!this.eventSource
-      });
       return;
     }
 
     if (this.eventSource && this.eventSource.readyState === EventSource.CONNECTING) {
-      console.debug(`[SSE] Connect skipped - already connecting for tab ${this.tabId}`);
       return;
     }
 
     if (this.checkCircuitBreaker()) {
-      console.warn(`🚫 [SSE] Connect BLOCKED by circuit breaker for tab ${this.tabId}`);
       return;
     }
 
@@ -459,40 +398,24 @@ class SSEService {
     // Don't attempt to connect if there's no valid token
     // since the backend requires authentication for all SSE connections
     if (!token) {
-      console.warn(`🚫 [SSE] Connect BLOCKED - no auth token for tab ${this.tabId}`);
       return;
     }
 
-    // Enhanced token validation logging
+    // Enhanced token validation
     try {
       const tokenPayload = JSON.parse(atob(token.split('.')[1]));
       const tokenExp = tokenPayload.exp * 1000; // Convert to milliseconds
       const now = Date.now();
       const timeUntilExpiry = tokenExp - now;
       
-      console.info(`🔐 [SSE] Token validation for tab ${this.tabId}:`, {
-        tokenExpiry: new Date(tokenExp).toISOString(),
-        timeUntilExpiry: Math.round(timeUntilExpiry / 1000) + ' seconds',
-        isExpired: timeUntilExpiry <= 0,
-        userId: tokenPayload.userId,
-        username: tokenPayload.username,
-        role: tokenPayload.role
-      });
-      
       if (timeUntilExpiry <= 0) {
-        console.error(`🚫 [SSE] Token EXPIRED for tab ${this.tabId} - cannot connect`);
         return;
       }
-      
-      if (timeUntilExpiry < 300000) { // Less than 5 minutes
-        console.warn(`⚠️ [SSE] Token expires soon for tab ${this.tabId} (${Math.round(timeUntilExpiry / 1000)}s remaining)`);
-      }
     } catch (error) {
-      console.error(`🚫 [SSE] Invalid token format for tab ${this.tabId}:`, error);
       return;
     }
 
-    console.info(`🔌 [SSE] Attempting to connect tab ${this.tabId}...`);
+
 
     this.recordConnectionAttempt();
 
@@ -503,14 +426,7 @@ class SSEService {
       sseUrl.searchParams.set('tabId', this.tabId);
       sseUrl.searchParams.set('token', token);
       
-      console.info(`🌐 [SSE] Connection details for tab ${this.tabId}:`, {
-        backendUrl: config.backendUrl,
-        fullUrl: sseUrl.toString().replace(/token=[^&]+/, 'token=***'),
-        sessionId: this.sessionId,
-        tabId: this.tabId,
-        origin: window.location.origin,
-        userAgent: navigator.userAgent.substring(0, 100) + '...'
-      });
+
       
       this.eventSource = new EventSource(sseUrl.toString());
       
@@ -518,59 +434,20 @@ class SSEService {
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.clearReconnectTimeout();
-        console.info(`✅ [SSE] Connected successfully for tab ${this.tabId}`, {
-          clientId: this.clientId,
-          url: sseUrl.toString().replace(/token=[^&]+/, 'token=***'),
-          readyState: this.eventSource.readyState
-        });
+
       };
 
       this.eventSource.onerror = (error) => {
         this.isConnected = false;
         
-        // Enhanced error logging
-        const errorDetails = {
-          readyState: this.eventSource?.readyState,
-          readyStateText: this.getReadyStateText(this.eventSource?.readyState),
-          error: error,
-          errorType: error.type || 'unknown',
-          errorTarget: error.target,
-          timestamp: new Date().toISOString(),
-          url: sseUrl.toString().replace(/token=[^&]+/, 'token=***'),
-          origin: window.location.origin,
-          backendOrigin: new URL(config.backendUrl).origin
-        };
-        
-        // Check for specific error types
-        if (error.target && error.target.readyState === EventSource.CLOSED) {
-          errorDetails.errorCategory = 'CONNECTION_CLOSED';
-          console.error(`❌ [SSE] Connection CLOSED for tab ${this.tabId}:`, errorDetails);
-        } else if (error.target && error.target.readyState === EventSource.CONNECTING) {
-          errorDetails.errorCategory = 'CONNECTION_FAILED';
-          console.error(`❌ [SSE] Connection FAILED for tab ${this.tabId}:`, errorDetails);
-        } else {
-          errorDetails.errorCategory = 'UNKNOWN_ERROR';
-          console.error(`❌ [SSE] Connection error for tab ${this.tabId}:`, errorDetails);
-        }
-        
-        // Check for CORS issues
-        if (window.location.origin !== new URL(config.backendUrl).origin) {
-          console.warn(`⚠️ [SSE] Cross-origin request detected for tab ${this.tabId}:`, {
-            frontendOrigin: window.location.origin,
-            backendOrigin: new URL(config.backendUrl).origin,
-            potentialCorsIssue: true
-          });
-        }
+
         
         if (this.eventSource?.readyState === EventSource.CLOSED) {
-          console.info(`🔄 [SSE] Connection closed, scheduling reconnect for tab ${this.tabId}`);
           this.scheduleReconnect();
         } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
           // Don't schedule another reconnect if still trying to connect
-          console.debug(`[SSE] Still connecting for tab ${this.tabId}, not scheduling reconnect`);
         } else {
           if (this.eventSource?.readyState !== EventSource.CONNECTING) {
-            console.info(`🔄 [SSE] Unexpected state, scheduling reconnect for tab ${this.tabId}`);
             this.scheduleReconnect();
           }
         }
@@ -616,7 +493,6 @@ class SSEService {
       this.eventSource.addEventListener('duplicate_connection', (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.warn(`🚨 [SSE] Duplicate connection detected by server for tab ${this.tabId}:`, data);
           
           this.isManuallyDisconnected = true;
           this.clearReconnectTimeout();
@@ -625,17 +501,12 @@ class SSEService {
           
           const delayTime = 20000;
           
-          console.warn(`⏸️ [SSE] Tab ${this.tabId} blocked for ${delayTime/1000} seconds due to duplicate connection`);
-          
           setTimeout(() => {
             this.isManuallyDisconnected = false;
             this.isCircuitBreakerOpen = false;
             this.recentConnections = [];
             
-            console.info(`🔓 [SSE] Tab ${this.tabId} unblocked after duplicate connection timeout`);
-            
             if (this.listeners.size > 0 && !document.hidden && this.isLeaderTab) {
-              console.info(`🔄 [SSE] Attempting reconnect after duplicate timeout for tab ${this.tabId}`);
               setTimeout(() => {
                 if (!this.eventSource && !this.isManuallyDisconnected) {
                   this.connect();
@@ -644,7 +515,7 @@ class SSEService {
             }
           }, delayTime);
         } catch (error) {
-          console.error(`[SSE] Error processing duplicate_connection event for tab ${this.tabId}:`, error);
+          console.error('Error processing duplicate_connection event:', error);
         }
       });
     } catch (error) {

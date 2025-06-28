@@ -416,64 +416,76 @@
   }
 }
 
-/* Network error notification styles */
-.network-error {
-  color: red;
-  font-size: 14px;
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #ffebee;
-  border: 1px solid #e57373;
+/* Auto-save status indicator */
+.auto-save-status {
+  padding: 8px 12px;
+  margin: 8px 0;
   border-radius: 4px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  font-size: 13px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  animation: slideDown 0.3s ease-out;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  gap: 8px;
 }
 
-.network-error:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+.auto-save-message {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.last-saved {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Enhanced network error styling */
+.network-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 15px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
 }
 
 .network-error-close-btn {
   background: none;
   border: none;
-  color: red;
+  color: #721c24;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 16px;
-  padding: 0 5px;
-  transition: all 0.2s ease;
+  padding: 0;
+  margin-left: 10px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 }
 
 .network-error-close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
+  background-color: rgba(114, 28, 36, 0.1);
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Auto-save recovery notification */
+.auto-save-recovery {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  padding: 12px 15px;
+  border: 1px solid #b8daff;
+  border-radius: 4px;
+  margin: 8px 0;
+  font-size: 14px;
 }
 
-/* Dark mode support for network error */
-:root.dark-mode .network-error {
-  background-color: #4a1a1a;
-  border-color: #8b4a4a;
-  color: #ffcccb;
-}
-
-:root.dark-mode .network-error-close-btn {
-  color: #ffcccb;
-}
-
-:root.dark-mode .network-error-close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.auto-save-recovery strong {
+  font-weight: 600;
 }

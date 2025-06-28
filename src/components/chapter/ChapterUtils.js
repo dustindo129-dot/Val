@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 
 /**
@@ -348,5 +348,256 @@ export const scrollToTop = () => {
   return new Promise((resolve) => {
     window.scrollTo({top: 0, behavior: 'smooth'});
     setTimeout(resolve, 500);
+  });
+};
+
+/**
+ * Chapter Editing Utilities
+ * 
+ * This file provides utilities for enhanced chapter editing with auto-save,
+ * retry logic, and network error handling.
+ * 
+ * Usage in parent component:
+ * 
+ * ```jsx
+ * import { useChapterEditingUtils } from './ChapterUtils';
+ * 
+ * const MyChapterComponent = ({ chapterId }) => {
+ *   const chapterUtils = useChapterEditingUtils(chapterId);
+ *   
+ *   const handleSave = async () => {
+ *     try {
+ *       await chapterUtils.saveWithRetry(async () => {
+ *         // Your actual save API call
+ *         const response = await fetch(`/api/chapters/${chapterId}`, {
+ *           method: 'PUT',
+ *           headers: { 'Content-Type': 'application/json' },
+ *           body: JSON.stringify(chapterData)
+ *         });
+ *         
+ *         if (!response.ok) throw new Error(`HTTP ${response.status}`);
+ *         return await response.json();
+ *       });
+ *       
+ *       // Success handling
+ *       console.log('Chapter saved successfully!');
+ *     } catch (error) {
+ *       // Error is already handled by the utility
+ *       console.error('Save failed:', error);
+ *     }
+ *   };
+ * 
+ *   return (
+ *     <div>
+ *       <button 
+ *         onClick={handleSave}
+ *         disabled={!chapterUtils.hasUnsavedChanges()}
+ *       >
+ *         {chapterUtils.hasUnsavedChanges() ? 'Save Changes ●' : 'No Changes'}
+ *       </button>
+ *       
+ *       {chapterUtils.hasUnsavedChanges() && (
+ *         <span style={{ color: 'orange' }}>● Unsaved changes</span>
+ *       )}
+ *     </div>
+ *   );
+ * };
+ * ```
+ */
+
+/**
+ * Hook to access chapter editing utilities
+ * @param {string} chapterId - The chapter ID
+ * @returns {object} Chapter utilities object
+ */
+export const useChapterEditingUtils = (chapterId) => {
+  const [utils, setUtils] = useState(null);
+
+  useEffect(() => {
+    if (!chapterId) return;
+
+    // Poll for utilities to be available
+    const checkForUtils = () => {
+      const saveWithRetry = window[`saveWithRetry_${chapterId}`];
+      const chapterUtils = window[`chapterUtils_${chapterId}`];
+      const clearAutoSave = window[`clearAutoSave_${chapterId}`];
+
+      if (saveWithRetry && chapterUtils && clearAutoSave) {
+        setUtils({
+          saveWithRetry,
+          triggerManualAutoSave: chapterUtils.triggerManualAutoSave,
+          hasUnsavedChanges: chapterUtils.hasUnsavedChanges,
+          clearAutoSave: chapterUtils.clearAutoSave,
+          getAutoSaveStatus: chapterUtils.getAutoSaveStatus,
+          getLastSaved: chapterUtils.getLastSaved
+        });
+        return true;
+      }
+      return false;
+    };
+
+    // Check immediately
+    if (!checkForUtils()) {
+      // If not available, poll every 100ms for up to 5 seconds
+      const pollInterval = setInterval(() => {
+        if (checkForUtils()) {
+          clearInterval(pollInterval);
+        }
+      }, 100);
+
+      const timeout = setTimeout(() => {
+        clearInterval(pollInterval);
+        console.warn('Chapter editing utilities not available for chapter:', chapterId);
+      }, 5000);
+
+      return () => {
+        clearInterval(pollInterval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [chapterId]);
+
+  return utils || {
+    saveWithRetry: async () => { 
+      throw new Error('Chapter editing utilities not yet available'); 
+    },
+    triggerManualAutoSave: () => {
+      console.warn('Manual auto-save not available');
+    },
+    hasUnsavedChanges: () => false,
+    clearAutoSave: () => {},
+    getAutoSaveStatus: () => '',
+    getLastSaved: () => null
+  };
+};
+
+/**
+ * Enhanced API call wrapper with retry logic and error handling
+ * @param {string} url - API endpoint URL
+ * @param {object} options - Fetch options
+ * @param {number} maxRetries - Maximum retry attempts
+ * @returns {Promise} API response
+ */
+export const apiCallWithRetry = async (url, options = {}, maxRetries = 3) => {
+  let attempt = 0;
+  
+  while (attempt < maxRetries) {
+    try {
+      // Add auth header if not present
+      if (!options.headers?.Authorization) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          options.headers = {
+            ...options.headers,
+            'Authorization': `Bearer ${token}`
+          };
+        }
+      }
+      
+      const response = await fetch(url, {
+        timeout: 30000, // 30 second timeout
+        ...options
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response;
+      
+    } catch (error) {
+      attempt++;
+      
+      const isRetryableError = 
+        error.name === 'NetworkError' ||
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('timeout') ||
+        (error.message.includes('HTTP 5') && attempt < maxRetries); // 5xx errors
+      
+      if (isRetryableError && attempt < maxRetries) {
+        console.warn(`API call attempt ${attempt} failed, retrying...`, error);
+        
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        continue;
+      }
+      
+      throw error;
+    }
+  }
+};
+
+/**
+ * Check if user authentication is valid
+ * @returns {object} Auth status and info
+ */
+export const checkAuthStatus = () => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return { 
+      isValid: false, 
+      error: 'No authentication token found' 
+    };
+  }
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp * 1000;
+    const now = Date.now();
+    const timeUntilExpiry = exp - now;
+    
+    if (timeUntilExpiry <= 0) {
+      return { 
+        isValid: false, 
+        error: 'Authentication token has expired' 
+      };
+    }
+    
+    return {
+      isValid: true,
+      expiresIn: timeUntilExpiry,
+      expiresAt: new Date(exp),
+      willExpireSoon: timeUntilExpiry < 300000, // Less than 5 minutes
+      user: {
+        userId: payload.userId,
+        username: payload.username,
+        role: payload.role
+      }
+    };
+  } catch (error) {
+    return { 
+      isValid: false, 
+      error: 'Invalid authentication token format' 
+    };
+  }
+};
+
+/**
+ * Enhanced chapter save function with all safety checks
+ * @param {string} chapterId - Chapter ID
+ * @param {object} chapterData - Chapter data to save
+ * @returns {Promise} Save result
+ */
+export const saveChapterWithRetry = async (chapterId, chapterData) => {
+  // Get the chapter utilities
+  const saveWithRetry = window[`saveWithRetry_${chapterId}`];
+  
+  if (!saveWithRetry) {
+    throw new Error('Chapter save utilities not available. Please refresh the page.');
+  }
+  
+  return await saveWithRetry(async () => {
+    const response = await apiCallWithRetry(`/api/chapters/${chapterId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(chapterData)
+    });
+    
+    return await response.json();
   });
 }; 

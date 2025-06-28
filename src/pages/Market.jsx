@@ -954,8 +954,7 @@ const Market = () => {
       return;
     }
     
-    console.log(`💰 [Market] Starting contribution: ${contributionAmount} 🌾 for request ${requestId}`);
-    console.log(`💰 [Market] User balance before contribution: ${userBalance} 🌾`);
+
     
     setSubmittingContribution(true);
     
@@ -977,7 +976,7 @@ const Market = () => {
       );
       
       const newContribution = response.data;
-      console.log(`✅ [Market] Contribution successful:`, newContribution);
+
       
       // Update contributions list with new contribution
       setContributions(prev => ({
@@ -988,20 +987,15 @@ const Market = () => {
       // Update user balance
       const newBalance = userBalance - Number(contributionAmount);
       setUserBalance(newBalance);
-      console.log(`💰 [Market] Updated local balance: ${userBalance} → ${newBalance} 🌾`);
+
       
-      // Notify other components about balance change
-      console.log(`📡 [Market] Dispatching balanceUpdated event...`);
-      window.dispatchEvent(new CustomEvent('balanceUpdated', { 
+      // Dispatch balance updated event
+      window.dispatchEvent(new CustomEvent('balanceUpdated', {
         detail: { 
-          oldBalance: userBalance, 
-          newBalance: newBalance, 
-          amount: Number(contributionAmount),
-          source: 'market_contribution',
-          requestId: requestId
-        } 
+          newBalance: newBalance,
+          contribution: { amount: Number(contributionAmount), type: 'market' }
+        }
       }));
-      console.log(`📡 [Market] balanceUpdated event dispatched successfully`);
       
       // Reset form and close modal
       handleCloseContributionModal();
