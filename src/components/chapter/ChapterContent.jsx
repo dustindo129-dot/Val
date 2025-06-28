@@ -193,10 +193,10 @@ const ChapterContent = ({
       clearTimeout(autoSaveTimeoutRef.current);
     }
     
-    // Set new timeout for auto-save (5 seconds after last change)
+    // Set new timeout for auto-save (10 seconds after last change)
     autoSaveTimeoutRef.current = setTimeout(() => {
       autoSave();
-    }, 5000);
+    }, 10000);
     
     return () => {
       if (autoSaveTimeoutRef.current) {
