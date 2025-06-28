@@ -272,15 +272,40 @@ class SSEService {
 
   handleVisibilityChange() {
     if (document.hidden) {
+      console.info(`👁️ [SSE] Tab ${this.tabId} became HIDDEN - clearing reconnect timeout`);
       this.clearReconnectTimeout();
     } else {
+      console.info(`👁️ [SSE] Tab ${this.tabId} became VISIBLE - checking connection status`);
+      
       // Check if leader is still alive when tab becomes visible
       if (!this.isLeaderTab) {
+        console.debug(`[SSE] Tab ${this.tabId} is not leader, checking leader health`);
         this.checkLeaderHealth();
       } else if (!this.isConnected && !this.isManuallyDisconnected && this.listeners.size > 0) {
+        console.info(`🔄 [SSE] Leader tab ${this.tabId} reconnecting after becoming visible`, {
+          reconnectAttempts: this.reconnectAttempts,
+          adjustedAttempts: Math.max(0, this.reconnectAttempts - 2),
+          listenersCount: this.listeners.size
+        });
         this.reconnectAttempts = Math.max(0, this.reconnectAttempts - 2);
         this.scheduleReconnect(2000);
+      } else {
+        console.debug(`[SSE] Tab ${this.tabId} visibility change - no action needed:`, {
+          isLeader: this.isLeaderTab,
+          isConnected: this.isConnected,
+          manuallyDisconnected: this.isManuallyDisconnected,
+          listenersCount: this.listeners.size
+        });
       }
+    }
+  }
+
+  getReadyStateText(readyState) {
+    switch (readyState) {
+      case EventSource.CONNECTING: return 'CONNECTING';
+      case EventSource.OPEN: return 'OPEN';
+      case EventSource.CLOSED: return 'CLOSED';
+      default: return 'UNKNOWN';
     }
   }
 
@@ -438,6 +463,35 @@ class SSEService {
       return;
     }
 
+    // Enhanced token validation logging
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const tokenExp = tokenPayload.exp * 1000; // Convert to milliseconds
+      const now = Date.now();
+      const timeUntilExpiry = tokenExp - now;
+      
+      console.info(`🔐 [SSE] Token validation for tab ${this.tabId}:`, {
+        tokenExpiry: new Date(tokenExp).toISOString(),
+        timeUntilExpiry: Math.round(timeUntilExpiry / 1000) + ' seconds',
+        isExpired: timeUntilExpiry <= 0,
+        userId: tokenPayload.userId,
+        username: tokenPayload.username,
+        role: tokenPayload.role
+      });
+      
+      if (timeUntilExpiry <= 0) {
+        console.error(`🚫 [SSE] Token EXPIRED for tab ${this.tabId} - cannot connect`);
+        return;
+      }
+      
+      if (timeUntilExpiry < 300000) { // Less than 5 minutes
+        console.warn(`⚠️ [SSE] Token expires soon for tab ${this.tabId} (${Math.round(timeUntilExpiry / 1000)}s remaining)`);
+      }
+    } catch (error) {
+      console.error(`🚫 [SSE] Invalid token format for tab ${this.tabId}:`, error);
+      return;
+    }
+
     console.info(`🔌 [SSE] Attempting to connect tab ${this.tabId}...`);
 
     this.recordConnectionAttempt();
@@ -449,6 +503,15 @@ class SSEService {
       sseUrl.searchParams.set('tabId', this.tabId);
       sseUrl.searchParams.set('token', token);
       
+      console.info(`🌐 [SSE] Connection details for tab ${this.tabId}:`, {
+        backendUrl: config.backendUrl,
+        fullUrl: sseUrl.toString().replace(/token=[^&]+/, 'token=***'),
+        sessionId: this.sessionId,
+        tabId: this.tabId,
+        origin: window.location.origin,
+        userAgent: navigator.userAgent.substring(0, 100) + '...'
+      });
+      
       this.eventSource = new EventSource(sseUrl.toString());
       
       this.eventSource.onopen = () => {
@@ -457,16 +520,47 @@ class SSEService {
         this.clearReconnectTimeout();
         console.info(`✅ [SSE] Connected successfully for tab ${this.tabId}`, {
           clientId: this.clientId,
-          url: sseUrl.toString().replace(/token=[^&]+/, 'token=***')
+          url: sseUrl.toString().replace(/token=[^&]+/, 'token=***'),
+          readyState: this.eventSource.readyState
         });
       };
 
       this.eventSource.onerror = (error) => {
         this.isConnected = false;
-        console.error(`❌ [SSE] Connection error for tab ${this.tabId}:`, {
+        
+        // Enhanced error logging
+        const errorDetails = {
           readyState: this.eventSource?.readyState,
-          error: error
-        });
+          readyStateText: this.getReadyStateText(this.eventSource?.readyState),
+          error: error,
+          errorType: error.type || 'unknown',
+          errorTarget: error.target,
+          timestamp: new Date().toISOString(),
+          url: sseUrl.toString().replace(/token=[^&]+/, 'token=***'),
+          origin: window.location.origin,
+          backendOrigin: new URL(config.backendUrl).origin
+        };
+        
+        // Check for specific error types
+        if (error.target && error.target.readyState === EventSource.CLOSED) {
+          errorDetails.errorCategory = 'CONNECTION_CLOSED';
+          console.error(`❌ [SSE] Connection CLOSED for tab ${this.tabId}:`, errorDetails);
+        } else if (error.target && error.target.readyState === EventSource.CONNECTING) {
+          errorDetails.errorCategory = 'CONNECTION_FAILED';
+          console.error(`❌ [SSE] Connection FAILED for tab ${this.tabId}:`, errorDetails);
+        } else {
+          errorDetails.errorCategory = 'UNKNOWN_ERROR';
+          console.error(`❌ [SSE] Connection error for tab ${this.tabId}:`, errorDetails);
+        }
+        
+        // Check for CORS issues
+        if (window.location.origin !== new URL(config.backendUrl).origin) {
+          console.warn(`⚠️ [SSE] Cross-origin request detected for tab ${this.tabId}:`, {
+            frontendOrigin: window.location.origin,
+            backendOrigin: new URL(config.backendUrl).origin,
+            potentialCorsIssue: true
+          });
+        }
         
         if (this.eventSource?.readyState === EventSource.CLOSED) {
           console.info(`🔄 [SSE] Connection closed, scheduling reconnect for tab ${this.tabId}`);
@@ -660,6 +754,26 @@ class SSEService {
       timestamp => now - timestamp < this.circuitBreakerWindow
     );
     
+    // Enhanced token info
+    let tokenInfo = null;
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const tokenExp = tokenPayload.exp * 1000;
+        tokenInfo = {
+          userId: tokenPayload.userId,
+          username: tokenPayload.username,
+          role: tokenPayload.role,
+          expiresAt: new Date(tokenExp).toISOString(),
+          timeUntilExpiry: Math.round((tokenExp - now) / 1000) + ' seconds',
+          isExpired: tokenExp <= now
+        };
+      }
+    } catch (error) {
+      tokenInfo = { error: 'Invalid token format' };
+    }
+    
     return {
       tabId: this.tabId,
       sessionId: this.sessionId,
@@ -672,11 +786,21 @@ class SSEService {
       recentConnectionsCount: recentConnectionsInWindow.length,
       circuitBreakerThreshold: this.circuitBreakerThreshold,
       willTriggerCircuitBreaker: recentConnectionsInWindow.length >= this.circuitBreakerThreshold,
-      hasAuthToken: !!localStorage.getItem('token'),
-      isOnline: navigator.onLine,
+      tokenInfo: tokenInfo,
+      networkInfo: {
+        isOnline: navigator.onLine,
+        connectionType: navigator.connection?.effectiveType || 'unknown',
+        downlink: navigator.connection?.downlink || 'unknown',
+        rtt: navigator.connection?.rtt || 'unknown'
+      },
       isTabHidden: document.hidden,
       listeners: Array.from(this.listeners.keys()),
       eventSourceState: this.eventSource ? this.eventSource.readyState : null,
+      eventSourceStateText: this.eventSource ? this.getReadyStateText(this.eventSource.readyState) : null,
+      backendUrl: config.backendUrl,
+      origin: window.location.origin,
+      backendOrigin: new URL(config.backendUrl).origin,
+      isCrossOrigin: window.location.origin !== new URL(config.backendUrl).origin,
       eventSourceStates: {
         CONNECTING: EventSource.CONNECTING,
         OPEN: EventSource.OPEN, 

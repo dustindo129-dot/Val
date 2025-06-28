@@ -487,11 +487,6 @@
   background-color: var(--card-bg);
 }
 
-:root.dark-mode .status-section,
-:root.dark-mode .chapter-staff-section {
-  /* Removed background-color and border-color */
-}
-
 :root.dark-mode .status-option {
   background-color: #3a3a3a;
   color: #ecf0f1;
