@@ -962,8 +962,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           wordCount: currentWordCount, // Update local cache with TinyMCE word count
           translator: editedTranslator,
           editor: editedEditor,
-          proofreader: editedProofreader,
-          updatedAt: new Date().toISOString()
+          proofreader: editedProofreader
+          // Don't update updatedAt in optimistic update to prevent auto-save clearing
         }
       });
 
@@ -984,6 +984,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           }
         }
       );
+
+      // Clear auto-save on successful save
+      if (window[`clearAutoSave_${chapterId}`]) {
+        window[`clearAutoSave_${chapterId}`]();
+      }
 
       // Exit edit mode
       setIsEditing(false);
