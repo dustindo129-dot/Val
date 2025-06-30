@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -449,9 +449,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           }
         } catch (viewErr) {
           // Don't log abort errors as they're expected
-          if (viewErr.name === 'CanceledError' || viewErr.name === 'AbortError') {
-            console.log('View count request aborted after timeout (expected behavior)');
-          } else {
+          if (viewErr.name !== 'CanceledError' && viewErr.name !== 'AbortError') {
             console.error('Lỗi ghi nhận lượt xem:', viewErr);
           }
         }
@@ -641,7 +639,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     enabled: !!chapterId,
     onError: () => {
       // Handle missing endpoint gracefully
-      console.log('Comments endpoint not available');
       return [];
     }
   });
@@ -703,9 +700,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   }, [chapter, isEditing]);
 
   // Function to update word count from TinyMCE editor
-  const updateWordCountFromEditor = (count) => {
+  const updateWordCountFromEditor = useCallback((count) => {
     setWordCount(count);
-  };
+  }, []);
+
+  // Memoize stable props to prevent unnecessary re-renders
+  const stableUserRole = useMemo(() => user?.role || 'user', [user?.role]);
+  const stableNovelData = useMemo(() => novelData?.novel || novelData, [novelData]);
 
   // Effect to handle edit mode initialization
   useEffect(() => {
@@ -719,8 +720,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       // Add a slight delay to ensure the editor is mounted before attempting to set content
       const timer = setTimeout(() => {
         if (editorRef.current && editorRef.current.setContent) {
-          // Force reset any editor content
-          editorRef.current.setContent(unescapeHtml(chapter.content || ''));
+          // With pure uncontrolled mode, we don't need to set content from React
         }
       }, 50);
       
@@ -1174,16 +1174,17 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   };
 
   // Check if user can edit
-  const canEdit = user && (
+  const canEdit = useMemo(() => user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
     (user?.role === 'pj_user' && (
       novel?.active?.pj_user?.includes(user.id) || 
       novel?.active?.pj_user?.includes(user.username)
     ))
-  );
+  ), [user, novel?.active?.pj_user]);
+  
   // Check if user can delete
-  const canDelete = user && (user.role === 'admin' || user.role === 'moderator');
+  const canDelete = useMemo(() => user && (user.role === 'admin' || user.role === 'moderator'), [user]);
 
   // Auto-hide notification after 5 seconds
   useEffect(() => {
@@ -1291,7 +1292,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           editorRef={editorRef}
           getSafeHtml={getSafeHtml}
           canEdit={canEdit}
-          userRole={user?.role || 'user'}
+          userRole={stableUserRole}
           moduleData={moduleData}
           onWordCountUpdate={updateWordCountFromEditor}
           editedTranslator={editedTranslator}
@@ -1300,7 +1301,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           setEditedEditor={setEditedEditor}
           editedProofreader={editedProofreader}
           setEditedProofreader={setEditedProofreader}
-          novelData={novelData?.novel || novelData}
+          novelData={stableNovelData}
         />
       </ChapterAccessGuard>
 

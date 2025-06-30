@@ -6,48 +6,48 @@ import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
 import { createUniqueSlug, generateNovelUrl } from '../../utils/slugUtils';
 
 const ChapterFooter = ({
-  novelId,
-  novel,
-  chapter,
-  moduleData,
-  isBookmarked,
-  handleBookmark,
-  setShowReportModal
-}) => {
+                         novelId,
+                         novel,
+                         chapter,
+                         moduleData,
+                         isBookmarked,
+                         handleBookmark,
+                         setShowReportModal
+                       }) => {
   const novelSlug = createUniqueSlug(novel?.title, novelId);
-  
-  return (
-    <div className="footer-nav-container">
-      <div className="breadcrumb-nav">
-        <Link to="/"><FontAwesomeIcon icon={faHome}/> Trang chủ</Link>
-        <span className="breadcrumb-separator">&gt;</span>
-        <Link to={generateNovelUrl({ _id: novelId, title: novel.title })}>{novel.title}</Link>
-        <span className="breadcrumb-separator">&gt;</span>
-        {moduleData && (
-          <>
-            <span className="breadcrumb-current">{moduleData.title}</span>
-            <span className="breadcrumb-separator">&gt;</span>
-          </>
-        )}
-        <span className="breadcrumb-current">{chapter.title}</span>
-      </div>
 
-      <div className="footer-actions">
-        <button
-          className="btn-report"
-          onClick={() => setShowReportModal(true)}
-        >
-          <FontAwesomeIcon icon={faFlag}/> Báo cáo
-        </button>
-        <button
-          className={`btn-bookmark ${isBookmarked ? 'active' : ''}`}
-          onClick={handleBookmark}
-        >
-          <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
-          {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu chương'}
-        </button>
+  return (
+      <div className="footer-nav-container">
+        <div className="breadcrumb-nav">
+          <Link to="/"><FontAwesomeIcon icon={faHome}/> Trang chủ</Link>
+          <span className="breadcrumb-separator">&gt;</span>
+          <Link to={generateNovelUrl({ _id: novelId, title: novel.title })}>{novel.title}</Link>
+          <span className="breadcrumb-separator">&gt;</span>
+          {moduleData && (
+              <>
+                <span className="breadcrumb-current">{moduleData.title}</span>
+                <span className="breadcrumb-separator">&gt;</span>
+              </>
+          )}
+          <span className="breadcrumb-current">{chapter.title}</span>
+        </div>
+
+        <div className="footer-actions">
+          <button
+              className="btn-report"
+              onClick={() => setShowReportModal(true)}
+          >
+            <FontAwesomeIcon icon={faFlag}/> Báo cáo
+          </button>
+          <button
+              className={`btn-bookmark ${isBookmarked ? 'active' : ''}`}
+              onClick={handleBookmark}
+          >
+            <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
+            {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu chương'}
+          </button>
+        </div>
       </div>
-    </div>
   );
 };
 

@@ -1235,7 +1235,7 @@ const ChapterDashboard = () => {
             ) : (
               <p>Hướng dẫn sử dụng chú thích:
                  <br />1. Bấm "+ Thêm chú thích" để tạo chú thích trước.
-                 <br />2. Sau đó có thể nhập trực tiếp [1], [2], v.v. vào nội dung chương (hoặc sao chép chỗ bên trái chú thích) và chúng sẽ tự động liên kết với chú thích tương ứng.
+                 <br />2. Sau đó sao chép [1], [2], v.v. vào nội dung chương (không thể nhập trực tiếp) và chúng sẽ tự động liên kết với chú thích tương ứng.
                  <br />3. Nếu chú thích không được tạo trước khi nhập [1], [2], v.v. thì [1] sẽ hiển thị như văn bản thông thường.
                  <br />4. Các thay đổi chỉ được lưu sau khi bấm "Lưu chương".</p>
             )}

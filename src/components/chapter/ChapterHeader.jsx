@@ -102,7 +102,12 @@ const ChapterHeader = ({
                 </button>
                 <button 
                   className="cancel-edit-btn" 
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    if (window[`clearAutoSave_${chapter._id}`]) {
+                      window[`clearAutoSave_${chapter._id}`]();
+                    }
+                    setIsEditing(false);
+                  }}
                   disabled={isSaving}
                 >
                   Hủy bỏ thay đổi

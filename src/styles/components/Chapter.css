@@ -581,12 +581,14 @@
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   margin: 10px 0;
-  text-wrap: nowrap;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .share-buttons {
   display: flex;
   gap: 8px;
+  order: 1;
 }
 
 .share-btn {
@@ -625,6 +627,8 @@
 .user-actions {
   display: flex;
   gap: 10px;
+  order: 2;
+  margin-left: auto;
 }
 
 .action-btn {
@@ -780,23 +784,25 @@
 /* Existing footer nav container styles */
 .footer-nav-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   padding: 10px 15px;
   margin-bottom: 15px;
   position: relative;
+  gap: 10px;
 }
 
 .breadcrumb-nav {
   align-items: center;
   font-size: 0.9rem;
   color: #777;
+  width: 100%;
 }
 
 .breadcrumb-info {
+  display: flex;
   align-items: center;
 }
 
@@ -821,13 +827,12 @@
 }
 
 .footer-actions {
-  display: inline-flex;
+  display: flex;
   gap: 10px;
-  flex-wrap: wrap;
   justify-content: flex-end;
-  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
 }
-
 .btn-report {
   background-color: var(--report-color);
   color: white;
@@ -1841,17 +1846,43 @@
   }
 
   .chapter-bottom-actions {
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     gap: 10px;
+  }
+
+  .share-buttons {
+    flex-shrink: 0;
+  }
+
+  .user-actions {
+    flex-shrink: 0;
   }
 
   .footer-nav-container {
-    gap: 10px;
+    gap: 8px;
+    padding: 8px 10px;
   }
 
   .breadcrumb-nav {
-    width: 100%;
-    flex-wrap: wrap;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+
+  .breadcrumb-separator {
+    margin: 0 4px;
+  }
+
+  .footer-actions {
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .btn-report,
+  .btn-bookmark {
+    padding: 5px 10px;
+    font-size: 0.8rem;
   }
 
   .breadcrumb-info {
