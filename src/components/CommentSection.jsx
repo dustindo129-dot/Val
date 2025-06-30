@@ -28,7 +28,7 @@ import { createUniqueSlug, generateUserProfileUrl } from '../utils/slugUtils';
 const sanitizeHTML = (content) => {
   if (!content) return '';
   return DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 's', 'strike', 'del'],
     ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height']
   });
 };
@@ -127,7 +127,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       'insertdatetime', 'media', 'table', 'help', 'wordcount'
     ],
     toolbar: 'undo redo | formatselect | ' +
-      'bold italic underline | ' +
+      'bold italic underline strikethrough | ' +
       'alignleft aligncenter alignright | ' +
       'bullist numlist | ' +
       'link image | code | removeformat | help',
@@ -136,6 +136,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       body { font-family:Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; }
       em, i { font-style: italic; }
       strong, b { font-weight: bold; }
+      s, strike, del { text-decoration: line-through; }
     `,
     skin: 'oxide',
     content_css: 'default',
@@ -723,7 +724,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         }
         
         return DOMPurify.sanitize(processedContent, {
-          ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'u'],
+          ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'u', 's', 'strike', 'del'],
           ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height', 'style', 'class']
         });
       } catch (error) {
