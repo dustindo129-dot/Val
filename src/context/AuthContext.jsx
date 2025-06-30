@@ -19,6 +19,7 @@ import axios from 'axios';
 import '../styles/AuthContext.css';
 import config from '../config/config';
 import { setupAutoRefresh } from '../services/tokenRefresh';
+import { startSessionValidation } from '../services/sessionService';
 
 // Create authentication context
 const AuthContext = createContext(null);
@@ -59,6 +60,12 @@ export const AuthProvider = ({ children }) => {
 
   // Store auto-refresh cleanup function
   const [autoRefreshCleanup, setAutoRefreshCleanup] = useState(null);
+  
+  // Store session validation cleanup function
+  const [sessionValidationCleanup, setSessionValidationCleanup] = useState(null);
+  
+  // State for session invalidation notification
+  const [sessionInvalidationMessage, setSessionInvalidationMessage] = useState(null);
 
   /**
    * Checks if the current session is valid with grace period for recent logins
@@ -220,6 +227,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Sets up session validation for single-device authentication
+   */
+  const setupSessionValidation = () => {
+    if (sessionValidationCleanup) {
+      sessionValidationCleanup(); // Clean up previous setup
+    }
+    
+    const cleanup = startSessionValidation();
+    setSessionValidationCleanup(() => cleanup);
+  };
+
+  /**
    * Initialize authentication state and set up session management
    */
   useEffect(() => {
@@ -294,6 +313,9 @@ export const AuthProvider = ({ children }) => {
             
             // Set up automatic token refresh
             setupTokenRefresh();
+            
+            // Set up session validation
+            setupSessionValidation();
           } else {
             signOut();
           }
@@ -344,6 +366,11 @@ export const AuthProvider = ({ children }) => {
       if (autoRefreshCleanup) {
         autoRefreshCleanup();
       }
+      
+      // Clean up session validation if it exists
+      if (sessionValidationCleanup) {
+        sessionValidationCleanup();
+      }
     };
   }, []);
 
@@ -358,6 +385,9 @@ export const AuthProvider = ({ children }) => {
       
       // Set up automatic token refresh for authenticated users
       setupTokenRefresh();
+      
+      // Set up session validation for authenticated users
+      setupSessionValidation();
     } else {
       setIsAuthenticated(false);
       
@@ -365,6 +395,12 @@ export const AuthProvider = ({ children }) => {
       if (autoRefreshCleanup) {
         autoRefreshCleanup();
         setAutoRefreshCleanup(null);
+      }
+      
+      // Clean up session validation when user logs out
+      if (sessionValidationCleanup) {
+        sessionValidationCleanup();
+        setSessionValidationCleanup(null);
       }
     }
   }, [user]);
@@ -413,6 +449,16 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(userData));
         }
         console.log('Token refreshed successfully');
+      } else if (event.type === 'session-invalidated') {
+        // Handle session invalidation from another device
+        const message = event.detail?.message || 'Your account has been logged in from another device';
+        setSessionInvalidationMessage(message);
+        
+        // Show notification for a few seconds before logging out
+        setTimeout(() => {
+          setSessionInvalidationMessage(null);
+          signOut(true); // Silent logout
+        }, 5000);
       }
     };
 
@@ -424,6 +470,7 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('auth-token-invalid', handleCustomEvent);
     window.addEventListener('auth-token-refresh-failed', handleCustomEvent);
     window.addEventListener('auth-token-refreshed', handleCustomEvent);
+    window.addEventListener('session-invalidated', handleCustomEvent);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -432,6 +479,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('auth-token-invalid', handleCustomEvent);
       window.removeEventListener('auth-token-refresh-failed', handleCustomEvent);
       window.removeEventListener('auth-token-refreshed', handleCustomEvent);
+      window.removeEventListener('session-invalidated', handleCustomEvent);
     };
   }, []);
 
@@ -558,6 +606,12 @@ export const AuthProvider = ({ children }) => {
         setAutoRefreshCleanup(null);
       }
       
+      // Clean up session validation
+      if (sessionValidationCleanup) {
+        sessionValidationCleanup();
+        setSessionValidationCleanup(null);
+      }
+      
       // Only try to call the logout API if this is not a synchronized logout
       if (!isSync) {
         try {
@@ -659,7 +713,8 @@ export const AuthProvider = ({ children }) => {
     setUser,
     updateUser: setUser,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    sessionInvalidationMessage
   };
 
   return (

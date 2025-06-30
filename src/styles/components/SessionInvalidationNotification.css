@@ -1,0 +1,102 @@
+.session-invalidation-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  max-width: 400px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(238, 90, 111, 0.3);
+  animation: slideInFromRight 0.5s ease-out;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.session-invalidation-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 16px;
+}
+
+.session-invalidation-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.session-invalidation-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.session-invalidation-message {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-invalidation-message h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.session-invalidation-message p {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.session-invalidation-subtext {
+  font-size: 12px !important;
+  opacity: 0.7 !important;
+  font-style: italic;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .session-invalidation-notification {
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+  
+  .session-invalidation-content {
+    padding: 16px;
+  }
+  
+  .session-invalidation-message h4 {
+    font-size: 15px;
+  }
+  
+  .session-invalidation-message p {
+    font-size: 13px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .session-invalidation-notification {
+    background: linear-gradient(135deg, #d63384, #c2185b);
+    box-shadow: 0 8px 25px rgba(214, 51, 132, 0.3);
+  }
+} 
