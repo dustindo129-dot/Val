@@ -703,6 +703,20 @@
   max-height: 3000px;
 }
 
+/* Paragraph styling for description content */
+.rd-description-content p {
+  font-size: inherit;
+  line-height: inherit;
+  font-family: var(--content-font-family, 'Arial', 'Georgia', sans-serif);
+  margin: 0 0 0.8em 0;
+  color: inherit;
+  font-weight: 400;
+}
+
+.rd-description-content p:last-child {
+  margin-bottom: 0;
+}
+
 .rd-show-toggle {
   color: var(--rd-primary-color);
   text-decoration: none;
@@ -858,6 +872,20 @@
 
 .rd-section-content {
   padding: 15px;
+}
+
+/* Paragraph styling for section content */
+.rd-section-content p {
+  font-size: inherit;
+  line-height: inherit;
+  font-family: var(--content-font-family, 'Arial', 'Georgia', sans-serif);
+  margin: 0 0 0.8em 0;
+  color: inherit;
+  font-weight: 400;
+}
+
+.rd-section-content p:last-child {
+  margin-bottom: 0;
 }
 
 /* Staff section */
@@ -1530,6 +1558,11 @@
 :root.dark-mode .rd-description-content,
 :root.dark-mode .rd-section-content {
   color: #e0e0e0;
+}
+
+:root.dark-mode .rd-description-content p,
+:root.dark-mode .rd-section-content p {
+  color: inherit;
 }
 
 :root.dark-mode .rd-show-toggle {

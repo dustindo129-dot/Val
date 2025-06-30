@@ -802,8 +802,8 @@
 }
 
 .breadcrumb-info {
-  display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .breadcrumb-nav a {
@@ -1883,10 +1883,6 @@
   .btn-bookmark {
     padding: 5px 10px;
     font-size: 0.8rem;
-  }
-
-  .breadcrumb-info {
-    width: 100%;
   }
 
   .header-bookmark {
