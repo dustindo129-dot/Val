@@ -311,7 +311,7 @@
 }
 
 /* Chapter list styles */
-.chapter-number {
+.module-chapter-item .chapter-number {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -373,7 +373,7 @@
   color: #f9fafb;
 }
 
-.dark-mode .chapter-number {
+.dark-mode .module-chapter-item .chapter-number {
   background-color: #2563eb;
 }
 
@@ -431,7 +431,7 @@
     padding: 8px;
   }
 
-  .chapter-number {
+  .module-chapter-item .chapter-number {
     width: 24px;
     height: 24px;
     font-size: 0.9rem;
