@@ -210,24 +210,16 @@ const ModuleList = memo(({
     return Math.max(0, remaining);
   }, [currentTime]);
   
-  // Check if a module should show rental price (for everyone when novel is available for rent)
+  // Check if a module should show rental price (for everyone when module is in rent mode)
   const shouldShowRentalPrice = useCallback((module) => {
-    // Novel must be available for rent
-    if (!novel?.availableForRent) return false;
+    // Module must be in rent mode
+    if (module.mode !== 'rent') return false;
     
     // Module must have rental price set
     if (!module.rentBalance || module.rentBalance <= 0) return false;
     
-    // Module must have paid content (either paid mode OR paid chapters)
-    const isPaidModule = module.mode === 'paid' && module.moduleBalance > 0;
-    const hasPaidChapters = module.chapters && module.chapters.some(chapter => 
-      chapter.mode === 'paid' && chapter.chapterBalance > 0
-    );
-    
-    if (!isPaidModule && !hasPaidChapters) return false;
-    
     return true;
-  }, [novel?.availableForRent]);
+  }, []);
 
   // Check if a module should show rental button (only for non-staff users)
   const shouldShowRentalButton = useCallback((module) => {
@@ -355,13 +347,13 @@ const ModuleList = memo(({
                       <>
                         <div className="module-rent-price">
                           <FontAwesomeIcon icon={faClock} className="rent-icon" />
-                          <span>Thuê: {module.rentBalance} 🌾/24h</span>
+                          <span>Thuê: {module.rentBalance} 🌾/52h</span>
                         </div>
                         {shouldShowRentalButton(module) && (
                           <button
                             className="module-rent-btn"
                             onClick={() => handleOpenRentalModal(module)}
-                            title={`Thuê tập này với ${module.rentBalance} 🌾 trong 24 giờ`}
+                            title={`Thuê tập này với ${module.rentBalance} 🌾 trong 52 giờ`}
                           >
                             <FontAwesomeIcon icon={faClock} />
                             Thuê Tập

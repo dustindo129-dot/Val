@@ -181,7 +181,7 @@ const ChapterAccessGuard = ({
                     <button
                       className="rent-module-btn"
                       onClick={() => handleOpenRentalModal(moduleData)}
-                      title={`Thuê tập này với ${moduleData.rentBalance} 🌾 trong 24 giờ`}
+                      title={`Thuê tập này với ${moduleData.rentBalance} 🌾 trong 52 giờ`}
                     >
                       <FontAwesomeIcon icon={faClock} />
                       Thuê tập
@@ -218,7 +218,7 @@ const ChapterAccessGuard = ({
                     <button
                       className="rent-module-btn"
                       onClick={() => handleOpenRentalModal(moduleData)}
-                      title={`Thuê tập này với ${moduleData.rentBalance} 🌾 trong 24 giờ`}
+                      title={`Thuê tập này với ${moduleData.rentBalance} 🌾 trong 52 giờ`}
                     >
                       <FontAwesomeIcon icon={faClock} />
                       Thuê tập

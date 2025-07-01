@@ -386,8 +386,7 @@ const VirtualNovelItem = React.memo(({
                                              setBalanceValue,
                                              handleEditBalance,
                                              cancelEditBalance,
-                                             saveBalanceChange,
-                                             handleRentalChange
+                                             saveBalanceChange
                                          }
                                      }) => {
     const novel = novels[index];
@@ -447,27 +446,7 @@ const VirtualNovelItem = React.memo(({
                         <option value="Hiatus">Tạm ngưng</option>
                     </select>
                     
-                    {/* Rental checkbox for novels with current paid content */}
-                    {((novel.paidModulesCount || 0) > 0 || 
-                      (novel.paidChaptersCount || 0) > 0) && 
-                      (user && (user.role === 'admin' || user.role === 'moderator' || user.role === 'pj_user')) && (
-                        <label className={`rental-checkbox-label ${user.role !== 'admin' ? 'disabled' : ''}`}>
-                            <input
-                                type="checkbox"
-                                checked={novel.availableForRent || false}
-                                onChange={(e) => handleRentalChange(novel._id, e.target.checked)}
-                                className="rental-checkbox"
-                                disabled={user.role !== 'admin'}
-                                title={user.role !== 'admin' ? 'Chỉ admin mới có thể thay đổi trạng thái cho thuê' : ''}
-                            />
-                            <span className="rental-label">
-                                Cho thuê
-                                {user.role !== 'admin' && (
-                                    <span className="admin-only-indicator"> (Chỉ admin)</span>
-                                )}
-                            </span>
-                        </label>
-                    )}
+
                     
                     {canEditNovels && (
                         <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
@@ -1984,67 +1963,7 @@ const AdminDashboard = () => {
         setSearchQuery('');
     };
 
-    /**
-     * Handles rental availability change for a novel
-     * @param {string} id - Novel ID  
-     * @param {boolean} availableForRent - New rental availability status
-     */
-    const handleRentalChange = async (id, availableForRent) => {
-        // Only admins can change rental status
-        if (user?.role !== 'admin') {
-            setError('Chỉ admin mới có thể thay đổi trạng thái cho thuê');
-            return;
-        }
 
-        try {
-            // Get current cache data
-            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role, sortType]);
-
-            // Optimistically update the cache
-            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
-                Array.isArray(old)
-                    ? old.map(novel => novel._id === id ? {...novel, availableForRent} : novel)
-                    : []
-            );
-
-            // Send request to server
-            const response = await fetch(`${config.backendUrl}/api/novels/${id}/rental`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    availableForRent
-                })
-            });
-
-            if (!response.ok) {
-                // If update failed, revert the cache to previous state
-                queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Không thể cập nhật trạng thái cho thuê');
-            }
-
-            // Get updated novel data
-            const updatedData = await response.json();
-
-            // Update cache with confirmed data
-            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
-                Array.isArray(old)
-                    ? old.map(novel => novel._id === id ? {...novel, availableForRent: updatedData.availableForRent} : novel)
-                    : []
-            );
-
-        } catch (err) {
-            // Revert cache on error
-            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role, sortType]);
-            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
-
-            console.error('Error updating rental status:', err);
-            setError(err.message);
-        }
-    };
 
     return (
         <div className="admin-dashboard">
@@ -2558,8 +2477,7 @@ const AdminDashboard = () => {
                                 setBalanceValue,
                                 handleEditBalance,
                                 cancelEditBalance,
-                                saveBalanceChange,
-                                handleRentalChange
+                                saveBalanceChange
                             }}
                             ref={novelListContainerRef}
                         >

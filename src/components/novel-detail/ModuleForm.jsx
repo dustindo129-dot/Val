@@ -26,8 +26,8 @@ const ModuleForm = memo(({
   const handleModeChange = (e) => {
     const newMode = e.target.value;
     setMode(newMode);
-    // If changing from paid to published, reset moduleBalance
-    if (newMode !== 'paid') {
+    // Reset moduleBalance when changing modes
+    if (newMode === 'published' || newMode === 'rent') {
       setModuleBalance(0);
     }
   };
@@ -113,6 +113,7 @@ const ModuleForm = memo(({
             >
               <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho tất cả)</option>
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
+              <option value="rent">CHO THUÊ (Mở khóa có thời hạn)</option>
             </select>
           </div>
         )}
@@ -135,10 +136,10 @@ const ModuleForm = memo(({
         )}
 
         {/* Rent Balance Display - Shows calculated value for admin users */}
-        {isAdmin && (
+        {isAdmin && mode === 'rent' && (
           <div className="module-form-group">
             <label className="module-form-label">
-              Giá thuê (🌾/24h):
+              Giá thuê (🌾/52h):
             </label>
             <div className="module-form-info-display">
               {moduleForm.rentBalance || 0} 🌾
@@ -149,13 +150,23 @@ const ModuleForm = memo(({
             </small>
           </div>
         )}
-        
+
         {/* Show module info for pj_user when module is paid */}
         {!isAdmin && user?.role === 'pj_user' && mode === 'paid' && (
           <div className="module-form-group">
             <label className="module-form-label">Chế độ tập hiện tại:</label>
             <div className="module-form-info-display">
               {translateChapterModuleStatus('PAID')} - {moduleBalance} 🌾 (Chỉ admin mới có thể thay đổi)
+            </div>
+          </div>
+        )}
+
+        {/* Show module info for pj_user when module is rent */}
+        {!isAdmin && user?.role === 'pj_user' && mode === 'rent' && (
+          <div className="module-form-group">
+            <label className="module-form-label">Chế độ tập hiện tại:</label>
+            <div className="module-form-info-display">
+              CHO THUÊ - {moduleForm.rentBalance || 0} 🌾/52h (Chỉ admin mới có thể thay đổi)
             </div>
           </div>
         )}

@@ -190,7 +190,7 @@ const ModuleRentalModal = ({
                 </div>
                 <div className="rental-info-item">
                   <FontAwesomeIcon icon={faClock} className="rental-icon" />
-                  <span>Thời gian: 24 giờ</span>
+                  <span>Thời gian: 52 giờ</span>
                 </div>
                 <div className="rental-info-item">
                   <FontAwesomeIcon icon={faCoins} className="rental-icon" />
@@ -203,10 +203,10 @@ const ModuleRentalModal = ({
           <div className="rental-description">
             <h5>Khi thuê tập này:</h5>
             <ul>
-              <li>Tất cả chương trả phí trong tập sẽ được mở khóa trong 24 giờ</li>
+              <li>Tất cả chương trả phí trong tập sẽ được mở khóa trong 52 giờ</li>
               <li>Nếu có chương mới được thêm vào, bạn cũng sẽ được truy cập</li>
               <li>Chỉ tài khoản của bạn mới có thể đọc nội dung đã thuê</li>
-              <li>Sau 24 giờ, quyền truy cập sẽ tự động hết hạn</li>
+              <li>Sau 52 giờ, quyền truy cập sẽ tự động hết hạn</li>
             </ul>
           </div>
           
