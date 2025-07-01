@@ -3,6 +3,7 @@ import config from '../config/config';
 import { queryClient } from '../lib/react-query';
 import bunnyUploadService from './bunnyUploadService';
 import { ensureValidToken, refreshToken } from './tokenRefresh';
+import { clearAllAuthData } from '../utils/auth';
 
 // Helper function to validate JWT token format
 const isValidJWT = (token) => {
@@ -30,8 +31,8 @@ const getValidToken = () => {
   const token = localStorage.getItem('token');
   if (!isValidJWT(token)) {
     // Clear invalid token
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAllAuthData();
+    window.dispatchEvent(new CustomEvent('auth-token-invalid'));
     return null;
   }
   return token;
@@ -106,10 +107,7 @@ axios.interceptors.response.use(
         if (isRecentLogin) {
           return Promise.reject(error);
         }
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        localStorage.removeItem('loginTime');
+        clearAllAuthData();
         window.dispatchEvent(new CustomEvent('auth-token-invalid'));
         return Promise.reject(error);
       }
@@ -117,10 +115,7 @@ axios.interceptors.response.use(
       // Prevent infinite retry loops
       if (originalRequest._retry) {
         if (!isRecentLogin) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-          localStorage.removeItem('loginTime');
+          clearAllAuthData();
           window.dispatchEvent(new CustomEvent('auth-token-invalid'));
         }
         return Promise.reject(error);
@@ -150,10 +145,7 @@ axios.interceptors.response.use(
         } else {
           // Refresh failed, but be more lenient with recent logins
           if (!isRecentLogin) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
-            localStorage.removeItem('loginTime');
+            clearAllAuthData();
             window.dispatchEvent(new CustomEvent('auth-token-invalid'));
           }
           processQueue(new Error('Token refresh failed'), null);
@@ -161,10 +153,7 @@ axios.interceptors.response.use(
         }
       } catch (refreshError) {
         if (!isRecentLogin) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-          localStorage.removeItem('loginTime');
+          clearAllAuthData();
           window.dispatchEvent(new CustomEvent('auth-token-invalid'));
         }
         processQueue(refreshError, null);
@@ -192,9 +181,7 @@ axios.interceptors.response.use(
       const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
       
       if (!isRecentLogin) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('loginTime');
+        clearAllAuthData();
         window.dispatchEvent(new CustomEvent('auth-token-invalid'));
       }
     }
@@ -670,8 +657,8 @@ const api = {
       return interactionResponse.data;
     } catch (error) {
       if (error.response?.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        clearAllAuthData();
+        window.dispatchEvent(new CustomEvent('auth-token-invalid'));
       }
       return { liked: false, rating: null, review: null, bookmarked: false, followed: false };
     }

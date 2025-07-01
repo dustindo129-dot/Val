@@ -68,9 +68,11 @@ export const getValidToken = () => {
     
     if (!isRecentLogin) {
       // Clear invalid token only if it's not a recent login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('loginTime');
+      console.warn('Invalid JWT token detected, clearing authentication data');
+      clearAllAuthData();
+      
+      // Dispatch event to notify app components
+      window.dispatchEvent(new CustomEvent('auth-token-invalid'));
     }
     return null;
   }
@@ -81,6 +83,11 @@ export const getValidToken = () => {
     const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
     
     if (!isRecentLogin) {
+      console.warn('Expired JWT token detected, clearing authentication data');
+      clearAllAuthData();
+      
+      // Dispatch event to notify app components
+      window.dispatchEvent(new CustomEvent('auth-token-invalid'));
       return null;
     }
     // For recent logins, allow expired tokens temporarily
@@ -125,4 +132,33 @@ export const updateAuthData = (tokenData, userData = null) => {
   window.dispatchEvent(new CustomEvent('auth-token-refreshed', { 
     detail: { token: tokenData.token, user: userData } 
   }));
+};
+
+// Helper function to completely clear all authentication data
+export const clearAllAuthData = () => {
+  // Clear all possible authentication-related items
+  const authKeys = [
+    'token',
+    'refreshToken',
+    'user',
+    'sessionExpiry',
+    'rememberMe',
+    'loginTime',
+    'authLogoutEvent',
+    'authLoginEvent'
+  ];
+  
+  authKeys.forEach(key => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
+  
+  // Clear any cookies
+  document.cookie.split(";").forEach(c => {
+    const eqPos = c.indexOf("=");
+    const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+  });
+  
+  console.log('All authentication data cleared');
 }; 
