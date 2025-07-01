@@ -20,6 +20,7 @@ import '../styles/AuthContext.css';
 import config from '../config/config';
 import { setupAutoRefresh } from '../services/tokenRefresh';
 import { startSessionValidation } from '../services/sessionService';
+import { clearAllAuthData } from '../utils/auth';
 
 // Create authentication context
 const AuthContext = createContext(null);
@@ -495,6 +496,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password, rememberMe = false) => {
     try {
       setError(null);
+      
+      // Clear any existing auth data FIRST to ensure clean slate
+      clearAllAuthData();
+      
       const response = await axios.post(`${config.backendUrl}/api/auth/login`,
         { username, password },
         { 
@@ -550,6 +555,10 @@ export const AuthProvider = ({ children }) => {
   const signUp = async (username, email, password) => {
     try {
       setError(null);
+      
+      // Clear any existing auth data FIRST to ensure clean slate
+      clearAllAuthData();
+      
       const response = await axios.post(`${config.backendUrl}/api/auth/signup`,
         { username, email, password },
         { 
@@ -618,12 +627,7 @@ export const AuthProvider = ({ children }) => {
       const currentToken = localStorage.getItem('token');
       
       // Clear user data and tokens FIRST to avoid auth issues
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('sessionExpiry');
-      localStorage.removeItem('rememberMe');
-      localStorage.removeItem('loginTime');
+      clearAllAuthData();
       
       // Update state immediately
       setUser(null);
