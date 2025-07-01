@@ -614,18 +614,35 @@ export const AuthProvider = ({ children }) => {
         setSessionValidationCleanup(null);
       }
       
+      // Get token before clearing local data for API call
+      const currentToken = localStorage.getItem('token');
+      
+      // Clear user data and tokens FIRST to avoid auth issues
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('sessionExpiry');
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('loginTime');
+      
+      // Update state immediately
+      setUser(null);
+      setIsAuthenticated(false);
+      setJustLoggedIn(false);
+      
       // Only try to call the logout API if this is not a synchronized logout
-      if (!isSync) {
+      if (!isSync && currentToken) {
         try {
           await axios.post(`${config.backendUrl}/api/auth/logout`, {},
             { 
               headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${currentToken}`
               }
             }
           );
         } catch (e) {
           // Continue with local logout even if API call fails
+          // This is expected and normal
         }
         
         // Notify other tabs about the logout
@@ -634,19 +651,6 @@ export const AuthProvider = ({ children }) => {
         // Dispatch custom event for same tab
         window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
       }
-      
-      // Clear user data and tokens
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('sessionExpiry');
-      localStorage.removeItem('rememberMe');
-      localStorage.removeItem('loginTime');
-      
-      // Update state
-      setUser(null);
-      setIsAuthenticated(false);
-      setJustLoggedIn(false);
       
       // Local event to close any open modals
       window.dispatchEvent(new CustomEvent('closeAuthModal'));

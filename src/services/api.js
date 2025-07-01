@@ -103,6 +103,11 @@ axios.interceptors.response.use(
       
       // Skip refresh for auth endpoints to prevent infinite loops
       if (originalRequest.url?.includes('/api/auth/')) {
+        // Special handling for logout endpoint - 401 is expected and should be ignored
+        if (originalRequest.url?.includes('/api/auth/logout')) {
+          return Promise.reject(error); // Don't clear auth data or show notifications
+        }
+        
         // For recent logins on auth endpoints, just reject without clearing data
         if (isRecentLogin) {
           return Promise.reject(error);
@@ -165,6 +170,11 @@ axios.interceptors.response.use(
 
     // For other types of 401 errors, check if it's a session invalidation
     if (error.response?.status === 401) {
+      // Special handling for logout endpoint - 401 is expected and should be ignored
+      if (originalRequest.url?.includes('/api/auth/logout')) {
+        return Promise.reject(error); // Don't clear auth data or show notifications
+      }
+      
       // Check if this is specifically a session invalidation
       if (error.response.data?.code === 'SESSION_INVALIDATED') {
         // Dispatch session invalidation event
