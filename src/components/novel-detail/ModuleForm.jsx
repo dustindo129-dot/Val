@@ -15,14 +15,12 @@ const ModuleForm = memo(({
   const isAdmin = user && user.role === 'admin';
   const [mode, setMode] = useState(moduleForm.mode || 'published');
   const [moduleBalance, setModuleBalance] = useState(moduleForm.moduleBalance || 0);
-  const [rentBalance, setRentBalance] = useState(moduleForm.rentBalance || 0);
 
   // Update form values when editingModule changes
   useEffect(() => {
     setMode(moduleForm.mode || 'published');
     setModuleBalance(moduleForm.moduleBalance || 0);
-    setRentBalance(moduleForm.rentBalance || 0);
-  }, [moduleForm.mode, moduleForm.moduleBalance, moduleForm.rentBalance]);
+  }, [moduleForm.mode, moduleForm.moduleBalance]);
 
   // Handler for mode change
   const handleModeChange = (e) => {
@@ -37,11 +35,6 @@ const ModuleForm = memo(({
   // Handler for moduleBalance change
   const handleModuleBalanceChange = (e) => {
     setModuleBalance(e.target.value);
-  };
-
-  // Handler for rentBalance change
-  const handleRentBalanceChange = (e) => {
-    setRentBalance(e.target.value);
   };
 
   // Handle form submission with updated values
@@ -63,12 +56,12 @@ const ModuleForm = memo(({
     // Clear any previous errors
     setModuleForm(prev => ({ ...prev, error: '' }));
     
-    // Create updated form data with current mode, moduleBalance, and rentBalance
+    // Create updated form data with current mode and moduleBalance
+    // rentBalance is calculated automatically on the backend
     const updatedForm = {
       ...moduleForm,
       mode: mode,
-      moduleBalance: mode === 'paid' ? parseInt(moduleBalance) || 0 : 0,
-      rentBalance: parseInt(rentBalance) || 0
+      moduleBalance: mode === 'paid' ? parseInt(moduleBalance) || 0 : 0
     };
     
     // Update the form state
@@ -141,22 +134,18 @@ const ModuleForm = memo(({
           </div>
         )}
 
-        {/* Rent Balance Input - Only shows for admin users */}
+        {/* Rent Balance Display - Shows calculated value for admin users */}
         {isAdmin && (
           <div className="module-form-group">
             <label className="module-form-label">
               Giá thuê (🌾/24h):
             </label>
-            <input
-              type="number"
-              min="0"
-              value={rentBalance}
-              onChange={handleRentBalanceChange}
-              placeholder="Nhập giá thuê (0 = không cho thuê)"
-              className="module-form-input"
-            />
+            <div className="module-form-info-display">
+              {moduleForm.rentBalance || 0} 🌾
+            </div>
             <small className="module-form-help-text">
-              Để 0 nếu không muốn cho phép thuê tập này. Giá thuê sẽ áp dụng cho toàn bộ nội dung trả phí trong tập.
+              Giá thuê được tính tự động: (Tổng lúa của tất cả chương trả phí trong tập) ÷ 10. 
+              Giá sẽ được cập nhật khi có chương trả phí được thêm hoặc xóa khỏi tập.
             </small>
           </div>
         )}
