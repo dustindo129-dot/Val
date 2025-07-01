@@ -206,20 +206,21 @@ const ModuleChapters = memo(({
             const chapterModeClass = chapter.mode === 'draft' ? 'chapter-mode-draft' : '';
             const isPaidChapter = chapter.mode === 'paid';
             const chapterIsAccessible = canAccessChapter(chapter);
-            // User can access paid module if they have staff access OR active rental
-            const isInPaidModule = isPaidModule && !canAccessPaidContent && !hasActiveRental;
+            // For paid modules, only lock chapters that are individually paid or inaccessible
+            // Published chapters in paid modules should remain accessible
+            const shouldLockChapter = !chapterIsAccessible;
             
             return (
               <div 
                 key={`chapter-item-${chapterId}`}
-                className={`module-chapter-item chapter-item-animated ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''} ${!chapterIsAccessible || isInPaidModule ? 'locked-chapter' : ''}`}
+                className={`module-chapter-item chapter-item-animated ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''} ${shouldLockChapter ? 'locked-chapter' : ''}`}
               >
                 <div className="chapter-list-content" key={`chapter-content-${chapterId}`}>
                   <div className="chapter-number" key={`chapter-number-${chapterId}`}>
                     {typeof chapter.order === 'number' ? chapter.order : chapter.order || 0}
                   </div>
                   
-                  {chapterIsAccessible && !isInPaidModule ? (
+                  {chapterIsAccessible ? (
                     <Link 
                       to={generateChapterUrl(
                 { _id: novelId, title: novelTitle },
@@ -234,19 +235,19 @@ const ModuleChapters = memo(({
                       )}
                     </Link>
                   ) : (
-                    <div className={`chapter-title-link locked ${isInPaidModule ? 'paid-module-chapter' : ''}`}>
-                      {(isInPaidModule || !chapterIsAccessible) && (
+                    <div className={`chapter-title-link locked ${isPaidChapter ? 'paid-chapter' : ''}`}>
+                      {!chapterIsAccessible && (
                         <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
                       )}
                       {chapter.title}
-                      {chapter.mode === 'protected' && !isInPaidModule && (
+                      {chapter.mode === 'protected' && !chapterIsAccessible && (
                         <span className="login-required-text">(Yêu cầu đăng nhập)</span>
                       )}
                     </div>
                   )}
 
-                  {/* Balance required for paid chapters (not in paid modules) */}
-                  {isPaidChapter && !isInPaidModule && chapter.chapterBalance > 0 && (
+                  {/* Balance required for paid chapters */}
+                  {isPaidChapter && chapter.chapterBalance > 0 && (
                     <div className="balance-required">
                       <FontAwesomeIcon icon={faSeedling} className="balance-icon" />
                       <span>{chapter.chapterBalance} lúa</span>
