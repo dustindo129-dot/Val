@@ -467,7 +467,7 @@
   overflow: hidden;
 }
 
-.description:not(.expanded)::after {
+.description.needs-read-more:not(.expanded)::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -786,14 +786,14 @@
 }
 
 /* Dark mode fade effects */
-:root.dark-mode .description:not(.expanded)::after {
+:root.dark-mode .description.needs-read-more:not(.expanded)::after {
   background: linear-gradient(to bottom, 
     rgba(26, 26, 26, 0) 0%, 
     rgba(26, 26, 26, 0.8) 50%, 
     rgba(26, 26, 26, 1) 100%);
 }
 
-:root.dark-mode .mobile-description:not(.expanded)::after {
+:root.dark-mode .mobile-description.needs-read-more:not(.expanded)::after {
   background: linear-gradient(to bottom, 
     rgba(26, 26, 26, 0) 0%, 
     rgba(26, 26, 26, 0.8) 50%, 
@@ -1070,7 +1070,7 @@
       overflow: hidden;
   }
 
-  .description:not(.expanded)::after {
+  .description.needs-read-more:not(.expanded)::after {
       height: 1.5em;
   }
 
@@ -1132,7 +1132,7 @@
       overflow: hidden;
   }
 
-  .mobile-description:not(.expanded)::after {
+  .mobile-description.needs-read-more:not(.expanded)::after {
       content: '';
       position: absolute;
       bottom: 0;

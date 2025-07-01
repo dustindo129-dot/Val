@@ -732,7 +732,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
 
                                                 {/* Description - desktop only */}
                                                 <div
-                                                    className={`description desktop-description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                                                    className={`description desktop-description ${expandedDescriptions[novel._id] ? 'expanded' : ''} ${descriptionNeedsReadMore[novel._id] ? 'needs-read-more' : ''}`}
                                                     ref={el => desktopDescriptionRefs.current[novel._id] = el}
                                                 >
                                                     {(() => {
@@ -784,7 +784,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
 
                                         {/* Mobile description section - outside novel-main */}
                                         <div
-                                            className={`description mobile-description ${expandedDescriptions[novel._id] ? 'expanded' : ''}`}
+                                            className={`description mobile-description ${expandedDescriptions[novel._id] ? 'expanded' : ''} ${descriptionNeedsReadMore[novel._id] ? 'needs-read-more' : ''}`}
                                             ref={el => mobileDescriptionRefs.current[novel._id] = el}
                                         >
                                             {(() => {
