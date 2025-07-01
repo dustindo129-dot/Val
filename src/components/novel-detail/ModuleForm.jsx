@@ -9,10 +9,23 @@ const ModuleForm = memo(({
   handleModuleSubmit, 
   handleModuleCoverUpload, 
   handleModuleFormToggle, 
-  editingModule 
+  editingModule,
+  hasPaidContent = false, // New prop to indicate if module has paid chapters
+  novel = null // Novel data for permission checks
 }) => {
   const { user } = useAuth();
-  const isAdmin = user && user.role === 'admin';
+  
+  // Enhanced permission check: admin, moderator, or authorized pj_user
+  const canManageModuleModes = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' || 
+    (user.role === 'pj_user' && novel?.active?.pj_user && (
+      novel.active.pj_user.includes(user._id?.toString()) || 
+      novel.active.pj_user.includes(user.id?.toString()) ||
+      novel.active.pj_user.includes(user.username) ||
+      novel.active.pj_user.includes(user.displayName)
+    ))
+  );
   const [mode, setMode] = useState(moduleForm.mode || 'published');
   const [moduleBalance, setModuleBalance] = useState(moduleForm.moduleBalance || 0);
 
@@ -21,6 +34,18 @@ const ModuleForm = memo(({
     setMode(moduleForm.mode || 'published');
     setModuleBalance(moduleForm.moduleBalance || 0);
   }, [moduleForm.mode, moduleForm.moduleBalance]);
+
+  // Handle invalid rent mode - if module is set to rent but has no paid content
+  useEffect(() => {
+    if (mode === 'rent' && !hasPaidContent && editingModule) {
+      // Automatically switch to published mode and show warning
+      setMode('published');
+      setModuleForm(prev => ({ 
+        ...prev, 
+        error: 'Chế độ cho thuê đã được chuyển về "Hiển thị" vì tập này không còn chương trả phí.' 
+      }));
+    }
+  }, [mode, hasPaidContent, editingModule, setModuleForm]);
 
   // Handler for mode change
   const handleModeChange = (e) => {
@@ -51,6 +76,15 @@ const ModuleForm = memo(({
         }));
         return;
       }
+    }
+    
+    // Validate rent mode - can only be set if module has paid content
+    if (mode === 'rent' && !hasPaidContent) {
+      setModuleForm(prev => ({ 
+        ...prev, 
+        error: 'Không thể đặt chế độ cho thuê. Tập này không có chương trả phí.' 
+      }));
+      return;
     }
     
     // Clear any previous errors
@@ -103,7 +137,7 @@ const ModuleForm = memo(({
             />
           </div>
 
-        {isAdmin && (
+        {canManageModuleModes && (
           <div className="module-form-group">
             <label className="module-form-label">Chế độ tập:</label>
             <select
@@ -113,13 +147,22 @@ const ModuleForm = memo(({
             >
               <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho tất cả)</option>
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
-              <option value="rent">CHO THUÊ (Mở khóa có thời hạn)</option>
+              {/* Only show rent option if module has paid content */}
+              {hasPaidContent && (
+                <option value="rent">CHO THUÊ (Mở khóa có thời hạn)</option>
+              )}
             </select>
+            {/* Show helper text when rent option is not available */}
+            {!hasPaidContent && (
+              <small className="module-form-help-text">
+                Chế độ cho thuê chỉ khả dụng khi tập có chương trả phí
+              </small>
+            )}
           </div>
         )}
         
-        {/* Module Balance Input - Only shows when mode is paid and user is admin */}
-        {isAdmin && mode === 'paid' && (
+        {/* Module Balance Input - Only shows when mode is paid and user can manage module modes */}
+        {canManageModuleModes && mode === 'paid' && (
           <div className="module-form-group">
             <label className="module-form-label">
               Số lượng 🌾 cần (tối thiểu 1):
@@ -135,8 +178,8 @@ const ModuleForm = memo(({
           </div>
         )}
 
-        {/* Rent Balance Display - Shows calculated value for admin users */}
-        {isAdmin && mode === 'rent' && (
+        {/* Rent Balance Display - Shows calculated value for authorized users */}
+        {canManageModuleModes && mode === 'rent' && (
           <div className="module-form-group">
             <label className="module-form-label">
               Giá thuê (🌾/52h):
@@ -151,22 +194,22 @@ const ModuleForm = memo(({
           </div>
         )}
 
-        {/* Show module info for pj_user when module is paid */}
-        {!isAdmin && user?.role === 'pj_user' && mode === 'paid' && (
+        {/* Show module info for users who can't manage module modes when module is paid */}
+        {!canManageModuleModes && user?.role === 'pj_user' && mode === 'paid' && (
           <div className="module-form-group">
             <label className="module-form-label">Chế độ tập hiện tại:</label>
             <div className="module-form-info-display">
-              {translateChapterModuleStatus('PAID')} - {moduleBalance} 🌾 (Chỉ admin mới có thể thay đổi)
+              {translateChapterModuleStatus('PAID')} - {moduleBalance} 🌾 (Chỉ quản lý dự án mới có thể thay đổi)
             </div>
           </div>
         )}
 
-        {/* Show module info for pj_user when module is rent */}
-        {!isAdmin && user?.role === 'pj_user' && mode === 'rent' && (
+        {/* Show module info for users who can't manage module modes when module is rent */}
+        {!canManageModuleModes && user?.role === 'pj_user' && mode === 'rent' && (
           <div className="module-form-group">
             <label className="module-form-label">Chế độ tập hiện tại:</label>
             <div className="module-form-info-display">
-              CHO THUÊ - {moduleForm.rentBalance || 0} 🌾/52h (Chỉ admin mới có thể thay đổi)
+              CHO THUÊ - {moduleForm.rentBalance || 0} 🌾/52h (Chỉ quản lý dự án mới có thể thay đổi)
             </div>
           </div>
         )}

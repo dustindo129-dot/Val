@@ -1134,22 +1134,32 @@ const NovelDetail = ({ novelId }) => {
             </div>
             
             {/* Place the form at the top level for maximum visibility when editing */}
-            {showModuleForm && editingModule && (
-              <div className="module-form-modal-overlay">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ModuleForm 
-                    key={`edit-${editingModule}`}
-                    moduleForm={moduleForm} 
-                    setModuleForm={setModuleForm} 
-                    handleModuleSubmit={handleModuleSubmit} 
-                    handleModuleCoverUpload={handleModuleCoverUpload} 
-                    handleModuleFormToggle={handleModuleFormToggle}
-                    editingModule={editingModule} 
-                    user={user}
-                  />
-                </Suspense>
-              </div>
-            )}
+            {showModuleForm && editingModule && (() => {
+              // Find the module being edited and check if it has paid content
+              const moduleBeingEdited = data.modules?.find(module => module._id === editingModule);
+              const hasPaidContent = moduleBeingEdited?.chapters?.some(chapter => 
+                chapter.mode === 'paid' && chapter.chapterBalance > 0
+              ) || false;
+              
+              return (
+                <div className="module-form-modal-overlay">
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ModuleForm 
+                      key={`edit-${editingModule}`}
+                      moduleForm={moduleForm} 
+                      setModuleForm={setModuleForm} 
+                      handleModuleSubmit={handleModuleSubmit} 
+                      handleModuleCoverUpload={handleModuleCoverUpload} 
+                      handleModuleFormToggle={handleModuleFormToggle}
+                      editingModule={editingModule} 
+                      hasPaidContent={hasPaidContent}
+                      novel={data.novel}
+                      user={user}
+                    />
+                  </Suspense>
+                </div>
+              );
+            })()}
             
             {/* Regular position for the add form */}
             {showModuleForm && !editingModule && (
@@ -1162,6 +1172,8 @@ const NovelDetail = ({ novelId }) => {
                   handleModuleCoverUpload={handleModuleCoverUpload} 
                   handleModuleFormToggle={handleModuleFormToggle}
                   editingModule={null} 
+                  hasPaidContent={false} // New modules have no chapters, so no paid content
+                  novel={data.novel}
                   user={user}
                 />
               </Suspense>
