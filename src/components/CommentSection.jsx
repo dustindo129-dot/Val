@@ -348,11 +348,15 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
             avatar: user.avatar || '' 
           },
           text: commentContent,
+          contentType: contentType,
+          contentId: contentId,
           createdAt: new Date().toISOString(),
           likes: [],
           replies: [],
           isDeleted: false,
-          adminDeleted: false
+          adminDeleted: false,
+          isPinned: false,
+          isEdited: false
         },
         ...prevComments
       ]);
