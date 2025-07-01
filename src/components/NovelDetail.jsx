@@ -481,6 +481,9 @@ const NovelDetail = ({ novelId }) => {
     queryClient.invalidateQueries(['novel', novelId]);
     queryClient.invalidateQueries(['user']);
     setUserBalance(data.userBalance);
+    
+    // Notify SecondaryNavbar to refresh balance display
+    window.dispatchEvent(new Event('balanceUpdated'));
   }, [queryClient, novelId]);
 
   // Set user balance when authenticated

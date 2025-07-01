@@ -629,7 +629,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       hasActiveRental: hasRentalNow,
       timestamp: currentTime
     });
-  }, [rentalStatus, lastRentalCheck, user, canAccessPaidContent]);
+  }, [rentalStatus, user, canAccessPaidContent]); // Removed lastRentalCheck from dependencies to prevent infinite loop
 
   // Query for all chapters in the current module
   const { data: moduleChaptersData, isLoading: isModuleChaptersLoading } = useQuery({
@@ -1280,6 +1280,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     queryClient.invalidateQueries(['novel']);
     queryClient.invalidateQueries(['user-chapter-interaction']);
     queryClient.invalidateQueries(['module-rental-status']);
+    
+    // Notify SecondaryNavbar to refresh balance display
+    window.dispatchEvent(new Event('balanceUpdated'));
     
     // Close both modals
     setShowRentalModal(false);

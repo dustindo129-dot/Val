@@ -42,8 +42,8 @@ const RentalExpirationModal = ({
   };
 
   return (
-    <div className="rental-expiration-overlay" onClick={handleCloseModal}>
-      <div className="rental-expiration-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="rental-expiration-overlay">
+      <div className="rental-expiration-modal">
         <button 
           className="close-rental-modal"
           onClick={handleCloseModal}

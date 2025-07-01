@@ -36,6 +36,9 @@ const ModuleRentalModal = ({
       queryClient.invalidateQueries({ queryKey: ['chapter'] });
       queryClient.invalidateQueries({ queryKey: ['user-chapter-interaction'] });
       
+      // Notify SecondaryNavbar to refresh balance display
+      window.dispatchEvent(new Event('balanceUpdated'));
+      
       if (onRentalSuccess) {
         onRentalSuccess(data);
       }

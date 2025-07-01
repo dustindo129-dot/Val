@@ -44,6 +44,9 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, novel, children }) => {
     queryClient.invalidateQueries(['user']);
     queryClient.invalidateQueries(['novel']);
     queryClient.invalidateQueries(['user-chapter-interaction']);
+    
+    // Notify SecondaryNavbar to refresh balance display
+    window.dispatchEvent(new Event('balanceUpdated'));
   }, [queryClient]);
 
   // Check if module should show rental option
