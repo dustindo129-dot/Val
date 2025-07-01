@@ -386,7 +386,8 @@ const VirtualNovelItem = React.memo(({
                                              setBalanceValue,
                                              handleEditBalance,
                                              cancelEditBalance,
-                                             saveBalanceChange
+                                             saveBalanceChange,
+                                             handleRentalChange
                                          }
                                      }) => {
     const novel = novels[index];
@@ -445,6 +446,29 @@ const VirtualNovelItem = React.memo(({
                         <option value="Completed">Đã hoàn thành</option>
                         <option value="Hiatus">Tạm ngưng</option>
                     </select>
+                    
+                    {/* Rental checkbox for novels with current paid content */}
+                    {((novel.paidModulesCount || 0) > 0 || 
+                      (novel.paidChaptersCount || 0) > 0) && 
+                      (user && (user.role === 'admin' || user.role === 'moderator' || user.role === 'pj_user')) && (
+                        <label className={`rental-checkbox-label ${user.role !== 'admin' ? 'disabled' : ''}`}>
+                            <input
+                                type="checkbox"
+                                checked={novel.availableForRent || false}
+                                onChange={(e) => handleRentalChange(novel._id, e.target.checked)}
+                                className="rental-checkbox"
+                                disabled={user.role !== 'admin'}
+                                title={user.role !== 'admin' ? 'Chỉ admin mới có thể thay đổi trạng thái cho thuê' : ''}
+                            />
+                            <span className="rental-label">
+                                Cho thuê
+                                {user.role !== 'admin' && (
+                                    <span className="admin-only-indicator"> (Chỉ admin)</span>
+                                )}
+                            </span>
+                        </label>
+                    )}
+                    
                     {canEditNovels && (
                         <button onClick={() => handleEdit(novel)}>Chỉnh sửa</button>
                     )}
@@ -687,7 +711,7 @@ const AdminDashboard = () => {
     const searchContainerRefs = useRef({});
 
     // Add state for sort control
-    const [sortType, setSortType] = useState('updated'); // 'updated' or 'balance'
+    const [sortType, setSortType] = useState('updated'); // 'updated', 'balance', or 'paid'
 
     // Add state for search functionality
     const [searchQuery, setSearchQuery] = useState('');
@@ -778,9 +802,16 @@ const AdminDashboard = () => {
 
     // Fetch novels using React Query
     const {data: novels = [], isLoading: novelsLoading} = useQuery({
-        queryKey: ['novels', user?.id, user?.role], // Include user info in cache key
+        queryKey: ['novels', user?.id, user?.role, sortType], // Include sortType in cache key for paid content
         queryFn: async () => {
-            const response = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&skipPopulation=true&t=${Date.now()}`, {
+            // Include paid content info when filtering by paid content
+            // When includePaidInfo=true, backend automatically skips staff population for performance
+            const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
+            const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
+            
+            const url = `${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}&t=${Date.now()}`;
+            
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -831,6 +862,17 @@ const AdminDashboard = () => {
             });
         }
 
+        // Further filter for paid content if needed
+        if (sortType === 'paid') {
+            filteredNovels = filteredNovels.filter(novel => {
+                // Check if novel has current paid content (positive balances only)
+                const hasPaidModules = (novel.paidModulesCount || 0) > 0;
+                const hasPaidChapters = (novel.paidChaptersCount || 0) > 0;
+                
+                return hasPaidModules || hasPaidChapters;
+            });
+        }
+
         // Then sort the filtered results
         return filteredNovels.sort((a, b) => {
             if (sortType === 'balance') {
@@ -838,6 +880,17 @@ const AdminDashboard = () => {
                 const balanceA = a.novelBalance || 0;
                 const balanceB = b.novelBalance || 0;
                 return balanceB - balanceA;
+            } else if (sortType === 'paid') {
+                // For paid content, sort by most recent paid content first, then by balance
+                const balanceA = a.novelBalance || 0;
+                const balanceB = b.novelBalance || 0;
+                if (balanceA !== balanceB) {
+                    return balanceB - balanceA; // Higher balance first
+                }
+                // If balance is same, sort by most recent update
+                const timestampA = new Date(a.updatedAt || a.createdAt).getTime();
+                const timestampB = new Date(b.updatedAt || b.createdAt).getTime();
+                return timestampB - timestampA;
             } else {
                 // Sort by updatedAt timestamp (most recent first) - default behavior
                 const timestampA = new Date(a.updatedAt || a.createdAt).getTime();
@@ -1422,11 +1475,15 @@ const AdminDashboard = () => {
 
             // Force clear and refetch to ensure UI is in sync
             // We use remove and refetch instead of invalidate to ensure fresh data
-            queryClient.removeQueries(['novels', user?.id, user?.role]);
+            queryClient.removeQueries(['novels', user?.id, user?.role, sortType]);
 
             // Manually fetch fresh data to update the UI immediately
             try {
-                const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&skipPopulation=true&t=${Date.now()}`, {
+                // Include paid content info when filtering by paid content
+                const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
+                const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
+                
+                const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}&t=${Date.now()}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -1437,7 +1494,7 @@ const AdminDashboard = () => {
                     const novelsList = Array.isArray(data.novels) ? data.novels : (Array.isArray(data) ? data : []);
 
                     // Update cache with fresh data that includes the new novel
-                    queryClient.setQueryData(['novels', user?.id, user?.role], novelsList);
+                    queryClient.setQueryData(['novels', user?.id, user?.role, sortType], novelsList);
                 }
             } catch (fetchError) {
                 console.error('Error fetching latest novels:', fetchError);
@@ -1539,7 +1596,7 @@ const AdminDashboard = () => {
 
         try {
             // Get current cache data
-            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role]) || [];
+            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role, sortType]) || [];
 
             // Create updated list without the deleted novel
             const updatedNovels = Array.isArray(previousData)
@@ -1547,7 +1604,7 @@ const AdminDashboard = () => {
                 : [];
 
             // Immediately update the cache
-            queryClient.setQueryData(['novels', user?.id, user?.role], updatedNovels);
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], updatedNovels);
 
             // Perform the actual deletion
             const response = await fetch(`${config.backendUrl}/api/novels/${id}`, {
@@ -1559,7 +1616,7 @@ const AdminDashboard = () => {
 
             if (!response.ok) {
                 // Revert cache if deletion failed
-                queryClient.setQueryData(['novels', user?.id, user?.role], previousData);
+                queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
                 throw new Error('Failed to delete novel');
             }
 
@@ -1567,7 +1624,7 @@ const AdminDashboard = () => {
             queryClient.removeQueries(['novel', id]);
 
             // Lock in our updated novels list - this is the key to making the deletion stick
-            queryClient.setQueryData(['novels', user?.id, user?.role], updatedNovels);
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], updatedNovels);
 
             setError('');
             // Close the modal
@@ -1634,7 +1691,7 @@ const AdminDashboard = () => {
 
         try {
             // Get current cache data
-            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role]);
+            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role, sortType]);
 
             // Create a timestamp for the status update (this should update updatedAt)
             const updatedAt = new Date().toISOString();
@@ -1646,7 +1703,7 @@ const AdminDashboard = () => {
             }
 
             // Optimistically update the cache
-            queryClient.setQueryData(['novels', user?.id, user?.role], old =>
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
                 Array.isArray(old)
                     ? old.map(novel => novel._id === id ? {...novel, status, updatedAt} : novel)
                     : []
@@ -1673,7 +1730,7 @@ const AdminDashboard = () => {
 
             if (!response.ok) {
                 // If update failed, revert the cache to previous state
-                queryClient.setQueryData(['novels', user?.id, user?.role], previousData);
+                queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Không thể cập nhật trạng thái truyện');
             }
@@ -1682,19 +1739,19 @@ const AdminDashboard = () => {
             const updatedNovel = await response.json();
 
             // Update cache with complete novel data
-            queryClient.setQueryData(['novels', user?.id, user?.role], old =>
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
                 Array.isArray(old)
                     ? old.map(novel => novel._id === id ? {...novel, ...updatedNovel} : novel)
                     : []
             );
 
             // Also invalidate novel list and hot novels queries to ensure they're updated
-            queryClient.invalidateQueries({queryKey: ['novels', user?.id, user?.role]});
+            queryClient.invalidateQueries({queryKey: ['novels', user?.id, user?.role, sortType]});
             queryClient.invalidateQueries({queryKey: ['hotNovels']});
 
         } catch (err) {
             // Revert cache on error
-            queryClient.setQueryData(['novels', user?.id, user?.role], previousData);
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
 
             console.error('Error updating status:', err);
             setError(err.message);
@@ -1749,7 +1806,11 @@ const AdminDashboard = () => {
             }
 
             // Immediately fetch fresh data
-            const freshDataResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true&skipPopulation=true&t=${Date.now()}`, {
+            // Include paid content info when filtering by paid content
+            const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
+            const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
+            
+            const freshDataResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}&t=${Date.now()}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -1758,11 +1819,11 @@ const AdminDashboard = () => {
             if (freshDataResponse.ok) {
                 const freshData = await freshDataResponse.json();
                 const freshNovels = Array.isArray(freshData.novels) ? freshData.novels : (Array.isArray(freshData) ? freshData : []);
-                queryClient.setQueryData(['novels', user?.id, user?.role], freshNovels);
+                queryClient.setQueryData(['novels', user?.id, user?.role, sortType], freshNovels);
             }
 
             // Force invalidation of the queries to ensure fresh data on next render
-            queryClient.invalidateQueries(['novels', user?.id, user?.role]);
+            queryClient.invalidateQueries(['novels', user?.id, user?.role, sortType]);
 
             // Exit edit mode
             setEditingBalanceId(null);
@@ -1921,6 +1982,68 @@ const AdminDashboard = () => {
      */
     const clearSearch = () => {
         setSearchQuery('');
+    };
+
+    /**
+     * Handles rental availability change for a novel
+     * @param {string} id - Novel ID  
+     * @param {boolean} availableForRent - New rental availability status
+     */
+    const handleRentalChange = async (id, availableForRent) => {
+        // Only admins can change rental status
+        if (user?.role !== 'admin') {
+            setError('Chỉ admin mới có thể thay đổi trạng thái cho thuê');
+            return;
+        }
+
+        try {
+            // Get current cache data
+            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role, sortType]);
+
+            // Optimistically update the cache
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
+                Array.isArray(old)
+                    ? old.map(novel => novel._id === id ? {...novel, availableForRent} : novel)
+                    : []
+            );
+
+            // Send request to server
+            const response = await fetch(`${config.backendUrl}/api/novels/${id}/rental`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    availableForRent
+                })
+            });
+
+            if (!response.ok) {
+                // If update failed, revert the cache to previous state
+                queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể cập nhật trạng thái cho thuê');
+            }
+
+            // Get updated novel data
+            const updatedData = await response.json();
+
+            // Update cache with confirmed data
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
+                Array.isArray(old)
+                    ? old.map(novel => novel._id === id ? {...novel, availableForRent: updatedData.availableForRent} : novel)
+                    : []
+            );
+
+        } catch (err) {
+            // Revert cache on error
+            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role, sortType]);
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
+
+            console.error('Error updating rental status:', err);
+            setError(err.message);
+        }
     };
 
     return (
@@ -2379,6 +2502,7 @@ const AdminDashboard = () => {
                             >
                                 <option value="updated">Mới cập nhật</option>
                                 <option value="balance">Số dư nhiều nhất</option>
+                                <option value="paid">Có nội dung trả phí</option>
                             </select>
                         </div>
                     </div>
@@ -2434,7 +2558,8 @@ const AdminDashboard = () => {
                                 setBalanceValue,
                                 handleEditBalance,
                                 cancelEditBalance,
-                                saveBalanceChange
+                                saveBalanceChange,
+                                handleRentalChange
                             }}
                             ref={novelListContainerRef}
                         >

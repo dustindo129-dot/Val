@@ -61,6 +61,70 @@
   font-size: 0.8rem;
 }
 
+.module-rent-price {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #e8f5e8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #2ecc71;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 8px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.module-rent-price .rent-icon {
+  font-size: 0.8rem;
+}
+
+.module-rent-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-top: 8px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.module-rent-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+}
+
+.module-rent-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.module-rent-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Dark mode support for rental button */
+[data-theme="dark"] .module-rent-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .module-rent-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
 .module-content-wrapper {
   position: relative;
 }
@@ -226,4 +290,185 @@
   -moz-user-select: none;
   -ms-user-select: none;
   pointer-events: none;
+}
+
+.module-rental-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 0 0 8px 8px;
+  margin-top: -4px;
+}
+
+.module-rental-overlay .module-rent-price {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #e8f5e8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #2ecc71;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  margin: 0;
+}
+
+.module-rental-overlay .module-rent-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.module-rental-overlay .module-rent-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+}
+
+.module-rental-overlay .module-rent-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.module-rental-overlay .module-rent-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Dark mode for module rent buttons */
+.dark-theme .module-rent-btn {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+}
+
+.dark-theme .module-rent-btn:hover {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.4);
+}
+
+.dark-theme .module-rental-overlay {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.dark-theme .module-rental-overlay .module-rent-price {
+  background-color: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  color: #4ade80;
+}
+
+/* Rental countdown timer styles */
+.module-rental-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #3b82f6;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+
+.countdown-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #64748b;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.countdown-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.countdown-icon {
+  font-size: 14px;
+  color: #3b82f6;
+  animation: pulse 1.5s infinite;
+}
+
+.countdown-text {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #1d4ed8;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Dark mode for countdown */
+.dark-theme .module-rental-countdown {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(67, 56, 202, 0.2));
+  border: 1px solid rgba(79, 70, 229, 0.4);
+  color: #8b5cf6;
+}
+
+.dark-theme .countdown-label {
+  color: #9ca3af;
+}
+
+.dark-theme .countdown-icon {
+  color: #8b5cf6;
+}
+
+.dark-theme .countdown-text {
+  color: #a78bfa;
+}
+
+/* Module rental count for admin/moderator/pj_user */
+.module-rental-count {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(52, 152, 219, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.rental-count-icon {
+  font-size: 10px;
+}
+
+.module-rental-count span {
+  white-space: nowrap;
+}
+
+.dark-theme .module-rental-count {
+  background: rgba(52, 152, 219, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 } 

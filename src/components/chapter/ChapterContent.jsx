@@ -1851,26 +1851,44 @@ const ChapterContent = React.memo(({
         </>
       ) : (
         <div className="chapter-content-container">
-          <div
-              ref={contentRef}
-              className="chapter-content"
-              style={{
-                '--content-font-size': `${fontSize}px`,
-                '--content-font-family': fontFamily,
-                '--content-line-height': lineHeight,
-                fontSize: `${fontSize}px`,
-                fontFamily: fontFamily,
-                lineHeight: lineHeight,
-                padding: '15px 10px'
-              }}
-              dangerouslySetInnerHTML={{ __html: processContent(chapter.content) }}
-          />
-          
-          {chapter.footnotes && chapter.footnotes.length > 0 && (
-            <ChapterFootnotes 
-              footnotes={chapter.footnotes}
-              onFootnoteClick={handleFootnoteClick}
-            />
+          {/* Handle access denied case */}
+          {chapter.accessDenied ? (
+            <div className="access-denied-message" style={{
+              padding: '20px',
+              textAlign: 'center',
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: '5px',
+              color: '#856404',
+              margin: '20px 0'
+            }}>
+              <h3>Nội dung bị hạn chế</h3>
+              <p>{chapter.accessMessage || 'Bạn không có quyền truy cập nội dung này.'}</p>
+            </div>
+          ) : (
+            <>
+              <div
+                  ref={contentRef}
+                  className="chapter-content"
+                  style={{
+                    '--content-font-size': `${fontSize}px`,
+                    '--content-font-family': fontFamily,
+                    '--content-line-height': lineHeight,
+                    fontSize: `${fontSize}px`,
+                    fontFamily: fontFamily,
+                    lineHeight: lineHeight,
+                    padding: '15px 10px'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: processContent(chapter.content || '') }}
+              />
+              
+              {chapter.footnotes && chapter.footnotes.length > 0 && (
+                <ChapterFootnotes 
+                  footnotes={chapter.footnotes}
+                  onFootnoteClick={handleFootnoteClick}
+                />
+              )}
+            </>
           )}
         </div>
       )}
@@ -1927,7 +1945,7 @@ const ChapterContent = React.memo(({
 ChapterContent.propTypes = {
   chapter: PropTypes.shape({
     title: PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
+    content: PropTypes.string, // Optional - may be undefined when access is denied
     mode: PropTypes.string,
     chapterBalance: PropTypes.number,
     footnotes: PropTypes.arrayOf(
@@ -1936,7 +1954,10 @@ ChapterContent.propTypes = {
         name: PropTypes.string,
         content: PropTypes.string.isRequired
       })
-    )
+    ),
+    // Access control fields
+    accessDenied: PropTypes.bool,
+    accessMessage: PropTypes.string
   }).isRequired,
   isEditing: PropTypes.bool,
   editedContent: PropTypes.shape({

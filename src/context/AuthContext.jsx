@@ -227,15 +227,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Sets up session validation for single-device authentication
+   * Sets up session validation with periodic checks
    */
   const setupSessionValidation = () => {
+    // Clean up existing validation first
     if (sessionValidationCleanup) {
-      sessionValidationCleanup(); // Clean up previous setup
+      sessionValidationCleanup();
     }
     
-    const cleanup = startSessionValidation();
-    setSessionValidationCleanup(() => cleanup);
+    // TEMPORARILY DISABLED - causing multi-tab authentication conflicts
+    // const cleanupFn = startSessionValidation(30000); // Check every 30 seconds
+    // setSessionValidationCleanup(() => cleanupFn);
   };
 
   /**

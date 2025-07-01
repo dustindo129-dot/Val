@@ -405,7 +405,8 @@ const api = {
           title: moduleData.title,
           illustration: moduleData.illustration,
           mode: moduleData.mode || 'published',
-          moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0
+          moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0,
+          rentBalance: moduleData.rentBalance || 0
         },
         {
           headers: {
@@ -438,7 +439,8 @@ const api = {
           title: moduleData.title,
           illustration: moduleData.illustration,
           mode: moduleData.mode || 'published',
-          moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0
+          moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0,
+          rentBalance: moduleData.rentBalance || 0
         },
         {
           headers: {

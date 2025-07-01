@@ -39,11 +39,15 @@ export const checkSessionValidity = async () => {
       // Check if this is specifically a session invalidation
       if (error.response.data?.code === 'SESSION_INVALIDATED') {
         // Dispatch a custom event to notify the app
+        // TEMPORARILY DISABLED - causing multi-tab conflicts
+        /*
         window.dispatchEvent(new CustomEvent('session-invalidated', {
           detail: {
             message: error.response.data.message || 'Tài khoản của bạn đã đăng nhập từ thiết bị khác'
           }
         }));
+        */
+        console.warn('Session invalidated but notification disabled to prevent multi-tab conflicts');
       }
       return false;
     }

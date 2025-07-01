@@ -1,13 +1,15 @@
 import React, { memo, useCallback, useState, useEffect, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faSeedling } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faSeedling, faClock, faUsers } from '@fortawesome/free-solid-svg-icons';
 import '../../styles/components/ModuleList.css';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { createUniqueSlug, generateLocalizedAddChapterUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
+import axios from 'axios';
+import config from '../../config/config';
 
 // Lazy load ModuleChapters for consistency
 const ModuleChapters = lazy(() => import('./ModuleChapters'));
@@ -67,7 +69,8 @@ const ModuleList = memo(({
   handleModuleDelete,
   handleEditModule,
   handleChapterReorder,
-  handleChapterDelete
+  handleChapterDelete,
+  handleOpenRentalModal
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   // Add state for delete confirmation modal
@@ -104,8 +107,146 @@ const ModuleList = memo(({
       novel?.active?.pj_user?.includes(user.displayName)
     ))
   );
-  
 
+  // Fetch active rentals for the user
+  const { data: activeRentals = [] } = useQuery({
+    queryKey: ['activeRentals', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${config.backendUrl}/api/modules/rentals/active`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching active rentals:', error);
+        return [];
+      }
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60, // 1 minute
+    refetchInterval: 1000 * 60, // Refetch every minute to update countdown
+  });
+
+  // Check if user can see rental stats (admin, moderator, or pj_user managing this novel)
+  const canSeeRentalStats = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' || 
+    (user.role === 'pj_user' && (
+      novel?.active?.pj_user?.includes(user.id) || 
+      novel?.active?.pj_user?.includes(user._id) ||
+      novel?.active?.pj_user?.includes(user.username) ||
+      novel?.active?.pj_user?.includes(user.displayName)
+    ))
+  );
+
+  // Fetch rental counts for modules (admin/moderator/pj_user only)
+  const { data: rentalCounts = {} } = useQuery({
+    queryKey: ['moduleRentalCounts', novelId, user?.id],
+    queryFn: async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${config.backendUrl}/api/modules/${novelId}/rental-counts`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching rental counts:', error);
+        return {};
+      }
+    },
+    enabled: !!user && !!novelId && canSeeRentalStats,
+    staleTime: 1000 * 30, // 30 seconds
+    refetchInterval: 1000 * 30, // Refetch every 30 seconds
+  });
+
+  // Function to get active rental for a specific module
+  const getActiveRental = useCallback((moduleId) => {
+    return activeRentals.find(rental => rental.module?._id === moduleId);
+  }, [activeRentals]);
+
+  // Format countdown timer
+  const formatCountdown = useCallback((timeRemaining) => {
+    if (!timeRemaining || timeRemaining <= 0) return '00:00:00';
+    
+    const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }, []);
+
+  // Real-time countdown updates
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    // Update current time every second for real-time countdown
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate real-time countdown for display
+  const getRealTimeCountdown = useCallback((rental) => {
+    if (!rental || !rental.endTime) return 0;
+    
+    const endTime = new Date(rental.endTime).getTime();
+    const remaining = endTime - currentTime;
+    
+    return Math.max(0, remaining);
+  }, [currentTime]);
+  
+  // Check if a module should show rental price (for everyone when novel is available for rent)
+  const shouldShowRentalPrice = useCallback((module) => {
+    // Novel must be available for rent
+    if (!novel?.availableForRent) return false;
+    
+    // Module must have rental price set
+    if (!module.rentBalance || module.rentBalance <= 0) return false;
+    
+    // Module must have paid content (either paid mode OR paid chapters)
+    const isPaidModule = module.mode === 'paid' && module.moduleBalance > 0;
+    const hasPaidChapters = module.chapters && module.chapters.some(chapter => 
+      chapter.mode === 'paid' && chapter.chapterBalance > 0
+    );
+    
+    if (!isPaidModule && !hasPaidChapters) return false;
+    
+    return true;
+  }, [novel?.availableForRent]);
+
+  // Check if a module should show rental button (only for non-staff users)
+  const shouldShowRentalButton = useCallback((module) => {
+    // Must have rental handler prop
+    if (!handleOpenRentalModal) return false;
+    
+    // Must first qualify for showing rental price
+    if (!shouldShowRentalPrice(module)) return false;
+    
+    // Don't show for staff members who already have access
+    if (user && canAccessPaidContent) return false;
+    
+    // Don't show if user already has an active rental for this module
+    const activeRental = getActiveRental(module._id);
+    const realTimeRemaining = activeRental ? getRealTimeCountdown(activeRental) : 0;
+    if (activeRental && realTimeRemaining > 0) return false;
+    
+    return true;
+  }, [handleOpenRentalModal, shouldShowRentalPrice, user, canAccessPaidContent, getActiveRental, getRealTimeCountdown]);
 
   const handleReorderClick = useCallback(async (moduleId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
@@ -183,6 +324,55 @@ const ModuleList = memo(({
                 alt={`${module.title} cover`}
                 className="module-cover-image"
               />
+              
+              {/* Active rental count for admin/moderator/pj_user */}
+              {canSeeRentalStats && (
+                <div className="module-rental-count">
+                  <FontAwesomeIcon icon={faUsers} className="rental-count-icon" />
+                  <span>Người đang thuê: {rentalCounts[module._id] || 0}</span>
+                </div>
+              )}
+              
+              {/* Rental price and button or countdown timer */}
+              {shouldShowRentalPrice(module) && (() => {
+                const activeRental = getActiveRental(module._id);
+                const realTimeRemaining = activeRental ? getRealTimeCountdown(activeRental) : 0;
+                const hasActiveRental = activeRental && realTimeRemaining > 0;
+
+                return (
+                  <div className="module-rental-overlay">
+                    {hasActiveRental ? (
+                      // Show countdown timer when user has active rental
+                      <div className="module-rental-countdown">
+                        <div className="countdown-label">Thời gian thuê còn lại</div>
+                        <div className="countdown-timer">
+                          <FontAwesomeIcon icon={faClock} className="countdown-icon" />
+                          <span className="countdown-text">{formatCountdown(realTimeRemaining)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      // Show rental price and button when no active rental
+                      <>
+                        <div className="module-rent-price">
+                          <FontAwesomeIcon icon={faClock} className="rent-icon" />
+                          <span>Thuê: {module.rentBalance} 🌾/24h</span>
+                        </div>
+                        {shouldShowRentalButton(module) && (
+                          <button
+                            className="module-rent-btn"
+                            onClick={() => handleOpenRentalModal(module)}
+                            title={`Thuê tập này với ${module.rentBalance} 🌾 trong 24 giờ`}
+                          >
+                            <FontAwesomeIcon icon={faClock} />
+                            Thuê Tập
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+              
               {canEdit && (
                 <div className="module-reorder-buttons">
                   <div className="reorder-buttons-row">
@@ -285,7 +475,7 @@ const ModuleList = memo(({
                     canDelete={canDelete}
                     handleChapterReorder={handleChapterReorder}
                     handleChapterDelete={handleChapterDelete}
-                    isPaidModule={module.mode === 'paid'}
+                    isPaidModule={module.mode === 'paid' || (module.chapters || []).some(chapter => chapter.mode === 'paid')}
                     canAccessPaidContent={canAccessPaidContent}
                   />
                 </Suspense>

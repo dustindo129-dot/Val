@@ -223,6 +223,7 @@
   gap: 8px;
   align-items: center;
   flex-shrink: 0; /* Prevent actions from shrinking */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
 .status-dropdown {
@@ -571,6 +572,20 @@
     font-size: 0.85rem;
   }
 
+  .rental-checkbox-label {
+    font-size: 0.8rem;
+    padding: 3px 6px;
+  }
+
+  .rental-checkbox {
+    width: 12px;
+    height: 12px;
+  }
+
+  .admin-only-indicator {
+    font-size: 0.7em;
+  }
+
   .novel-list-header {
     flex-direction: column;
     align-items: stretch;
@@ -634,6 +649,21 @@
   .search-results-info {
     font-size: 0.85rem;
     text-align: center;
+  }
+
+  .rental-checkbox-label {
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    gap: 2px;
+  }
+
+  .rental-checkbox {
+    width: 10px;
+    height: 10px;
+  }
+
+  .admin-only-indicator {
+    font-size: 0.65em;
   }
 }
 
@@ -983,6 +1013,101 @@
 
 :root.dark-mode .novel-actions .delete:hover {
   background: #c53030;
+}
+
+/* Rental checkbox styles */
+.rental-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-color, #2c3e50);
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.rental-checkbox-label:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.rental-checkbox-label.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+  border-color: #ddd;
+}
+
+.rental-checkbox-label.disabled:hover {
+  background-color: #f5f5f5;
+  border-color: #ddd;
+}
+
+.rental-checkbox {
+  margin: 0;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--success-color, #28a745);
+}
+
+.rental-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.rental-checkbox:checked + .rental-label {
+  color: var(--success-color, #28a745);
+  font-weight: 600;
+}
+
+.rental-label {
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.admin-only-indicator {
+  font-size: 0.75em;
+  color: #6c757d;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Dark mode support for rental checkbox */
+:root.dark-mode .rental-checkbox-label {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .rental-checkbox-label:hover {
+  background-color: #4a5568;
+  border-color: #718096;
+}
+
+:root.dark-mode .rental-checkbox-label.disabled {
+  background-color: #1a202c;
+  border-color: #2d3748;
+  color: #718096;
+}
+
+:root.dark-mode .rental-checkbox-label.disabled:hover {
+  background-color: #1a202c;
+  border-color: #2d3748;
+}
+
+:root.dark-mode .rental-checkbox:checked + .rental-label {
+  color: #68d391;
+}
+
+:root.dark-mode .admin-only-indicator {
+  color: #a0aec0;
 }
 
 /* Status dropdown */

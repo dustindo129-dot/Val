@@ -51,4 +51,48 @@
 .go-to-market-btn:hover {
   background: #27ae60;
   text-decoration: none;
+}
+
+/* Rental button styles */
+.rent-module-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.rent-module-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #1f618d);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.rent-module-btn .fa-clock {
+  font-size: 12px;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .locked-chapter-container {
+  background: rgba(44, 44, 44, 0.9);
+  border-color: #555;
+  color: #f0f0f0;
+}
+
+[data-theme="dark"] .rent-module-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+[data-theme="dark"] .rent-module-btn:hover {
+  background: linear-gradient(135deg, #5dade2, #3498db);
 } 

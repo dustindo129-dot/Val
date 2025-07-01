@@ -23,6 +23,8 @@ import ChapterNavigationControls from './chapter/ChapterNavigationControls';
 import ChapterCommentsSection from './chapter/ChapterCommentsSection';
 import ChapterAccessGuard from './chapter/ChapterAccessGuard';
 import { SettingsModal, ReportModal } from './chapter/ChapterModals';
+import RentalExpirationModal from './chapter/RentalExpirationModal';
+import ModuleRentalModal from './rental/ModuleRentalModal';
 import ScrollToTop from './ScrollToTop';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -271,6 +273,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  
+  // Rental expiration modal state
+  const [showRentalExpirationModal, setShowRentalExpirationModal] = useState(false);
+  const [showRentalModal, setShowRentalModal] = useState(false);
+  const [lastRentalCheck, setLastRentalCheck] = useState(null);
 
   // Add notification states for chapter editing
   const [notification, setNotification] = useState({ type: '', message: '', show: false });
@@ -557,6 +564,72 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
     enabled: !!chapter?.moduleId
   });
+
+  // Check if user can access paid content (admin/moderator/pj_user)
+  const canAccessPaidContent = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' ||
+    (user.role === 'pj_user' && novel && (
+      novel.active?.pj_user?.includes(user.id) || 
+      novel.active?.pj_user?.includes(user.username)
+    ))
+  );
+
+  // Check if this is paid content that might need rental monitoring
+  const isPaidContent = (chapter?.mode === 'paid' && chapter?.chapterBalance > 0) || 
+                       (moduleData?.mode === 'paid' && moduleData?.moduleBalance > 0);
+
+  // Real-time rental status monitoring for paid content
+  const { data: rentalStatus } = useQuery({
+    queryKey: ['module-rental-status', chapter?.moduleId, user?.id],
+    queryFn: async () => {
+      if (!user || !chapter?.moduleId || !isPaidContent || canAccessPaidContent) {
+        return { hasActiveRental: false };
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${config.backendUrl}/api/modules/${chapter.moduleId}/rental-status`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        return response.data;
+      } catch (error) {
+        console.error('Error checking rental status:', error);
+        return { hasActiveRental: false };
+      }
+    },
+    enabled: !!user && !!chapter?.moduleId && isPaidContent && !canAccessPaidContent,
+    refetchInterval: 30000, // Check every 30 seconds while reading
+    staleTime: 1000 * 30, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: true, // Check when user comes back to tab
+    refetchIntervalInBackground: true, // Continue checking in background
+  });
+
+  // Monitor rental expiration while reading
+  useEffect(() => {
+    if (!rentalStatus || !user || canAccessPaidContent) return;
+
+    // Check if rental just expired
+    const currentTime = Date.now();
+    const hadRentalBefore = lastRentalCheck?.hasActiveRental;
+    const hasRentalNow = rentalStatus.hasActiveRental;
+
+    if (hadRentalBefore && !hasRentalNow) {
+      // Rental expired while user was reading
+      setShowRentalExpirationModal(true);
+    }
+
+    // Update last check status
+    setLastRentalCheck({
+      hasActiveRental: hasRentalNow,
+      timestamp: currentTime
+    });
+  }, [rentalStatus, lastRentalCheck, user, canAccessPaidContent]);
 
   // Query for all chapters in the current module
   const { data: moduleChaptersData, isLoading: isModuleChaptersLoading } = useQuery({
@@ -1178,6 +1251,48 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     window.open(shareUrl, 'ShareWindow', 'height=450, width=550, toolbar=0, menubar=0');
   };
 
+  /**
+   * Handles opening the rental modal for renting a module
+   */
+  const handleOpenRentalModal = useCallback(() => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để thuê tập');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
+      return;
+    }
+    setShowRentalModal(true);
+  }, [user]);
+
+  /**
+   * Handles closing the rental modal
+   */
+  const handleCloseRentalModal = useCallback(() => {
+    setShowRentalModal(false);
+  }, []);
+
+  /**
+   * Handles successful rental - refresh chapter data and close modals
+   */
+  const handleRentalSuccess = useCallback((data) => {
+    // Refresh chapter data and user balance after successful rental
+    queryClient.invalidateQueries(['chapter']);
+    queryClient.invalidateQueries(['user']);
+    queryClient.invalidateQueries(['novel']);
+    queryClient.invalidateQueries(['user-chapter-interaction']);
+    queryClient.invalidateQueries(['module-rental-status']);
+    
+    // Close both modals
+    setShowRentalModal(false);
+    setShowRentalExpirationModal(false);
+  }, [queryClient]);
+
+  /**
+   * Handles closing the rental expiration modal
+   */
+  const handleCloseRentalExpirationModal = useCallback(() => {
+    setShowRentalExpirationModal(false);
+  }, []);
+
   // Check if user can edit
   const canEdit = useMemo(() => user && (
     user.role === 'admin' || 
@@ -1409,6 +1524,27 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         chapterTitle={chapter?.title}
         novelId={novelId}
       />
+
+      {/* Rental Expiration Modal */}
+      <RentalExpirationModal
+        isOpen={showRentalExpirationModal}
+        onClose={handleCloseRentalExpirationModal}
+        onRentAgain={handleOpenRentalModal}
+        module={moduleData}
+        novel={novel}
+        chapter={chapter}
+      />
+
+      {/* Module Rental Modal */}
+      {showRentalModal && moduleData && (
+        <ModuleRentalModal
+          isOpen={showRentalModal}
+          onClose={handleCloseRentalModal}
+          module={moduleData}
+          novel={novel}
+          onRentalSuccess={handleRentalSuccess}
+        />
+      )}
     </div>
   );
 };

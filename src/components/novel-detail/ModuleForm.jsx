@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
+import '../../styles/components/ModuleForm.css';
 
 const ModuleForm = memo(({ 
   moduleForm, 
@@ -14,12 +15,14 @@ const ModuleForm = memo(({
   const isAdmin = user && user.role === 'admin';
   const [mode, setMode] = useState(moduleForm.mode || 'published');
   const [moduleBalance, setModuleBalance] = useState(moduleForm.moduleBalance || 0);
+  const [rentBalance, setRentBalance] = useState(moduleForm.rentBalance || 0);
 
   // Update form values when editingModule changes
   useEffect(() => {
     setMode(moduleForm.mode || 'published');
     setModuleBalance(moduleForm.moduleBalance || 0);
-  }, [moduleForm.mode, moduleForm.moduleBalance]);
+    setRentBalance(moduleForm.rentBalance || 0);
+  }, [moduleForm.mode, moduleForm.moduleBalance, moduleForm.rentBalance]);
 
   // Handler for mode change
   const handleModeChange = (e) => {
@@ -34,6 +37,11 @@ const ModuleForm = memo(({
   // Handler for moduleBalance change
   const handleModuleBalanceChange = (e) => {
     setModuleBalance(e.target.value);
+  };
+
+  // Handler for rentBalance change
+  const handleRentBalanceChange = (e) => {
+    setRentBalance(e.target.value);
   };
 
   // Handle form submission with updated values
@@ -55,11 +63,12 @@ const ModuleForm = memo(({
     // Clear any previous errors
     setModuleForm(prev => ({ ...prev, error: '' }));
     
-    // Create updated form data with current mode and moduleBalance
+    // Create updated form data with current mode, moduleBalance, and rentBalance
     const updatedForm = {
       ...moduleForm,
       mode: mode,
-      moduleBalance: mode === 'paid' ? parseInt(moduleBalance) || 0 : 0
+      moduleBalance: mode === 'paid' ? parseInt(moduleBalance) || 0 : 0,
+      rentBalance: parseInt(rentBalance) || 0
     };
     
     // Update the form state
@@ -70,51 +79,44 @@ const ModuleForm = memo(({
   };
 
   return (
-    <div className="module-form" style={{ 
-      border: '4px solid red', 
-      padding: '20px', 
-      margin: '20px 0', 
-      background: '#ffffcc',
-      position: 'relative',
-      zIndex: 1000,
-      boxShadow: '0 0 10px rgba(0,0,0,0.5)',
-      maxWidth: '100%'
-    }}>
-      <h4 style={{ color: 'black', fontSize: '18px', fontWeight: 'bold' }}>
-        {editingModule ? '✏️ SỬA TẬP' : 'THÊM TẬP MỚI'}
-      </h4>
-      {moduleForm.error && <div className="form-error" style={{color: 'red'}}>{moduleForm.error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group" style={{margin: '10px 0'}}>
-          <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Tên tập:</label>
-          <input
-            type="text"
-            value={moduleForm.title}
-            onChange={(e) => setModuleForm(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="Nhập tên tập"
-            required
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ccc',
-              borderRadius: '4px'
-            }}
-          />
+    <div className="module-form-modal">
+      <div className="module-form-content">
+        <div className="module-form-header">
+          <h3>{editingModule ? 'Sửa tập' : 'Tạo tập mới'}</h3>
+          <button
+            onClick={handleModuleFormToggle}
+            className="module-form-close-btn"
+          >
+            ×
+          </button>
         </div>
-        
-        {/* Module Mode Selection - Only published and paid for modules */}
+
+        <form onSubmit={handleSubmit}>
+          {moduleForm.error && (
+            <div className="module-form-error">
+              {moduleForm.error}
+            </div>
+          )}
+
+          <div className="module-form-group">
+            <label className="module-form-label">Tên tập:</label>
+            <input
+              type="text"
+              value={moduleForm.title}
+              onChange={(e) => setModuleForm(prev => ({...prev, title: e.target.value}))}
+              placeholder="Nhập tên tập"
+              className="module-form-input"
+              required
+            />
+          </div>
+
         {isAdmin && (
-          <div className="form-group" style={{margin: '10px 0'}}>
-            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Chế độ tập:</label>
+          <div className="module-form-group">
+            <label className="module-form-label">Chế độ tập:</label>
             <select
               value={mode}
               onChange={handleModeChange}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ccc',
-                borderRadius: '4px'
-              }}
+              className="module-form-select"
             >
               <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho tất cả)</option>
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
@@ -124,8 +126,8 @@ const ModuleForm = memo(({
         
         {/* Module Balance Input - Only shows when mode is paid and user is admin */}
         {isAdmin && mode === 'paid' && (
-          <div className="form-group" style={{margin: '10px 0'}}>
-            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>
+          <div className="module-form-group">
+            <label className="module-form-label">
               Số lượng 🌾 cần (tối thiểu 1):
             </label>
             <input
@@ -134,45 +136,49 @@ const ModuleForm = memo(({
               value={moduleBalance}
               onChange={handleModuleBalanceChange}
               placeholder="Nhập giá 🌾 (tối thiểu 1)"
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ccc',
-                borderRadius: '4px'
-              }}
+              className="module-form-input"
             />
+          </div>
+        )}
+
+        {/* Rent Balance Input - Only shows for admin users */}
+        {isAdmin && (
+          <div className="module-form-group">
+            <label className="module-form-label">
+              Giá thuê (🌾/24h):
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={rentBalance}
+              onChange={handleRentBalanceChange}
+              placeholder="Nhập giá thuê (0 = không cho thuê)"
+              className="module-form-input"
+            />
+            <small className="module-form-help-text">
+              Để 0 nếu không muốn cho phép thuê tập này. Giá thuê sẽ áp dụng cho toàn bộ nội dung trả phí trong tập.
+            </small>
           </div>
         )}
         
         {/* Show module info for pj_user when module is paid */}
         {!isAdmin && user?.role === 'pj_user' && mode === 'paid' && (
-          <div className="form-group" style={{margin: '10px 0'}}>
-            <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Chế độ tập hiện tại:</label>
-            <div style={{
-              padding: '8px',
-              backgroundColor: '#f5f5f5',
-              borderRadius: '4px',
-              color: '#666'
-            }}>
+          <div className="module-form-group">
+            <label className="module-form-label">Chế độ tập hiện tại:</label>
+            <div className="module-form-info-display">
               {translateChapterModuleStatus('PAID')} - {moduleBalance} 🌾 (Chỉ admin mới có thể thay đổi)
             </div>
           </div>
         )}
         
-        <div className="form-group" style={{margin: '10px 0'}}>
-          <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Ảnh bìa:</label>
+        <div className="module-form-group">
+          <label className="module-form-label">Ảnh bìa:</label>
           <div className="cover-upload">
             {moduleForm.illustration && (
               <img
                 src={moduleForm.illustration}
                 alt="Cover preview"
-                className="cover-preview"
-                style={{
-                  maxWidth: '200px',
-                  maxHeight: '200px',
-                  display: 'block',
-                  marginBottom: '10px'
-                }}
+                className="module-form-cover-preview"
               />
             )}
             <input
@@ -180,47 +186,32 @@ const ModuleForm = memo(({
               accept="image/*"
               onChange={handleModuleCoverUpload}
               id="cover-upload"
-              style={{ display: 'none' }}
+              className="module-form-file-input"
             />
-            <label htmlFor="cover-upload" className="upload-btn" style={{
-              display: 'inline-block',
-              padding: '8px 16px',
-              background: '#4285f4',
-              color: 'white',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
+            <label htmlFor="cover-upload" className="module-form-upload-btn">
               {moduleForm.loading ? 'Đang tải lên...' : 'Tải lên ảnh bìa'}
             </label>
           </div>
         </div>
-        <div className="form-actions" style={{
-          marginTop: '20px',
-          display: 'flex',
-          gap: '10px'
-        }}>
-          <button type="submit" disabled={moduleForm.loading} style={{
-            padding: '10px 20px',
-            background: editingModule ? 'orange' : 'green',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            {editingModule ? 'Cập nhật tập' : 'Tạo tập mới'}
-          </button>
-          <button type="button" onClick={handleModuleFormToggle} style={{
-            padding: '10px 20px',
-            background: '#f44336',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>
-            Hủy
-          </button>
-        </div>
-      </form>
+
+          <div className="module-form-actions">
+            <button
+              type="button"
+              onClick={handleModuleFormToggle}
+              className="module-form-cancel-btn"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={moduleForm.loading}
+              className="module-form-submit-btn"
+            >
+              {moduleForm.loading ? 'Đang lưu...' : (editingModule ? 'Cập nhật' : 'Tạo tập')}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 });

@@ -19,27 +19,33 @@
  * - Navigation breadcrumbs
  */
 
-import { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import '../styles/components/NovelDetail.css';
 import '../styles/components/RedesignedNovelDetail.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faThumbsUp, faStar, faBookmark, faLock, faGift, faCrown, faChevronDown, faChevronUp, faEdit, faTrash, faPlus, faCopy, faTimes, faChartLine, faComment, faUser, faUsers, faCalendar, faEye, faRocket, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { useSEO } from '../context/SEOContext';
+import { useTheme } from '../context/ThemeContext';
+import axios from 'axios';
+import config from '../config/config';
+import DOMPurify from 'dompurify';
+import { createUniqueSlug } from '../utils/slugUtils';
 
 import LoadingSpinner from './LoadingSpinner';
 import NovelInfo from './novel-detail/NovelInfo';
 import ScrollToTop from './ScrollToTop';
 import api from '../services/api';
 import sseService from '../services/sseService';
-import axios from 'axios';
-import config from '../config/config';
-import DOMPurify from 'dompurify';
-import { createUniqueSlug } from '../utils/slugUtils';
+import GiftModal from './novel-detail/GiftModal';
+import RatingModal from './RatingModal';
+import ModuleRentalModal from './rental/ModuleRentalModal';
 
 // Lazy load components that are not immediately visible
 const CommentSection = lazy(() => import('./CommentSection'));
-const RatingModal = lazy(() => import('./RatingModal'));
 const ModuleChapters = lazy(() => import('./novel-detail/ModuleChapters'));
 const ModuleForm = lazy(() => import('./novel-detail/ModuleForm'));
 const ModuleList = lazy(() => import('./novel-detail/ModuleList'));
@@ -437,16 +443,44 @@ const NovelDetail = ({ novelId }) => {
     loading: false, 
     error: '',
     mode: 'published',
-    moduleBalance: 0
+    moduleBalance: 0,
+    rentBalance: 0
   });
   const [editingModule, setEditingModule] = useState(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
   
+  // Rental modal state
+  const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
+  const [selectedModuleForRent, setSelectedModuleForRent] = useState(null);
+  
   // Handler for contribution success
   const handleContributionSuccess = useCallback(() => {
     // Refresh the novel data to update the budget
     queryClient.invalidateQueries(['novel', novelId]);
+  }, [queryClient, novelId]);
+
+  // Rental modal handlers
+  const handleOpenRentalModal = useCallback((module) => {
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để thuê tập');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
+      return;
+    }
+    setSelectedModuleForRent(module);
+    setIsRentalModalOpen(true);
+  }, [isAuthenticated]);
+
+  const handleCloseRentalModal = useCallback(() => {
+    setIsRentalModalOpen(false);
+    setSelectedModuleForRent(null);
+  }, []);
+
+  const handleRentalSuccess = useCallback((data) => {
+    // Refresh novel data and user balance after successful rental
+    queryClient.invalidateQueries(['novel', novelId]);
+    queryClient.invalidateQueries(['user']);
+    setUserBalance(data.userBalance);
   }, [queryClient, novelId]);
 
   // Set user balance when authenticated
@@ -664,7 +698,8 @@ const NovelDetail = ({ novelId }) => {
           loading: false,
           error: '',
           mode: 'published',
-          moduleBalance: 0
+          moduleBalance: 0,
+          rentBalance: 0
         });
         setEditingModule(null);
       }
@@ -708,6 +743,7 @@ const NovelDetail = ({ novelId }) => {
                   illustration: dataToSubmit.illustration,
                   mode: dataToSubmit.mode,
                   moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0,
+                  rentBalance: parseInt(dataToSubmit.rentBalance) || 0,
                   updatedAt: new Date().toISOString()
                 }
               : module
@@ -725,7 +761,8 @@ const NovelDetail = ({ novelId }) => {
           title: dataToSubmit.title,
           illustration: dataToSubmit.illustration,
           mode: dataToSubmit.mode,
-          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0
+          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0,
+          rentBalance: parseInt(dataToSubmit.rentBalance) || 0
         });
       } else {
         // Create new module
@@ -733,7 +770,8 @@ const NovelDetail = ({ novelId }) => {
           title: dataToSubmit.title,
           illustration: dataToSubmit.illustration,
           mode: dataToSubmit.mode,
-          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0
+          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0,
+          rentBalance: parseInt(dataToSubmit.rentBalance) || 0
         });
         
         // If we have current data and a successful response, optimistically add the new module
@@ -760,7 +798,8 @@ const NovelDetail = ({ novelId }) => {
         loading: false,
         error: '',
         mode: 'published',
-        moduleBalance: 0
+        moduleBalance: 0,
+        rentBalance: 0
       });
       setEditingModule(null);
     } catch (error) {
@@ -963,7 +1002,8 @@ const NovelDetail = ({ novelId }) => {
       loading: false,
       error: '',
       mode: module.mode || 'published',
-      moduleBalance: module.moduleBalance || 0
+      moduleBalance: module.moduleBalance || 0,
+      rentBalance: module.rentBalance || 0
     });
     
     // Set the editing ID
@@ -1137,6 +1177,7 @@ const NovelDetail = ({ novelId }) => {
                   handleEditModule={handleEditModule}
                   handleChapterReorder={handleChapterReorder}
                   handleChapterDelete={handleChapterDelete}
+                  handleOpenRentalModal={handleOpenRentalModal}
                 />
               </Suspense>
             )}
@@ -1165,6 +1206,17 @@ const NovelDetail = ({ novelId }) => {
                 currentRating={userInteraction?.rating || 0}
               />
             </Suspense>
+          )}
+          
+          {/* Module Rental Modal */}
+          {isRentalModalOpen && selectedModuleForRent && (
+            <ModuleRentalModal
+              isOpen={isRentalModalOpen}
+              onClose={handleCloseRentalModal}
+              module={selectedModuleForRent}
+              novel={data.novel}
+              onRentalSuccess={handleRentalSuccess}
+            />
           )}
           
           {/* Add ScrollToTop component */}

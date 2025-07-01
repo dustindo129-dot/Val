@@ -6,6 +6,9 @@ import { useAuth } from '../../context/AuthContext';
 import { createUniqueSlug, generateChapterUrl } from '../../utils/slugUtils';
 import '../../styles/components/ModuleChapters.css';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import config from '../../config/config';
 
 // Helper function for date formatting in Vietnamese format (DD/MM/YYYY)
 const formatDateUtil = (date) => {
@@ -76,6 +79,34 @@ const ModuleChapters = memo(({
     }
   }, [moduleId, handleChapterReorder, isReordering]);
 
+  // Check if user has active rental for this module - MOVED UP for availability in canAccessChapter
+  const { data: rentalStatus } = useQuery({
+    queryKey: ['module-rental-status', moduleId, user?.id],
+    queryFn: async () => {
+      if (!user || !moduleId) return { hasActiveRental: false };
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${config.backendUrl}/api/modules/${moduleId}/rental-status`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        return response.data;
+      } catch (error) {
+        console.error('Error checking rental status:', error);
+        return { hasActiveRental: false };
+      }
+    },
+    enabled: !!user && !!moduleId && isPaidModule, // Only check if user exists, moduleId exists, and module is paid
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  const hasActiveRental = rentalStatus?.hasActiveRental || false;
+
   // Function to determine if a chapter should be visible based on its mode
   const isChapterVisible = (chapter) => {
     // Admin and moderators see all chapters, pj_user sees all chapters for their novels
@@ -116,6 +147,11 @@ const ModuleChapters = memo(({
       return true;
     }
     
+    // RENTAL ACCESS: If user has active rental for this module, treat all chapters as accessible
+    if (hasActiveRental) {
+      return true;
+    }
+    
     // Regular users can access published chapters
     if (!chapter.mode || chapter.mode === 'published') {
       return true;
@@ -151,6 +187,9 @@ const ModuleChapters = memo(({
     // pj_user should NOT be able to delete chapters
   );
 
+
+
+
   return (
     <div className="module-chapters">
       {chapters && chapters.length > 0 ? (
@@ -167,13 +206,13 @@ const ModuleChapters = memo(({
             const chapterModeClass = chapter.mode === 'draft' ? 'chapter-mode-draft' : '';
             const isPaidChapter = chapter.mode === 'paid';
             const chapterIsAccessible = canAccessChapter(chapter);
-            const isInPaidModule = isPaidModule && !canAccessPaidContent;
+            // User can access paid module if they have staff access OR active rental
+            const isInPaidModule = isPaidModule && !canAccessPaidContent && !hasActiveRental;
             
             return (
               <div 
                 key={`chapter-item-${chapterId}`}
-                className={`module-chapter-item ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''} ${!chapterIsAccessible || isInPaidModule ? 'locked-chapter' : ''}`}
-                style={{ transition: 'all 0.3s ease' }}
+                className={`module-chapter-item chapter-item-animated ${isReordering ? 'reordering' : ''} ${chapter.mode ? `chapter-mode-${chapter.mode}` : ''} ${!chapterIsAccessible || isInPaidModule ? 'locked-chapter' : ''}`}
               >
                 <div className="chapter-list-content" key={`chapter-content-${chapterId}`}>
                   <div className="chapter-number" key={`chapter-number-${chapterId}`}>
