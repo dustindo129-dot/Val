@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faClock, faCoins } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -19,6 +20,66 @@ const ModuleRentalModal = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isConfirming, setIsConfirming] = useState(false);
+
+  // Create portal container
+  const [portalContainer, setPortalContainer] = useState(null);
+
+  useEffect(() => {
+    // Create or get portal container
+    let container = document.getElementById('vt-rental-modal-portal');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vt-rental-modal-portal';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.zIndex = '10000';
+      container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+    }
+    setPortalContainer(container);
+
+    // Cleanup function
+    return () => {
+      if (container && container.parentNode && !isOpen) {
+        // Only remove if no other modals are using it
+        const existingModals = container.children.length;
+        if (existingModals === 0) {
+          container.parentNode.removeChild(container);
+        }
+      }
+    };
+  }, [isOpen]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('vt-rental-modal-open');
+      // Enable pointer events for the portal when modal is open
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'auto';
+      }
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('vt-rental-modal-open');
+      // Disable pointer events when modal is closed
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    }
+
+    // Cleanup function to restore scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('vt-rental-modal-open');
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    };
+  }, [isOpen, portalContainer]);
 
   // Mutation for renting module
   const rentModuleMutation = useMutation({
@@ -64,7 +125,14 @@ const ModuleRentalModal = ({
     onClose();
   };
 
-  if (!isOpen || !module) return null;
+  // Handle overlay click to close modal
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleCancel();
+    }
+  };
+
+  if (!isOpen || !module || !portalContainer) return null;
 
   const formatTimeRemaining = (milliseconds) => {
     const hours = Math.floor(milliseconds / (1000 * 60 * 60));
@@ -72,8 +140,9 @@ const ModuleRentalModal = ({
     return `${hours}h ${minutes}m`;
   };
 
-  return (
-    <div className="rental-modal-overlay" onClick={handleCancel}>
+  // Render modal content with portal
+  const modalContent = (
+    <div className="vt-rental-modal-overlay" onClick={handleOverlayClick}>
       <div className="rental-modal" onClick={(e) => e.stopPropagation()}>
         <div className="rental-modal-header">
           <h3>Thuê Tập</h3>
@@ -167,6 +236,9 @@ const ModuleRentalModal = ({
       </div>
     </div>
   );
+
+  // Use createPortal to render outside the component tree
+  return createPortal(modalContent, portalContainer);
 };
 
 export default ModuleRentalModal; 

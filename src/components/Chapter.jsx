@@ -1254,14 +1254,14 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   /**
    * Handles opening the rental modal for renting a module
    */
-  const handleOpenRentalModal = useCallback(() => {
+  const handleOpenRentalModal = useCallback((module = moduleData) => {
     if (!user) {
       alert('Vui lòng đăng nhập để thuê tập');
       window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
     setShowRentalModal(true);
-  }, [user]);
+  }, [user, moduleData]);
 
   /**
    * Handles closing the rental modal
@@ -1400,7 +1400,15 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       />
 
       {/* Chapter Content with Access Guard */}
-      <ChapterAccessGuard chapter={chapter} moduleData={moduleData} user={user} novel={novel}>
+      <ChapterAccessGuard 
+        chapter={chapter} 
+        moduleData={moduleData} 
+        user={user} 
+        novel={novel}
+        onOpenRentalModal={handleOpenRentalModal}
+        onCloseRentalModal={handleCloseRentalModal}
+        onRentalSuccess={handleRentalSuccess}
+      >
         <ChapterContent
           key={`chapter-content-${chapterId}`}
           chapter={chapter}

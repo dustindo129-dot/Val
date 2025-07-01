@@ -1,4 +1,65 @@
-/* Module Rental Modal */
+/* Portal container styles */
+#vt-rental-modal-portal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* Body class when modal is open */
+body.vt-rental-modal-open {
+  overflow: hidden;
+}
+
+/* Blur overlay styles */
+.vt-rental-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* Update the rental modal to work with portal */
+.vt-rental-modal-overlay .rental-modal {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  transform: scale(0.9);
+  animation: vtRentalModalAppear 0.3s ease-out forwards;
+  position: relative;
+  z-index: 10002;
+  pointer-events: auto;
+}
+
+@keyframes vtRentalModalAppear {
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Legacy overlay styles for backwards compatibility */
 .rental-modal-overlay {
   position: fixed;
   top: 0;
@@ -13,6 +74,7 @@
   padding: 20px;
 }
 
+/* Module Rental Modal */
 .rental-modal {
   background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   border-radius: 16px;
@@ -228,8 +290,9 @@
 }
 
 .rental-confirm-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   transform: translateY(-1px);
-  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
 .rental-confirm-btn:active:not(:disabled) {
@@ -244,42 +307,37 @@
 }
 
 .rental-confirm-btn.confirming {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
-  }
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
 }
 
-/* Dark mode support */
+/* Dark theme support */
 [data-theme="dark"] .rental-modal {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-color: rgba(71, 85, 105, 0.3);
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
 }
 
 [data-theme="dark"] .rental-module-info,
 [data-theme="dark"] .rental-description {
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Mobile responsiveness */
+/* Media Queries */
 @media (max-width: 768px) {
   .rental-modal {
-    margin: 20px;
-    max-width: calc(100% - 40px);
+    margin: 0 10px;
+    max-height: 95vh;
   }
   
   .rental-modal-header,
   .rental-modal-content,
   .rental-modal-actions {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding: 16px;
   }
   
   .rental-module-info {
@@ -302,9 +360,9 @@
 
 @media (max-width: 480px) {
   .rental-modal {
-    margin: 10px;
-    max-width: calc(100% - 20px);
+    margin: 0 5px;
     border-radius: 12px;
+    max-height: 98vh;
   }
   
   .rental-modal-header h3 {
@@ -316,6 +374,6 @@
   }
   
   .rental-info-item {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 } 

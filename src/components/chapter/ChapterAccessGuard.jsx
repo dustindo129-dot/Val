@@ -1,11 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faCog, faClock } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import { generateNovelUrl } from '../../utils/slugUtils';
-import { useQueryClient } from '@tanstack/react-query';
-import ModuleRentalModal from '../rental/ModuleRentalModal';
 import '../../styles/components/ChapterAccessGuard.css';
 
 /**
@@ -13,41 +11,32 @@ import '../../styles/components/ChapterAccessGuard.css';
  * 
  * Displays appropriate messages when a user doesn't have access to chapter content
  */
-const ChapterAccessGuard = ({ chapter, moduleData, user, novel, children }) => {
+const ChapterAccessGuard = ({ 
+  chapter, 
+  moduleData, 
+  user, 
+  novel, 
+  children,
+  // Modal handlers from parent
+  onOpenRentalModal,
+  onCloseRentalModal,
+  onRentalSuccess
+}) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
   
-  // Rental modal state
-  const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
-  const [selectedModuleForRent, setSelectedModuleForRent] = useState(null);
-  
-  // Rental modal handlers
+  // Rental modal handlers - use parent handlers if provided
   const handleOpenRentalModal = useCallback((module) => {
     if (!isAuthenticated) {
       alert('Vui lòng đăng nhập để thuê tập');
       window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
-    setSelectedModuleForRent(module);
-    setIsRentalModalOpen(true);
-  }, [isAuthenticated]);
-
-  const handleCloseRentalModal = useCallback(() => {
-    setIsRentalModalOpen(false);
-    setSelectedModuleForRent(null);
-  }, []);
-
-  const handleRentalSuccess = useCallback((data) => {
-    // Refresh chapter data and user balance after successful rental
-    queryClient.invalidateQueries(['chapter']);
-    queryClient.invalidateQueries(['user']);
-    queryClient.invalidateQueries(['novel']);
-    queryClient.invalidateQueries(['user-chapter-interaction']);
     
-    // Notify SecondaryNavbar to refresh balance display
-    window.dispatchEvent(new Event('balanceUpdated'));
-  }, [queryClient]);
+    if (onOpenRentalModal) {
+      onOpenRentalModal(module);
+    }
+  }, [isAuthenticated, onOpenRentalModal]);
 
   // Check if module should show rental option
   const shouldShowRentalButton = useCallback(() => {
@@ -56,14 +45,17 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, novel, children }) => {
     const isPaidModule = moduleData?.mode === 'paid';
     const moduleHasRentBalance = moduleData?.rentBalance > 0;
     
-    // Show for everyone except staff who already have access
-    const isStaffWithAccess = isAuthenticated && user && (
-      user.role === 'admin' || 
-      user.role === 'moderator' ||
-      user.role === 'pj_user'
-    );
+    // Show rental button if:
+    // 1. Module exists
+    // 2. Either chapter or module is paid
+    // 3. Module has rental price set
+    // 4. User is authenticated
+    const shouldShow = moduleData && 
+                      (isPaidChapter || isPaidModule) && 
+                      moduleHasRentBalance && 
+                      isAuthenticated;
     
-    return (isPaidChapter || isPaidModule) && moduleHasRentBalance && !isStaffWithAccess && moduleData;
+    return shouldShow;
   }, [chapter, moduleData, isAuthenticated, user]);
   
   // Check if user has access to chapter content based on mode
@@ -241,22 +233,7 @@ const ChapterAccessGuard = ({ chapter, moduleData, user, novel, children }) => {
     );
   }
 
-  return (
-    <>
-      {children}
-      
-      {/* Module Rental Modal */}
-      {isRentalModalOpen && selectedModuleForRent && (
-        <ModuleRentalModal
-          isOpen={isRentalModalOpen}
-          onClose={handleCloseRentalModal}
-          module={selectedModuleForRent}
-          novel={novel}
-          onRentalSuccess={handleRentalSuccess}
-        />
-      )}
-    </>
-  );
+  return children;
 };
 
 export default ChapterAccessGuard; 
