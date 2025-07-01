@@ -5,6 +5,7 @@ import { faTimes, faClock, faCoins } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import config from '../../config/config';
 import '../../styles/components/ModuleRentalModal.css';
 
 /**
@@ -84,7 +85,17 @@ const ModuleRentalModal = ({
   // Mutation for renting module
   const rentModuleMutation = useMutation({
     mutationFn: async (moduleId) => {
-      const response = await axios.post(`/api/modules/${moduleId}/rent`);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${config.backendUrl}/api/modules/${moduleId}/rent`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       return response.data;
     },
     onSuccess: (data) => {
@@ -117,7 +128,15 @@ const ModuleRentalModal = ({
       return;
     }
     
-    rentModuleMutation.mutate(module._id);
+    // Validate module ID format (MongoDB ObjectId should be 24 hex characters)
+    const moduleId = module._id;
+    if (!moduleId || typeof moduleId !== 'string' || !/^[0-9a-fA-F]{24}$/.test(moduleId)) {
+      console.error('Invalid module ID format:', moduleId);
+      alert('Lỗi: ID tập không hợp lệ. Vui lòng thử lại.');
+      return;
+    }
+    
+    rentModuleMutation.mutate(moduleId);
   };
 
   const handleCancel = () => {
