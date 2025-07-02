@@ -80,6 +80,7 @@ const ChapterContent = React.memo(({
   const autoSaveTimeoutRef = useRef(null);
   const restoredContentRef = useRef(null); // Add ref to store restored content
   const isLoadingRestoredContent = useRef(false); // Flag to prevent immediate overwrite
+  const isInitializedRef = useRef(false); // Flag to track if component has finished initializing
 
   // OPTIMIZATION: Add refs for debouncing expensive operations
   const footnoteProcessingTimeoutRef = useRef(null);
@@ -201,37 +202,57 @@ const ChapterContent = React.memo(({
           // Only restore if auto-save is newer than chapter's last update AND not too old
           if (savedTime > chapterUpdatedTime && !isTooOld) {
 
-            setAutoSaveStatus('Nội dung đã lưu tự động được khôi phục');
-            setTimeout(() => setAutoSaveStatus(''), 3000);
+            startTransition(() => {
+              setAutoSaveStatus('Nội dung đã lưu tự động được khôi phục');
+            });
+            setTimeout(() => {
+              startTransition(() => {
+                setAutoSaveStatus('');
+              });
+            }, 3000);
             
             // Store restored content in ref for immediate TinyMCE access
             restoredContentRef.current = parsedContent;
             
             // Restore content to editor if available
             if (parsedContent.content && setEditedContent) {
-              setEditedContent(prev => ({
-                ...prev,
-                content: parsedContent.content,
-                footnotes: parsedContent.footnotes || []
-              }));
+              startTransition(() => {
+                setEditedContent(prev => ({
+                  ...prev,
+                  content: parsedContent.content,
+                  footnotes: parsedContent.footnotes || []
+                }));
+              });
             }
             
             if (parsedContent.title && setEditedTitle) {
-              setEditedTitle(parsedContent.title);
+              startTransition(() => {
+                setEditedTitle(parsedContent.title);
+              });
             }
             
             // Also restore mode and balance if they were changed
             if (parsedContent.mode) {
-              setEditedMode(parsedContent.mode);
+              startTransition(() => {
+                setEditedMode(parsedContent.mode);
+              });
             }
             
             if (parsedContent.chapterBalance !== undefined) {
-              setEditedChapterBalance(parsedContent.chapterBalance);
+              startTransition(() => {
+                setEditedChapterBalance(parsedContent.chapterBalance);
+              });
             }
           } else if (isTooOld) {
             localStorage.removeItem(autoSaveKey);
-            setAutoSaveStatus(`Auto-save quá cũ (${Math.round(ageHours)} giờ) - đã xóa tự động`);
-            setTimeout(() => setAutoSaveStatus(''), 3000);
+            startTransition(() => {
+              setAutoSaveStatus(`Auto-save quá cũ (${Math.round(ageHours)} giờ) - đã xóa tự động`);
+            });
+            setTimeout(() => {
+              startTransition(() => {
+                setAutoSaveStatus('');
+              });
+            }, 3000);
           } else {
             // Clear outdated auto-save
             localStorage.removeItem(autoSaveKey);
@@ -439,8 +460,10 @@ const ChapterContent = React.memo(({
   // Clear auto-save when successfully saved (call this from parent component)
   const clearAutoSave = useCallback(() => {
     localStorage.removeItem(autoSaveKey);
-    setAutoSaveStatus('');
-    setLastSaved(null);
+    startTransition(() => {
+      setAutoSaveStatus('');
+      setLastSaved(null);
+    });
   }, [autoSaveKey]);
 
   // Expose clearAutoSave to parent component
@@ -467,11 +490,15 @@ const ChapterContent = React.memo(({
       errorMessage = error.message;
     }
     
-    setNetworkError(errorMessage);
+    startTransition(() => {
+      setNetworkError(errorMessage);
+    });
     
     // Auto-hide network error after 5 seconds
     setTimeout(() => {
-      setNetworkError('');
+      startTransition(() => {
+        setNetworkError('');
+      });
     }, 5000);
     
     // Also call parent's onNetworkError callback if provided
@@ -520,7 +547,9 @@ const ChapterContent = React.memo(({
         
         // Clear auto-save on successful save
         clearAutoSave();
-        setNetworkError('');
+        startTransition(() => {
+          setNetworkError('');
+        });
         
         return result;
         
@@ -537,7 +566,9 @@ const ChapterContent = React.memo(({
           error.status >= 500; // Server errors
         
         if (isRetryableError && attempt < maxRetries) {
-          setNetworkError(`Lưu thất bại (lần thử ${attempt}/${maxRetries}). Đang thử lại...`);
+          startTransition(() => {
+            setNetworkError(`Lưu thất bại (lần thử ${attempt}/${maxRetries}). Đang thử lại...`);
+          });
           
           // Wait before retry with exponential backoff
           const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
@@ -570,8 +601,14 @@ const ChapterContent = React.memo(({
   // Manual auto-save trigger (available but no UI button)
   const triggerManualAutoSave = useCallback(() => {
     autoSave();
-    setAutoSaveStatus('Đã lưu thủ công');
-    setTimeout(() => setAutoSaveStatus(''), 2000);
+    startTransition(() => {
+      setAutoSaveStatus('Đã lưu thủ công');
+    });
+    setTimeout(() => {
+      startTransition(() => {
+        setAutoSaveStatus('');
+      });
+    }, 2000);
   }, [autoSave]);
 
   // OPTIMIZATION: Memoized unsaved changes check - use React state for parent component
@@ -747,7 +784,9 @@ const ChapterContent = React.memo(({
     const checkConnectionStatus = () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        setNetworkError('Phiên đăng nhập đã hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+        startTransition(() => {
+          setNetworkError('Phiên đăng nhập đã hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+        });
         return;
       }
       
@@ -758,16 +797,24 @@ const ChapterContent = React.memo(({
         const timeUntilExpiry = tokenExp - now;
         
         if (timeUntilExpiry <= 0) {
-          setNetworkError('Phiên đăng nhập đã hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+          startTransition(() => {
+            setNetworkError('Phiên đăng nhập đã hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+          });
         } else if (timeUntilExpiry < 300000) { // Less than 5 minutes
-          setNetworkError('Phiên đăng nhập sắp hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+          startTransition(() => {
+            setNetworkError('Phiên đăng nhập sắp hết hạn. Vui lòng lưu thay đổi và đăng nhập lại.');
+          });
         }
       } catch (error) {
-        setNetworkError('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+        startTransition(() => {
+          setNetworkError('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+        });
       }
       
       if (!navigator.onLine) {
-        setNetworkError('Mất kết nối internet. Thay đổi sẽ được tự động lưu.');
+        startTransition(() => {
+          setNetworkError('Mất kết nối internet. Thay đổi sẽ được tự động lưu.');
+        });
       }
     };
     
@@ -781,9 +828,11 @@ const ChapterContent = React.memo(({
   // Effect to handle when module becomes paid - automatically change chapter mode
   useEffect(() => {
     if (isModulePaid && editedMode === 'paid') {
-      setEditedMode('published');
-      setEditedChapterBalance(0);
-      setModeError('Chương đã được chuyển về chế độ công khai vì tập hiện tại đã ở chế độ trả phí.');
+      startTransition(() => {
+        setEditedMode('published');
+        setEditedChapterBalance(0);
+        setModeError('Chương đã được chuyển về chế độ công khai vì tập hiện tại đã ở chế độ trả phí.');
+      });
     }
   }, [isModulePaid, editedMode]);
   
@@ -796,7 +845,7 @@ const ChapterContent = React.memo(({
       const newIds = new Set(footnotes.map(f => f.id));
       
       // Skip during deletion operations - detected by fewer footnotes
-      if (localFootnotes.length > 0 && footnotes.length < localFootnotes.length) {
+      if (isInitializedRef.current && localFootnotes.length > 0 && footnotes.length < localFootnotes.length) {
         return;
       }
       
@@ -806,19 +855,28 @@ const ChapterContent = React.memo(({
         localFootnotes.some(f => !newIds.has(f.id));
       
       if (hasChanged) {
-        // Use a single batch update
-        const nextId = Math.max(...footnotes.map(f => f.id).concat([0])) + 1;
-        const nextName = nextId.toString();
-        setLocalFootnotes(footnotes);
-        setNextFootnoteId(nextId);
-        setNextFootnoteName(nextName);
+        // Use startTransition to prevent React warning about state updates during render
+        startTransition(() => {
+          // Use a single batch update
+          const nextId = Math.max(...footnotes.map(f => f.id).concat([0])) + 1;
+          const nextName = nextId.toString();
+          setLocalFootnotes(footnotes);
+          setNextFootnoteId(nextId);
+          setNextFootnoteName(nextName);
+          
+          // Mark as initialized after first update
+          isInitializedRef.current = true;
+        });
       }
+    } else {
+      // Reset initialization flag when exiting edit mode
+      isInitializedRef.current = false;
     }
-  }, [isEditing, chapter.footnotes, editedContent?.footnotes, localFootnotes]);
+  }, [isEditing, chapter.footnotes, editedContent?.footnotes]);
 
   // Update parent's editedContent whenever footnotes change in edit mode
   useEffect(() => {
-    if (isEditing && setEditedContent) {
+    if (isEditing && setEditedContent && isInitializedRef.current) {
       // Only update if we're not already setting the content from parent
       const currentFootnotes = editedContent?.footnotes || [];
       
@@ -836,13 +894,16 @@ const ChapterContent = React.memo(({
         );
       
       if (hasChanged) {
-        setEditedContent(prev => ({
-          ...prev,
-          footnotes: localFootnotes
-        }));
+        // Wrap in startTransition to prevent React warning about state updates during render
+        startTransition(() => {
+          setEditedContent(prev => ({
+            ...prev,
+            footnotes: localFootnotes
+          }));
+        });
       }
     }
-  }, [localFootnotes, isEditing, setEditedContent, editedContent?.footnotes]);
+  }, [localFootnotes, isEditing, setEditedContent]);
 
   // Provide access to current footnotes for TinyMCE editor
   useEffect(() => {
@@ -855,11 +916,15 @@ const ChapterContent = React.memo(({
   // Initialize editedTitle from parent component when entering edit mode
   useEffect(() => {
     if (isEditing && chapter && editedTitle === '') {
-      setEditedTitle(chapter.title || '');
+      startTransition(() => {
+        setEditedTitle(chapter.title || '');
+      });
     }
     
     if (isEditing && chapter) {
-      setEditedChapterBalance(chapter.chapterBalance || 0);
+      startTransition(() => {
+        setEditedChapterBalance(chapter.chapterBalance || 0);
+      });
     }
   }, [isEditing, chapter, editedTitle, setEditedTitle]);
 
@@ -868,13 +933,15 @@ const ChapterContent = React.memo(({
     if (isEditing && setEditedContent) {
       // Store mode and balance info in the editedContent object 
       // but don't trigger immediate API calls
-      setEditedContent(prev => ({
-        ...prev,
-        mode: editedMode,
-        chapterBalance: editedMode === 'paid' ? (parseInt(editedChapterBalance) || 0) : 0
-      }));
+      startTransition(() => {
+        setEditedContent(prev => ({
+          ...prev,
+          mode: editedMode,
+          chapterBalance: editedMode === 'paid' ? (parseInt(editedChapterBalance) || 0) : 0
+        }));
+      });
     }
-  }, [isEditing, setEditedContent]);
+  }, [isEditing, editedMode, editedChapterBalance]);
 
   const handleFootnoteClick = (targetId) => {
     // Add small delay to ensure DOM is ready
@@ -905,21 +972,25 @@ const ChapterContent = React.memo(({
   }, []);
 
   const addFootnote = useCallback(() => {
-    setLocalFootnotes(prev => {
-      const newFootnoteId = Math.max(...prev.map(f => f.id || 0), 0) + 1;
-      const newFootnoteName = newFootnoteId.toString();
-      return [...prev, { id: newFootnoteId, name: newFootnoteName, content: '' }];
+    startTransition(() => {
+      setLocalFootnotes(prev => {
+        const newFootnoteId = Math.max(...prev.map(f => f.id || 0), 0) + 1;
+        const newFootnoteName = newFootnoteId.toString();
+        return [...prev, { id: newFootnoteId, name: newFootnoteName, content: '' }];
+      });
+      setNextFootnoteId(prev => prev + 1);
+      setNextFootnoteName(prev => (parseInt(prev) + 1).toString());
     });
-    setNextFootnoteId(prev => prev + 1);
-    setNextFootnoteName(prev => (parseInt(prev) + 1).toString());
   }, []); // Stable callback that computes values dynamically
 
   const updateFootnote = useCallback((id, content) => {
-    setLocalFootnotes(prev =>
-      prev.map(footnote =>
-        footnote.id === id ? { ...footnote, content } : footnote
-      )
-    );
+    startTransition(() => {
+      setLocalFootnotes(prev =>
+        prev.map(footnote =>
+          footnote.id === id ? { ...footnote, content } : footnote
+        )
+      );
+    });
   }, []);
 
   const deleteFootnote = useCallback((id) => {
@@ -927,30 +998,30 @@ const ChapterContent = React.memo(({
       const editor = editorRef.current;
       const content = editor.getContent();
 
-      setLocalFootnotes(prev => {
-        // Find the footnote to be deleted to get its name
-        const footnoteToDelete = prev.find(f => f.id === id);
-        if (!footnoteToDelete) return prev;
+      // Wrap the entire state update in startTransition
+      startTransition(() => {
+        setLocalFootnotes(prev => {
+          // Find the footnote to be deleted to get its name
+          const footnoteToDelete = prev.find(f => f.id === id);
+          if (!footnoteToDelete) return prev;
 
-        // Create a temporary div to modify the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = content;
+          // Create a temporary div to modify the HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = content;
 
-        // Remove the marker for the deleted footnote using both name and id for compatibility
-        const markerToDelete = tempDiv.querySelector(`sup[data-footnote="${footnoteToDelete.name || footnoteToDelete.id}"]`);
-        if (markerToDelete) {
-          markerToDelete.remove();
-        }
+          // Remove the marker for the deleted footnote using both name and id for compatibility
+          const markerToDelete = tempDiv.querySelector(`sup[data-footnote="${footnoteToDelete.name || footnoteToDelete.id}"]`);
+          if (markerToDelete) {
+            markerToDelete.remove();
+          }
 
-        // Update the editor content (no renumbering needed for named footnotes)
-        editor.setContent(tempDiv.innerHTML);
-        
-        // Remove the footnote from the list
-        const updatedFootnotes = prev.filter(footnote => footnote.id !== id);
-        
-        // Use startTransition to prevent React warning about state updates during render
-        startTransition(() => {
-          // Update parent's state in one operation
+          // Update the editor content (no renumbering needed for named footnotes)
+          editor.setContent(tempDiv.innerHTML);
+          
+          // Remove the footnote from the list
+          const updatedFootnotes = prev.filter(footnote => footnote.id !== id);
+          
+          // Update parent's state in same transition
           if (setEditedContent) {
             setEditedContent(current => ({
               ...current,
@@ -958,9 +1029,9 @@ const ChapterContent = React.memo(({
               footnotes: updatedFootnotes
             }));
           }
+          
+          return updatedFootnotes;
         });
-        
-        return updatedFootnotes;
       });
     }
   }, []); // Stable callback that accesses current state
@@ -1020,23 +1091,29 @@ const ChapterContent = React.memo(({
   const handleModeChange = useCallback((value) => {
     // Prevent pj_user from changing paid mode
     if (userRole === 'pj_user' && (originalMode === 'paid' || value === 'paid')) {
-      setModeError('Bạn không có quyền thay đổi chế độ trả phí. Chỉ admin mới có thể thay đổi.');
+      startTransition(() => {
+        setModeError('Bạn không có quyền thay đổi chế độ trả phí. Chỉ admin mới có thể thay đổi.');
+      });
       return;
     }
     
     // Validate that paid chapters cannot be set in paid modules
     if (value === 'paid' && isModulePaid) {
-      setModeError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+      startTransition(() => {
+        setModeError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+      });
       return;
     }
     
-    setEditedMode(value);
-    setModeError(''); // Clear any previous errors
-    
-    // If mode changes from paid to something else, reset chapter balance locally
-    if (value !== 'paid') {
-      setEditedChapterBalance(0);
-    }
+    startTransition(() => {
+      setEditedMode(value);
+      setModeError(''); // Clear any previous errors
+      
+      // If mode changes from paid to something else, reset chapter balance locally
+      if (value !== 'paid') {
+        setEditedChapterBalance(0);
+      }
+    });
     
     // We don't call onModeChange or setEditedContent here anymore
     // Changes will be saved when the user clicks the Save Changes button
@@ -1597,7 +1674,11 @@ const ChapterContent = React.memo(({
                 <span>{networkError}</span>
                 <button 
                   className="network-error-close-btn"
-                  onClick={() => setNetworkError('')}
+                  onClick={() => {
+                    startTransition(() => {
+                      setNetworkError('');
+                    });
+                  }}
                   title="Đóng thông báo"
                 >
                   ×
