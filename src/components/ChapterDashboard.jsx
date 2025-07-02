@@ -17,7 +17,7 @@
  * - Responsive design
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, startTransition } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -87,6 +87,9 @@ const ChapterDashboard = () => {
 
   // Reference to the editor
   const editorRef = useRef(null);
+  
+  // Flag to track if component has finished initializing
+  const isInitializedRef = useRef(false);
 
   // In-memory cache for pending module resolution promises to prevent duplicate API calls
   const pendingModuleResolutions = useRef(new Map());
@@ -99,20 +102,26 @@ const ChapterDashboard = () => {
     const newMode = e.target.value;
     
     if (newMode === 'paid' && isModulePaid) {
-      setError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+      startTransition(() => {
+        setError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+      });
       return;
     }
     
-    setMode(newMode);
-    setError(''); // Clear any previous errors
+    startTransition(() => {
+      setMode(newMode);
+      setError(''); // Clear any previous errors
+    });
   };
 
   // Effect to handle when module becomes paid - automatically change chapter mode
   useEffect(() => {
     if (isModulePaid && mode === 'paid') {
-      setMode('published');
-      setChapterBalance(0);
-      setError('Chương đã được chuyển về chế độ công khai vì tập hiện tại đã ở chế độ trả phí.');
+      startTransition(() => {
+        setMode('published');
+        setChapterBalance(0);
+        setError('Chương đã được chuyển về chế độ công khai vì tập hiện tại đã ở chế độ trả phí.');
+      });
     }
   }, [isModulePaid, mode]);
 
@@ -132,17 +141,16 @@ const ChapterDashboard = () => {
    * Adds a new footnote to the footnotes array
    */
   const addFootnote = useCallback(() => {
-    const newFootnoteId = nextFootnoteId;
-    const newFootnoteName = nextFootnoteName;
-
-    setFootnotes(prev => [
-      ...prev,
-      { id: newFootnoteId, name: newFootnoteName, content: '' }
-    ]);
-
-    setNextFootnoteId(newFootnoteId + 1);
-    setNextFootnoteName((newFootnoteId + 1).toString());
-  }, [nextFootnoteId, nextFootnoteName]);
+    startTransition(() => {
+      setFootnotes(prev => {
+        const newFootnoteId = Math.max(...prev.map(f => f.id || 0), 0) + 1;
+        const newFootnoteName = newFootnoteId.toString();
+        return [...prev, { id: newFootnoteId, name: newFootnoteName, content: '' }];
+      });
+      setNextFootnoteId(prev => prev + 1);
+      setNextFootnoteName(prev => (parseInt(prev) + 1).toString());
+    });
+  }, []); // Stable callback that computes values dynamically
 
   /**
    * Updates a footnote's content
@@ -150,11 +158,13 @@ const ChapterDashboard = () => {
    * @param {string} content - New content for the footnote
    */
   const updateFootnote = useCallback((id, content) => {
-    setFootnotes(prev =>
-        prev.map(footnote =>
-            footnote.id === id ? { ...footnote, content } : footnote
-        )
-    );
+    startTransition(() => {
+      setFootnotes(prev =>
+          prev.map(footnote =>
+              footnote.id === id ? { ...footnote, content } : footnote
+          )
+      );
+    });
   }, []);
 
   /**
@@ -162,32 +172,36 @@ const ChapterDashboard = () => {
    * @param {number} id - ID of the footnote to delete
    */
   const deleteFootnote = useCallback((id) => {
-    // Find the footnote to be deleted to get its name
-    const footnoteToDelete = footnotes.find(f => f.id === id);
-    if (!footnoteToDelete) return;
-
-    // Remove the footnote from the array
-    setFootnotes(prev => prev.filter(footnote => footnote.id !== id));
-
-    // If the editor instance exists, update the footnote markers in the content
     if (editorRef.current) {
       const editor = editorRef.current;
       const content = editor.getContent();
 
-      // Create a temporary div to modify the HTML
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = content;
+      // Wrap the entire state update in startTransition
+      startTransition(() => {
+        setFootnotes(prev => {
+          // Find the footnote to be deleted to get its name
+          const footnoteToDelete = prev.find(f => f.id === id);
+          if (!footnoteToDelete) return prev;
 
-      // Find and remove the marker for the deleted footnote using both name and id for compatibility
-      const markerToDelete = tempDiv.querySelector(`sup.footnote-marker[data-footnote="${footnoteToDelete.name || footnoteToDelete.id}"]`);
-      if (markerToDelete) {
-        markerToDelete.remove();
-      }
+          // Create a temporary div to modify the HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = content;
 
-      // Update the editor content (no renumbering needed for named footnotes)
-      editor.setContent(tempDiv.innerHTML);
+          // Remove the marker for the deleted footnote using both name and id for compatibility
+          const markerToDelete = tempDiv.querySelector(`sup.footnote-marker[data-footnote="${footnoteToDelete.name || footnoteToDelete.id}"]`);
+          if (markerToDelete) {
+            markerToDelete.remove();
+          }
+
+          // Update the editor content (no renumbering needed for named footnotes)
+          editor.setContent(tempDiv.innerHTML);
+          
+          // Remove the footnote from the list
+          return prev.filter(footnote => footnote.id !== id);
+        });
+      });
     }
-  }, [footnotes]);
+  }, []); // Stable callback that accesses current state
 
   /**
    * Fetches novel and module data when component mounts
@@ -300,6 +314,16 @@ const ChapterDashboard = () => {
           }
         }
 
+        // Initialize footnotes for new chapter creation
+        if (!isEditMode) {
+          startTransition(() => {
+            setFootnotes([]);
+            setNextFootnoteId(1);
+            setNextFootnoteName('1');
+            isInitializedRef.current = true;
+          });
+        }
+
         // Fetch chapter data if in edit mode (call directly instead of via function reference)
         if (isEditMode && chapterId) {
           try {
@@ -316,17 +340,27 @@ const ChapterDashboard = () => {
 
             // Use existing footnotes from chapter data if available
             if (chapterData.footnotes && Array.isArray(chapterData.footnotes)) {
-              setFootnotes(chapterData.footnotes);
-              
-              // Find the highest ID to set next footnote ID
-              const maxId = Math.max(...chapterData.footnotes.map(f => f.id), 0);
-              setNextFootnoteId(maxId + 1);
-              setNextFootnoteName((maxId + 1).toString());
+              startTransition(() => {
+                setFootnotes(chapterData.footnotes);
+                
+                // Find the highest ID to set next footnote ID
+                const maxId = Math.max(...chapterData.footnotes.map(f => f.id), 0);
+                setNextFootnoteId(maxId + 1);
+                setNextFootnoteName((maxId + 1).toString());
+                
+                // Mark as initialized after footnote loading
+                isInitializedRef.current = true;
+              });
             } else {
               // If no footnotes in chapter data, start fresh
-              setFootnotes([]);
-              setNextFootnoteId(1);
-              setNextFootnoteName('1');
+              startTransition(() => {
+                setFootnotes([]);
+                setNextFootnoteId(1);
+                setNextFootnoteName('1');
+                
+                // Mark as initialized after footnote initialization
+                isInitializedRef.current = true;
+              });
             }
           } catch (err) {
             console.error('Error loading chapter data:', err);
@@ -343,6 +377,13 @@ const ChapterDashboard = () => {
 
     fetchData();
   }, [novelId, moduleSlugOrId, isEditMode, chapterId]);
+
+  // Reset initialization flag when leaving edit mode or changing chapters
+  useEffect(() => {
+    if (!isEditMode) {
+      isInitializedRef.current = false;
+    }
+  }, [isEditMode, chapterId]);
 
   // Cleanup effect to clear pending promises on unmount
   useEffect(() => {
@@ -374,29 +415,37 @@ const ChapterDashboard = () => {
 
     // Validate moduleSlugOrId
     if (!moduleSlugOrId) {
-      setError('Không có module được chọn. Vui lòng chọn module trước.');
-      setSaving(false);
+      startTransition(() => {
+        setError('Không có module được chọn. Vui lòng chọn module trước.');
+        setSaving(false);
+      });
       return;
     }
 
     // Validate that we have a resolved module ID
     if (!resolvedModuleId) {
-      setError('Không thể xác định ID của module. Vui lòng thử lại.');
-      setSaving(false);
+      startTransition(() => {
+        setError('Không thể xác định ID của module. Vui lòng thử lại.');
+        setSaving(false);
+      });
       return;
     }
 
     // Validate that paid chapters cannot be created in paid modules
     if (mode === 'paid' && isModulePaid) {
-      setError('Không thể tạo chương trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
-      setSaving(false);
+      startTransition(() => {
+        setError('Không thể tạo chương trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
+        setSaving(false);
+      });
       return;
     }
 
     // Validate minimum chapter balance for paid chapters
     if (mode === 'paid' && parseInt(chapterBalance) < 1) {
-      setError('Số lúa chương tối thiểu là 1 🌾 cho chương trả phí.');
-      setSaving(false);
+      startTransition(() => {
+        setError('Số lúa chương tối thiểu là 1 🌾 cho chương trả phí.');
+        setSaving(false);
+      });
       return;
     }
 
@@ -652,8 +701,10 @@ const ChapterDashboard = () => {
       // Check content size
       const contentSizeMB = (cleanedContent.length / (1024 * 1024)).toFixed(2);
       if (cleanedContent.length > 40 * 1024 * 1024) {
-        setError('Nội dung quá lớn. Vui lòng giảm độ định dạng hoặc chia thành nhiều chương.');
-        setSaving(false);
+        startTransition(() => {
+          setError('Nội dung quá lớn. Vui lòng giảm độ định dạng hoặc chia thành nhiều chương.');
+          setSaving(false);
+        });
         return;
       }
 
@@ -671,16 +722,20 @@ const ChapterDashboard = () => {
       // Check for markers without footnotes
       const missingFootnotes = footnoteMarkersInContent.filter(marker => !footnoteNamesInState.includes(marker));
       if (missingFootnotes.length > 0) {
-        setError(`Có chú thích trong chương không có nội dung ([${missingFootnotes.join('], [')}]). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
-        setSaving(false);
+        startTransition(() => {
+          setError(`Có chú thích trong chương không có nội dung ([${missingFootnotes.join('], [')}]). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
+          setSaving(false);
+        });
         return;
       }
 
       // Check for footnotes without markers
       const orphanedFootnotes = footnoteNamesInState.filter(name => !footnoteMarkersInContent.includes(name));
       if (orphanedFootnotes.length > 0) {
-        setError(`Có chú thích trong chương không có dấu chú thích ([${orphanedFootnotes.join('], [')}]). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
-        setSaving(false);
+        startTransition(() => {
+          setError(`Có chú thích trong chương không có dấu chú thích ([${orphanedFootnotes.join('], [')}]). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
+          setSaving(false);
+        });
         return;
       }
 
@@ -728,7 +783,9 @@ const ChapterDashboard = () => {
             }
         );
 
-        setSuccess('Chương đã được cập nhật thành công!');
+        startTransition(() => {
+          setSuccess('Chương đã được cập nhật thành công!');
+        });
       } else {
         // Optimistically update the UI before the API call completes
         if (currentNovelData) {
@@ -784,13 +841,21 @@ const ChapterDashboard = () => {
             }
         );
 
-        setSuccess('Chương đã được tạo thành công!');
+        startTransition(() => {
+          setSuccess('Chương đã được tạo thành công!');
+        });
       }
 
       // For edit mode, clear success message after timeout and stay on page
       if (isEditMode) {
-        setTimeout(() => setSuccess(''), 3000);
-        setSaving(false);
+        setTimeout(() => {
+          startTransition(() => {
+            setSuccess('');
+          });
+        }, 3000);
+        startTransition(() => {
+          setSaving(false);
+        });
       } else {
         // For new chapter, navigate back without aggressive refetch state
         setTimeout(() => {
@@ -801,11 +866,13 @@ const ChapterDashboard = () => {
       }
     } catch (err) {
       console.error('Error details:', err);
-      setError(err.response?.data?.message || err.message || 'Không thể lưu chương. Vui lòng thử lại.');
+      startTransition(() => {
+        setError(err.response?.data?.message || err.message || 'Không thể lưu chương. Vui lòng thử lại.');
+        setSaving(false);
+      });
 
       // On error, refetch to ensure data consistency
       queryClient.refetchQueries({ queryKey: ['novel', novelId] });
-      setSaving(false);
     }
   };
 

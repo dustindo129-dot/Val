@@ -317,8 +317,8 @@ const ModuleList = memo(({
                 className="module-cover-image"
               />
               
-              {/* Active rental count for admin/moderator/pj_user */}
-              {canSeeRentalStats && (
+              {/* Active rental count for admin/moderator/pj_user (only for rent mode modules) */}
+              {canSeeRentalStats && module.mode === 'rent' && (
                 <div className="module-rental-count">
                   <FontAwesomeIcon icon={faUsers} className="rental-count-icon" />
                   <span>Người đang thuê: {rentalCounts[module._id] || 0}</span>
