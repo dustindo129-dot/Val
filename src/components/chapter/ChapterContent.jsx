@@ -372,7 +372,7 @@ const ChapterContent = React.memo(({
       delete window.currentEditedContent;
       delete window.updateChapterWordCount;
     };
-  }, [isEditing, chapter?.content, editedContent?.content, throttledWordCountUpdate]);
+  }, [isEditing, chapter?.content, editedContent?.content]);
 
   // OPTIMIZATION: Timer-based auto-save that doesn't require React state sync
   const lastAutoSaveContentRef = useRef('');
@@ -948,14 +948,17 @@ const ChapterContent = React.memo(({
         // Remove the footnote from the list
         const updatedFootnotes = prev.filter(footnote => footnote.id !== id);
         
-        // Update parent's state in one operation
-        if (setEditedContent) {
-          setEditedContent(current => ({
-            ...current,
-            content: tempDiv.innerHTML,
-            footnotes: updatedFootnotes
-          }));
-        }
+        // Use startTransition to prevent React warning about state updates during render
+        startTransition(() => {
+          // Update parent's state in one operation
+          if (setEditedContent) {
+            setEditedContent(current => ({
+              ...current,
+              content: tempDiv.innerHTML,
+              footnotes: updatedFootnotes
+            }));
+          }
+        });
         
         return updatedFootnotes;
       });
@@ -1480,8 +1483,8 @@ const ChapterContent = React.memo(({
           }
           
           // Access the current callback via ref to avoid dependency
-          if (debouncedWordCountUpdate) {
-            debouncedWordCountUpdate(editor);
+          if (throttledWordCountUpdate) {
+            throttledWordCountUpdate(editor.plugins.wordcount.getCount());
           }
         }, 100);
       });
