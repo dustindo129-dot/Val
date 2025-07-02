@@ -13,7 +13,6 @@ import SecondaryNavbar from './components/SecondaryNavbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import StructuredData from './components/StructuredData';
-import SessionInvalidationNotification from './components/SessionInvalidationNotification';
 import AppRoutes from './routes/AppRoutes';
 import './styles/shared/App.css';
 
@@ -59,8 +58,6 @@ const App = () => {
                   <Footer />
                   {/* Global ScrollToTop button that appears on all pages */}
                   <ScrollToTop threshold={300} />
-                  {/* Global session invalidation notification */}
-                  <SessionInvalidationNotification />
                 </div>
                 </BookmarkProvider>
               </NovelStatusProvider>

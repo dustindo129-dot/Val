@@ -64,9 +64,6 @@ export const AuthProvider = ({ children }) => {
   
   // Store session validation cleanup function
   const [sessionValidationCleanup, setSessionValidationCleanup] = useState(null);
-  
-  // State for session invalidation notification
-  const [sessionInvalidationMessage, setSessionInvalidationMessage] = useState(null);
 
   /**
    * Checks if the current session is valid with grace period for recent logins
@@ -236,9 +233,8 @@ export const AuthProvider = ({ children }) => {
       sessionValidationCleanup();
     }
     
-    // TEMPORARILY DISABLED - causing multi-tab authentication conflicts
-    // const cleanupFn = startSessionValidation(30000); // Check every 30 seconds
-    // setSessionValidationCleanup(() => cleanupFn);
+    const cleanupFn = startSessionValidation(30000); // Check every 30 seconds
+    setSessionValidationCleanup(() => cleanupFn);
   };
 
   /**
@@ -452,16 +448,6 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(userData));
         }
         console.log('Token refreshed successfully');
-      } else if (event.type === 'session-invalidated') {
-        // Handle session invalidation from another device
-        const message = event.detail?.message || 'Your account has been logged in from another device';
-        setSessionInvalidationMessage(message);
-        
-        // Show notification for a few seconds before logging out
-        setTimeout(() => {
-          setSessionInvalidationMessage(null);
-          signOut(true); // Silent logout
-        }, 5000);
       }
     };
 
@@ -473,7 +459,6 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('auth-token-invalid', handleCustomEvent);
     window.addEventListener('auth-token-refresh-failed', handleCustomEvent);
     window.addEventListener('auth-token-refreshed', handleCustomEvent);
-    window.addEventListener('session-invalidated', handleCustomEvent);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -482,7 +467,6 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('auth-token-invalid', handleCustomEvent);
       window.removeEventListener('auth-token-refresh-failed', handleCustomEvent);
       window.removeEventListener('auth-token-refreshed', handleCustomEvent);
-      window.removeEventListener('session-invalidated', handleCustomEvent);
     };
   }, []);
 
@@ -723,8 +707,7 @@ export const AuthProvider = ({ children }) => {
     setUser,
     updateUser: setUser,
     forgotPassword,
-    resetPassword,
-    sessionInvalidationMessage
+    resetPassword
   };
 
   return (

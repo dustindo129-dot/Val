@@ -168,22 +168,11 @@ axios.interceptors.response.use(
       }
     }
 
-    // For other types of 401 errors, check if it's a session invalidation
+    // For other types of 401 errors
     if (error.response?.status === 401) {
       // Special handling for logout endpoint - 401 is expected and should be ignored
       if (originalRequest.url?.includes('/api/auth/logout')) {
         return Promise.reject(error); // Don't clear auth data or show notifications
-      }
-      
-      // Check if this is specifically a session invalidation
-      if (error.response.data?.code === 'SESSION_INVALIDATED') {
-        // Dispatch session invalidation event
-        window.dispatchEvent(new CustomEvent('session-invalidated', {
-          detail: {
-            message: error.response.data.message || 'Tài khoản của bạn đã đăng nhập từ thiết bị khác'
-          }
-        }));
-        return Promise.reject(error);
       }
       
       // For other 401 errors, be more lenient with recent logins
