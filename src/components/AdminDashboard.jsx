@@ -328,7 +328,10 @@ const DeleteConfirmationModal = ({novel, onConfirm, onCancel}) => {
     const [isMatch, setIsMatch] = useState(false);
 
     useEffect(() => {
-        setIsMatch(confirmText === novel.title);
+        // Make comparison case-insensitive and trim whitespace
+        const normalizedConfirmText = confirmText.trim().toLowerCase();
+        const normalizedNovelTitle = novel.title.trim().toLowerCase();
+        setIsMatch(normalizedConfirmText === normalizedNovelTitle);
     }, [confirmText, novel.title]);
 
     return (
