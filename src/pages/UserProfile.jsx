@@ -292,6 +292,7 @@ const UserProfile = () => {
             selector: '#intro-editor',
             height: 300,
             menubar: false,
+            license_key: 'gpl',
             plugins: [
               'lists', 'link', 'image', 'charmap', 'preview',
               'searchreplace', 'visualblocks', 'code', 'fullscreen',

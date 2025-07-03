@@ -41,7 +41,7 @@ const decodeHTMLEntities = (text) => {
   return textarea.value;
 };
 
-const CommentSection = ({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null }) => {
+const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null }) => {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -205,7 +205,7 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
     checkBanStatus();
   }, [user, isAuthenticated]);
 
-  // Fetch comments
+  // Fetch comments (optimized to reduce refetches)
   const { data: commentsData = [], isLoading: commentsLoading, error: commentsError, refetch } = useQuery({
     queryKey: ['comments', `${contentType}-${contentId}`, sortOrder],
     queryFn: async () => {
@@ -223,8 +223,15 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
         return response.data;
       }
     },
-    staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: false
+    staleTime: 1000 * 60 * 10, // 10 minutes - comments don't change frequently 
+    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Don't refetch on component mount if data exists
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    refetchInterval: false, // Disable automatic refetching
+    refetchOnReconnect: false, // Don't refetch when reconnecting
+    refetchInterval: false, // Disable automatic refetching
+    refetchIntervalInBackground: false // Disable background refetching
   });
 
   // Memoize the organizeComments function to prevent recreation on every render
@@ -1544,6 +1551,6 @@ const CommentSection = ({ contentId, contentType, user, isAuthenticated, default
       )}
     </div>
   );
-};
+});
 
 export default CommentSection;

@@ -131,8 +131,9 @@ const ModuleList = memo(({
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 60, // 1 minute
-    refetchInterval: 1000 * 60, // Refetch every minute to update countdown
+    staleTime: 1000 * 60 * 5, // 5 minutes - data doesn't change that often
+    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes instead of every minute
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   // Check if user can see rental stats (admin, moderator, or pj_user managing this novel)
@@ -168,8 +169,9 @@ const ModuleList = memo(({
       }
     },
     enabled: !!user && !!novelId && canSeeRentalStats,
-    staleTime: 1000 * 30, // 30 seconds
-    refetchInterval: 1000 * 30, // Refetch every 30 seconds
+    staleTime: 1000 * 60 * 2, // 2 minutes - counts don't change that frequently
+    refetchInterval: 1000 * 60 * 2, // Refetch every 2 minutes instead of every 30 seconds
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   // Function to get active rental for a specific module
@@ -188,17 +190,22 @@ const ModuleList = memo(({
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
 
-  // Real-time countdown updates
+  // Real-time countdown updates (optimized to reduce re-renders)
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
-    // Update current time every second for real-time countdown
+    // Only update if there are active rentals to avoid unnecessary re-renders
+    if (activeRentals.length === 0) {
+      return;
+    }
+
+    // Update current time every 60 seconds instead of every second to reduce re-renders
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 1000);
+    }, 60000); // 60 seconds (1 minute) instead of 10 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [activeRentals.length]);
 
   // Calculate real-time countdown for display
   const getRealTimeCountdown = useCallback((rental) => {

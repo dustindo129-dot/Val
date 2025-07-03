@@ -851,6 +851,11 @@
   margin-bottom: 20px;
 }
 
+.rd-section-title-wrapper {
+  position: relative;
+  min-height: 32px;
+}
+
 .rd-section-title {
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
@@ -871,7 +876,7 @@
 }
 
 .rd-section-content {
-  padding: 15px;
+  padding: 15px 15px 15px 25px;
 }
 
 /* Paragraph styling for section content */
@@ -1036,21 +1041,6 @@
   height: 16px;
   background-color: #f39c12;
   margin-right: 8px;
-}
-
-.faq-toggle-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.faq-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 /* FAQ Section */

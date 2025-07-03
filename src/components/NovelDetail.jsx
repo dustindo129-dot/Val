@@ -19,7 +19,7 @@
  * - Navigation breadcrumbs
  */
 
-import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -96,7 +96,6 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
   const { user, isAuthenticated } = useAuth();
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const [showFAQ, setShowFAQ] = useState(false);
   const [hasContributionHistory, setHasContributionHistory] = useState(false);
 
   // Check for contribution history
@@ -143,70 +142,17 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
   }
 
   return (
-    <div className="rd-contribution-section">
-      <div className="rd-contribution-section-title">
-        ĐÓNG GÓP
-        <button 
-          onClick={() => setShowFAQ(!showFAQ)}
-          className="faq-toggle-btn"
-        >
-          FAQs
-        </button>
-      </div>
-      
-      {showFAQ && (
-        <div className="faq-section">
-          <div className="faq-title">
-            Những câu hỏi thường gặp:
-          </div>
-          
-          <div className="faq-question">
-            <strong>Hỏi:</strong> Nạp lúa ở đâu?
-          </div>
-          <div className="faq-answer">
-            <strong>Đáp:</strong> Nút "Nạp thêm".
-          </div>
-          
-          <div className="faq-question">
-            <strong>Hỏi:</strong> Kho lúa bị dư thì như thế nào?
-          </div>
-          <div className="faq-answer">
-            <strong>Đáp:</strong> Lúa dư sẽ để lại trong kho và tự động trừ để mở chương khi chương trả phí mới được đăng (có lưu lại trong lịch sử đóng góp).
-          </div>
-          
-          <div className="faq-question">
-            <strong>Hỏi:</strong> Có lúa trong kho nhưng chưa đủ để mở chương thì sao?
-          </div>
-          <div className="faq-answer">
-            <strong>Đáp:</strong> Lúa sẽ ở trong kho đến khi góp đủ để mở chương trả phí đăng sớm nhất.
-          </div>
-          
-          <div className="faq-question">
-            <strong>Hỏi:</strong> Ví dụ chương 1 giá 200 lúa, chương 2 giá 100 lúa, kho lúa có 100 lúa thì chương nào sẽ mở trước?
-          </div>
-          <div className="faq-answer">
-            <strong>Đáp:</strong> Không chương nào cả. Lúa sẽ ở trong kho đến khi góp đủ 200 lúa để tự động mở chương 1. Chương được mở theo thứ tự và cả tập cũng vậy.
-          </div>
-          
-          <div className="faq-question">
-            <strong>Hỏi:</strong> Cách tính giá lúa của chương/tập?
-          </div>
-          <div className="faq-answer">
-            <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc (chưa kèm phụ phí).
-          </div>
-        </div>
-      )}
-      
+    <>
       {/* Novel Budget Card */}
       <div className="novel-budget">
         <div className="balance-icon">
           <i className="fas fa-seedling"></i>
-          </div>
+        </div>
         <div className="balance-info">
           <div className="balance-label">Kho lúa</div>
           <div className="balance-value">{(novelBudget || 0).toLocaleString()} 🌾</div>
-              </div>
-                </div>
+        </div>
+      </div>
 
       {/* Action Buttons */}
       <div className="contribution-actions">
@@ -246,7 +192,7 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
         onClose={() => setIsHistoryModalOpen(false)}
         novelId={novelId}
       />
-    </div>
+    </>
   );
 };
 
@@ -423,6 +369,15 @@ const NovelSEO = ({ novel }) => {
   );
 };
 
+// Memoize the NovelInfo component to prevent unnecessary re-renders
+const MemoizedNovelInfo = React.memo(NovelInfo);
+
+// Memoize the ModuleList component to prevent unnecessary re-renders
+const MemoizedModuleList = React.memo(ModuleList);
+
+// Memoize the CommentSection component to prevent unnecessary re-renders  
+const MemoizedCommentSection = React.memo(CommentSection);
+
 /**
  * NovelDetail Component
  * 
@@ -437,17 +392,18 @@ const NovelDetail = ({ novelId }) => {
   
   const [autoLoadComments, setAutoLoadComments] = useState(false);
   const [showModuleForm, setShowModuleForm] = useState(false);
-  const [moduleForm, setModuleForm] = useState({ 
-    title: '', 
-    illustration: '', 
-    loading: false, 
+  const [editingModule, setEditingModule] = useState(null);
+  const [showFAQ, setShowFAQ] = useState(false);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [moduleForm, setModuleForm] = useState({
+    title: '',
+    illustration: '',
+    loading: false,
     error: '',
     mode: 'published',
     moduleBalance: 0,
     rentBalance: 0
   });
-  const [editingModule, setEditingModule] = useState(null);
-  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
   
   // Rental modal state
@@ -710,122 +666,36 @@ const NovelDetail = ({ novelId }) => {
     });
   }, []);
 
-  // Handler for module submission (create/update)
-  const handleModuleSubmit = useCallback(async (e, formData) => {
-    e.preventDefault();
-    
-    // Use the formData passed from ModuleForm if available, otherwise use moduleForm state
-    const dataToSubmit = formData || moduleForm;
-    
-    if (!dataToSubmit.title.trim()) {
-      setModuleForm(prev => ({ ...prev, error: 'Module title is required' }));
-      return;
-    }
+  // Query to get novel stats (likes, ratings, etc.) - optimize to reduce duplicate calls
+  const { data: novelStats } = useQuery({
+    queryKey: ['novelStats', novelId],
+    queryFn: () => api.getNovelStats(novelId),
+    enabled: !!novelId,
+    staleTime: 1000 * 60 * 5, // 5 minutes - stats don't change frequently
+    cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on component mount if data exists
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    // Enable query deduplication for this specific query
+    queryDeduplication: true
+  });
   
-    setModuleForm(prev => ({ ...prev, loading: true, error: '' }));
-  
-    try {
-      // Get current novel data for optimistic updates
-      const currentNovelData = queryClient.getQueryData(['novel', novelId]);
-      
-      // Store current data for possible rollback
-      let previousData = null;
-      if (currentNovelData) {
-        previousData = JSON.parse(JSON.stringify(currentNovelData));
-      }
-      
-      let response;
-      if (editingModule) {
-        // Optimistically update the cache before API call
-        if (currentNovelData?.modules) {
-          const updatedModules = currentNovelData.modules.map(module => 
-            module._id === editingModule 
-              ? { 
-                  ...module, 
-                  title: dataToSubmit.title,
-                  illustration: dataToSubmit.illustration,
-                  mode: dataToSubmit.mode,
-                  moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0,
-                  rentBalance: parseInt(dataToSubmit.rentBalance) || 0,
-                  updatedAt: new Date().toISOString()
-                }
-              : module
-          );
-          
-          queryClient.setQueryData(['novel', novelId], {
-            ...currentNovelData,
-            modules: updatedModules,
-            updatedAt: new Date().toISOString()
-          });
-        }
-        
-        // Make the API call
-        response = await api.updateModule(novelId, editingModule, {
-          title: dataToSubmit.title,
-          illustration: dataToSubmit.illustration,
-          mode: dataToSubmit.mode,
-          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0,
-          rentBalance: parseInt(dataToSubmit.rentBalance) || 0
-        });
-      } else {
-        // Create new module
-        response = await api.createModule(novelId, {
-          title: dataToSubmit.title,
-          illustration: dataToSubmit.illustration,
-          mode: dataToSubmit.mode,
-          moduleBalance: dataToSubmit.mode === 'paid' ? parseInt(dataToSubmit.moduleBalance) || 0 : 0,
-          rentBalance: parseInt(dataToSubmit.rentBalance) || 0
-        });
-        
-        // If we have current data and a successful response, optimistically add the new module
-        if (currentNovelData?.modules && response) {
-          const updatedModules = [...currentNovelData.modules, response];
-          queryClient.setQueryData(['novel', novelId], {
-            ...currentNovelData,
-            modules: updatedModules,
-            updatedAt: new Date().toISOString()
-          });
-        }
-      }
-      
-      // Force a refetch to ensure consistency with server
-      await queryClient.invalidateQueries(['novel', novelId], { 
-        refetchType: 'all' 
-      });
-      
-      // Close the form and reset state
-      setShowModuleForm(false);
-      setModuleForm({
-        title: '',
-        illustration: '',
-        loading: false,
-        error: '',
-        mode: 'published',
-        moduleBalance: 0,
-        rentBalance: 0
-      });
-      setEditingModule(null);
-    } catch (error) {
-      console.error('Lỗi gửi module:', error);
-      const errorMessage = error.response?.data?.message || 'Không thể lưu module. Vui lòng thử lại.';
-      setModuleForm(prev => ({ 
-        ...prev, 
-        loading: false,
-        error: errorMessage
-      }));
-      
-      // On error, force refetch to make sure we have correct data
-      queryClient.refetchQueries(['novel', novelId]);
-    }
-  }, [moduleForm, editingModule, novelId, queryClient]);
-  
-  // Check if token exists
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (user && !token) {
-      console.error("Vấn đề xác thực: Người dùng đã đăng nhập nhưng token bị thiếu");
-    }
-  }, [user]);
+  // Query to get user interaction data (likes, ratings) - optimize to reduce duplicate calls  
+  const { data: userInteraction } = useQuery({
+    queryKey: ['userInteraction', user?.username, novelId],
+    queryFn: () => {
+      if (!user?.username || !novelId) return { liked: false, rating: null };
+      return api.getUserNovelInteraction(novelId);
+    },
+    enabled: !!user?.username && !!novelId,
+    staleTime: 1000 * 60 * 10, // 10 minutes - user interactions don't change often
+    cacheTime: 1000 * 60 * 20, // 20 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch when reconnecting
+    refetchOnMount: false, // Don't refetch on component mount if data exists
+    // Enable query deduplication for this specific query
+    queryDeduplication: true
+  });
   
   // Query for fetching novel data
   const { data, isLoading, error, refetch } = useQuery({
@@ -892,22 +762,6 @@ const NovelDetail = ({ novelId }) => {
     retry: false
   });
   
-  // Query to get user interaction data (likes, ratings)
-  const { data: userInteraction } = useQuery({
-    queryKey: ['userInteraction', user?.username, novelId],
-    queryFn: () => {
-      if (!user?.username || !novelId) return { liked: false, rating: null };
-      return api.getUserNovelInteraction(novelId);
-    },
-    enabled: !!user?.username && !!novelId,
-    staleTime: 1000 * 60 * 3, // 3 minutes - don't refetch if data is less than 3 minutes old
-    cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache for 15 minutes
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnReconnect: false // Don't refetch when reconnecting
-  });
-  
-
-
   // Add handler functions for chapters
   const handleChapterReorder = useCallback(async (moduleId, chapterId, direction) => {
     // Check if user has permission (admin, moderator, or pj_user managing this novel)
@@ -1077,6 +931,159 @@ const NovelDetail = ({ novelId }) => {
     };
   }, [novelId, queryClient, navigate]);
 
+  // User interaction handlers
+  const handleLike = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const response = await api.likeNovel(novelId);
+      
+      // Update user interaction cache
+      queryClient.setQueryData(['userInteraction', user.username, novelId], (old) => ({
+        ...old,
+        liked: response.liked
+      }));
+      
+      // Update novel stats cache
+      queryClient.setQueryData(['novelStats', novelId], (old) => ({
+        ...old,
+        totalLikes: response.totalLikes
+      }));
+      
+    } catch (error) {
+      console.error('Error liking novel:', error);
+    }
+  }, [user, novelId, queryClient]);
+
+  const handleRating = useCallback(async (rating, review) => {
+    if (!user) return;
+    
+    try {
+      const response = await api.rateNovel(novelId, rating, review);
+      
+      // Update user interaction cache
+      queryClient.setQueryData(['userInteraction', user.username, novelId], (old) => ({
+        ...old,
+        rating: response.rating,
+        review: response.review
+      }));
+      
+      // Update novel stats cache
+      queryClient.setQueryData(['novelStats', novelId], (old) => ({
+        ...old,
+        totalRatings: response.totalRatings,
+        averageRating: response.averageRating
+      }));
+      
+    } catch (error) {
+      console.error('Error rating novel:', error);
+    }
+  }, [user, novelId, queryClient]);
+
+  const handleBookmark = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const response = await api.toggleBookmark(novelId);
+      
+      // Update user interaction cache
+      queryClient.setQueryData(['userInteraction', user.username, novelId], (old) => ({
+        ...old,
+        bookmarked: response.bookmarked
+      }));
+      
+    } catch (error) {
+      console.error('Error bookmarking novel:', error);
+    }
+  }, [user, novelId, queryClient]);
+
+  // Optimized module submission handler to prevent cascade of re-renders
+  const handleModuleSubmit = useCallback(async (e, formData) => {
+    e.preventDefault();
+    
+    // Use the formData passed from ModuleForm if available, otherwise use moduleForm state
+    const dataToSubmit = formData || moduleForm;
+    
+    // Get current data for mode change detection
+    const currentNovelData = queryClient.getQueryData(['novel', novelId]);
+    
+    setModuleForm(prev => ({ ...prev, loading: true, error: '' }));
+    
+    try {
+      let response;
+      
+      if (editingModule) {
+        // Update existing module
+        response = await api.updateModule(novelId, editingModule, dataToSubmit);
+      } else {
+        // Create new module
+        response = await api.createModule(novelId, dataToSubmit);
+      }
+      
+      // Close the form
+      setShowModuleForm(false);
+      setEditingModule(null);
+      
+      // Reset form
+      setModuleForm({
+        title: '',
+        illustration: '',
+        loading: false,
+        error: '',
+        mode: 'published',
+        moduleBalance: 0,
+        rentBalance: 0
+      });
+      
+      // OPTIMIZED: Only invalidate specific queries that actually need updates
+      // Always invalidate the main novel query since module data changed
+      await queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      
+      // Only invalidate rental-related queries if the module mode changed to/from 'rent'
+      const wasRentMode = editingModule && currentNovelData?.modules?.find(m => m._id === editingModule)?.mode === 'rent';
+      const isRentMode = dataToSubmit.mode === 'rent';
+      
+      if (wasRentMode !== isRentMode) {
+        // Module rental mode changed, invalidate rental queries
+        await queryClient.invalidateQueries({ queryKey: ['activeRentals', user?.id] });
+        await queryClient.invalidateQueries({ queryKey: ['moduleRentalCounts', novelId, user?.id] });
+      }
+      
+      // DON'T invalidate user interactions or comments - they're not affected by module changes
+      
+    } catch (error) {
+      console.error('Module submission error:', error);
+      setModuleForm(prev => ({ 
+        ...prev, 
+        loading: false, 
+        error: error.response?.data?.message || 'Đã xảy ra lỗi' 
+      }));
+      
+      // On error, only refetch the main novel query to ensure consistency
+      queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+    }
+  }, [moduleForm, editingModule, novelId, queryClient, user]);
+
+  // Check if user can edit (admin, moderator, or pj_user managing this novel)
+  const canEdit = user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' || 
+    (user.role === 'pj_user' && (
+      data?.novel?.active?.pj_user?.includes(user.id) || 
+      data?.novel?.active?.pj_user?.includes(user._id) ||
+      data?.novel?.active?.pj_user?.includes(user.username) ||
+      data?.novel?.active?.pj_user?.includes(user.displayName)
+    ))
+  );
+
+  // Check if token exists
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (user && !token) {
+      console.error("Vấn đề xác thực: Người dùng đã đăng nhập nhưng token bị thiếu");
+    }
+  }, [user]);
+  
   return (
     <div className="novel-detail-page">
       {isLoading ? (
@@ -1086,144 +1093,145 @@ const NovelDetail = ({ novelId }) => {
       ) : data?.novel ? (
         <>
           <NovelSEO novel={data.novel} />
-            <NovelInfo
-                novel={{...data.novel, modules: data.modules}}
-                user={user}
-                userInteraction={userInteraction}
-                hasChapters={hasChapters}
-                setIsRatingModalOpen={setIsRatingModalOpen}
-                handleModuleFormToggle={handleModuleFormToggle}
-                truncateHTML={truncateHTML}
-                chaptersData={chaptersData}
-                sidebar={<NovelContributions
-                    novelId={novelId}
-                    novelBudget={data.novel.novelBudget}
-                    onContributionSuccess={handleContributionSuccess}
-                    modules={data.modules}
-                />}
-            />
-          
-          <div className="chapter-list-container">
-            <div className="chapters-header">
-              <h2>Danh Sách Chương</h2>
-              {/* Add module button - restricted to admin/moderator/assigned pj_user */}
-              {(() => {
-                const canAddModule = user?.role === 'admin' || user?.role === 'moderator' || 
-                  (user?.role === 'pj_user' && (
-                    data.novel.active?.pj_user?.includes(user.id) || 
-                    data.novel.active?.pj_user?.includes(user._id) ||
-                    data.novel.active?.pj_user?.includes(user.username) ||
-                    data.novel.active?.pj_user?.includes(user.displayName)
-                  ));
-
-
-
-                return canAddModule;
-              })() && (
-                <button 
-                  className="add-module-btn"
-                  onClick={handleModuleFormToggle}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  Thêm tập
-                </button>
-              )}
-            </div>
-            
-            {/* Place the form at the top level for maximum visibility when editing */}
-            {showModuleForm && editingModule && (() => {
-              // Find the module being edited and check if it has paid content
-              const moduleBeingEdited = data.modules?.find(module => module._id === editingModule);
-              const hasPaidContent = moduleBeingEdited?.chapters?.some(chapter => 
-                chapter.mode === 'paid' && chapter.chapterBalance > 0
-              ) || false;
-              
-              return (
-                <div className="module-form-modal-overlay">
+          <MemoizedNovelInfo
+            novel={{...data.novel, modules: data.modules}}
+            user={user}
+            userInteraction={userInteraction}
+            novelStats={novelStats}
+            handleLike={handleLike}
+            handleRating={handleRating}
+            handleBookmark={handleBookmark}
+            truncateHTML={truncateHTML}
+            sidebar={user && (
+              <div className="rd-section">
+                <div className="rd-section-title-wrapper">
+                  <h3 className="rd-section-title">ĐÓNG GÓP</h3>
+                  <button 
+                    onClick={() => setShowFAQ(!showFAQ)}
+                    className="faq-toggle-btn"
+                  >
+                    FAQs
+                  </button>
+                </div>
+                <div className="rd-section-content">
+                  {showFAQ && (
+                    <div className="faq-section">
+                      <div className="faq-title">
+                        Những câu hỏi thường gặp:
+                      </div>
+                      
+                      <div className="faq-question">
+                        <strong>Hỏi:</strong> Nạp lúa ở đâu?
+                      </div>
+                      <div className="faq-answer">
+                        <strong>Đáp:</strong> Nút "Nạp thêm".
+                      </div>
+                      
+                      <div className="faq-question">
+                        <strong>Hỏi:</strong> Kho lúa bị dư thì như thế nào?
+                      </div>
+                      <div className="faq-answer">
+                        <strong>Đáp:</strong> Lúa dư sẽ để lại trong kho và tự động trừ để mở chương khi chương trả phí mới được đăng (có lưu lại trong lịch sử đóng góp).
+                      </div>
+                      
+                      <div className="faq-question">
+                        <strong>Hỏi:</strong> Có lúa trong kho nhưng chưa đủ để mở chương thì sao?
+                      </div>
+                      <div className="faq-answer">
+                        <strong>Đáp:</strong> Lúa sẽ ở trong kho đến khi góp đủ để mở chương trả phí đăng sớm nhất.
+                      </div>
+                      
+                      <div className="faq-question">
+                        <strong>Hỏi:</strong> Ví dụ chương 1 giá 200 lúa, chương 2 giá 100 lúa, kho lúa có 100 lúa thì chương nào sẽ mở trước?
+                      </div>
+                      <div className="faq-answer">
+                        <strong>Đáp:</strong> Không chương nào cả. Lúa sẽ ở trong kho đến khi góp đủ 200 lúa để tự động mở chương 1. Chương được mở theo thứ tự và cả tập cũng vậy.
+                      </div>
+                      
+                      <div className="faq-question">
+                        <strong>Hỏi:</strong> Cách tính giá lúa của chương/tập?
+                      </div>
+                      <div className="faq-answer">
+                        <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc (chưa kèm phụ phí).
+                      </div>
+                    </div>
+                  )}
                   <Suspense fallback={<LoadingSpinner />}>
-                    <ModuleForm 
-                      key={`edit-${editingModule}`}
-                      moduleForm={moduleForm} 
-                      setModuleForm={setModuleForm} 
-                      handleModuleSubmit={handleModuleSubmit} 
-                      handleModuleCoverUpload={handleModuleCoverUpload} 
-                      handleModuleFormToggle={handleModuleFormToggle}
-                      editingModule={editingModule} 
-                      hasPaidContent={hasPaidContent}
-                      novel={data.novel}
-                      user={user}
+                    <NovelContributions 
+                      novelId={novelId}
+                      novelBudget={data.novel?.novelBudget || 0}
+                      onContributionSuccess={handleContributionSuccess}
+                      modules={data.modules}
                     />
                   </Suspense>
                 </div>
-              );
-            })()}
-            
-            {/* Regular position for the add form */}
-            {showModuleForm && !editingModule && (
-              <Suspense fallback={<LoadingSpinner />}>
-                <ModuleForm 
-                  key="new-module"
-                  moduleForm={moduleForm} 
-                  setModuleForm={setModuleForm} 
-                  handleModuleSubmit={handleModuleSubmit} 
-                  handleModuleCoverUpload={handleModuleCoverUpload} 
-                  handleModuleFormToggle={handleModuleFormToggle}
-                  editingModule={null} 
-                  hasPaidContent={false} // New modules have no chapters, so no paid content
-                  novel={data.novel}
-                  user={user}
-                />
-              </Suspense>
+              </div>
             )}
-            
-            {data?.modules && (
-              <Suspense fallback={<LoadingSpinner />}>
-                <ModuleList
-                  modules={data.modules}
-                  novelId={novelId}
-                  novelTitle={data.novel.title}
-                  novel={data.novel}
-                  user={user}
-                  handleModuleReorder={handleModuleReorder}
-                  handleModuleDelete={handleDeleteModule}
-                  handleEditModule={handleEditModule}
-                  handleChapterReorder={handleChapterReorder}
-                  handleChapterDelete={handleChapterDelete}
-                  handleOpenRentalModal={handleOpenRentalModal}
-                />
-              </Suspense>
+          />
+          
+          {/* Module Form */}
+          {showModuleForm && (
+            <Suspense fallback={<LoadingSpinner />}>
+              <ModuleForm
+                moduleForm={moduleForm}
+                setModuleForm={setModuleForm}
+                handleModuleSubmit={handleModuleSubmit}
+                handleModuleFormToggle={handleModuleFormToggle}
+                handleModuleCoverUpload={handleModuleCoverUpload}
+                editingModule={editingModule}
+                hasPaidContent={editingModule && data?.modules ? 
+                  data.modules.find(m => m._id === editingModule)?.chapters?.some(ch => ch.mode === 'paid') || false 
+                  : false}
+                novel={data.novel}
+              />
+            </Suspense>
+          )}
+          
+          {/* Modules Header - Chapter List title and Add Module button on same line */}
+          <div className="modules-header">
+            <h2 className="modules-title">
+              Danh sách chương ({chaptersData.chapters.length})
+            </h2>
+            {canEdit && (
+              <button 
+                onClick={handleModuleFormToggle}
+                className="add-module-btn"
+              >
+                {showModuleForm ? 'Hủy' : 'Thêm tập mới'}
+              </button>
             )}
           </div>
-
+          
+          {/* Modules List */}
+          <MemoizedModuleList
+            modules={data.modules}
+            novelId={novelId}
+            novelTitle={data.novel.title}
+            novel={data.novel}
+            user={user}
+            handleModuleReorder={handleModuleReorder}
+            handleModuleDelete={handleDeleteModule}
+            handleEditModule={handleEditModule}
+            handleChapterReorder={handleChapterReorder}
+            handleChapterDelete={handleChapterDelete}
+            handleOpenRentalModal={handleOpenRentalModal}
+          />
+          
           {/* Comments section - Auto-loads after delay */}
           {autoLoadComments && (
             <Suspense fallback={<LoadingSpinner />}>
-              <CommentSection 
+              <MemoizedCommentSection 
                 contentId={novelId}
                 contentType="novels"
                 user={user}
                 isAuthenticated={!!user}
                 novel={data.novel}
-              />
-            </Suspense>
-          )}
-
-          {/* Rating Modal */}
-          {isRatingModalOpen && (
-            <Suspense fallback={<LoadingSpinner />}>
-              <RatingModal 
-                novelId={novelId}
-                isOpen={isRatingModalOpen}
-                onClose={() => setIsRatingModalOpen(false)}
-                currentRating={userInteraction?.rating || 0}
+                key={`comments-${novelId}`} // Add key to prevent unnecessary re-creation
               />
             </Suspense>
           )}
           
-          {/* Module Rental Modal */}
+          {/* Rental Modal */}
           {isRentalModalOpen && selectedModuleForRent && (
             <ModuleRentalModal
               isOpen={isRentalModalOpen}
