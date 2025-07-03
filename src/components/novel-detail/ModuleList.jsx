@@ -345,13 +345,13 @@ const ModuleList = memo(({
                     ) : (
                       // Show rental price and button when no active rental
                       <>
-                        <div className="module-rent-price">
+                        <div className="module-rental-price">
                           <FontAwesomeIcon icon={faClock} className="rent-icon" />
                           <span>Thuê: {module.rentBalance} 🌾/52h</span>
                         </div>
                         {shouldShowRentalButton(module) && (
                           <button
-                            className="module-rent-btn"
+                            className="module-rental-btn"
                             onClick={() => handleOpenRentalModal(module)}
                             title={`Thuê tập này với ${module.rentBalance} 🌾 trong 52 giờ`}
                           >
