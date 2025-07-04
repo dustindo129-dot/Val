@@ -92,7 +92,7 @@ const truncateHTML = (html, maxLength) => {
  * Displays novel budget and contribution interface
  * Only shows if the novel has paid modules or chapters, or if there's contribution history
  */
-const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modules }) => {
+const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modules, showFAQ, setShowFAQ }) => {
   const { user, isAuthenticated } = useAuth();
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -142,57 +142,111 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
   }
 
   return (
-    <>
-      {/* Novel Budget Card */}
-      <div className="novel-budget">
-        <div className="balance-icon">
-          <i className="fas fa-seedling"></i>
-        </div>
-        <div className="balance-info">
-          <div className="balance-label">Kho lúa</div>
-          <div className="balance-value">{(novelBudget || 0).toLocaleString()} 🌾</div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="contribution-actions">
+    <div className="rd-section">
+      <div className="rd-section-title-wrapper">
+        <h3 className="rd-section-title">ĐÓNG GÓP</h3>
         <button 
-          className="btn btn-primary contribution-btn-primary" 
-          onClick={() => {
-            if (!isAuthenticated) {
-              alert('Vui lòng đăng nhập để đóng góp');
-              window.dispatchEvent(new CustomEvent('openLoginModal'));
-              return;
-            }
-            setIsContributeModalOpen(true);
-          }}
+          onClick={() => setShowFAQ(!showFAQ)}
+          className="faq-toggle-btn"
         >
-          <i className="fas fa-plus-circle"></i>
-          <span>Góp lúa</span>
-        </button>
-        <button 
-          className="btn btn-secondary contribution-btn-secondary" 
-          onClick={() => setIsHistoryModalOpen(true)}
-        >
-          <i className="fas fa-history"></i>
-          <span>Lịch sử đóng góp</span>
+          FAQs
         </button>
       </div>
+      <div className="rd-section-content">
+        {showFAQ && (
+          <div className="faq-section">
+            <div className="faq-title">
+              Những câu hỏi thường gặp:
+            </div>
+            
+            <div className="faq-question">
+              <strong>Hỏi:</strong> Nạp lúa ở đâu?
+            </div>
+            <div className="faq-answer">
+              <strong>Đáp:</strong> Nút "Nạp thêm".
+            </div>
+            
+            <div className="faq-question">
+              <strong>Hỏi:</strong> Kho lúa bị dư thì như thế nào?
+            </div>
+            <div className="faq-answer">
+              <strong>Đáp:</strong> Lúa dư sẽ để lại trong kho và tự động trừ để mở chương khi chương trả phí mới được đăng (có lưu lại trong lịch sử đóng góp).
+            </div>
+            
+            <div className="faq-question">
+              <strong>Hỏi:</strong> Có lúa trong kho nhưng chưa đủ để mở chương thì sao?
+            </div>
+            <div className="faq-answer">
+              <strong>Đáp:</strong> Lúa sẽ ở trong kho đến khi góp đủ để mở chương trả phí đăng sớm nhất.
+            </div>
+            
+            <div className="faq-question">
+              <strong>Hỏi:</strong> Ví dụ chương 1 giá 200 lúa, chương 2 giá 100 lúa, kho lúa có 100 lúa thì chương nào sẽ mở trước?
+            </div>
+            <div className="faq-answer">
+              <strong>Đáp:</strong> Không chương nào cả. Lúa sẽ ở trong kho đến khi góp đủ 200 lúa để tự động mở chương 1. Chương được mở theo thứ tự và cả tập cũng vậy.
+            </div>
+            
+            <div className="faq-question">
+              <strong>Hỏi:</strong> Cách tính giá lúa của chương/tập?
+            </div>
+            <div className="faq-answer">
+              <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc (chưa kèm phụ phí).
+            </div>
+          </div>
+        )}
+        
+        {/* Novel Budget Card */}
+        <div className="novel-budget">
+          <div className="balance-icon">
+            <i className="fas fa-seedling"></i>
+          </div>
+          <div className="balance-info">
+            <div className="balance-label">Kho lúa</div>
+            <div className="balance-value">{(novelBudget || 0).toLocaleString()} 🌾</div>
+          </div>
+        </div>
 
-      {/* Modals */}
-      <ContributionModal
-        isOpen={isContributeModalOpen}
-        onClose={() => setIsContributeModalOpen(false)}
-        novelId={novelId}
-        onContributionSuccess={onContributionSuccess}
-      />
-      
-      <ContributionHistoryModal
-        isOpen={isHistoryModalOpen}
-        onClose={() => setIsHistoryModalOpen(false)}
-        novelId={novelId}
-      />
-    </>
+        {/* Action Buttons */}
+        <div className="contribution-actions">
+          <button 
+            className="btn btn-primary contribution-btn-primary" 
+            onClick={() => {
+              if (!isAuthenticated) {
+                alert('Vui lòng đăng nhập để đóng góp');
+                window.dispatchEvent(new CustomEvent('openLoginModal'));
+                return;
+              }
+              setIsContributeModalOpen(true);
+            }}
+          >
+            <i className="fas fa-plus-circle"></i>
+            <span>Góp lúa</span>
+          </button>
+          <button 
+            className="btn btn-secondary contribution-btn-secondary" 
+            onClick={() => setIsHistoryModalOpen(true)}
+          >
+            <i className="fas fa-history"></i>
+            <span>Lịch sử đóng góp</span>
+          </button>
+        </div>
+
+        {/* Modals */}
+        <ContributionModal
+          isOpen={isContributeModalOpen}
+          onClose={() => setIsContributeModalOpen(false)}
+          novelId={novelId}
+          onContributionSuccess={onContributionSuccess}
+        />
+        
+        <ContributionHistoryModal
+          isOpen={isHistoryModalOpen}
+          onClose={() => setIsHistoryModalOpen(false)}
+          novelId={novelId}
+        />
+      </div>
+    </div>
   );
 };
 
@@ -395,6 +449,7 @@ const NovelDetail = ({ novelId }) => {
   const [editingModule, setEditingModule] = useState(null);
   const [showFAQ, setShowFAQ] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+
   const [moduleForm, setModuleForm] = useState({
     title: '',
     illustration: '',
@@ -1076,6 +1131,8 @@ const NovelDetail = ({ novelId }) => {
     ))
   );
 
+
+
   // Check if token exists
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -1103,69 +1160,16 @@ const NovelDetail = ({ novelId }) => {
             handleBookmark={handleBookmark}
             truncateHTML={truncateHTML}
             sidebar={user && (
-              <div className="rd-section">
-                <div className="rd-section-title-wrapper">
-                  <h3 className="rd-section-title">ĐÓNG GÓP</h3>
-                  <button 
-                    onClick={() => setShowFAQ(!showFAQ)}
-                    className="faq-toggle-btn"
-                  >
-                    FAQs
-                  </button>
-                </div>
-                <div className="rd-section-content">
-                  {showFAQ && (
-                    <div className="faq-section">
-                      <div className="faq-title">
-                        Những câu hỏi thường gặp:
-                      </div>
-                      
-                      <div className="faq-question">
-                        <strong>Hỏi:</strong> Nạp lúa ở đâu?
-                      </div>
-                      <div className="faq-answer">
-                        <strong>Đáp:</strong> Nút "Nạp thêm".
-                      </div>
-                      
-                      <div className="faq-question">
-                        <strong>Hỏi:</strong> Kho lúa bị dư thì như thế nào?
-                      </div>
-                      <div className="faq-answer">
-                        <strong>Đáp:</strong> Lúa dư sẽ để lại trong kho và tự động trừ để mở chương khi chương trả phí mới được đăng (có lưu lại trong lịch sử đóng góp).
-                      </div>
-                      
-                      <div className="faq-question">
-                        <strong>Hỏi:</strong> Có lúa trong kho nhưng chưa đủ để mở chương thì sao?
-                      </div>
-                      <div className="faq-answer">
-                        <strong>Đáp:</strong> Lúa sẽ ở trong kho đến khi góp đủ để mở chương trả phí đăng sớm nhất.
-                      </div>
-                      
-                      <div className="faq-question">
-                        <strong>Hỏi:</strong> Ví dụ chương 1 giá 200 lúa, chương 2 giá 100 lúa, kho lúa có 100 lúa thì chương nào sẽ mở trước?
-                      </div>
-                      <div className="faq-answer">
-                        <strong>Đáp:</strong> Không chương nào cả. Lúa sẽ ở trong kho đến khi góp đủ 200 lúa để tự động mở chương 1. Chương được mở theo thứ tự và cả tập cũng vậy.
-                      </div>
-                      
-                      <div className="faq-question">
-                        <strong>Hỏi:</strong> Cách tính giá lúa của chương/tập?
-                      </div>
-                      <div className="faq-answer">
-                        <strong>Đáp:</strong> Số chữ * Giá chữ \ 100. Giá chữ dao động từ 4/5/6 vnđ 1 chữ tùy theo ngôn ngữ gốc (chưa kèm phụ phí).
-                      </div>
-                    </div>
-                  )}
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <NovelContributions 
-                      novelId={novelId}
-                      novelBudget={data.novel?.novelBudget || 0}
-                      onContributionSuccess={handleContributionSuccess}
-                      modules={data.modules}
-                    />
-                  </Suspense>
-                </div>
-              </div>
+              <Suspense fallback={<LoadingSpinner />}>
+                <NovelContributions 
+                  novelId={novelId}
+                  novelBudget={data.novel?.novelBudget || 0}
+                  onContributionSuccess={handleContributionSuccess}
+                  modules={data.modules}
+                  showFAQ={showFAQ}
+                  setShowFAQ={setShowFAQ}
+                />
+              </Suspense>
             )}
           />
           

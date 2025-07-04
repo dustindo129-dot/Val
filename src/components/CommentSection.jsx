@@ -229,8 +229,6 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     refetchOnMount: false, // Don't refetch on component mount if data exists
     refetchOnReconnect: false, // Don't refetch on reconnect
     refetchInterval: false, // Disable automatic refetching
-    refetchOnReconnect: false, // Don't refetch when reconnecting
-    refetchInterval: false, // Disable automatic refetching
     refetchIntervalInBackground: false // Disable background refetching
   });
 
