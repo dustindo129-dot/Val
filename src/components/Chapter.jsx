@@ -1256,7 +1256,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
    */
   const handleOpenRentalModal = useCallback((module = moduleData) => {
     if (!user) {
-      alert('Vui lòng đăng nhập để thuê tập');
+              alert('Vui lòng đăng nhập để mở tạm thời tập');
       window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }

@@ -28,7 +28,7 @@ const ChapterAccessGuard = ({
   // Rental modal handlers - use parent handlers if provided
   const handleOpenRentalModal = useCallback((module) => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để thuê tập');
+      alert('Vui lòng đăng nhập để mở tạm thời tập');
       window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
@@ -181,10 +181,10 @@ const ChapterAccessGuard = ({
                     <button
                       className="rent-module-btn"
                       onClick={() => handleOpenRentalModal(moduleData)}
-                      title={`Thuê tập này với ${moduleData.rentBalance} 🌾 trong 52 giờ`}
+                      title={`Mở tạm thời tập này với ${moduleData.rentBalance} 🌾 trong 1 tuần`}
                     >
                       <FontAwesomeIcon icon={faClock} />
-                      Thuê tập
+                      Mở tạm thời
                     </button>
                   )}
                 </div>
@@ -218,10 +218,10 @@ const ChapterAccessGuard = ({
                     <button
                       className="rent-module-btn"
                       onClick={() => handleOpenRentalModal(moduleData)}
-                      title={`Thuê tập này với ${moduleData.rentBalance} 🌾 trong 52 giờ`}
+                      title={`Mở tạm thời tập này với ${moduleData.rentBalance} 🌾 trong 1 tuần`}
                     >
                       <FontAwesomeIcon icon={faClock} />
-                      Thuê tập
+                      Mở tạm thời
                     </button>
                   )}
                 </div>

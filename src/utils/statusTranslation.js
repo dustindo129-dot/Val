@@ -36,21 +36,21 @@ const chapterModuleStatusTranslations = {
   'DRAFT': 'NHÁP',
   'PROTECTED': 'BẢO MẬT',
   'PAID': 'TRẢ PHÍ',
-  'RENT': 'CHO THUÊ',
+  'RENT': 'MỞ TẠM THỜI',
   
   // Capitalized variants
   'Published': 'Công khai',
   'Draft': 'Nháp',
   'Protected': 'Bảo mật',
   'Paid': 'Trả phí',
-  'Rent': 'Cho thuê',
+  'Rent': 'Mở tạm thời',
   
   // Lowercase variants (just in case)
   'published': 'công khai',
   'draft': 'nháp',
   'protected': 'bảo mật',
   'paid': 'trả phí',
-  'rent': 'cho thuê'
+  'rent': 'mở tạm thời'
 };
 
 /**

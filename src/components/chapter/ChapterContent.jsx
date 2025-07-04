@@ -570,6 +570,7 @@ const ChapterContent = React.memo(({
         if (isEditing && setEditedContent) {
             const currentFootnotes = editedContent?.footnotes || [];
 
+            // Skip sync if localFootnotes is smaller (during deletion)
             if (localFootnotes.length < currentFootnotes.length) {
                 return;
             }
@@ -696,8 +697,7 @@ const ChapterContent = React.memo(({
             return aNum - bNum;
         });
 
-        // Create mapping from old to new numbers
-        const renumberingMap = new Map();
+        // Create mapping and renumber
         let newContent = content;
 
         sortedFootnotes.forEach((footnote, index) => {
@@ -705,11 +705,13 @@ const ChapterContent = React.memo(({
             const newName = (index + 1).toString();
 
             if (oldName !== newName) {
-                renumberingMap.set(oldName, newName);
+                // Update both [valnote_X] and HTML format markers
+                const valnotePattern = new RegExp(`\\[valnote_${oldName}\\]`, 'g');
+                const htmlPattern = new RegExp(`(<sup><a[^>]*href="#note-)${oldName}("[^>]*>\\[)${oldName}(\\]</a></sup>)`, 'g');
 
-                // Update content markers
-                const oldPattern = new RegExp(`\\[valnote_${oldName}\\]`, 'g');
-                newContent = newContent.replace(oldPattern, `[valnote_${newName}]`);
+                // Replace both formats
+                newContent = newContent.replace(valnotePattern, `[valnote_${newName}]`);
+                newContent = newContent.replace(htmlPattern, `$1${newName}$2${newName}$3`);
 
                 // Update footnote name
                 footnote.name = newName;
@@ -789,38 +791,48 @@ const ChapterContent = React.memo(({
 
         const editor = editorRef.current;
         const footnoteToDelete = localFootnotes.find(f => f.id === id);
+
         if (!footnoteToDelete) return;
 
         // Get current editor content
         let content = editor.getContent();
 
-        // Remove all instances of [valnote_X] for this footnote
+        // Remove footnote markers from content
         const footnoteName = footnoteToDelete.name || footnoteToDelete.id.toString();
-        const markerPattern = new RegExp(`\\[valnote_${footnoteName}\\]`, 'g');
-        content = content.replace(markerPattern, '');
+
+        // Remove both [valnote_X] and HTML format markers
+        const valnotePattern = new RegExp(`\\[valnote_${footnoteName}\\]`, 'g');
+        const htmlPattern = new RegExp(`<sup><a[^>]*href="#note-${footnoteName}"[^>]*>\\[${footnoteName}\\]</a></sup>`, 'g');
+
+        content = content.replace(valnotePattern, '');
+        content = content.replace(htmlPattern, '');
+
+        // Remove empty <sup></sup> tags that might be left behind
+        content = content.replace(/<sup>\s*<\/sup>/g, '');
 
         // Remove footnote from list
         const updatedFootnotes = localFootnotes.filter(footnote => footnote.id !== id);
 
         // Renumber footnotes to maintain sequence
-        const renumberedFootnotes = renumberFootnotes(updatedFootnotes, content);
-        content = renumberedFootnotes.content;
+        const renumberedResult = renumberFootnotes(updatedFootnotes, content);
+        const finalContent = renumberedResult.content;
+        const finalFootnotes = renumberedResult.footnotes;
 
-        // Update editor content immediately
-        editor.setContent(content);
+        // Update editor content
+        editor.setContent(finalContent);
 
-        // Update local state immediately
-        setLocalFootnotes(renumberedFootnotes.footnotes);
+        // Update local state
+        setLocalFootnotes(finalFootnotes);
 
         // Update parent state
         if (setEditedContent) {
             setEditedContent(current => ({
                 ...current,
-                content: content,
-                footnotes: renumberedFootnotes.footnotes
+                content: finalContent,
+                footnotes: finalFootnotes
             }));
         }
-    }, [localFootnotes, setEditedContent]);
+    }, [localFootnotes, setEditedContent, renumberFootnotes]);
 
     // Content click handler for footnote navigation
     useEffect(() => {

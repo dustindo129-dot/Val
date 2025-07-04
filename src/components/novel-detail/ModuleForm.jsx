@@ -42,7 +42,7 @@ const ModuleForm = memo(({
       setMode('published');
       setModuleForm(prev => ({ 
         ...prev, 
-        error: 'Chế độ cho thuê đã được chuyển về "Hiển thị" vì tập này không còn chương trả phí.' 
+                    error: 'Chế độ mở tạm thời đã được chuyển về "Hiển thị" vì tập này không còn chương trả phí.' 
       }));
     }
   }, [mode, hasPaidContent, editingModule, setModuleForm]);
@@ -82,7 +82,7 @@ const ModuleForm = memo(({
     if (mode === 'rent' && !hasPaidContent) {
       setModuleForm(prev => ({ 
         ...prev, 
-        error: 'Không thể đặt chế độ cho thuê. Tập này không có chương trả phí.' 
+                  error: 'Không thể đặt chế độ mở tạm thời. Tập này không có chương trả phí.' 
       }));
       return;
     }
@@ -149,13 +149,13 @@ const ModuleForm = memo(({
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
               {/* Only show rent option if module has paid content */}
               {hasPaidContent && (
-                <option value="rent">CHO THUÊ (Mở khóa có thời hạn)</option>
+                <option value="rent">MỞ TẠM THỜI (Mở khóa có thời hạn)</option>
               )}
             </select>
             {/* Show helper text when rent option is not available */}
             {!hasPaidContent && (
               <small className="module-form-help-text">
-                Chế độ cho thuê chỉ khả dụng khi tập có chương trả phí
+                Chế độ mở tạm thời chỉ khả dụng khi tập có chương trả phí
               </small>
             )}
           </div>
@@ -182,13 +182,13 @@ const ModuleForm = memo(({
         {canManageModuleModes && mode === 'rent' && (
           <div className="module-form-group">
             <label className="module-form-label">
-              Giá thuê (🌾/52h):
+              Giá mở tạm thời (🌾/1 tuần):
             </label>
             <div className="module-form-info-display">
               {moduleForm.rentBalance || 0} 🌾
             </div>
             <small className="module-form-help-text">
-              Giá thuê được tính tự động: (Tổng lúa của tất cả chương trả phí trong tập) ÷ 10. 
+              Giá mở tạm thời được tính tự động: (Tổng lúa của tất cả chương trả phí trong tập) ÷ 10. 
               Giá sẽ được cập nhật khi có chương trả phí được thêm hoặc xóa khỏi tập.
             </small>
           </div>
@@ -209,7 +209,7 @@ const ModuleForm = memo(({
           <div className="module-form-group">
             <label className="module-form-label">Chế độ tập hiện tại:</label>
             <div className="module-form-info-display">
-              CHO THUÊ - {moduleForm.rentBalance || 0} 🌾/52h (Chỉ quản lý dự án mới có thể thay đổi)
+              MỞ TẠM THỜI - {moduleForm.rentBalance || 0} 🌾/1 tuần (Chỉ quản lý dự án mới có thể thay đổi)
             </div>
           </div>
         )}

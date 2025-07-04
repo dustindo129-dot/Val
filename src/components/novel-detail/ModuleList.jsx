@@ -187,6 +187,11 @@ const ModuleList = memo(({
     const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
     
+    // If more than 24 hours remaining, show just hours
+    if (hours >= 24) {
+      return `${hours}h`;
+    }
+    
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
 
@@ -328,7 +333,7 @@ const ModuleList = memo(({
               {canSeeRentalStats && module.mode === 'rent' && (
                 <div className="module-rental-count">
                   <FontAwesomeIcon icon={faUsers} className="rental-count-icon" />
-                  <span>Người đang thuê: {rentalCounts[module._id] || 0}</span>
+                  <span>Người đang mở tạm thời: {rentalCounts[module._id] || 0}</span>
                 </div>
               )}
               
@@ -343,7 +348,7 @@ const ModuleList = memo(({
                     {hasActiveRental ? (
                       // Show countdown timer when user has active rental
                       <div className="module-rental-countdown">
-                        <div className="countdown-label">Thời gian thuê còn lại</div>
+                        <div className="countdown-label">Thời gian mở tạm thời còn lại</div>
                         <div className="countdown-timer">
                           <FontAwesomeIcon icon={faClock} className="countdown-icon" />
                           <span className="countdown-text">{formatCountdown(realTimeRemaining)}</span>
@@ -354,16 +359,16 @@ const ModuleList = memo(({
                       <>
                         <div className="module-rental-price">
                           <FontAwesomeIcon icon={faClock} className="rent-icon" />
-                          <span>Thuê: {module.rentBalance} 🌾/52h</span>
+                          <span>Mở tạm thời: {module.rentBalance} 🌾/168h</span>
                         </div>
                         {shouldShowRentalButton(module) && (
                           <button
                             className="module-rental-btn"
                             onClick={() => handleOpenRentalModal(module)}
-                            title={`Thuê tập này với ${module.rentBalance} 🌾 trong 52 giờ`}
+                            title={`Mở tập này với ${module.rentBalance} 🌾 trong 168 giờ`}
                           >
                             <FontAwesomeIcon icon={faClock} />
-                            Thuê Tập
+                            Mở cả tập (tạm thời)
                           </button>
                         )}
                       </>

@@ -164,7 +164,7 @@ const ModuleRentalModal = ({
     <div className="vt-rental-modal-overlay" onClick={handleOverlayClick}>
       <div className="rental-modal" onClick={(e) => e.stopPropagation()}>
         <div className="rental-modal-header">
-          <h3>Thuê Tập</h3>
+          <h3>Mở Tạm Thời</h3>
           <button className="rental-close-btn" onClick={handleCancel}>
             <FontAwesomeIcon icon={faTimes} />
           </button>
@@ -186,11 +186,11 @@ const ModuleRentalModal = ({
               <div className="rental-info-grid">
                 <div className="rental-info-item">
                   <FontAwesomeIcon icon={faCoins} className="rental-icon" />
-                  <span>Giá thuê: {module.rentBalance} 🌾</span>
+                  <span>Giá mở tạm thời: {module.rentBalance} 🌾</span>
                 </div>
                 <div className="rental-info-item">
                   <FontAwesomeIcon icon={faClock} className="rental-icon" />
-                  <span>Thời gian: 52 giờ</span>
+                  <span>Thời gian: 1 tuần</span>
                 </div>
                 <div className="rental-info-item">
                   <FontAwesomeIcon icon={faCoins} className="rental-icon" />
@@ -201,30 +201,30 @@ const ModuleRentalModal = ({
           </div>
           
           <div className="rental-description">
-            <h5>Khi thuê tập này:</h5>
+            <h5>Khi mở tạm thời tập này:</h5>
             <ul>
-              <li>Tất cả chương trả phí trong tập sẽ được mở khóa trong 52 giờ</li>
+              <li>Tất cả chương trả phí trong tập sẽ được mở khóa trong 1 tuần</li>
               <li>Nếu có chương mới được thêm vào, bạn cũng sẽ được truy cập</li>
-              <li>Chỉ tài khoản của bạn mới có thể đọc nội dung đã thuê</li>
-              <li>Sau 52 giờ, quyền truy cập sẽ tự động hết hạn</li>
+              <li>Chỉ tài khoản của bạn mới có thể đọc nội dung đã mở tạm thời</li>
+              <li>Sau 1 tuần, quyền truy cập sẽ tự động hết hạn</li>
             </ul>
           </div>
           
           {rentModuleMutation.error && (
             <div className="rental-error">
-              {rentModuleMutation.error.response?.data?.message || 'Có lỗi xảy ra khi thuê tập'}
+              {rentModuleMutation.error.response?.data?.message || 'Có lỗi xảy ra khi mở tạm thời tập'}
             </div>
           )}
           
           <div className="rental-balance-check">
             {user?.balance < module.rentBalance ? (
               <div className="insufficient-balance">
-                <p>Số dư không đủ để thuê tập này</p>
+                <p>Số dư không đủ để mở tạm thời tập này</p>
                 <p>Bạn cần thêm {module.rentBalance - (user?.balance || 0)} 🌾</p>
               </div>
             ) : (
               <div className="sufficient-balance">
-                <p>Sau khi thuê, số dư còn lại: {(user?.balance || 0) - module.rentBalance} 🌾</p>
+                <p>Sau khi mở tạm thời, số dư còn lại: {(user?.balance || 0) - module.rentBalance} 🌾</p>
               </div>
             )}
           </div>
@@ -246,9 +246,9 @@ const ModuleRentalModal = ({
             {rentModuleMutation.isPending ? (
               'Đang xử lý...'
             ) : isConfirming ? (
-              'Xác nhận thuê'
+              'Xác nhận mở tạm thời'
             ) : (
-              `Thuê - ${module.rentBalance} 🌾`
+              `Mở tạm thời - ${module.rentBalance} 🌾`
             )}
           </button>
         </div>

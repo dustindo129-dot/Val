@@ -57,10 +57,10 @@ const RentalExpirationModal = ({
             <FontAwesomeIcon icon={faClock} />
           </div>
           
-          <h3>Thời gian thuê đã hết hạn</h3>
+          <h3>Thời gian mở tạm thời đã hết hạn</h3>
           
           <p>
-            Thời gian thuê "{module?.title || 'module'}" đã hết hạn. 
+            Thời gian mở tạm thời "{module?.title || 'module'}" đã hết hạn. 
             Bạn không thể tiếp tục đọc nội dung trả phí.
           </p>
 
@@ -77,7 +77,7 @@ const RentalExpirationModal = ({
                 onClick={handleRentAgain}
               >
                 <FontAwesomeIcon icon={faClock} />
-                Thuê lại ({module.rentBalance} 🌾)
+                Mở tạm thời lại ({module.rentBalance} 🌾)
               </button>
             )}
             
