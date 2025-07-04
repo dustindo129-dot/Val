@@ -210,6 +210,10 @@ const ModuleRentalModal = ({
             </ul>
           </div>
           
+          <div className="rental-note">
+            <p><strong>Chú ý:</strong> Lúa để mở tạm thời có thêm vào kho lúa để mở chương chung cho cộng đồng</p>
+          </div>
+          
           {rentModuleMutation.error && (
             <div className="rental-error">
               {rentModuleMutation.error.response?.data?.message || 'Có lỗi xảy ra khi mở tạm thời tập'}
