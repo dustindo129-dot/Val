@@ -800,10 +800,24 @@ const NovelDetail = ({ novelId }) => {
     )) || false;
   }, [data]);
 
-  // Calculate chapters data early
-  const chaptersData = useMemo(() => ({
-    chapters: data?.modules?.flatMap(module => module.chapters || []) || []
-  }), [data]);
+  // Calculate chapters data early - flatten all chapters from modules
+  const chaptersData = useMemo(() => {
+    // Flatten chapters from all modules
+    const chapters = data?.modules?.flatMap(module => module.chapters || []) || [];
+    
+    // Sort chapters by order to ensure correct first/last chapter links
+    // We need to sort globally across all modules for proper first/last chapter detection
+    const sortedChapters = chapters.sort((a, b) => {
+      // First sort by order if available
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      // Fallback to creation date if order is not available
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    });
+    
+    return { chapters: sortedChapters };
+  }, [data]);
 
   // Query for fetching user's reading progress
   const { data: readingProgress } = useQuery({
@@ -1159,6 +1173,7 @@ const NovelDetail = ({ novelId }) => {
             handleRating={handleRating}
             handleBookmark={handleBookmark}
             truncateHTML={truncateHTML}
+            chaptersData={chaptersData}
             sidebar={user && (
               <Suspense fallback={<LoadingSpinner />}>
                 <NovelContributions 
