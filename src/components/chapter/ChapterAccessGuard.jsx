@@ -49,14 +49,12 @@ const ChapterAccessGuard = ({
     // 1. Module exists
     // 2. Either chapter or module is paid
     // 3. Module has rental price set
-    // 4. User is authenticated
     const shouldShow = moduleData && 
                       (isPaidChapter || isPaidModule) && 
-                      moduleHasRentBalance && 
-                      isAuthenticated;
+                      moduleHasRentBalance;
     
     return shouldShow;
-  }, [chapter, moduleData, isAuthenticated, user]);
+  }, [chapter, moduleData]);
   
   // Check if user has access to chapter content based on mode
   const canAccessChapterContent = (chapter, user) => {
@@ -184,7 +182,7 @@ const ChapterAccessGuard = ({
                       title={`Mở tạm thời tập này với ${moduleData.rentBalance} 🌾 trong 1 tuần`}
                     >
                       <FontAwesomeIcon icon={faClock} />
-                      Mở tạm thời
+                      Mở cả tập (tạm thời)
                     </button>
                   )}
                 </div>
@@ -221,7 +219,7 @@ const ChapterAccessGuard = ({
                       title={`Mở tạm thời tập này với ${moduleData.rentBalance} 🌾 trong 1 tuần`}
                     >
                       <FontAwesomeIcon icon={faClock} />
-                      Mở tạm thời
+                      Mở cả tập (tạm thời)
                     </button>
                   )}
                 </div>
