@@ -62,7 +62,6 @@
 }
 
 
-
 .module-content-wrapper {
   position: relative;
 }
@@ -147,27 +146,26 @@
 /* Dark mode support for delete modal */
 @media (prefers-color-scheme: dark) {
   .delete-confirmation-modal {
-    background-color: #2d3748;
-    color: #e2e8f0;
+      background-color: #2d3748;
+      color: #e2e8f0;
   }
-  
+
   .delete-confirmation-modal h3 {
-    color: #f56565;
+      color: #f56565;
   }
-  
+
   .confirmation-input {
-    background-color: #1a202c;
-    border-color: #4a5568;
-    color: #e2e8f0;
+      background-color: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
   }
-  
+
   .cancel-delete-btn {
-    background-color: #2d3748;
-    color: #e2e8f0;
-    border-color: #4a5568;
+      background-color: #2d3748;
+      color: #e2e8f0;
+      border-color: #4a5568;
   }
 }
-
 
 
 /* Non-selectable text in confirmation modals */
@@ -302,10 +300,10 @@
 
 @keyframes pulse {
   0%, 100% {
-    opacity: 1;
+      opacity: 1;
   }
   50% {
-    opacity: 0.6;
+      opacity: 0.6;
   }
 }
 
@@ -363,122 +361,129 @@
 /* Responsive styles for tablet */
 @media (max-width: 768px) {
   .delete-confirmation-modal {
-    padding: 16px;
-    width: 95%;
+      padding: 16px;
+      width: 95%;
   }
-  
+
   .confirmation-input {
-    padding: 8px;
-    font-size: 14px;
+      padding: 8px;
+      font-size: 14px;
   }
-  
-  .confirm-delete-btn, 
+
+  .confirm-delete-btn,
   .cancel-delete-btn {
-    padding: 8px 12px;
-    font-size: 14px;
+      padding: 8px 12px;
+      font-size: 14px;
   }
 
   /* Module rental overlay responsive adjustments */
   .module-rental-overlay {
-    padding: 6px 8px;
-    gap: 4px;
+      padding: 6px 8px;
+      gap: 4px;
   }
 
   .module-rental-price {
-    font-size: 0.7rem;
-    padding: 2px 6px;
+      font-size: 0.7rem;
+      padding: 2px 6px;
   }
 
   .module-rental-btn {
-    padding: 5px 8px;
-    font-size: 0.75rem;
+      padding: 5px 8px;
+      font-size: 0.75rem;
   }
 
   .module-rental-countdown {
-    padding: 6px 8px;
+      padding: 6px 8px;
   }
 
   .countdown-label {
-    font-size: 0.6rem;
+      font-size: 0.6rem;
   }
 
   .countdown-text {
-    font-size: 0.75rem;
+      font-size: 0.75rem;
   }
+  .module-content {
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+  }
+
 }
 
 /* Responsive styles for mobile */
 @media (max-width: 576px) {
+
   .delete-confirmation-modal {
-    padding: 12px;
-    max-width: 95%;
+      padding: 12px;
+      max-width: 95%;
   }
-  
+
   .delete-confirmation-modal h3 {
-    font-size: 16px;
-    margin-bottom: 12px;
+      font-size: 16px;
+      margin-bottom: 12px;
   }
-  
+
   .delete-confirmation-modal p {
-    font-size: 14px;
-    margin-bottom: 16px;
+      font-size: 14px;
+      margin-bottom: 16px;
   }
-  
+
   .confirmation-input {
-    padding: 6px;
-    font-size: 13px;
-    margin-bottom: 16px;
+      padding: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
   }
-  
+
   .confirmation-actions {
-    gap: 8px;
+      gap: 8px;
   }
-  
+
   .confirm-delete-btn,
   .cancel-delete-btn {
-    padding: 6px 10px;
-    font-size: 13px;
+      padding: 6px 10px;
+      font-size: 13px;
   }
 
   /* Module rental overlay mobile adjustments */
   .module-rental-overlay {
-    padding: 4px 6px;
-    gap: 3px;
+      padding: 4px 6px;
+      gap: 3px;
   }
 
   .module-rental-price {
-    font-size: 0.65rem;
-    padding: 1px 3px;
+      font-size: 0.65rem;
+      padding: 1px 3px;
   }
 
   .module-rental-price span {
-    font-size: 0.65rem;
+      font-size: 0.65rem;
   }
 
   .module-rental-btn {
-    padding: 3px 6px;
-    font-size: 0.65rem;
-    justify-content: center;
-    text-align: center;
+      padding: 3px 6px;
+      font-size: 0.65rem;
+      justify-content: center;
+      text-align: center;
   }
 
   .module-rental-countdown {
-    padding: 4px 6px;
-    gap: 2px;
+      padding: 4px 6px;
+      gap: 2px;
   }
 
   .countdown-label {
-    font-size: 0.55rem;
+      font-size: 0.55rem;
   }
 
   .countdown-text {
-    font-size: 0.65rem;
+      font-size: 0.65rem;
   }
 
   .module-rental-count {
-    top: 4px;
-    left: 4px;
-    padding: 1px 3px;
-    font-size: 9px;
+      top: 4px;
+      left: 4px;
+      padding: 1px 3px;
+      font-size: 9px;
   }
 }

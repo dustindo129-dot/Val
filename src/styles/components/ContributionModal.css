@@ -577,14 +577,6 @@
     padding: 15px;
   }
 
-  .contribution-actions {
-    flex-direction: column;
-  }
-
-  .btn {
-    flex: none;
-  }
-
   /* Adjust table for tablet sizes */
   .history-table {
     font-size: 0.9rem;

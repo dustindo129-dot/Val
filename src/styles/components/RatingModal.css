@@ -28,7 +28,7 @@ body.vt-modal-open {
   align-items: center;
   justify-content: center;
   z-index: 10001;
-  padding: 20px;
+  padding: 10px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   margin: 0;
@@ -64,7 +64,7 @@ body.vt-modal-open {
 .vt-rating-modal-overlay .rating-modal-header {
   background-color: #2c3e50;
   color: white;
-  padding: 15px 20px;
+  padding: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -99,7 +99,7 @@ body.vt-modal-open {
 
 /* Modal body */
 .vt-rating-modal-overlay .vt-rating-modal-body {
-  padding: 25px;
+  padding: 6px;
   overflow-y: auto;
   flex: 1;
   color: #374151;
@@ -159,7 +159,6 @@ body.vt-modal-open {
 .rd-rating-stars {
   display: flex;
   justify-content: center;
-  margin: 15px 0;
   gap: 10px;
 }
 
@@ -504,7 +503,7 @@ body.vt-modal-open {
   }
 
   .reviews-list {
-    max-height: 200px;
+    max-height: 250px;
   }
 
   .review-header {
@@ -568,10 +567,6 @@ body.vt-modal-open {
   .reviews-section h3 {
     font-size: 14px;
     margin-bottom: 12px;
-  }
-
-  .reviews-list {
-    max-height: 150px;
   }
 
   .review-item {

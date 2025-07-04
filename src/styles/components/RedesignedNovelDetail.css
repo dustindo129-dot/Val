@@ -165,7 +165,7 @@
 .rd-novel-main, .rd-novel-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 /* ===== NOVEL CARD ===== */
@@ -185,8 +185,8 @@
 
 .rd-chapter-count-overlay {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 8px;
+  right: 8px;
   background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 8px 12px;
@@ -257,6 +257,8 @@
   max-width: 160px;
   white-space: nowrap;
   text-overflow: ellipsis;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Banner hover effect */
@@ -265,10 +267,12 @@
   transition: transform 0.2s ease;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
 }
+
 .rd-novel-type-banner:hover::before {
   animation-duration: 2s;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
 }
+
 /* Banner click effect */
 .rd-novel-type-banner:active {
   transform: rotate(0deg) scale(0.95);
@@ -356,7 +360,7 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   flex-shrink: 0;
-  padding-right: 120px; 
+  padding-right: 100px;
 }
 
 .rd-info-rows {
@@ -412,7 +416,6 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 5px;
-  padding-right: 120px; 
 }
 
 .rd-genre-tag {
@@ -1075,9 +1078,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 15px;
   background-color: #effaf5;
-  padding: 15px;
+  padding: 10px;
   border-radius: 8px;
   border-left: 4px solid var(--rd-active-color);
 }
@@ -1107,7 +1109,6 @@
 .contribution-actions {
   display: flex;
   gap: 10px;
-  margin: 15px;
 }
 
 .btn {
@@ -1279,7 +1280,7 @@
   }
 
   .rd-alt-title {
-    padding-right: 0;
+      padding-right: 0;
   }
 
   .rd-info-rows {
