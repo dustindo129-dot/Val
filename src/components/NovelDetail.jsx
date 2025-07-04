@@ -1174,7 +1174,7 @@ const NovelDetail = ({ novelId }) => {
             handleBookmark={handleBookmark}
             truncateHTML={truncateHTML}
             chaptersData={chaptersData}
-            sidebar={user && (
+            sidebar={(
               <Suspense fallback={<LoadingSpinner />}>
                 <NovelContributions 
                   novelId={novelId}
