@@ -28,6 +28,18 @@ const ReportPanel = ({ user }) => {
     return translations[reportType?.toLowerCase()] || reportType || 'Không xác định';
   };
 
+  // Translation function for content types
+  const translateContentType = (contentType) => {
+    const translations = {
+      'chapter': 'Chương',
+      'novel': 'Truyện',
+      'comment': 'Bình luận',
+      'review': 'Đánh giá'
+    };
+    
+    return translations[contentType?.toLowerCase()] || contentType || 'Nội dung';
+  };
+
   // Fetch reports
   const { data: reports = [], isLoading, error } = useQuery({
     queryKey: ['reports', 'pending'],
@@ -129,13 +141,13 @@ const ReportPanel = ({ user }) => {
                       {translateReportType(report.reportType)}
                     </div>
                     <div className="report-content-type">
-                      {report.contentType.charAt(0).toUpperCase() + report.contentType.slice(1)}:
+                      {translateContentType(report.contentType)}:
                       {' '}
                       <Link 
                         to={getContentLink(report)} 
                         className="content-link"
                       >
-                        {report.contentTitle || `${report.contentType} #${report.contentId.substring(0,8)}`}
+                        {report.contentTitle || `${translateContentType(report.contentType)} #${report.contentId.substring(0,8)}`}
                       </Link>
                     </div>
                   </div>
