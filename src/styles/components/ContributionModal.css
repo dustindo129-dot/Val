@@ -554,6 +554,55 @@
   flex-direction: column;
 }
 
+/* Admin auto-unlock button */
+.auto-unlock-btn {
+  align-items: center;
+  gap: 8px;
+  background: #007bff;
+  color: white;
+  border: 1px solid #0056b3;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.auto-unlock-btn:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #004085;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.auto-unlock-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+}
+
+.auto-unlock-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #6c757d;
+  border-color: #6c757d;
+}
+
+.auto-unlock-btn i {
+  font-size: 1rem;
+  min-width: 16px;
+}
+
+.auto-unlock-btn .fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .contribution-modal-content,
@@ -845,6 +894,23 @@
 
 :root.dark-mode .balance-info {
   color: var(--text-color-dark, #e2e8f0);
+}
+
+/* Dark mode admin auto-unlock button */
+:root.dark-mode .auto-unlock-btn {
+  background: #0d6efd;
+  border-color: #0b5ed7;
+}
+
+:root.dark-mode .auto-unlock-btn:hover:not(:disabled) {
+  background: #0b5ed7;
+  border-color: #0a58ca;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+}
+
+:root.dark-mode .auto-unlock-btn:disabled {
+  background: #495057;
+  border-color: #495057;
 }
 
 :root.dark-mode .faq-toggle-btn {

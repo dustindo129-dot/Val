@@ -120,49 +120,34 @@ const TopUpManagement = () => {
     }
   }, [user, navigate]);
 
-  // Fetch top-up transactions (both types)
-  const fetchTransactions = async () => {
+  // Fetch all dashboard data in one request - OPTIMIZED
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setPendingLoading(true);
       
-      // Get admin-initiated transactions
-      const adminResponse = await axios.get(
-        `${config.backendUrl}/api/topup-admin/transactions`,
+      const response = await axios.get(
+        `${config.backendUrl}/api/topup-admin/dashboard-data?recentLimit=${recentTransactionsPerPage * 5}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
-      // Get user-initiated completed requests
-      const userResponse = await axios.get(
-        `${config.backendUrl}/api/topup-admin/completed-requests`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const { recentTransactions, pendingRequests, stats } = response.data;
       
-      // Combine and format both types of transactions
-      const adminTransactions = adminResponse.data.map(tx => ({
-        ...tx,
-        transactionType: 'admin'
-      }));
+      setTransactions(recentTransactions);
+      setPendingRequests(pendingRequests);
+      setRecentTotalPages(Math.ceil(recentTransactions.length / recentTransactionsPerPage));
       
-      const userTransactions = userResponse.data.map(tx => ({
-        ...tx,
-        transactionType: 'user'
-      }));
-      
-      // Combine and sort by date
-      const allTransactions = [...adminTransactions, ...userTransactions]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      setTransactions(allTransactions);
-      setRecentTotalPages(Math.ceil(allTransactions.length / recentTransactionsPerPage));
       setLoading(false);
+      setPendingLoading(false);
     } catch (err) {
-      console.error('Lỗi khi tải giao dịch:', err);
-      setError('Lỗi khi tải giao dịch');
+      console.error('Lỗi khi tải dữ liệu dashboard:', err);
+      setError('Lỗi khi tải dữ liệu dashboard');
       setLoading(false);
+      setPendingLoading(false);
     }
   };
 
-  // Fetch pending requests
+  // Fetch pending requests (for refresh button)
   const fetchPendingRequests = async () => {
     try {
       setPendingLoading(true);
@@ -307,15 +292,14 @@ const TopUpManagement = () => {
     }
   };
 
-  // Initial data fetch
+  // Initial data fetch - OPTIMIZED
   useEffect(() => {
     if (user?.role === 'admin') {
-      fetchTransactions();
-      fetchPendingRequests();
+      // Use the optimized dashboard endpoint that fetches most data in one request
+      fetchDashboardData();
+      // Only fetch these separately as they're less frequently accessed
       fetchUnmatchedTransactions();
       fetchDismissedTransactions();
-      // Remove default fetch of all transactions
-      // fetchUserTransactions();
     }
   }, [user]);
 
@@ -475,7 +459,7 @@ const TopUpManagement = () => {
       setPendingRequests(pendingRequests.filter(req => req._id !== requestId));
       
       // Refresh transactions
-      fetchTransactions();
+      fetchDashboardData();
       fetchUserTransactions(currentPage, selectedTransactionUser?.username);
       
       alert('Yêu cầu đã được xác nhận thành công');
@@ -569,7 +553,7 @@ const TopUpManagement = () => {
       setMatchBalance('');
       
       // Refresh other data
-      fetchTransactions();
+      fetchDashboardData();
       fetchUserTransactions(currentPage, selectedTransactionUser?.username);
       
       alert('Giao dịch đã được khớp thành công');
@@ -598,7 +582,7 @@ const TopUpManagement = () => {
       setPendingRequests(pendingRequests.filter(req => req._id !== requestId));
       
       // Refresh transactions
-      fetchTransactions();
+      fetchDashboardData();
       fetchUserTransactions(currentPage, selectedTransactionUser?.username);
       
       alert('Yêu cầu đã được từ chối thành công');
@@ -636,6 +620,32 @@ const TopUpManagement = () => {
     setNovelTotalPages(1);
   };
 
+  // Handle revoke transaction
+  const handleRevokeTransaction = async (transactionId, amount, username) => {
+    if (!confirm(`Bạn có chắc chắn muốn thu hồi giao dịch này? Số dư của ${username} sẽ bị trừ ${amount} 🌾. Nếu số dư không đủ, nó sẽ được đặt về 0.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/topup-admin/revoke-transaction/${transactionId}`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      // Refresh all transaction lists
+      fetchDashboardData();
+      if (selectedTransactionUser) {
+        fetchUserTransactions(currentPage, selectedTransactionUser.username);
+      }
+
+      alert('Giao dịch đã được thu hồi thành công');
+    } catch (err) {
+      console.error('Không thể thu hồi giao dịch:', err);
+      alert(err.response?.data?.message || 'Không thể thu hồi giao dịch');
+    }
+  };
+
   // Handle top-up form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -655,7 +665,7 @@ const TopUpManagement = () => {
       );
 
       // Refresh transactions
-      fetchTransactions();
+      fetchDashboardData();
       fetchUserTransactions(currentPage, selectedTransactionUser?.username);
 
       // Reset form
@@ -719,7 +729,8 @@ const TopUpManagement = () => {
       'failed': 'Thất bại',
       'cancelled': 'Đã hủy',
       'processing': 'Đang xử lý',
-      'rejected': 'Bị từ chối'
+      'rejected': 'Bị từ chối',
+      'revoked': 'Đã thu hồi'
     };
     return statusMap[status.toLowerCase()] || status;
   };
@@ -1123,6 +1134,7 @@ const TopUpManagement = () => {
               <button 
                 className="refresh-button"
                 onClick={() => {
+                  fetchDashboardData();
                   fetchUnmatchedTransactions();
                   fetchDismissedTransactions();
                 }}
@@ -1467,7 +1479,26 @@ const TopUpManagement = () => {
                           transaction.transactionType === 'admin' ? 
                             `Đã xử lý bởi: ${transaction.admin.displayName || transaction.admin.username}` : 
                             'Tự động xử lý'}
+                        {transaction.status === 'Revoked' && transaction.revokedBy && (
+                          <div className="revoked-info">
+                            Thu hồi bởi: {transaction.revokedBy.displayName || transaction.revokedBy.username}
+                          </div>
+                        )}
                       </div>
+                      {transaction.transactionType === 'admin' && transaction.status !== 'Revoked' && (
+                        <div className="transaction-actions">
+                          <button 
+                            className="revoke-button"
+                            onClick={() => handleRevokeTransaction(
+                              transaction._id, 
+                              transaction.amount, 
+                              transaction.user.displayName || transaction.user.username
+                            )}
+                          >
+                            Thu hồi
+                          </button>
+                        </div>
+                      )}
                       {transaction.notes && (
                         <div className="transaction-notes">
                           Ghi chú: {transaction.notes}

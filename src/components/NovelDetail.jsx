@@ -97,6 +97,7 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [hasContributionHistory, setHasContributionHistory] = useState(false);
+  const [isAutoUnlocking, setIsAutoUnlocking] = useState(false);
 
   // Check for contribution history
   useEffect(() => {
@@ -135,6 +136,28 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
     // Show if there's paid content OR contribution history
     return hasPaidModules || hasPaidChapters || hasContributionHistory;
   }, [modules, hasContributionHistory]);
+
+  // Handle manual auto-unlock (admin only)
+  const handleManualAutoUnlock = async () => {
+    if (!user || user.role !== 'admin') return;
+    
+    setIsAutoUnlocking(true);
+    try {
+      const result = await api.manualAutoUnlock(novelId);
+      
+      // Show success message
+      alert(result.message);
+      
+      // Trigger refresh of novel data
+      onContributionSuccess();
+      
+    } catch (error) {
+      console.error('Manual auto-unlock failed:', error);
+      alert(error.response?.data?.message || 'Có lỗi xảy ra khi mở khóa tự động');
+    } finally {
+      setIsAutoUnlocking(false);
+    }
+  };
 
   // Don't render the contribution section if there's no paid content and no contribution history
   if (!hasPaidContent) {
@@ -205,6 +228,22 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
             <div className="balance-label">Kho lúa</div>
             <div className="balance-value">{(novelBudget || 0).toLocaleString()} 🌾</div>
           </div>
+          {/* Admin Auto-Unlock Button */}
+          {user && user.role === 'admin' && (
+            <button 
+              className="btn btn-admin auto-unlock-btn"
+              onClick={handleManualAutoUnlock}
+              disabled={isAutoUnlocking || (novelBudget || 0) <= 0}
+              title="Mở khóa tự động (Admin only)"
+            >
+              {isAutoUnlocking ? (
+                <i className="fas fa-spinner fa-spin"></i>
+              ) : (
+                <i className="fas fa-unlock"></i>
+              )}
+              <span>Mở tự động</span>
+            </button>
+          )}
         </div>
 
         {/* Action Buttons */}

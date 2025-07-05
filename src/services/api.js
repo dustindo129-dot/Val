@@ -848,6 +848,30 @@ const api = {
     }
   },
 
+  // Manual auto-unlock (admin only)
+  manualAutoUnlock: async (novelId) => {
+    try {
+      const token = getValidToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await axios.post(
+        `${config.backendUrl}/api/novels/${novelId}/auto-unlock`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Notification related API calls
   getNotifications: async (page = 1, limit = 10) => {
     try {
