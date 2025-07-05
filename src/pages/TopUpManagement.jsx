@@ -127,7 +127,7 @@ const TopUpManagement = () => {
       setPendingLoading(true);
       
       const response = await axios.get(
-        `${config.backendUrl}/api/topup-admin/dashboard-data?recentLimit=${recentTransactionsPerPage * 5}`,
+        `${config.backendUrl}/api/topup-admin/dashboard-data?recentLimit=all`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
