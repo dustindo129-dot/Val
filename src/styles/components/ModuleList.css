@@ -464,7 +464,6 @@
   .module-rental-price {
       font-size: 0.7rem;
       padding: 3px 6px;
-      flex-wrap: wrap;
       justify-content: center;
   }
 
@@ -477,7 +476,6 @@
       font-size: 0.7rem;
       justify-content: center;
       text-align: center;
-      flex-wrap: wrap;
   }
 
   .module-rental-countdown {
