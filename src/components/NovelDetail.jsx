@@ -1024,11 +1024,20 @@ const NovelDetail = ({ novelId }) => {
       }
     };
 
+    const handleModuleModeChanged = (data) => {
+      // Only invalidate if it's for this novel
+      if (data.novelId === novelId) {
+        console.log(`Module mode changed: ${data.moduleTitle} from ${data.oldMode} to ${data.newMode}`);
+        queryClient.invalidateQueries(['novel', novelId]);
+      }
+    };
+
     // Add event listeners
     sseService.addEventListener('update', handleUpdate);
     sseService.addEventListener('novel_status_changed', handleStatusChange);
     sseService.addEventListener('novel_deleted', handleNovelDelete);
     sseService.addEventListener('new_chapter', handleNewChapter);
+    sseService.addEventListener('module_mode_changed', handleModuleModeChanged);
 
     // Clean up on unmount
     return () => {
@@ -1036,6 +1045,7 @@ const NovelDetail = ({ novelId }) => {
       sseService.removeEventListener('novel_status_changed', handleStatusChange);
       sseService.removeEventListener('novel_deleted', handleNovelDelete);
       sseService.removeEventListener('new_chapter', handleNewChapter);
+      sseService.removeEventListener('module_mode_changed', handleModuleModeChanged);
     };
   }, [novelId, queryClient, navigate]);
 

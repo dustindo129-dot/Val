@@ -348,18 +348,11 @@ const Navbar = () => {
         <div className="navbar-content">
           {/* Left section with logo and site title */}
           <Link to="/" className="navbar-left">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" stroke="black" className="navbar-logo">
-              {/* Main V letter */}
-              <path d="M75 20 L50 90 L25 20" fill="none" strokeWidth="8" strokeLinecap="round"/>
-              
-              {/* Decorative floral element */}
-              <path d="M25 20 C25 20, 35 15, 40 25 S50 15, 55 25 S65 15, 75 20" 
-                    fill="none" strokeWidth="3"/>
-              <path d="M40 22 C40 22, 45 18, 50 28" 
-                    fill="none" strokeWidth="2"/>
-              <path d="M60 22 C60 22, 65 18, 70 28" 
-                    fill="none" strokeWidth="2"/>
-            </svg>
+            <img 
+              src="/images/Khong_Co_Tieu_e431_20250703112444.png" 
+              alt="Valvrareteam Logo" 
+              className="navbar-logo"
+            />
             <div className="title-container">
               <h1 className="navbar-title">Valvrareteam</h1>
             </div>

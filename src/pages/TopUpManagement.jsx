@@ -708,8 +708,11 @@ const TopUpManagement = () => {
       'admin': 'Điều chỉnh thủ công',
       'contribution': 'Đóng góp',
       'gift': 'Quà tặng',
+      'gift_received': 'Nhận quà tặng',
       'refund': 'Hoàn tiền',
       'withdrawal': 'Rút tiền',
+      'rental': 'Mở tạm thời tập',
+      'open': 'Mở khóa nội dung',
       'other': 'Khác'
     };
     return typeMap[type] || type;
