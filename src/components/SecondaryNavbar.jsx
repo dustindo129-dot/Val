@@ -82,7 +82,7 @@ const SecondaryNavbar = () => {
   }, [fetchUserBalance]);
 
   /**
-   * Listen for balance update events from other components
+   * Listen for balance update events from other components and SSE
    */
   useEffect(() => {
     const handleBalanceUpdate = (event) => {
@@ -92,12 +92,34 @@ const SecondaryNavbar = () => {
       }, 100);
     };
 
+    const handleSSEBalanceUpdate = (data) => {
+      // Only handle balance updates for the current user
+      if (data.userId === user?.id || data.userId === user?._id) {
+        console.log('Balance updated via SSE, refreshing balance display');
+        fetchUserBalance();
+      }
+    };
+
     window.addEventListener('balanceUpdated', handleBalanceUpdate);
+    
+    // Listen for SSE balance update events
+    if (isAuthenticated && user) {
+      import('../services/sseService').then(({ default: sseService }) => {
+        sseService.addEventListener('balance_updated', handleSSEBalanceUpdate);
+      });
+    }
     
     return () => {
       window.removeEventListener('balanceUpdated', handleBalanceUpdate);
+      
+      // Clean up SSE listener
+      if (isAuthenticated && user) {
+        import('../services/sseService').then(({ default: sseService }) => {
+          sseService.removeEventListener('balance_updated', handleSSEBalanceUpdate);
+        });
+      }
     };
-  }, [fetchUserBalance, userBalance]);
+  }, [fetchUserBalance, userBalance, isAuthenticated, user]);
 
   /**
    * Add click outside listener to close menu when clicking outside

@@ -399,6 +399,9 @@ const TopUp = () => {
     
     // Refresh pending requests
     refreshPendingRequests();
+    
+    // Notify SecondaryNavbar to refresh balance display (manual fallback)
+    window.dispatchEvent(new Event('balanceUpdated'));
   };
 
   // Handle QR modal cancel
@@ -528,6 +531,9 @@ const TopUp = () => {
       // Extract pending requests for cancel functionality
       const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
       setPendingRequests(pendingRequests);
+      
+      // Notify SecondaryNavbar to refresh balance display (manual fallback)
+      window.dispatchEvent(new Event('balanceUpdated'));
     } catch (err) {
       console.error('Failed to fetch history:', err);
     } finally {
