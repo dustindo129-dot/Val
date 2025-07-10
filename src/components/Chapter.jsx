@@ -381,17 +381,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     refetchIntervalInBackground: true, // Continue checking in background
   });
 
-  // Query for all chapters in the current module
-  const { data: moduleChaptersData, isLoading: isModuleChaptersLoading } = useQuery({
-    queryKey: ['module-chapters', chapter?.moduleId],
-    queryFn: async () => {
-      if (!chapter?.moduleId) return { chapters: [] };
-      const res = await axios.get(`${config.backendUrl}/api/chapters/module/${chapter.moduleId}`);
-      return { chapters: res.data }; // Wrap the response data in a chapters property to match our expected format
-    },
-    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
-    enabled: !!chapter?.moduleId && showChapterList, // Only fetch when dropdown is open
-  });
+  // Module chapters are now included in the main query response - no separate fetch needed
+  const moduleChaptersData = chapterData?.moduleChapters ? { chapters: chapterData.moduleChapters } : { chapters: [] };
+  const isModuleChaptersLoading = false; // No separate loading since it's part of main query
 
   // OPTIMIZATION: Handle very long content more efficiently
   // Show loading for extremely large content to prevent UI blocking
