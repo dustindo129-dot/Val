@@ -24,6 +24,7 @@ import '../styles/UserSettings.css';
 import config from '../config/config';
 import ReportPanel from '../components/ReportPanel';
 import bunnyUploadService from '../services/bunnyUploadService';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 /**
  * UserSettingsSEO Component
@@ -479,7 +480,11 @@ const UserSettings = () => {
 
   // Show loading while resolving user
   if (userResolutionLoading) {
-    return <div className="container mt-4">Đang tải...</div>;
+    return (
+      <div className="container mt-4">
+        <LoadingSpinner size="medium" text="Đang tải..." />
+      </div>
+    );
   }
 
   // Check if user exists and has permission to view this profile
