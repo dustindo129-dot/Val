@@ -150,7 +150,6 @@
 
 .profile-meta {
   display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
@@ -565,7 +564,13 @@
   .profile-avatar-section {
     flex-direction: column;
     text-align: center;
-    gap: 20px;
+    gap: 15px;
+  }
+  
+  .profile-username {
+    font-size: 1.9rem;
+    text-align: center;
+    justify-content: center;
   }
   
   .profile-stats {
@@ -574,14 +579,10 @@
   }
   
   .profile-meta {
-    flex-direction: column;
     align-items: center;
-    gap: 8px;
   }
 
   .meta-row {
-    flex-direction: column;
-    gap: 8px;
     align-items: center;
   }
   
@@ -597,8 +598,6 @@
 @media (max-width: 576px) {
   .profile-username {
     font-size: 1.8rem;
-    flex-direction: column;
-    gap: 5px;
   }
   
   .profile-stats {
@@ -619,7 +618,6 @@
   }
 
   .notes-header {
-    flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }

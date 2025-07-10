@@ -25,7 +25,7 @@
 }
 
 .top-up-section h2 {
-  font-size: 1.5rem;
+  font-size: 1rem;
   margin-bottom: 1.5rem;
   color: #343a40;
 }
@@ -70,12 +70,6 @@
   border-radius: 8px;
   padding: 1.25rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.request-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
 }
 
 .request-user {

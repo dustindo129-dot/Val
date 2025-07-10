@@ -71,11 +71,19 @@
   margin-top: 0;
 }
 
-.transaction-header-container {
+/* TopUp Management specific header container */
+.topup-management-header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 0.5rem;
+}
+
+/* TopUp Management specific transaction header */
+.topup-management-transaction-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
 }
 
 .refresh-button {
@@ -116,13 +124,6 @@
   background-color: #f9f9f9;
 }
 
-.transaction-header, 
-.request-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
 .transaction-user, 
 .request-user {
   display: flex;
@@ -145,11 +146,8 @@
   color: #666;
 }
 
-.transaction-details, 
-.request-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+.topup-management-transaction-details, 
+.topup-management-request-details {
   margin-bottom: 10px;
 }
 
@@ -164,27 +162,27 @@
   font-weight: 500;
 }
 
-.transaction-status {
+.topup-management-transaction-status {
   font-size: 14px;
   font-weight: 500;
   padding: 3px 8px;
   border-radius: 4px;
 }
 
-.transaction-status.completed,
-.transaction-status.successful {
+.topup-management-transaction-status.completed,
+.topup-management-transaction-status.successful {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
 
-.transaction-status.pending {
+.topup-management-transaction-status.pending {
   background-color: #fff8e1;
   color: #f57f17;
 }
 
-.transaction-status.failed,
-.transaction-status.cancelled,
-.transaction-status.revoked {
+.topup-management-transaction-status.failed,
+.topup-management-transaction-status.cancelled,
+.topup-management-transaction-status.revoked {
   background-color: #ffebee;
   color: #c62828;
 }
@@ -819,20 +817,20 @@
 }
 
 /* Dark mode for transaction status */
-:root.dark-mode .transaction-status.completed,
-:root.dark-mode .transaction-status.successful {
+:root.dark-mode .topup-management-transaction-status.completed,
+:root.dark-mode .topup-management-transaction-status.successful {
   background-color: rgba(46, 125, 50, 0.2);
   color: #66bb6a;
 }
 
-:root.dark-mode .transaction-status.pending {
+:root.dark-mode .topup-management-transaction-status.pending {
   background-color: rgba(245, 127, 23, 0.2);
   color: #ffb74d;
 }
 
-:root.dark-mode .transaction-status.failed,
-:root.dark-mode .transaction-status.cancelled,
-:root.dark-mode .transaction-status.revoked {
+:root.dark-mode .topup-management-transaction-status.failed,
+:root.dark-mode .topup-management-transaction-status.cancelled,
+:root.dark-mode .topup-management-transaction-status.revoked {
   background-color: rgba(198, 40, 40, 0.2);
   color: #ef5350;
 }
@@ -919,8 +917,13 @@
 }
 
 /* Dark mode for transaction filter section */
-:root.dark-mode .transaction-header-container h2 {
+:root.dark-mode .topup-management-header-container h2 {
   color: #e2e8f0;
+}
+
+/* Dark mode for TopUp Management transaction header */
+:root.dark-mode .topup-management-transaction-header {
+  border-bottom-color: #4a5568;
 }
 
 /* Dark mode for novel search in transaction history */
@@ -975,7 +978,7 @@
 }
 
 /* Dark mode for transaction details section */
-:root.dark-mode .user-transaction-item .transaction-details {
+:root.dark-mode .user-transaction-item .topup-management-transaction-details {
   background-color: rgba(26, 32, 44, 0.5);
   padding: 0.75rem;
   border-radius: 6px;
@@ -1047,13 +1050,6 @@
     margin-top: 10px;
   }
 
-  /* Transaction header responsiveness */
-  .transaction-header-container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-  }
-
   .transaction-filter {
     flex-direction: column;
     gap: 10px;
@@ -1073,22 +1069,6 @@
     overflow-wrap: break-word;
     overflow: hidden;
     padding: 12px;
-  }
-
-  /* Transaction header mobile layout */
-  .transaction-header,
-  .request-header {
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  /* Transaction details mobile layout */
-  .transaction-details,
-  .request-details {
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
   }
 
   /* Handle long transaction IDs and content */
@@ -1230,13 +1210,61 @@
     margin: 5px 0;
   }
 
-  .unmatched-section-buttons {
+  /* TopUp Management header responsiveness */
+  .topup-management-header-container {
     flex-direction: column;
-    gap: 10px;
+    align-items: stretch;
+  }
+
+  /* Ensure all text content respects container boundaries */
+  .top-up-container * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Prevent horizontal scrolling */
+  .transactions-list,
+  .pending-requests-list,
+  .unmatched-transactions-list,
+  .user-transactions-list {
+    overflow-x: hidden;
+  }
+
+  /* Handle long URLs and links */
+  .top-up-container a {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+
+  /* Ensure form inputs don't overflow */
+  .topup-form-group input,
+  .topup-form-group select,
+  .balance-adjustment input,
+  .match-balance-control input,
+  .transaction-filter input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Handle user search container */
+  .user-search-container {
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    overflow: visible;
+  }
+
+  /* Ensure search results don't overflow viewport */
+  .user-search-results {
+    left: 0;
+    right: 0;
+    max-width: 100vw;
+    box-sizing: border-box;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 576px) {
   .top-up-container {
     padding: 10px;
   }
@@ -1359,59 +1387,13 @@
   }
 }
 
-/* Ensure all text content respects container boundaries */
-@media (max-width: 768px) {
-  .top-up-container * {
-    max-width: 100%;
-    box-sizing: border-box;
-  }
 
-  /* Prevent horizontal scrolling */
-  .transactions-list,
-  .pending-requests-list,
-  .unmatched-transactions-list,
-  .user-transactions-list {
-    overflow-x: hidden;
-  }
-
-  /* Handle long URLs and links */
-  .top-up-container a {
-    word-break: break-all;
-    overflow-wrap: break-word;
-  }
-
-  /* Ensure form inputs don't overflow */
-  .topup-form-group input,
-  .topup-form-group select,
-  .balance-adjustment input,
-  .match-balance-control input,
-  .transaction-filter input {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* Handle user search container */
-  .user-search-container {
-    width: 100%;
-    max-width: 100%;
-    position: relative;
-    overflow: visible;
-  }
-
-  /* Ensure search results don't overflow viewport */
-  .user-search-results {
-    left: 0;
-    right: 0;
-    max-width: 100vw;
-    box-sizing: border-box;
-  }
-}
 
 .unmatched-section-buttons {
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .history-toggle-button {
@@ -1465,7 +1447,7 @@
   background-color: #ffffff;
 }
 
-.history-transaction-item .transaction-status.dismissed {
+.history-transaction-item .topup-management-transaction-status.dismissed {
   background-color: #ffebee;
   color: #c62828;
   padding: 3px 8px;
@@ -1474,7 +1456,7 @@
   font-weight: 500;
 }
 
-.history-transaction-item .transaction-status.matched {
+.history-transaction-item .topup-management-transaction-status.matched {
   background-color: #e8f5e9;
   color: #2e7d32;
   padding: 3px 8px;
@@ -1522,12 +1504,12 @@
   color: #e0e0e0;
 }
 
-:root.dark-mode .history-transaction-item .transaction-status.dismissed {
+:root.dark-mode .history-transaction-item .topup-management-transaction-status.dismissed {
   background-color: rgba(198, 40, 40, 0.2);
   color: #ef5350;
 }
 
-:root.dark-mode .history-transaction-item .transaction-status.matched {
+:root.dark-mode .history-transaction-item .topup-management-transaction-status.matched {
   background-color: rgba(46, 125, 50, 0.2);
   color: #66bb6a;
 }

@@ -247,7 +247,6 @@
 /* Responsive design */
 @media (max-width: 576px) {
   .interest-tags-header {
-    flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }

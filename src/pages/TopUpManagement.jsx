@@ -834,9 +834,9 @@ const TopUpManagement = () => {
 
         {/* New section: Novel Transaction History */}
         <section className="top-up-section transaction-section">
-          <div className="transaction-header-container">
-            <h2>Nhật ký giao dịch truyện</h2>
-            <div className="transaction-filter">
+                  <div className="topup-management-header-container">
+          <h2>Nhật ký giao dịch truyện</h2>
+          <div className="transaction-filter">
               <div className="user-search-container">
                 <input 
                   type="text" 
@@ -905,16 +905,16 @@ const TopUpManagement = () => {
           ) : (
             <>
               <div className="user-transactions-list">
-                {novelTransactions.map((transaction) => (
-                  <div key={transaction._id} className="user-transaction-item">
-                    <div className="transaction-header">
-                      <div className="transaction-user">
-                        <span className="username">{transaction.novel.title}</span>
-                        <span className="transaction-id">ID: {transaction._id}</span>
+                                  {novelTransactions.map((transaction) => (
+                    <div key={transaction._id} className="user-transaction-item">
+                      <div className="topup-management-transaction-header">
+                        <div className="transaction-user">
+                          <span className="username">{transaction.novel.title}</span>
+                          <span className="transaction-id">ID: {transaction._id}</span>
+                        </div>
+                        <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
                       </div>
-                      <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
-                    </div>
-                    <div className="transaction-details">
+                    <div className="topup-management-transaction-details">
                       <div className="transaction-type">
                         {getTransactionTypeText(transaction.type)}
                       </div>
@@ -982,9 +982,9 @@ const TopUpManagement = () => {
 
         {/* User Transactions Section - Modified to show instructions when no user selected */}
         <section className="top-up-section transaction-section">
-          <div className="transaction-header-container">
-            <h2>Nhật ký giao dịch người dùng</h2>
-            <div className="transaction-filter">
+                  <div className="topup-management-header-container">
+          <h2>Nhật ký giao dịch người dùng</h2>
+          <div className="transaction-filter">
               <div className="user-search-container">
                 <input 
                   type="text" 
@@ -1053,17 +1053,17 @@ const TopUpManagement = () => {
             <p>Không tìm thấy giao dịch nào cho người dùng này</p>
           ) : (
             <>
-              <div className="user-transactions-list">
+                                <div className="user-transactions-list">
                 {userTransactions.map((transaction) => (
                   <div key={transaction._id} className="user-transaction-item">
-                    <div className="transaction-header">
+                    <div className="topup-management-transaction-header">
                       <div className="transaction-user">
                         <span className="username">{transaction.user.displayName || transaction.user.username}</span>
                         <span className="transaction-id">ID: {transaction._id}</span>
                       </div>
                       <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
                     </div>
-                    <div className="transaction-details">
+                    <div className="topup-management-transaction-details">
                       <div className="transaction-type">
                         {getTransactionTypeText(transaction.type)}
                       </div>
@@ -1131,7 +1131,7 @@ const TopUpManagement = () => {
 
         {/* New section: Unmatched Transactions */}
         <section className="top-up-section unmatched-section">
-          <div className="transaction-header-container">
+          <div className="topup-management-header-container">
             <h2>Giao dịch chưa khớp</h2>
             <div className="unmatched-section-buttons">
               <button 
@@ -1161,14 +1161,14 @@ const TopUpManagement = () => {
             <div className="unmatched-transactions-list">
               {unmatchedTransactions.map((transaction) => (
                 <div key={transaction.transactionId} className="unmatched-transaction-item">
-                  <div className="transaction-header">
+                  <div className="topup-management-transaction-header">
                     <div className="transaction-user">
                       <span className="username">Giao dịch chưa khớp</span>
                       <span className="transaction-id">ID: {transaction.transactionId}</span>
                     </div>
                     <span className="transaction-date">{formatDate(transaction.date || transaction.createdAt)}</span>
                   </div>
-                  <div className="transaction-details">
+                  <div className="topup-management-transaction-details">
                     <div className="transaction-method">
                       Ngân hàng: {transaction.bankName || 'Không xác định'}
                     </div>
@@ -1309,7 +1309,7 @@ const TopUpManagement = () => {
                         <div className="transaction-reference">
                           Mã tham chiếu: <span className="transfer-content">{transaction.extractedContent}</span>
                         </div>
-                        <div className={`transaction-status ${transaction.status}`}>
+                        <div className={`topup-management-transaction-status ${transaction.status}`}>
                           {transaction.statusText}
                         </div>
 
@@ -1330,7 +1330,7 @@ const TopUpManagement = () => {
 
         {/* New section: Pending Requests */}
         <section className="top-up-section pending-section">
-          <div className="transaction-header-container">
+          <div className="topup-management-header-container">
             <h2>Yêu cầu chờ xử lý</h2>
             <button 
               className="refresh-button"
@@ -1348,7 +1348,7 @@ const TopUpManagement = () => {
             <div className="pending-requests-list">
               {pendingRequests.map((request) => (
                 <div key={request._id} className="pending-request-item">
-                  <div className="request-header">
+                  <div className="topup-management-transaction-header">
                     <div className="request-user">
                       <span className="username">{request.user.displayName || request.user.username}</span>
                       <span className="request-id">ID: {request._id}
@@ -1359,7 +1359,7 @@ const TopUpManagement = () => {
                     </div>
                     <span className="request-date">{formatDate(request.createdAt)}</span>
                   </div>
-                  <div className="request-details">
+                  <div className="topup-management-request-details">
                     <div className="request-method">
                       Phương thức: {request.paymentMethod === 'bank' 
                           ? 'Chuyển khoản ngân hàng' 
@@ -1448,14 +1448,14 @@ const TopUpManagement = () => {
                     .slice((recentCurrentPage - 1) * recentTransactionsPerPage, recentCurrentPage * recentTransactionsPerPage)
                     .map((transaction) => (
                     <div key={transaction._id} className="transaction-item">
-                      <div className="transaction-header">
+                      <div className="topup-management-transaction-header">
                         <div className="transaction-user">
                           <span className="username">{transaction.user.displayName || transaction.user.username}</span>
                           <span className="transaction-id">ID: {transaction._id}</span>
                         </div>
                         <span className="transaction-date">{formatDate(transaction.createdAt)}</span>
                       </div>
-                      <div className="transaction-details">
+                      <div className="topup-management-transaction-details">
                         {transaction.transactionType === 'admin' ? (
                           // Admin transaction
                           <div className="transaction-amount">Số 🌾 đã thêm: +{transaction.amount}</div>
@@ -1472,7 +1472,7 @@ const TopUpManagement = () => {
                             </div>
                           </>
                         )}
-                        <div className={`transaction-status ${transaction.status.toLowerCase()}`}>
+                        <div className={`topup-management-transaction-status ${transaction.status.toLowerCase()}`}>
                           {getTransactionStatusText(transaction.status)}
                         </div>
                       </div>
