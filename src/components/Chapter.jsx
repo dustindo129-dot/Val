@@ -212,33 +212,7 @@ const ChapterSEO = ({ novel, chapter }) => {
 };
 
 const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, preloadedNovelSlug, preloadedChapterSlug }) => {
-  // Handle error state first
-  if (error) {
-    return (
-      <div className="error-container">
-        <div className="error-content">
-          <h1>Oops! Có lỗi xảy ra</h1>
-          <p>
-            {error === 'Chapter not found' && 'Chương bạn tìm kiếm không tồn tại hoặc đã bị xóa.'}
-            {error === 'Chapter unavailable' && 'Chương hiện tại không khả dụng, vui lòng thử lại sau.'}
-            {error === 'Invalid chapter URL' && 'URL chương không hợp lệ.'}
-            {error === 'Chapter data not available' && 'Nội dung chương hiện không khả dụng.'}
-            {error === 'Server error' && 'Đã xảy ra lỗi server, vui lòng thử lại sau.'}
-            {!['Chapter not found', 'Chapter unavailable', 'Invalid chapter URL', 'Chapter data not available', 'Server error'].includes(error) && 'Đã xảy ra lỗi không xác định.'}
-          </p>
-          <div className="error-actions">
-            <button onClick={() => window.history.back()} className="btn-secondary">
-              Quay lại
-            </button>
-            <a href="/" className="btn-primary">
-              Trang chủ
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // ALL HOOKS MUST BE CALLED FIRST, BEFORE ANY CONDITIONAL RETURNS
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -300,32 +274,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const [lastLikeTime, setLastLikeTime] = useState(0);
   const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
 
-  // Reset navigation state and edited content when chapter changes
-  useEffect(() => {
-    setIsNavigating(false);
-    // Reset edited content when chapter changes
-    setEditedContent({ content: '', footnotes: [] });
-    setEditedTitle('');
-    setEditedTranslator('');
-    setEditedEditor('');
-    setEditedProofreader('');
-    // Scroll to top when chapter changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [chapterId]);
-
-  // Reset edited content when exiting edit mode
-  useEffect(() => {
-    if (!isEditing) {
-      setEditedContent({ content: '', footnotes: [] });
-      setEditedTitle('');
-      setEditedTranslator('');
-      setEditedEditor('');
-      setEditedProofreader('');
-    }
-  }, [isEditing]);
-
-  // Note: Novel data is included in the chapter query response via MongoDB lookup
-  // No need for separate novel query since chapter endpoint already returns novel data
+  // Long content state
+  const [longContentProcessed, setLongContentProcessed] = useState(false);
 
   // OPTIMIZED: Single query for all chapter data including user interactions
   const { data: chapterData, error: chapterError, isLoading } = useQuery({
@@ -373,65 +323,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // User interaction data is now included in the main query, no separate fetch needed
   const userInteraction = interactions.userInteraction;
-
-  // OPTIMIZED: View counting and recently read tracking now handled in the main query
-  // No separate queries needed - server handles this automatically
-
-  // Note: chapter, novel, and interactions are now extracted earlier to avoid circular dependencies
-
-  // OPTIMIZATION: Handle very long content more efficiently
-  // Show loading for extremely large content to prevent UI blocking
-  const isVeryLongContent = useMemo(() => {
-    return chapter?.content && chapter.content.length > 500000; // 500KB+ content
-  }, [chapter?.content]);
-
-  const [longContentProcessed, setLongContentProcessed] = useState(false);
-  
-  useEffect(() => {
-    if (isVeryLongContent) {
-      setLongContentProcessed(false);
-      const timer = setTimeout(() => {
-        setLongContentProcessed(true);
-      }, 100); // Brief delay to prevent UI blocking
-      
-      return () => clearTimeout(timer);
-    } else {
-      setLongContentProcessed(true);
-    }
-  }, [isVeryLongContent]);
-
-  // OPTIMIZATION: Force garbage collection for very long content
-  // This helps prevent memory buildup when navigating between long chapters
-  useEffect(() => {
-    if (chapter?.content && chapter.content.length > 400000) {
-      const timer = setTimeout(() => {
-        if (window.gc) {
-          window.gc();
-        }
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [chapter?.content]);
-
-  if (isVeryLongContent && !longContentProcessed) {
-    return (
-      <div className="loading">
-        <LoadingSpinner size="large" text="Đang xử lý chương dài..." />
-      </div>
-    );
-  }
-
-
-
-  // Initialize staff state when entering edit mode (after chapterData is available)
-  useEffect(() => {
-    if (isEditing && chapter) {
-      setEditedTranslator(chapter.translator || '');
-      setEditedEditor(chapter.editor || '');
-      setEditedProofreader(chapter.proofreader || '');
-    }
-  }, [isEditing, chapter]);
 
   // Query for module data when we have a moduleId
   const { data: moduleData } = useQuery({
@@ -490,27 +381,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     refetchIntervalInBackground: true, // Continue checking in background
   });
 
-  // Monitor rental expiration while reading
-  useEffect(() => {
-    if (!rentalStatus || !user || canAccessPaidContent) return;
-
-    // Check if rental just expired
-    const currentTime = Date.now();
-    const hadRentalBefore = lastRentalCheck?.hasActiveRental;
-    const hasRentalNow = rentalStatus.hasActiveRental;
-
-    if (hadRentalBefore && !hasRentalNow) {
-      // Rental expired while user was reading
-      setShowRentalExpirationModal(true);
-    }
-
-    // Update last check status
-    setLastRentalCheck({
-      hasActiveRental: hasRentalNow,
-      timestamp: currentTime
-    });
-  }, [rentalStatus, user, canAccessPaidContent]); // Removed lastRentalCheck from dependencies to prevent infinite loop
-
   // Query for all chapters in the current module
   const { data: moduleChaptersData, isLoading: isModuleChaptersLoading } = useQuery({
     queryKey: ['module-chapters', chapter?.moduleId],
@@ -522,6 +392,34 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
     enabled: !!chapter?.moduleId && showChapterList, // Only fetch when dropdown is open
   });
+
+  // OPTIMIZATION: Handle very long content more efficiently
+  // Show loading for extremely large content to prevent UI blocking
+  const isVeryLongContent = useMemo(() => {
+    return chapter?.content && chapter.content.length > 500000; // 500KB+ content
+  }, [chapter?.content]);
+
+  // Function to update word count from TinyMCE editor
+  const updateWordCountFromEditor = useCallback((count) => {
+    setWordCount(count);
+  }, []);
+
+  // Memoize stable props to prevent unnecessary re-renders
+  const stableUserRole = useMemo(() => user?.role || 'user', [user?.role]);
+  const stableNovelData = useMemo(() => novel, [novel]);
+
+  // Check if user can edit
+  const canEdit = useMemo(() => user && (
+    user.role === 'admin' || 
+    user.role === 'moderator' || 
+    (user?.role === 'pj_user' && (
+      novel?.active?.pj_user?.includes(user.id) || 
+      novel?.active?.pj_user?.includes(user.username)
+    ))
+  ), [user, novel?.active?.pj_user]);
+  
+  // Check if user can delete
+  const canDelete = useMemo(() => user && (user.role === 'admin' || user.role === 'moderator'), [user]);
 
   // Create a sorted chapter list from the module chapters or fallback to prev/next
   const getModuleChapterList = () => {
@@ -567,8 +465,86 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Use the module chapter list for the dropdown
   const moduleChapters = getModuleChapterList();
 
-  // Note: Comments are fetched by ChapterCommentsSection component itself
-  // No need to fetch comments here to avoid duplicate queries
+  // Initialize staff state when entering edit mode (after chapterData is available)
+  useEffect(() => {
+    if (isEditing && chapter) {
+      setEditedTranslator(chapter.translator || '');
+      setEditedEditor(chapter.editor || '');
+      setEditedProofreader(chapter.proofreader || '');
+    }
+  }, [isEditing, chapter]);
+
+  // Reset navigation state and edited content when chapter changes
+  useEffect(() => {
+    setIsNavigating(false);
+    // Reset edited content when chapter changes
+    setEditedContent({ content: '', footnotes: [] });
+    setEditedTitle('');
+    setEditedTranslator('');
+    setEditedEditor('');
+    setEditedProofreader('');
+    // Scroll to top when chapter changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [chapterId]);
+
+  // Reset edited content when exiting edit mode
+  useEffect(() => {
+    if (!isEditing) {
+      setEditedContent({ content: '', footnotes: [] });
+      setEditedTitle('');
+      setEditedTranslator('');
+      setEditedEditor('');
+      setEditedProofreader('');
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (isVeryLongContent) {
+      setLongContentProcessed(false);
+      const timer = setTimeout(() => {
+        setLongContentProcessed(true);
+      }, 100); // Brief delay to prevent UI blocking
+      
+      return () => clearTimeout(timer);
+    } else {
+      setLongContentProcessed(true);
+    }
+  }, [isVeryLongContent]);
+
+  // OPTIMIZATION: Force garbage collection for very long content
+  // This helps prevent memory buildup when navigating between long chapters
+  useEffect(() => {
+    if (chapter?.content && chapter.content.length > 400000) {
+      const timer = setTimeout(() => {
+        if (window.gc) {
+          window.gc();
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [chapter?.content]);
+
+  // Monitor rental expiration while reading
+  useEffect(() => {
+    if (!rentalStatus || !user || canAccessPaidContent) return;
+
+    // Check if rental just expired
+    const currentTime = Date.now();
+    const hadRentalBefore = lastRentalCheck?.hasActiveRental;
+    const hasRentalNow = rentalStatus.hasActiveRental;
+
+    if (hadRentalBefore && !hasRentalNow) {
+      // Rental expired while user was reading
+      setShowRentalExpirationModal(true);
+    }
+
+    // Update last check status
+    setLastRentalCheck({
+      hasActiveRental: hasRentalNow,
+      timestamp: currentTime
+    });
+  }, [rentalStatus, user, canAccessPaidContent]); // Removed lastRentalCheck from dependencies to prevent infinite loop
 
   // Effect to update interaction stats and ensure state consistency
   useEffect(() => {
@@ -625,15 +601,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         });
     }
   }, [chapter, isEditing]);
-
-  // Function to update word count from TinyMCE editor
-  const updateWordCountFromEditor = useCallback((count) => {
-    setWordCount(count);
-  }, []);
-
-  // Memoize stable props to prevent unnecessary re-renders
-  const stableUserRole = useMemo(() => user?.role || 'user', [user?.role]);
-  const stableNovelData = useMemo(() => novel, [novel]);
 
   // Effect to handle edit mode initialization
   useEffect(() => {
@@ -709,6 +676,95 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showChapterList]);
+
+  /**
+   * Handles opening the rental modal for renting a module
+   */
+  const handleOpenRentalModal = useCallback((module = moduleData) => {
+    if (!user) {
+              alert('Vui lòng đăng nhập để mở tạm thời tập');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
+      return;
+    }
+    setShowRentalModal(true);
+  }, [user, moduleData]);
+
+  /**
+   * Handles closing the rental modal
+   */
+  const handleCloseRentalModal = useCallback(() => {
+    setShowRentalModal(false);
+  }, []);
+
+  /**
+   * Handles successful rental - refresh chapter data and close modals
+   */
+  const handleRentalSuccess = useCallback((data) => {
+    // Refresh chapter data and user balance after successful rental
+    queryClient.invalidateQueries(['chapter-optimized']);
+    queryClient.invalidateQueries(['user']);
+    queryClient.invalidateQueries(['novel']);
+    queryClient.invalidateQueries(['module-rental-status']);
+    
+    // Notify SecondaryNavbar to refresh balance display
+    window.dispatchEvent(new Event('balanceUpdated'));
+    
+    // Close both modals
+    setShowRentalModal(false);
+    setShowRentalExpirationModal(false);
+  }, [queryClient]);
+
+  /**
+   * Handles closing the rental expiration modal
+   */
+  const handleCloseRentalExpirationModal = useCallback(() => {
+    setShowRentalExpirationModal(false);
+  }, []);
+
+  // Auto-hide notification after 5 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ type: '', message: '', show: false });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
+
+  // HANDLE ERROR STATE AFTER ALL HOOKS ARE CALLED
+  if (error) {
+    return (
+      <div className="error-container">
+        <div className="error-content">
+          <h1>Oops! Có lỗi xảy ra</h1>
+          <p>
+            {error === 'Chapter not found' && 'Chương bạn tìm kiếm không tồn tại hoặc đã bị xóa.'}
+            {error === 'Chapter unavailable' && 'Chương hiện tại không khả dụng, vui lòng thử lại sau.'}
+            {error === 'Invalid chapter URL' && 'URL chương không hợp lệ.'}
+            {error === 'Chapter data not available' && 'Nội dung chương hiện không khả dụng.'}
+            {error === 'Server error' && 'Đã xảy ra lỗi server, vui lòng thử lại sau.'}
+            {!['Chapter not found', 'Chapter unavailable', 'Invalid chapter URL', 'Chapter data not available', 'Server error'].includes(error) && 'Đã xảy ra lỗi không xác định.'}
+          </p>
+          <div className="error-actions">
+            <button onClick={() => window.history.back()} className="btn-secondary">
+              Quay lại
+            </button>
+            <a href="/" className="btn-primary">
+              Trang chủ
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isVeryLongContent && !longContentProcessed) {
+    return (
+      <div className="loading">
+        <LoadingSpinner size="large" text="Đang xử lý chương dài..." />
+      </div>
+    );
+  }
 
   /**
    * Handles navigation to previous chapter
@@ -1106,73 +1162,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
     window.open(shareUrl, 'ShareWindow', 'height=450, width=550, toolbar=0, menubar=0');
   };
-
-  /**
-   * Handles opening the rental modal for renting a module
-   */
-  const handleOpenRentalModal = useCallback((module = moduleData) => {
-    if (!user) {
-              alert('Vui lòng đăng nhập để mở tạm thời tập');
-      window.dispatchEvent(new CustomEvent('openLoginModal'));
-      return;
-    }
-    setShowRentalModal(true);
-  }, [user, moduleData]);
-
-  /**
-   * Handles closing the rental modal
-   */
-  const handleCloseRentalModal = useCallback(() => {
-    setShowRentalModal(false);
-  }, []);
-
-  /**
-   * Handles successful rental - refresh chapter data and close modals
-   */
-  const handleRentalSuccess = useCallback((data) => {
-    // Refresh chapter data and user balance after successful rental
-    queryClient.invalidateQueries(['chapter-optimized']);
-    queryClient.invalidateQueries(['user']);
-    queryClient.invalidateQueries(['novel']);
-    queryClient.invalidateQueries(['module-rental-status']);
-    
-    // Notify SecondaryNavbar to refresh balance display
-    window.dispatchEvent(new Event('balanceUpdated'));
-    
-    // Close both modals
-    setShowRentalModal(false);
-    setShowRentalExpirationModal(false);
-  }, [queryClient]);
-
-  /**
-   * Handles closing the rental expiration modal
-   */
-  const handleCloseRentalExpirationModal = useCallback(() => {
-    setShowRentalExpirationModal(false);
-  }, []);
-
-  // Check if user can edit
-  const canEdit = useMemo(() => user && (
-    user.role === 'admin' || 
-    user.role === 'moderator' || 
-    (user?.role === 'pj_user' && (
-      novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user.username)
-    ))
-  ), [user, novel?.active?.pj_user]);
-  
-  // Check if user can delete
-  const canDelete = useMemo(() => user && (user.role === 'admin' || user.role === 'moderator'), [user]);
-
-  // Auto-hide notification after 5 seconds
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ type: '', message: '', show: false });
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
 
   // Show loading state with animation
   if (isLoading) {
