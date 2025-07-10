@@ -268,7 +268,7 @@ const ModuleForm = memo(({
               <span>Tính toán lại giá mở tạm thời khi có chương trả phí được mở</span>
             </label>
             <small className="module-form-help-text">
-              Khi được bật, giá mở tạm thời sẽ được tính lại khi có chương trả phí trong tập được mở khóa tự động thông qua đóng góp.
+              Khi bật, giá mở tạm thời sẽ được tính lại khi có chương trả phí trong tập được mở khóa tự động thông qua đóng góp.
             </small>
           </div>
         )}

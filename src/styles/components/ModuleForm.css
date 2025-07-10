@@ -82,9 +82,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
   border-bottom: 2px solid #f1f3f4;
-  padding-bottom: 16px;
+  padding-bottom: 0.5rem;
 }
 
 .module-form-header h3 {
@@ -128,7 +127,7 @@
 }
 
 .module-form-group {
-  margin: 20px 0;
+  margin: 0.5rem 0;
 }
 
 .module-form-label {
