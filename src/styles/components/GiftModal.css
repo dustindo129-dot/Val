@@ -72,7 +72,7 @@ body.vt-modal-open {
 
 .vt-gift-modal-overlay .vt-gift-modal-title {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: #ffffff;
 }
@@ -161,25 +161,25 @@ body.vt-modal-open {
 }
 
 .vt-gift-modal-overlay .vt-gift-selection-title {
-  margin: 0 0 20px 0;
+  margin: 0 0 15px 0;
   color: #374151;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 600;
 }
 
 /* Gift grid */
 .vt-gift-modal-overlay .vt-gift-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
   margin-bottom: 15px;
 }
 
 /* Gift option */
 .vt-gift-modal-overlay .vt-gift-option {
   border: 2px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 15px;
+  border-radius: 10px;
+  padding: 10px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -207,21 +207,21 @@ body.vt-modal-open {
 }
 
 .vt-gift-modal-overlay .vt-gift-option-icon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
+  font-size: 1.8rem;
+  margin-bottom: 6px;
 }
 
 .vt-gift-modal-overlay .vt-gift-option-name {
   font-weight: 600;
   color: #374151;
-  margin-bottom: 8px;
-  font-size: 1.1rem;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
 }
 
 .vt-gift-modal-overlay .vt-gift-option-price {
   color: #2c3e50;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .vt-gift-modal-overlay .vt-gift-option-insufficient {
@@ -240,38 +240,38 @@ body.vt-modal-open {
 .vt-gift-modal-overlay .vt-gift-selected-info {
   background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
   border: 1px solid #bae6fd;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 25px;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
 }
 
 .vt-gift-modal-overlay .vt-gift-selected-title {
-  margin: 0 0 15px 0;
+  margin: 0 0 12px 0;
   color: #0369a1;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
 .vt-gift-modal-overlay .vt-gift-selected-display {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .vt-gift-modal-overlay .vt-gift-selected-icon {
-  font-size: 2rem;
+  font-size: 1.6rem;
 }
 
 .vt-gift-modal-overlay .vt-gift-selected-name {
   font-weight: 600;
   color: #374151;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .vt-gift-modal-overlay .vt-gift-selected-price {
   color: #2c3e50;
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   margin-left: auto;
 }
 
@@ -362,15 +362,15 @@ body.vt-modal-open {
 }
 
 .vt-gift-modal-overlay .vt-gift-btn--primary {
-  background: linear-gradient(135deg, #2c3e50, #34495e);
+  background-color: #1e3a8a;
   color: white;
-  box-shadow: 0 4px 8px rgba(44, 62, 80, 0.2);
+  box-shadow: 0 4px 8px rgba(30, 58, 138, 0.2);
 }
 
 .vt-gift-modal-overlay .vt-gift-btn--primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #34495e, #2c3e50);
+  background-color: #1e40af;
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(44, 62, 80, 0.3);
+  box-shadow: 0 6px 12px rgba(30, 58, 138, 0.3);
 }
 
 .vt-gift-modal-overlay .vt-gift-btn--secondary {
@@ -410,24 +410,55 @@ body.vt-modal-open {
   }
 
   .vt-gift-modal-overlay .vt-gift-modal-title {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
 
   .vt-gift-modal-overlay .vt-gift-modal-body {
     padding: 20px;
   }
 
+  .vt-gift-modal-overlay .vt-gift-selection-title {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
   .vt-gift-modal-overlay .vt-gift-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
   }
 
   .vt-gift-modal-overlay .vt-gift-option {
-    padding: 15px;
+    padding: 10px;
   }
 
   .vt-gift-modal-overlay .vt-gift-option-icon {
-    font-size: 2rem;
+    font-size: 1.6rem;
+  }
+
+  .vt-gift-modal-overlay .vt-gift-selected-info {
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+
+  .vt-gift-modal-overlay .vt-gift-selected-title {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+
+  .vt-gift-modal-overlay .vt-gift-selected-display {
+    gap: 10px;
+  }
+
+  .vt-gift-modal-overlay .vt-gift-selected-icon {
+    font-size: 1.4rem;
+  }
+
+  .vt-gift-modal-overlay .vt-gift-selected-name {
+    font-size: 0.95rem;
+  }
+
+  .vt-gift-modal-overlay .vt-gift-selected-price {
+    font-size: 1.05rem;
   }
 
   .vt-gift-modal-overlay .vt-gift-modal-actions {
@@ -474,31 +505,31 @@ body.vt-modal-open {
   }
 
   .vt-gift-modal-overlay .vt-gift-selection-title {
-    font-size: 1.2rem;
-    margin-bottom: 12px;
+    font-size: 1rem;
+    margin-bottom: 8px;
   }
 
   .vt-gift-modal-overlay .vt-gift-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
   }
 
   .vt-gift-modal-overlay .vt-gift-option {
-    padding: 8px;
+    padding: 6px;
   }
 
   .vt-gift-modal-overlay .vt-gift-option-icon {
-    font-size: 1.5rem;
-    margin-bottom: 6px;
+    font-size: 1.2rem;
+    margin-bottom: 3px;
   }
 
   .vt-gift-modal-overlay .vt-gift-option-name {
-    font-size: 0.9rem;
-    margin-bottom: 4px;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
   }
 
   .vt-gift-modal-overlay .vt-gift-option-price {
-    font-size: 1rem;
+    font-size: 0.85rem;
   }
 
   .vt-gift-modal-overlay .vt-gift-selected-info {
@@ -507,24 +538,24 @@ body.vt-modal-open {
   }
 
   .vt-gift-modal-overlay .vt-gift-selected-title {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
+    font-size: 1rem;
+    margin-bottom: 8px;
   }
 
   .vt-gift-modal-overlay .vt-gift-selected-display {
-    gap: 10px;
+    gap: 8px;
   }
 
   .vt-gift-modal-overlay .vt-gift-selected-icon {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .vt-gift-modal-overlay .vt-gift-selected-name {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .vt-gift-modal-overlay .vt-gift-selected-price {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .vt-gift-modal-overlay .vt-gift-note {

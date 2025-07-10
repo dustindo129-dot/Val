@@ -83,16 +83,16 @@
 }
 
 /* Dark mode support */
-[data-theme="dark"] .locked-chapter-container {
+:root.dark-mode .locked-chapter-container {
   background: rgba(44, 44, 44, 0.9);
   border-color: #555;
   color: #f0f0f0;
 }
 
-[data-theme="dark"] .rent-module-btn {
+:root.dark-mode .rent-module-btn {
   background: linear-gradient(135deg, #3498db, #2980b9);
 }
 
-[data-theme="dark"] .rent-module-btn:hover {
+:root.dark-mode .rent-module-btn:hover {
   background: linear-gradient(135deg, #5dade2, #3498db);
 } 

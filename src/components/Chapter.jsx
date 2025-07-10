@@ -324,23 +324,17 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     }
   }, [isEditing]);
 
-  // Query for novel data
-  const { data: novelData } = useQuery({
-    queryKey: ['novel', novelId],
-    queryFn: async () => {
-      const novelRes = await axios.get(`${config.backendUrl}/api/novels/${novelId}`);
-      return novelRes.data;
-    },
-    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
-    enabled: !!novelId
-  });
+  // Note: Novel data is included in the chapter query response via MongoDB lookup
+  // No need for separate novel query since chapter endpoint already returns novel data
 
-  // Query for chapter data
+  // OPTIMIZED: Single query for all chapter data including user interactions
   const { data: chapterData, error: chapterError, isLoading } = useQuery({
-    queryKey: ['chapter', chapterId],
+    queryKey: ['chapter-optimized', chapterId, user?.id],
     queryFn: async () => {
-      const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}/full`, {
-        headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
+      const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}/full-optimized`, {
+        headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {},
+        // OPTIMIZATION: Increase timeout for long content chapters
+        timeout: 30000 // 30 seconds for very long chapters
       });
 
       return chapterRes.data;
@@ -352,189 +346,22 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       if (error?.response?.status === 401 || error?.response?.status === 403) {
         return false;
       }
+      // Don't retry on timeout errors for very long content
+      if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+        return false;
+      }
       // Retry up to 2 times for other errors
       return failureCount < 2;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    // OPTIMIZATION: Add performance settings for long content
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches for long content
+    gcTime: 1000 * 60 * 15 // Keep in cache longer for long content
   });
 
-  // Fetch user interaction data (likes, bookmarks)
-  const { data: userInteraction } = useQuery({
-    queryKey: ['user-chapter-interaction', chapterId, user?.id],
-    queryFn: async () => {
-      try {
-        const headers = getAuthHeaders();
-        if (!headers.Authorization) {
-          return { liked: false, bookmarked: false };
-        }
-        
-        const response = await axios.get(
-          `${config.backendUrl}/api/userchapterinteractions/user/${chapterId}`,
-          { headers }
-        );
-        return response.data;
-      } catch (error) {
-        console.error('Error fetching user chapter interaction:', error);
-        return { liked: false, bookmarked: false };
-      }
-    },
-    enabled: !!chapterId && !!user,
-    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
-    retry: (failureCount, error) => {
-      // Don't retry on auth errors, just return default values
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
-        return false;
-      }
-      return failureCount < 2;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setIsLiked(data.liked || false);
-        setIsBookmarked(data.bookmarked || false);
-      }
-    }
-  });
-
-  // Check if we should count a view
-  const viewKeyLocal = `chapter_${chapterId}_last_viewed`;
-  const lastViewed = localStorage.getItem(viewKeyLocal);
-  const now = Date.now();
-  const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
-  const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > fourHours;
-
-  // Check if we should record recently read (less restrictive than view counting)
-  const recentReadKeyLocal = `recent_read_${chapterId}_last_recorded`;
-  const lastRecorded = localStorage.getItem(recentReadKeyLocal);
-  const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
-  const shouldRecordRecentRead = !lastRecorded || (now - parseInt(lastRecorded, 10)) > twoMinutes;
-
-  // Separate query for view count with fire-and-forget approach
-  useQuery({
-    queryKey: ['chapter-view', chapterId],
-    queryFn: async () => {
-      try {
-        // Create a controller to manually abort the request if needed
-        const controller = new AbortController();
-        
-        // Give the server more time to process the request - 5 seconds
-        setTimeout(() => {
-          controller.abort();
-        }, 5000); // Abort after 5 seconds instead 
-        
-        // Update localStorage immediately to prevent repeated attempts
-        localStorage.setItem(viewKeyLocal, now.toString());
-        
-        // Make the view count request
-        try {
-          const headers = user ? getAuthHeaders() : {};
-          
-          const viewResponse = await axios.post(
-            `${config.backendUrl}/api/userchapterinteractions/view/${chapterId}`, 
-            {}, 
-            {
-              headers,
-              signal: controller.signal
-            }
-          );
-          
-          // If we got a response, update the view count in the UI
-          if (viewResponse?.data?.views) {
-            // Update directly in state for immediate UI update
-            setViewCount(viewResponse.data.views);
-            
-            // Also update the cached data
-            queryClient.setQueryData(['chapter', chapterId], oldData => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                chapter: {
-                  ...oldData.chapter,
-                  views: viewResponse.data.views
-                }
-              };
-            });
-          }
-        } catch (viewErr) {
-          // Don't log abort errors as they're expected
-          if (viewErr.name !== 'CanceledError' && viewErr.name !== 'AbortError') {
-            console.error('Lỗi ghi nhận lượt xem:', viewErr);
-          }
-        }
-        
-        // Return something to satisfy React Query
-        return { success: true };
-      } catch (err) {
-        // This should never be reached with our approach, but include it for safety
-        console.error('Lỗi thiết lập ghi nhận lượt xem:', err);
-        return { success: false };
-      }
-    },
-    enabled: !!chapterId && !!chapterData && shouldCountView,
-    retry: false,
-    staleTime: fourHours,
-    // Prevent refetching on focus/reconnect
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    // Avoid caching errors to allow retry on next visit
-    cacheTime: 0 
-  });
-
-  // Track recently read chapters for logged-in users
-  const recentlyReadQuery = useQuery({
-    queryKey: ['recently-read-track', chapterId, user?.id],
-    queryFn: async () => {
-      try {
-        if (!user) return { success: false };
-        
-        // Update localStorage immediately to prevent repeated attempts
-        localStorage.setItem(recentReadKeyLocal, Date.now().toString());
-        
-        // Make the recently read tracking request
-        try {
-          const headers = getAuthHeaders();
-          if (!headers.Authorization) {
-            return { success: false };
-          }
-          
-          const trackingResponse = await axios.post(
-            `${config.backendUrl}/api/userchapterinteractions/recently-read`,
-            { 
-              chapterId,
-              novelId,
-              moduleId: chapter?.moduleId
-            },
-            { headers }
-          );
-          
-          // Invalidate recently read cache to show updated data
-          queryClient.invalidateQueries(['recentlyRead', user?.id]);
-          
-        } catch (recentReadErr) {
-          console.error('❌ Recently read tracking failed:', recentReadErr);
-          console.error('❌ Failed data:', {
-            chapterId,
-            novelId,
-            moduleId: chapter?.moduleId
-          });
-        }
-        
-        return { success: true };
-      } catch (err) {
-        console.error('Lỗi thiết lập ghi nhận lịch sử đọc:', err);
-        return { success: false };
-      }
-    },
-    enabled: !!chapterId && !!chapterData && !!user && shouldRecordRecentRead,
-    retry: false,
-    staleTime: twoMinutes,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    cacheTime: 0 
-  });
-
-  // Extract chapter and novel data
+  // Extract chapter and novel data early to avoid circular dependencies
   const chapter = chapterData?.chapter;
-  const novel = chapter?.novel || novelData?.novel || {title: "Novel"};
+  const novel = chapter?.novel || {title: "Novel"};
   // Extract interaction data from the consolidated endpoint
   const interactions = chapterData?.interactions || {
     totalLikes: 0,
@@ -543,6 +370,59 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       bookmarked: false
     }
   };
+
+  // User interaction data is now included in the main query, no separate fetch needed
+  const userInteraction = interactions.userInteraction;
+
+  // OPTIMIZED: View counting and recently read tracking now handled in the main query
+  // No separate queries needed - server handles this automatically
+
+  // Note: chapter, novel, and interactions are now extracted earlier to avoid circular dependencies
+
+  // OPTIMIZATION: Handle very long content more efficiently
+  // Show loading for extremely large content to prevent UI blocking
+  const isVeryLongContent = useMemo(() => {
+    return chapter?.content && chapter.content.length > 500000; // 500KB+ content
+  }, [chapter?.content]);
+
+  const [longContentProcessed, setLongContentProcessed] = useState(false);
+  
+  useEffect(() => {
+    if (isVeryLongContent) {
+      setLongContentProcessed(false);
+      const timer = setTimeout(() => {
+        setLongContentProcessed(true);
+      }, 100); // Brief delay to prevent UI blocking
+      
+      return () => clearTimeout(timer);
+    } else {
+      setLongContentProcessed(true);
+    }
+  }, [isVeryLongContent]);
+
+  // OPTIMIZATION: Force garbage collection for very long content
+  // This helps prevent memory buildup when navigating between long chapters
+  useEffect(() => {
+    if (chapter?.content && chapter.content.length > 400000) {
+      const timer = setTimeout(() => {
+        if (window.gc) {
+          window.gc();
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [chapter?.content]);
+
+  if (isVeryLongContent && !longContentProcessed) {
+    return (
+      <div className="loading">
+        <LoadingSpinner size="large" text="Đang xử lý chương dài..." />
+      </div>
+    );
+  }
+
+
 
   // Initialize staff state when entering edit mode (after chapterData is available)
   useEffect(() => {
@@ -687,34 +567,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Use the module chapter list for the dropdown
   const moduleChapters = getModuleChapterList();
 
-  // Query for comments
-  const { data: comments = [], isLoading: isCommentsLoading } = useQuery({
-    queryKey: ['comments', `${novelId}-${chapterId}`],
-    queryFn: async () => {
-      const headers = getAuthHeaders();
-      if (!headers.Authorization) {
-        return [];
-      }
-      
-      const res = await axios.get(`${config.backendUrl}/api/comments`, {
-        params: {
-          contentType: 'chapters',
-          contentId: `${novelId}-${chapterId}`,
-          includeDeleted: false
-        },
-        headers: {
-          'Authorization': `Bearer ${getValidToken()}`
-        }
-      });
-      return res.data;
-    },
-    staleTime: 1000 * 60 * 15, // Changed to 15 minutes for comments as they're less critical
-    enabled: !!chapterId,
-    onError: () => {
-      // Handle missing endpoint gracefully
-      return [];
-    }
-  });
+  // Note: Comments are fetched by ChapterCommentsSection component itself
+  // No need to fetch comments here to avoid duplicate queries
 
   // Effect to update interaction stats and ensure state consistency
   useEffect(() => {
@@ -779,7 +633,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // Memoize stable props to prevent unnecessary re-renders
   const stableUserRole = useMemo(() => user?.role || 'user', [user?.role]);
-  const stableNovelData = useMemo(() => novelData?.novel || novelData, [novelData]);
+  const stableNovelData = useMemo(() => novel, [novel]);
 
   // Effect to handle edit mode initialization
   useEffect(() => {
@@ -865,9 +719,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       try {
         // Prefetch previous chapter data if query client available
         await queryClient.prefetchQuery({
-          queryKey: ['chapter', chapter.prevChapter._id],
+          queryKey: ['chapter-optimized', chapter.prevChapter._id, user?.id],
           queryFn: async () => {
-            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.prevChapter._id}`);
+            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.prevChapter._id}/full-optimized`, {
+              headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
+            });
             return response.data;
           }
         });
@@ -894,9 +750,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       try {
         // Prefetch next chapter data if query client available
         await queryClient.prefetchQuery({
-          queryKey: ['chapter', chapter.nextChapter._id],
+          queryKey: ['chapter-optimized', chapter.nextChapter._id, user?.id],
           queryFn: async () => {
-            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.nextChapter._id}`);
+            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.nextChapter._id}/full-optimized`, {
+              headers: user ? {Authorization: `Bearer ${localStorage.getItem('token')}`} : {}
+            });
             return response.data;
           }
         });
@@ -926,8 +784,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       const currentChapterId = chapter._id;
 
       // Optimistic UI update if using React Query
-      await queryClient.cancelQueries({queryKey: ['chapter', chapterId]});
-      queryClient.removeQueries(['chapter', chapterId]);
+      await queryClient.cancelQueries({queryKey: ['chapter-optimized', chapterId, user?.id]});
+      queryClient.removeQueries(['chapter-optimized', chapterId, user?.id]);
 
       // Make API call to delete chapter
       await axios.delete(
@@ -940,7 +798,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       );
 
       // Invalidate related queries
-      queryClient.invalidateQueries({queryKey: ['novel', novelId]});
+      queryClient.invalidateQueries({queryKey: ['chapter-optimized', chapterId, user?.id]});
 
       // Navigate back to novel page
       navigate(generateNovelUrl({ _id: novelId, title: novel.title }), {replace: true});
@@ -1019,11 +877,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       };
 
       // Optimistic UI update
-      await queryClient.cancelQueries({queryKey: ['chapter', chapterId]});
+      await queryClient.cancelQueries({queryKey: ['chapter-optimized', chapterId, user?.id]});
 
-      const previousChapterData = queryClient.getQueryData(['chapter', chapterId]);
+      const previousChapterData = queryClient.getQueryData(['chapter-optimized', chapterId, user?.id]);
 
-      queryClient.setQueryData(['chapter', chapterId], {
+      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], {
         ...chapterData,
         chapter: {
           ...chapterData.chapter,
@@ -1074,7 +932,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       });
 
       // Update with server data for consistency
-      queryClient.setQueryData(['chapter', chapterId], {
+      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], {
         ...previousChapterData,
         chapter: {
           ...previousChapterData.chapter,
@@ -1093,7 +951,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       });
 
       // Refetch data to ensure consistency
-      queryClient.refetchQueries({queryKey: ['chapter', chapterId]});
+      queryClient.refetchQueries({queryKey: ['chapter-optimized', chapterId, user?.id]});
     } finally {
       setIsSaving(false);
     }
@@ -1132,7 +990,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       }));
 
       // Update the local cache with the new like status
-      queryClient.setQueryData(['chapter', chapterId], oldData => {
+      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
         if (!oldData) return oldData;
         return {
           ...oldData,
@@ -1152,8 +1010,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       setIsLiked(previousLiked);
       setLikeCount(likeCount);
       // Refetch to ensure consistency
-      queryClient.invalidateQueries(['chapter', chapterId]);
-      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
+      queryClient.invalidateQueries(['chapter-optimized', chapterId, user?.id]);
     }
   };
 
@@ -1184,7 +1041,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       );
 
       // Update the local cache with the new bookmark status
-      queryClient.setQueryData(['chapter', chapterId], oldData => {
+      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
         if (!oldData) return oldData;
         return {
           ...oldData,
@@ -1216,8 +1073,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       // Revert optimistic update on error
       setIsBookmarked(previousBookmarked);
       // Refetch to ensure consistency
-      queryClient.invalidateQueries(['chapter', chapterId]);
-      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
+      queryClient.invalidateQueries(['chapter-optimized', chapterId, user?.id]);
     }
   };
 
@@ -1275,10 +1131,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
    */
   const handleRentalSuccess = useCallback((data) => {
     // Refresh chapter data and user balance after successful rental
-    queryClient.invalidateQueries(['chapter']);
+    queryClient.invalidateQueries(['chapter-optimized']);
     queryClient.invalidateQueries(['user']);
     queryClient.invalidateQueries(['novel']);
-    queryClient.invalidateQueries(['user-chapter-interaction']);
     queryClient.invalidateQueries(['module-rental-status']);
     
     // Notify SecondaryNavbar to refresh balance display
@@ -1337,6 +1192,17 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   if (!chapter || !novel) {
     return <div className="error">Không tìm thấy chương</div>;
   }
+
+  // CRITICAL: Prevent rendering if chapter data is incomplete (fixes race condition)
+  if (!chapter._id || !chapter.mode) {
+    return (
+      <div className="loading">
+        <LoadingSpinner size="large" text="Đang tải dữ liệu chương..." />
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="chapter-container">
@@ -1481,8 +1347,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         novelId={novelId}
         chapterId={chapterId}
         user={user}
-        comments={comments}
-        isCommentsLoading={isCommentsLoading}
         novel={novel}
       />
 

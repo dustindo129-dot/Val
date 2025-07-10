@@ -142,16 +142,16 @@
 }
 
 /* Dark theme compatibility */
-[data-theme="dark"] .seo-content {
+:root.dark-mode .seo-content {
   background: rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="dark"] .feature-item {
+:root.dark-mode .feature-item {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .seo-popular {
+:root.dark-mode .seo-popular {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.05);
 } 

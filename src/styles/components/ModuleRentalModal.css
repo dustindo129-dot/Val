@@ -361,12 +361,12 @@ body.vt-rental-modal-open {
 }
 
 /* Dark theme support */
-[data-theme="dark"] .rental-modal {
+:root.dark-mode .rental-modal {
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
 }
 
-[data-theme="dark"] .rental-module-info,
-[data-theme="dark"] .rental-description {
+:root.dark-mode .rental-module-info,
+:root.dark-mode .rental-description {
   background: rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.1);
 }

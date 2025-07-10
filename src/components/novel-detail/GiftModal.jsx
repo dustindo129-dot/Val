@@ -254,6 +254,14 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
                           </div>
                       ))}
                     </div>
+                    
+                    {/* Gift note moved here to always show */}
+                    <div className="vt-gift-note">
+                      <i className="fas fa-info-circle vt-gift-note-icon"></i>
+                      <span className="vt-gift-note-text">
+                        Quà tặng trực tiếp dành cho dịch giả/tác giả, không được thêm vào kho lúa để mở chương (cho những bộ không khóa lúa hoặc đã mở hết/hoàn thành). 
+                      </span>
+                    </div>
                   </div>
 
                   {selectedGift && (
@@ -263,12 +271,6 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
                           <span className="vt-gift-selected-icon">{selectedGift.icon}</span>
                           <span className="vt-gift-selected-name">{selectedGift.name}</span>
                           <span className="vt-gift-selected-price">{selectedGift.price} 🌾</span>
-                        </div>
-                        <div className="vt-gift-note">
-                          <i className="fas fa-info-circle vt-gift-note-icon"></i>
-                          <span className="vt-gift-note-text">
-                      Quà tặng trực tiếp dành cho dịch giả/tác giả, không được thêm vào Kho lúa
-                    </span>
                         </div>
                       </div>
                   )}

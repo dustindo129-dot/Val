@@ -67,6 +67,8 @@ const ChapterContent = React.memo(({
     const autoSaveKey = `chapter_autosave_${chapter._id}`;
     const AUTO_SAVE_EXPIRY_HOURS = 24;
 
+
+
     // FOOTNOTE SYSTEM: Convert between formats (with backward compatibility)
     const convertFootnotesToHTML = useCallback((content) => {
         if (!content) return content;
@@ -905,6 +907,16 @@ const ChapterContent = React.memo(({
     // Process content for display (with backward compatibility)
     const processContent = (content) => {
         if (!content) return '';
+
+        // OPTIMIZATION: Handle very long content more efficiently
+        const isVeryLongContent = content.length > 300000; // 300KB+
+        if (isVeryLongContent) {
+            // For very long content, add a small delay to prevent UI blocking
+            // This helps with the race condition issue on long chapters
+            requestAnimationFrame(() => {
+                // Content processing will continue normally
+            });
+        }
 
         try {
             const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);

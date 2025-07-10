@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 import '../../styles/components/ModuleForm.css';
@@ -28,6 +29,58 @@ const ModuleForm = memo(({
   );
   const [mode, setMode] = useState(moduleForm.mode || 'published');
   const [moduleBalance, setModuleBalance] = useState(moduleForm.moduleBalance || 0);
+  
+  // Create portal container
+  const [portalContainer, setPortalContainer] = useState(null);
+
+  // Create portal container
+  useEffect(() => {
+    // Create or get portal container
+    let container = document.getElementById('vt-module-form-modal-portal');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vt-module-form-modal-portal';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.zIndex = '10000';
+      container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+    }
+    setPortalContainer(container);
+
+    // Cleanup function
+    return () => {
+      if (container && container.parentNode) {
+        // Only remove if no other modals are using it
+        const existingModals = container.children.length;
+        if (existingModals === 0) {
+          container.parentNode.removeChild(container);
+        }
+      }
+    };
+  }, []);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('vt-modal-open');
+    // Enable pointer events for the portal when modal is open
+    if (portalContainer) {
+      portalContainer.style.pointerEvents = 'auto';
+    }
+
+    // Cleanup function to restore scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('vt-modal-open');
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    };
+  }, [portalContainer]);
 
   // Update form values when editingModule changes
   useEffect(() => {
@@ -95,7 +148,8 @@ const ModuleForm = memo(({
     const updatedForm = {
       ...moduleForm,
       mode: mode,
-      moduleBalance: mode === 'paid' ? parseInt(moduleBalance) || 0 : 0
+      moduleBalance: mode === 'paid' ? parseInt(moduleBalance) || 0 : 0,
+      recalculateRentOnUnlock: mode === 'rent' ? (moduleForm.recalculateRentOnUnlock || false) : false
     };
     
     // Update the form state
@@ -105,9 +159,13 @@ const ModuleForm = memo(({
     handleModuleSubmit(e, updatedForm);
   };
 
-  return (
-    <div className="module-form-modal">
-      <div className="module-form-content">
+  if (!portalContainer) return null;
+
+  // Render modal content with portal
+  const modalContent = (
+    <div className="vt-module-form-modal-overlay">
+      <div className="vt-module-form-modal-content">
+        <div className="module-form-content">
         <div className="module-form-header">
           <h3>{editingModule ? 'Sửa tập' : 'Tạo tập mới'}</h3>
           <button
@@ -194,6 +252,27 @@ const ModuleForm = memo(({
           </div>
         )}
 
+        {/* Recalculate Rent Balance on Unlock Checkbox */}
+        {canManageModuleModes && mode === 'rent' && (
+          <div className="module-form-group">
+            <label className="module-form-checkbox-label">
+              <input
+                type="checkbox"
+                checked={moduleForm.recalculateRentOnUnlock || false}
+                onChange={(e) => setModuleForm(prev => ({
+                  ...prev, 
+                  recalculateRentOnUnlock: e.target.checked
+                }))}
+                className="module-form-checkbox"
+              />
+              <span>Tính toán lại giá mở tạm thời khi có chương trả phí được mở</span>
+            </label>
+            <small className="module-form-help-text">
+              Khi được bật, giá mở tạm thời sẽ được tính lại khi có chương trả phí trong tập được mở khóa tự động thông qua đóng góp.
+            </small>
+          </div>
+        )}
+
         {/* Show module info for users who can't manage module modes when module is paid */}
         {!canManageModuleModes && user?.role === 'pj_user' && mode === 'paid' && (
           <div className="module-form-group">
@@ -254,9 +333,13 @@ const ModuleForm = memo(({
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
+
+  // Use createPortal to render outside the component tree
+  return createPortal(modalContent, portalContainer);
 });
 
 export default ModuleForm; 

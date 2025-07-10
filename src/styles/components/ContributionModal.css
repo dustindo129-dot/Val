@@ -205,13 +205,32 @@
   overflow-x: hidden; /* Prevent horizontal scrolling completely */
 }
 
-/* User balance info */
+/* User balance info - styled like gift modal */
 .user-balance-info {
-  background-color: #effaf5;
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 4px solid #2ecc71;
-  margin-bottom: 20px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.balance-info-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  color: #0369a1;
+  font-size: 1.3rem;
+}
+
+.balance-info-icon {
+  color: #10b981;
+  font-size: 1.6rem;
+}
+
+.balance-info-text {
+  color: #0369a1;
 }
 
 .balance-label {
@@ -237,14 +256,15 @@
 .contribution-form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0px;
 }
 
 .form-group label,
 .contribution-form-label {
   font-weight: 600;
-  color: #4b5563;
-  font-size: 0.95rem;
+  color: #374151;
+  font-size: 1.2rem;
+  margin: 0 0 15px 0;
 }
 
 .form-group input,
@@ -626,6 +646,28 @@
     padding: 15px;
   }
 
+  /* Balance info responsive */
+  .user-balance-info {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .balance-info-display {
+    font-size: 1.1rem;
+    gap: 10px;
+  }
+
+  .balance-info-icon {
+    font-size: 1.4rem;
+  }
+
+  /* Form label responsive */
+  .form-group label,
+  .contribution-form-label {
+    font-size: 1.1rem;
+    margin: 0 0 12px 0;
+  }
+
   /* Adjust table for tablet sizes */
   .history-table {
     font-size: 0.9rem;
@@ -678,6 +720,28 @@
 
   .modal-title {
     font-size: 1.1rem;
+  }
+
+  /* Mobile balance info */
+  .user-balance-info {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .balance-info-display {
+    font-size: 1rem;
+    gap: 8px;
+  }
+
+  .balance-info-icon {
+    font-size: 1.3rem;
+  }
+
+  /* Mobile form labels */
+  .form-group label,
+  .contribution-form-label {
+    font-size: 1rem;
+    margin: 0 0 10px 0;
   }
 
   /* Mobile table adjustments - NO horizontal scrolling */
@@ -785,7 +849,7 @@
 
 :root.dark-mode .form-group label,
 :root.dark-mode .contribution-form-label {
-  color: #e0e0e0;
+  color: #f9fafb;
 }
 
 :root.dark-mode .form-group input,
@@ -816,8 +880,20 @@
 }
 
 :root.dark-mode .user-balance-info {
-  background: var(--info-bg-dark, #1a2332);
-  border-left-color: var(--info-color, #17a2b8);
+  background: linear-gradient(135deg, #1e3a8a, #1e40af);
+  border-color: #3b82f6;
+}
+
+:root.dark-mode .balance-info-display {
+  color: #dbeafe;
+}
+
+:root.dark-mode .balance-info-text {
+  color: #dbeafe;
+}
+
+:root.dark-mode .balance-info-icon {
+  color: #10b981;
 }
 
 :root.dark-mode .user-balance-info .balance-label {

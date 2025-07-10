@@ -1163,27 +1163,49 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
 }
 
 .qr-modal-content {
-  background-color: white;
-  border-radius: 8px;
-  padding: 2rem;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #e1e5e9;
+  transform: scale(0.9);
+  animation: qrModalAppear 0.3s ease-out forwards;
+  position: relative;
+  z-index: 10001;
+  pointer-events: auto;
+  padding: 1rem;
   text-align: center;
+}
+
+@keyframes qrModalAppear {
+  to {
+    transform: scale(1);
+  }
 }
 
 .qr-modal-content h3 {
   margin-top: 0;
   color: #333;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .qr-code-container {
@@ -1191,7 +1213,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .qr-code-container img {
@@ -1205,9 +1227,9 @@
   background-color: #f8f9fa;
   border-radius: 8px;
   padding: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   text-align: left;
-  max-height: 200px;
+  max-height: 210px;
   overflow-y: auto;
 }
 
@@ -1289,7 +1311,10 @@
 
 /* Dark mode styles for QR modal */
 :root.dark-mode .qr-modal-content {
-  background-color: #343a40;
+  background: #2c3e50;
+  color: #ecf0f1;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+  border-color: #34495e;
 }
 
 :root.dark-mode .qr-modal-content h3 {
@@ -1318,7 +1343,7 @@
   margin-bottom: 1.5rem;
 }
 
-.countdown-timer {
+.qr-countdown-timer {
   font-family: monospace;
   font-size: 1.2rem;
   font-weight: bold;
@@ -1333,7 +1358,7 @@
 }
 
 /* Pulse animation for the countdown timer */
-@keyframes pulse {
+@keyframes qr-timer-pulse {
   0% {
     transform: scale(1);
   }
@@ -1346,12 +1371,12 @@
 }
 
 /* Apply animation when timer is low (< 60 seconds) */
-.countdown-timer.low {
-  animation: pulse 1s infinite;
+.qr-countdown-timer.low {
+  animation: qr-timer-pulse 1s infinite;
 }
 
 /* Dark mode styles for countdown timer */
-:root.dark-mode .countdown-timer {
+:root.dark-mode .qr-countdown-timer {
   background-color: #dc3545;
 }
 
@@ -1361,14 +1386,10 @@
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
-  margin-top: 1rem;
-  width: 100%;
-  max-width: 200px;
+  margin-top: 0.5rem;
 }
 
 .qr-download-button:hover {
@@ -1384,15 +1405,6 @@
   background-color: #6c757d;
   cursor: not-allowed;
   opacity: 0.7;
-}
-
-/* Update QR code container to center the download button */
-.qr-code-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
 }
 
 /* Dark mode styles for QR download button */
@@ -1411,9 +1423,8 @@
 /* Mobile responsiveness for QR download button */
 @media (max-width: 576px) {
   .qr-download-button {
-    max-width: 100%;
-    padding: 0.875rem 1.5rem;
-    font-size: 1rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9rem;
   }
 }
 

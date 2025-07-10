@@ -1,5 +1,61 @@
 /* ModuleForm Component Styles */
 
+/* Portal container styles */
+#vt-module-form-modal-portal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* Overlay styles for module form modal */
+.vt-module-form-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* Modal content container for portal */
+.vt-module-form-modal-overlay .vt-module-form-modal-content {
+  width: 90%;
+  max-width: 600px;
+  background: #ffffff;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #e1e5e9;
+  transform: scale(0.9);
+  animation: vtModuleFormModalAppear 0.3s ease-out forwards;
+  position: relative;
+  z-index: 10002;
+  pointer-events: auto;
+}
+
+@keyframes vtModuleFormModalAppear {
+  to {
+    transform: scale(1);
+  }
+}
+
 .module-form-modal {
   position: fixed;
   top: 50%;
@@ -224,80 +280,148 @@
 }
 
 /* Dark theme support */
-[data-theme="dark"] .module-form-modal {
+:root.dark-mode .vt-module-form-modal-overlay .vt-module-form-modal-content {
+  background: #2c3e50;
+  color: #ecf0f1;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+  border-color: #34495e;
+}
+
+:root.dark-mode .module-form-modal {
   background: #2c3e50;
   color: #ecf0f1;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   border-color: #34495e;
 }
 
-[data-theme="dark"] .module-form-content {
+:root.dark-mode .module-form-content {
   background: #2c3e50;
 }
 
-[data-theme="dark"] .module-form-header {
+:root.dark-mode .module-form-header {
   border-bottom-color: #34495e;
 }
 
-[data-theme="dark"] .module-form-header h3 {
+:root.dark-mode .module-form-header h3 {
   color: #ecf0f1;
 }
 
-[data-theme="dark"] .module-form-close-btn {
+:root.dark-mode .module-form-close-btn {
   color: #bdc3c7;
 }
 
-[data-theme="dark"] .module-form-close-btn:hover {
+:root.dark-mode .module-form-close-btn:hover {
   background-color: #34495e;
   color: #ecf0f1;
 }
 
-[data-theme="dark"] .module-form-label {
+:root.dark-mode .module-form-label {
   color: #ecf0f1;
 }
 
-[data-theme="dark"] .module-form-input,
-[data-theme="dark"] .module-form-select {
+:root.dark-mode .module-form-input,
+:root.dark-mode .module-form-select {
   background: #34495e;
   border-color: #4a5f7a;
   color: #ecf0f1;
 }
 
-[data-theme="dark"] .module-form-input:focus,
-[data-theme="dark"] .module-form-select:focus {
+:root.dark-mode .module-form-input:focus,
+:root.dark-mode .module-form-select:focus {
   border-color: #3498db;
   background-color: #3c4e62;
 }
 
-[data-theme="dark"] .module-form-error {
+:root.dark-mode .module-form-error {
   background: #4a2c2a;
   border-color: #7b3f3c;
   color: #f1c40f;
 }
 
-[data-theme="dark"] .module-form-help-text {
+:root.dark-mode .module-form-help-text {
   color: #95a5a6;
 }
 
-[data-theme="dark"] .module-form-info-display {
+:root.dark-mode .module-form-info-display {
   background-color: #34495e;
   border-color: #4a5f7a;
   color: #bdc3c7;
 }
 
-[data-theme="dark"] .module-form-cancel-btn {
+:root.dark-mode .module-form-cancel-btn {
   background: #34495e;
   color: #ecf0f1;
   border-color: #4a5f7a;
 }
 
-[data-theme="dark"] .module-form-cancel-btn:hover {
+:root.dark-mode .module-form-cancel-btn:hover {
   background: #4a5f7a;
   border-color: #5d6d7e;
 }
 
-[data-theme="dark"] .module-form-actions {
+:root.dark-mode .module-form-actions {
   border-top-color: #34495e;
+}
+
+/* Checkbox styling */
+.module-form-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #bdc3c7;
+  border-radius: 3px;
+  background-color: #ffffff;
+  cursor: pointer;
+  position: relative;
+  top: 2px;
+  transition: all 0.2s ease;
+}
+
+.module-form-checkbox:checked {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.module-form-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.module-form-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.module-form-checkbox-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.module-form-checkbox-label:hover .module-form-checkbox {
+  border-color: #3498db;
+}
+
+/* Dark theme checkbox styling */
+:root.dark-mode .module-form-checkbox {
+  background-color: #34495e;
+  border-color: #4a5f7a;
+}
+
+:root.dark-mode .module-form-checkbox:checked {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+:root.dark-mode .module-form-checkbox-label {
+  color: #ecf0f1;
 }
 
 /* Responsive design */

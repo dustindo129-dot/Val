@@ -188,8 +188,12 @@ const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) 
         </div>
         <div className="vt-contribution-modal-body">
           <div className="user-balance-info">
-            <div className="balance-label">Số dư hiện tại của bạn</div>
-            <div className="balance-value">{userBalance.toLocaleString()} 🌾</div>
+            <div className="balance-info-display">
+              <i className="fas fa-seedling balance-info-icon"></i>
+              <span className="balance-info-text">
+                Số dư của bạn: {userBalance.toLocaleString()} 🌾
+              </span>
+            </div>
           </div>
           <form className="contribute-form" onSubmit={handleSubmit}>
             <div className="contribution-form-group">

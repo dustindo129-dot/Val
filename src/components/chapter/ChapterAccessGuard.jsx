@@ -60,6 +60,11 @@ const ChapterAccessGuard = ({
   const canAccessChapterContent = (chapter, user) => {
     if (!chapter || !chapter.mode) return true; // Default to accessible if no mode specified
     
+    // CRITICAL: Check server's access decision first
+    if (chapter.accessDenied) {
+      return false;
+    }
+    
     switch (chapter.mode) {
       case 'published':
         return true; // Published is accessible to everyone
@@ -93,7 +98,9 @@ const ChapterAccessGuard = ({
 
   // Check if user has access to paid module content
   const canAccessPaidModule = (moduleData, user) => {
-    if (!moduleData || moduleData.mode !== 'paid') return true; // Not a paid module
+    if (!moduleData || moduleData.mode !== 'paid') {
+      return true; // Not a paid module
+    }
     
     // Check if user has active rental for this module
     if (chapter?.rentalInfo?.hasActiveRental) {

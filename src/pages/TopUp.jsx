@@ -732,7 +732,7 @@ const TopUp = () => {
         {/* QR Code Modal */}
         {qrModalOpen && (
           <div className="qr-modal-overlay">
-            <div className="qr-modal-content">
+            <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>Quét mã QR để thanh toán</h3>
               
               <div className="qr-code-container">
@@ -772,11 +772,11 @@ const TopUp = () => {
               </div>
               
               <div className="qr-countdown-container">
-                <p className="qr-expiry-note">
-                  Vui lòng quét mã QR, yêu cầu sẽ hết hạn sau <span className={`countdown-timer ${isCountdownLow(countdown) ? 'low' : ''}`}>{formatCountdown(countdown)}
-                  </span>
-                  Nếu chuyển khoản trực tiếp vui lòng điền chính xác nội dung và số tiền.
-                </p>
+                <div className="qr-expiry-note">
+                  <p>Vui lòng quét mã QR, yêu cầu sẽ hết hạn sau <span className={`qr-countdown-timer ${isCountdownLow(countdown) ? 'low' : ''}`}>{formatCountdown(countdown)}</span></p>
+                  <p>Nếu chuyển khoản trực tiếp vui lòng điền chính xác nội dung và số tiền.</p>
+                  <p>Sau khi thanh toán, vui lòng đăng nhập lại để cập nhật số dư nhanh nhất có thể.</p>
+                </div>
               </div>
               
               <div className="qr-modal-actions">
