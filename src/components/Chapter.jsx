@@ -457,12 +457,26 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Use the module chapter list for the dropdown
   const moduleChapters = getModuleChapterList();
 
+  // Helper function to normalize staff values for dropdown consistency
+  const normalizeStaffValue = (staffValue) => {
+    if (!staffValue) return '';
+    
+    // If it's an ObjectId (24 hex characters), reset to empty to avoid mismatch
+    // The dropdown options are display names, so ObjectIds won't match
+    if (/^[0-9a-fA-F]{24}$/.test(staffValue)) {
+      return ''; // Show "Không có" and let user re-select
+    }
+    
+    // If it's already a display name, return as is
+    return staffValue;
+  };
+
   // Initialize staff state when entering edit mode (after chapterData is available)
   useEffect(() => {
     if (isEditing && chapter) {
-      setEditedTranslator(chapter.translator || '');
-      setEditedEditor(chapter.editor || '');
-      setEditedProofreader(chapter.proofreader || '');
+      setEditedTranslator(normalizeStaffValue(chapter.translator));
+      setEditedEditor(normalizeStaffValue(chapter.editor));
+      setEditedProofreader(normalizeStaffValue(chapter.proofreader));
     }
   }, [isEditing, chapter]);
 
