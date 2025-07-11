@@ -1764,13 +1764,32 @@ const AdminDashboard = () => {
      */
     const saveBalanceChange = async (id) => {
         try {
+            // Get current cache data for optimistic update
+            const previousData = queryClient.getQueryData(['novels', user?.id, user?.role, sortType]) || [];
+            
             // Find the novel in the current data
-            const novel = sortedNovels.find(novel => novel._id === id);
+            const novel = previousData.find(novel => novel._id === id);
             if (!novel) {
                 throw new Error('Novel not found');
             }
 
-            // Send request to update only the balance without affecting updatedAt
+            const newBalance = parseFloat(balanceValue);
+            
+            // Optimistic update: Immediately update the cache
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
+                Array.isArray(old)
+                    ? old.map(novel => 
+                        novel._id === id 
+                            ? { ...novel, novelBalance: newBalance }
+                            : novel
+                      )
+                    : []
+            );
+
+            // Exit edit mode immediately for better UX
+            setEditingBalanceId(null);
+
+            // Send request to update the balance
             const response = await fetch(`${config.backendUrl}/api/novels/${id}/balance`, {
                 method: 'PATCH',
                 headers: {
@@ -1778,41 +1797,37 @@ const AdminDashboard = () => {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 body: JSON.stringify({
-                    novelBalance: parseFloat(balanceValue)
+                    novelBalance: newBalance
                 })
             });
 
             if (!response.ok) {
+                // Revert optimistic update on error
+                queryClient.setQueryData(['novels', user?.id, user?.role, sortType], previousData);
+                
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Không thể cập nhật số dư truyện');
             }
 
-            // Immediately fetch fresh data
-            // Include paid content info when filtering by paid content
-            const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
-            const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
+            const updatedNovel = await response.json();
             
-            const freshDataResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}&t=${Date.now()}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            // Update cache with the actual server response (includes any server-side corrections)
+            queryClient.setQueryData(['novels', user?.id, user?.role, sortType], old =>
+                Array.isArray(old)
+                    ? old.map(novel => 
+                        novel._id === id 
+                            ? { ...novel, ...updatedNovel }
+                            : novel
+                      )
+                    : []
+            );
 
-            if (freshDataResponse.ok) {
-                const freshData = await freshDataResponse.json();
-                const freshNovels = Array.isArray(freshData.novels) ? freshData.novels : (Array.isArray(freshData) ? freshData : []);
-                queryClient.setQueryData(['novels', user?.id, user?.role, sortType], freshNovels);
-            }
-
-            // Force invalidation of the queries to ensure fresh data on next render
-            queryClient.invalidateQueries(['novels', user?.id, user?.role, sortType]);
-
-            // Exit edit mode
-            setEditingBalanceId(null);
             setError('');
         } catch (err) {
             console.error('Lỗi cập nhật số dư:', err);
             setError(err.message);
+            // Edit mode was already exited, but we could re-enable it on error if desired
+            // setEditingBalanceId(id);
         }
     };
 
