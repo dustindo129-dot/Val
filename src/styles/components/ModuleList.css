@@ -416,7 +416,10 @@
   .module-content {
       flex-direction: column;
       gap: 10px;
-      align-items: center;
+  }
+
+  .module-cover {
+      align-self: center;
   }
 
 }

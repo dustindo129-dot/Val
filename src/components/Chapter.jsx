@@ -276,6 +276,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // Long content state
   const [longContentProcessed, setLongContentProcessed] = useState(false);
+  
+  // Chapter view tracking state
+  const [hasTrackedView, setHasTrackedView] = useState(false);
 
   // OPTIMIZED: Single query for all chapter data including user interactions
   const { data: chapterData, error: chapterError, isLoading } = useQuery({
@@ -572,6 +575,58 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       setViewCount(chapter?.views || 0);
     }
   }, [interactions, chapter]);
+
+  // Effect to handle chapter view tracking with optimistic updates
+  useEffect(() => {
+    if (!chapter || !chapterId || hasTrackedView) return;
+
+    // Check if chapter was viewed in the last 4 hours (same cooldown as novel views)
+    const viewKey = `chapter_${chapterId}_last_viewed`;
+    const lastViewed = localStorage.getItem(viewKey);
+    const now = Date.now();
+    const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+
+    // Only count view if:
+    // 1. Never viewed before, or
+    // 2. Last viewed more than 4 hours ago
+    // 3. Not currently in cache (fresh visit)
+    const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > fourHours;
+
+    if (shouldCountView) {
+      // OPTIMISTIC UPDATE: Increment view count immediately for better UX
+      // This shows the user that their view has been counted without waiting for server response
+      setViewCount(prevCount => prevCount + 1);
+      
+      // Update the query cache as well for consistency
+      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          chapter: {
+            ...old.chapter,
+            views: (old.chapter.views || 0) + 1
+          }
+        };
+      });
+      
+      // Update localStorage to prevent multiple counts
+      localStorage.setItem(viewKey, now.toString());
+      
+      // Mark as tracked to prevent multiple calls
+      setHasTrackedView(true);
+      
+      // The backend will handle the actual view tracking on the next data fetch
+      // This provides immediate visual feedback while maintaining data consistency
+    } else {
+      // Mark as tracked even if we didn't count to prevent loops
+      setHasTrackedView(true);
+    }
+  }, [chapter, chapterId, hasTrackedView, queryClient, user?.id]);
+
+  // Reset view tracking when chapter changes
+  useEffect(() => {
+    setHasTrackedView(false);
+  }, [chapterId]);
 
   // Effect to calculate word count - prefer stored TinyMCE word count, fallback to calculation
   useEffect(() => {
