@@ -136,8 +136,8 @@ const UserProfile = () => {
   // Separate permission for remove buttons - admin/mod only
   const canRemoveModules = user && ['admin', 'moderator'].includes(user.role);
 
-  // Separate permission for refresh button - admin/mod only
-  const canRefreshModules = user && ['admin', 'moderator'].includes(user.role);
+  // Separate permission for refresh button - admin/mod or own profile
+  const canRefreshModules = user && (['admin', 'moderator'].includes(user.role) || isOwnProfile);
 
   /**
    * Fetch user profile data
