@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createUniqueSlug, generateNovelUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 import DOMPurify from 'dompurify';
+import { translateRequestStatus, translateRequestType, translateContributionStatus } from '../../utils/marketStatusTranslation';
 
 /**
  * Request History Component
@@ -94,12 +95,10 @@ const RequestHistory = ({
                   <div className="history-user">
                     <span className="history-username">{request.user.displayName || request.user.username}</span>
                     <span className="history-type">
-                      {request.type === 'new' 
-                        ? 'Truyện mới' 
-                        : 'Đề xuất từ nhóm dịch'}
+                      {translateRequestType(request.type)}
                     </span>
                     <span className={`history-status status-${request.status}`}>
-                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      {translateRequestStatus(request.status)}
                     </span>
 
                   </div>
@@ -139,7 +138,7 @@ const RequestHistory = ({
                         <div className="contribution-header">
                           <span className="contribution-username">{contribution.user.displayName || contribution.user.username}</span>
                           <span className={`contribution-status status-${contribution.status}`}>
-                            {contribution.status.charAt(0).toUpperCase() + contribution.status.slice(1)}
+                            {translateContributionStatus(contribution.status)}
                           </span>
                                                     <span className="contribution-date">                            {(() => {                              const date = new Date(contribution.createdAt);                              const day = date.getDate().toString().padStart(2, '0');                              const month = (date.getMonth() + 1).toString().padStart(2, '0');                              const year = date.getFullYear();                              return `${day}/${month}/${year}`;                            })()}                          </span>
                         </div>

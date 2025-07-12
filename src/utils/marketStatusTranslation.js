@@ -1,36 +1,9 @@
 /**
- * Status Translation Utility
+ * Market Status Translation Utility
  * 
- * Provides translation functions for request, contribution, and novel status values
+ * Provides translation functions for market request and contribution status values
  * from English to Vietnamese
  */
-
-/**
- * Translates novel status from English to Vietnamese
- * @param {string} status - The status in English
- * @returns {string} The translated status in Vietnamese
- */
-export const translateStatus = (status) => {
-  const statusMap = {
-    'ongoing': 'Đang tiến hành',
-    'completed': 'Hoàn thành',
-    'dropped': 'Tạm dừng',
-    'hiatus': 'Tạm nghỉ',
-    'licensed': 'Đã mua bản quyền',
-    'axed': 'Đã hủy bỏ'
-  };
-  
-  return statusMap[status] || status;
-};
-
-/**
- * Gets the CSS class name for a given novel status
- * @param {string} status - The status value
- * @returns {string} The CSS class name
- */
-export const getStatusForCSS = (status) => {
-  return `status-${status}`;
-};
 
 /**
  * Translates request status from English to Vietnamese

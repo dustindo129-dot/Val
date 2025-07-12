@@ -403,6 +403,9 @@ const Market = () => {
         window.dispatchEvent(new CustomEvent('balanceUpdated'));
       }
       
+      // Notify other components about request update
+      window.dispatchEvent(new CustomEvent('requestUpdated'));
+      
       // Add request to withdrawableRequests after 24 hours (for user requests only)
       if (requestType === 'new') {
         setTimeout(() => {
@@ -710,6 +713,9 @@ const Market = () => {
       // Remove the request from the list
       setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
       
+      // Notify other components about request update
+      window.dispatchEvent(new CustomEvent('requestUpdated'));
+      
       // If there's a novel ID in the response, navigate to it
       if (approveResponse.data.novelId) {
         alert('Yêu cầu đã được phê duyệt thành công và 🌾 đã được chuyển cho truyện.');
@@ -795,6 +801,9 @@ const Market = () => {
       // Remove the request from the list
       setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
       
+      // Notify other components about request update
+      window.dispatchEvent(new CustomEvent('requestUpdated'));
+      
       alert('Yêu cầu đã được từ chối thành công');
     } catch (err) {
       console.error('Không thể từ chối yêu cầu:', err);
@@ -835,7 +844,7 @@ const Market = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
-      // If successful, remove the request from the list
+      // If successful, remove the request from the active list (it becomes withdrawn)
       if (response.status === 200) {
         setRequests(prevRequests => prevRequests.filter(request => request._id !== requestId));
         
@@ -843,6 +852,9 @@ const Market = () => {
         const refundAmount = response.data.refundAmount;
         const contributionsRefunded = response.data.contributionsRefunded || 0;
         setUserBalance(prev => prev + refundAmount);
+        
+        // Notify other components about request update
+        window.dispatchEvent(new CustomEvent('requestUpdated'));
         
         // Show different message based on whether there were contributions
         if (contributionsRefunded > 0) {

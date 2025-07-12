@@ -722,6 +722,10 @@
   border-left-color: #dc3545;
 }
 
+.history-item.status-withdrawn {
+  border-left-color: #6c757d;
+}
+
 .history-header {
   display: flex;
   justify-content: space-between;
@@ -783,6 +787,11 @@
 .history-status.status-declined {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+.history-status.status-withdrawn {
+  background-color: #e2e3e5;
+  color: #41464b;
 }
 
 .history-date {

@@ -44,6 +44,8 @@ const SecondaryNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // State for user balance
   const [userBalance, setUserBalance] = useState(0);
+  // State for request count
+  const [requestCount, setRequestCount] = useState(0);
   // Reference to the menu container for detecting outside clicks
   const menuRef = useRef(null);
 
@@ -77,9 +79,24 @@ const SecondaryNavbar = () => {
     }
   }, [isAuthenticated, user]);
 
+  /**
+   * Fetch current request count for market page
+   */
+  const fetchRequestCount = useCallback(async () => {
+    try {
+      const response = await axios.get(`${config.backendUrl}/api/requests`);
+      setRequestCount(response.data.length || 0);
+    } catch (error) {
+      console.error('❌ [SecondaryNavbar] Failed to fetch request count:', error);
+      // Fallback to 0 if we can't fetch count
+      setRequestCount(0);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUserBalance();
-  }, [fetchUserBalance]);
+    fetchRequestCount();
+  }, [fetchUserBalance, fetchRequestCount]);
 
   /**
    * Listen for balance update events from other components and SSE
@@ -100,7 +117,16 @@ const SecondaryNavbar = () => {
       }
     };
 
+    // Listen for request updates to refresh the count
+    const handleRequestUpdate = (event) => {
+      // Small delay to ensure database transaction is committed
+      setTimeout(() => {
+        fetchRequestCount();
+      }, 100);
+    };
+
     window.addEventListener('balanceUpdated', handleBalanceUpdate);
+    window.addEventListener('requestUpdated', handleRequestUpdate);
     
     // Listen for SSE balance update events
     if (isAuthenticated && user) {
@@ -111,6 +137,7 @@ const SecondaryNavbar = () => {
     
     return () => {
       window.removeEventListener('balanceUpdated', handleBalanceUpdate);
+      window.removeEventListener('requestUpdated', handleRequestUpdate);
       
       // Clean up SSE listener
       if (isAuthenticated && user) {
@@ -119,7 +146,7 @@ const SecondaryNavbar = () => {
         });
       }
     };
-  }, [fetchUserBalance, userBalance, isAuthenticated, user]);
+  }, [fetchUserBalance, userBalance, isAuthenticated, user, fetchRequestCount]);
 
   /**
    * Add click outside listener to close menu when clicking outside
@@ -190,7 +217,7 @@ const SecondaryNavbar = () => {
 
             {/* Market link - visible to everyone */}
             <Link to="/bang-yeu-cau" className={`nav-link ${isActive('/bang-yeu-cau')}`} onClick={() => setIsMenuOpen(false)}>
-              Bảng yêu cầu
+              Bảng yêu cầu ({requestCount})
             </Link>
             {/* Admin, Moderator and Project User dashboard link */}
             {(user?.role === 'admin' || user?.role === 'moderator' || user?.role === 'pj_user') && (
