@@ -33,6 +33,32 @@ export const getStatusForCSS = (status) => {
 };
 
 /**
+ * Translates chapter/module status from English to Vietnamese
+ * @param {string} status - The status in English
+ * @returns {string} The translated status in Vietnamese
+ */
+export const translateChapterModuleStatus = (status) => {
+  const statusMap = {
+    'PUBLISHED': 'Đã xuất bản',
+    'PAID': 'Trả phí',
+    'DRAFT': 'Bản nháp',
+    'PROTECTED': 'Được bảo vệ',
+    // Also handle lowercase versions
+    'published': 'Đã xuất bản',
+    'paid': 'Trả phí',
+    'draft': 'Bản nháp',
+    'protected': 'Được bảo vệ',
+    // Also handle capitalized versions
+    'Published': 'Đã xuất bản',
+    'Paid': 'Trả phí',
+    'Draft': 'Bản nháp',
+    'Protected': 'Được bảo vệ'
+  };
+  
+  return statusMap[status] || status;
+};
+
+/**
  * Translates request status from English to Vietnamese
  * @param {string} status - The status in English
  * @returns {string} The translated status in Vietnamese
