@@ -972,7 +972,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                 {followMutation.isPending ? '...' : (isFollowed ? '✓' : '+')}
                             </button>
                             <span
-                                className={`rd-status-badge-inline rd-status-${getStatusForCSS(novelData.status)?.toLowerCase() || 'ongoing'}`}>
+                                className={`rd-status-badge-inline ${getStatusForCSS(novelData.status) || 'rd-status-ongoing'}`}>
                                 {translateStatus(novelData.status)}
                             </span>
                         </h1>

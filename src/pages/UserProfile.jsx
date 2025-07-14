@@ -12,6 +12,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
@@ -90,11 +91,14 @@ const UserProfile = () => {
   const { username } = useParams();
   // Get current user context
   const { user } = useAuth();
+  // Get theme context
+  const { themeLoaded } = useTheme();
   
   // State management
   const [profileUser, setProfileUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [domReady, setDomReady] = useState(false);
   const [userStats, setUserStats] = useState({
     chaptersParticipated: 0,
     commentsCount: 0,
@@ -644,6 +648,30 @@ const UserProfile = () => {
       }
     }
   };
+
+  // Ensure DOM is ready before rendering
+  useEffect(() => {
+    // Check if theme classes are applied to document
+    const checkDOMReady = () => {
+      const hasThemeClass = document.documentElement.classList.contains('dark-mode') || 
+                           document.documentElement.classList.contains('sepia-mode') ||
+                           (!localStorage.getItem('theme') || localStorage.getItem('theme') === 'light');
+      
+      if (hasThemeClass) {
+        setDomReady(true);
+      } else {
+        // Retry after a short delay
+        setTimeout(checkDOMReady, 10);
+      }
+    };
+    
+    checkDOMReady();
+  }, []);
+
+  // Show loading state while theme is loading or DOM is not ready
+  if (!themeLoaded || !domReady) {
+    return <LoadingSpinner />;
+  }
 
   // Show loading state
   if (loading) {

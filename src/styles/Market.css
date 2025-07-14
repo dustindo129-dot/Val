@@ -80,30 +80,32 @@
   margin-bottom: 2rem;
 }
 
-.request-type-tabs {
+.market-container .request-type-tabs {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.type-tab {
+.market-container .type-tab {
   padding: 0.5rem 1rem;
   border: 1px solid #ced4da;
   border-radius: 4px;
   background-color: #fff;
+  color: #212529;
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
 
-.type-tab.active {
+.market-container .type-tab.active {
   background-color: #007bff;
   color: white;
   border-color: #007bff;
 }
 
-.type-tab:hover:not(.active) {
+.market-container .type-tab:hover:not(.active) {
   background-color: #e9ecef;
+  color: #495057;
 }
 
 .request-form {
@@ -165,7 +167,7 @@
   font-size: 1rem;
 }
 
-.balance-display {
+.market-balance-display {
   color: #6c757d;
   font-size: 0.9rem;
 }
@@ -186,7 +188,7 @@
   gap: 1rem;
 }
 
-.submit-request-btn {
+.market-container .submit-request-btn {
   padding: 0.5rem 1.5rem;
   background-color: #007bff;
   color: white;
@@ -197,17 +199,17 @@
   transition: background-color 0.2s;
 }
 
-.submit-request-btn:hover:not(:disabled) {
+.market-container .submit-request-btn:hover:not(:disabled) {
   background-color: #0069d9;
 }
 
-.submit-request-btn:disabled {
+.market-container .submit-request-btn:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.discard-btn {
+.market-container .discard-btn {
   padding: 0.5rem 1.5rem;
   background-color: #f8f9fa;
   color: #6c757d;
@@ -218,7 +220,7 @@
   transition: all 0.2s ease;
 }
 
-.discard-btn:hover {
+.market-container .discard-btn:hover {
   background-color: #e9ecef;
   color: #495057;
 }
@@ -422,7 +424,7 @@
   padding: 0 15px 15px;
 }
 
-.action-btn {
+.market-container .action-btn {
   flex: 1;
   display: flex;
   align-items: center;
@@ -444,7 +446,7 @@
   width: 100%;
 }
 
-.withdraw-button {
+.market-container .withdraw-button {
   padding: 0.3rem 0.7rem;
   background-color: #f8d7da;
   color: #721c24;
@@ -457,20 +459,20 @@
   transition: background-color 0.2s, transform 0.1s;
 }
 
-.withdraw-button:hover {
+.market-container .withdraw-button:hover {
   background-color: #f1b0b7;
 }
 
-.withdraw-button:active {
+.market-container .withdraw-button:active {
   transform: scale(0.97);
 }
 
-.withdraw-button:disabled {
+.market-container .withdraw-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-.like-button {
+.market-container .like-button {
   background: none;
   border: none;
   padding: 4px 8px;
@@ -480,22 +482,23 @@
   gap: 4px;
   transition: all 0.2s ease;
   border-radius: 4px;
+  color: #6c757d;
 }
 
-.like-button:disabled {
+.market-container .like-button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.like-button:not(:disabled):hover {
+.market-container .like-button:not(:disabled):hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
-.like-button.liked {
+.market-container .like-button.liked {
   color: #007bff;
 }
 
-.like-button.liked .like-icon {
+.market-container .like-button.liked .like-icon {
   transform: scale(1.1);
 }
 
@@ -510,7 +513,7 @@
   gap: 0.5rem;
 }
 
-.approve-btn, .decline-btn {
+.market-container .approve-btn, .market-container .decline-btn {
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -518,23 +521,23 @@
   transition: all 0.2s ease;
 }
 
-.approve-btn {
+.market-container .approve-btn {
   background-color: #198754;
   color: white;
   border: none;
 }
 
-.approve-btn:hover {
+.market-container .approve-btn:hover {
   background-color: #157347;
 }
 
-.decline-btn {
+.market-container .decline-btn {
   background-color: #dc3545;
   color: white;
   border: none;
 }
 
-.decline-btn:hover {
+.market-container .decline-btn:hover {
   background-color: #bb2d3b;
 }
 
@@ -562,19 +565,21 @@
   color: #5dba7d;
 }
 
-:root.dark-mode .type-tab {
+:root.dark-mode .market-container .type-tab {
   background-color: #212529;
   border-color: #495057;
   color: #e9ecef;
 }
 
-:root.dark-mode .type-tab.active {
+:root.dark-mode .market-container .type-tab.active {
   background-color: #0d6efd;
   border-color: #0d6efd;
+  color: white;
 }
 
-:root.dark-mode .type-tab:hover:not(.active) {
+:root.dark-mode .market-container .type-tab:hover:not(.active) {
   background-color: #343a40;
+  color: #f8f9fa;
 }
 
 :root.dark-mode .request-input,
@@ -613,13 +618,13 @@
   color: #adb5bd;
 }
 
-:root.dark-mode .discard-btn {
+:root.dark-mode .market-container .discard-btn {
   background-color: #343a40;
   border-color: #495057;
   color: #adb5bd;
 }
 
-:root.dark-mode .discard-btn:hover {
+:root.dark-mode .market-container .discard-btn:hover {
   background-color: #212529;
   color: #e9ecef;
 }
@@ -628,8 +633,25 @@
   border-bottom-color: #495057;
 }
 
-:root.dark-mode .like-button:not(:disabled):hover {
+:root.dark-mode .market-container .like-button {
+  color: #adb5bd;
+}
+
+:root.dark-mode .market-container .like-button:not(:disabled):hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark-mode .market-container .like-button.liked {
+  color: #6ea8fe;
+}
+
+:root.dark-mode .market-container .contribute-button {
+  color: #adb5bd;
+}
+
+:root.dark-mode .market-container .contribute-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #4ade80;
 }
 
 :root.dark-mode .like-count {
@@ -870,7 +892,7 @@
 }
 
 /* Contribution button styles */
-.contribute-button {
+.market-container .contribute-button {
   background: none;
   border: none;
   display: flex;
@@ -884,7 +906,7 @@
   transition: background-color 0.2s;
 }
 
-.contribute-button:hover {
+.market-container .contribute-button:hover {
   background-color: rgba(108, 117, 125, 0.1);
   color: #28a745;
 }
@@ -941,7 +963,7 @@
   gap: 0.75rem;
 }
 
-.submit-contribution-btn {
+.market-container .submit-contribution-btn {
   padding: 0.5rem 1rem;
   background-color: #28a745;
   color: white;
@@ -952,17 +974,17 @@
   transition: background-color 0.2s;
 }
 
-.submit-contribution-btn:hover:not(:disabled) {
+.market-container .submit-contribution-btn:hover:not(:disabled) {
   background-color: #218838;
 }
 
-.submit-contribution-btn:disabled {
+.market-container .submit-contribution-btn:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.cancel-contribution-btn {
+.market-container .cancel-contribution-btn {
   padding: 0.5rem 1rem;
   background-color: #f8f9fa;
   color: #6c757d;
@@ -973,7 +995,7 @@
   transition: all 0.2s ease;
 }
 
-.cancel-contribution-btn:hover {
+.market-container .cancel-contribution-btn:hover {
   background-color: #e9ecef;
   color: #495057;
 }
@@ -1092,7 +1114,7 @@
 }
 
 /* Request history contributions styles */
-.view-contributions-btn {
+.market-container .view-contributions-btn {
   margin-top: 0.75rem;
   padding: 0.35rem 0.75rem;
   background-color: #f8f9fa;
@@ -1104,7 +1126,7 @@
   transition: all 0.15s ease;
 }
 
-.view-contributions-btn:hover {
+.market-container .view-contributions-btn:hover {
   background-color: #e9ecef;
   color: #495057;
 }
@@ -1187,13 +1209,13 @@
   color: #f8f9fa;
 }
 
-:root.dark-mode .cancel-contribution-btn {
+:root.dark-mode .market-container .cancel-contribution-btn {
   background-color: #343a40;
   border-color: #495057;
   color: #adb5bd;
 }
 
-:root.dark-mode .cancel-contribution-btn:hover:not(:disabled) {
+:root.dark-mode .market-container .cancel-contribution-btn:hover:not(:disabled) {
   background-color: #212529;
   color: #e9ecef;
 }
@@ -1219,13 +1241,13 @@
   color: #e9ecef;
 }
 
-:root.dark-mode .view-contributions-btn {
+:root.dark-mode .market-container .view-contributions-btn {
   background-color: #343a40;
   border-color: #495057;
   color: #adb5bd;
 }
 
-:root.dark-mode .view-contributions-btn:hover {
+:root.dark-mode .market-container .view-contributions-btn:hover {
   background-color: #212529;
   color: #e9ecef;
 }
@@ -1754,7 +1776,7 @@
 }
 
 /* Show donors button */
-.show-donors-btn {
+.market-container .show-donors-btn {
   margin: 0 15px 15px;
   background-color: #f0f9ff;
   color: #0369a1;
@@ -1764,9 +1786,10 @@
   cursor: pointer;
   font-size: 0.9rem;
   border: 1px solid #bae6fd;
+  transition: all 0.2s ease;
 }
 
-.show-donors-btn:hover {
+.market-container .show-donors-btn:hover {
   background-color: #e0f2fe;
 }
 
@@ -1810,23 +1833,33 @@
   margin-top: 4px;
 }
 
-.upvote-btn {
+.market-container .upvote-btn {
   background-color: #f0f9ff;
   color: #0369a1;
   border: 1px solid #bae6fd;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.upvote-btn:hover, .upvote-btn.active {
+.market-container .upvote-btn:hover, .market-container .upvote-btn.active {
   background-color: #e0f2fe;
 }
 
-.donate-btn {
+.market-container .donate-btn {
   background-color: #f0fdf4;
   color: #16a34a;
   border: 1px solid #bbf7d0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.donate-btn:hover {
+.market-container .donate-btn:hover {
   background-color: #dcfce7;
 }
 
@@ -1867,13 +1900,13 @@
   background-color: #495057;
 }
 
-:root.dark-mode .show-donors-btn {
+:root.dark-mode .market-container .show-donors-btn {
   background-color: #0c4a6e;
   color: #7dd3fc;
   border-color: #075985;
 }
 
-:root.dark-mode .show-donors-btn:hover {
+:root.dark-mode .market-container .show-donors-btn:hover {
   background-color: #0369a1;
 }
 
@@ -1897,24 +1930,24 @@
   color: #ced4da;
 }
 
-:root.dark-mode .upvote-btn {
+:root.dark-mode .market-container .upvote-btn {
   background-color: #0c4a6e;
   color: #7dd3fc;
   border-color: #075985;
 }
 
-:root.dark-mode .upvote-btn:hover, 
-:root.dark-mode .upvote-btn.active {
+:root.dark-mode .market-container .upvote-btn:hover, 
+:root.dark-mode .market-container .upvote-btn.active {
   background-color: #0369a1;
 }
 
-:root.dark-mode .donate-btn {
+:root.dark-mode .market-container .donate-btn {
   background-color: #052e16;
   color: #4ade80;
   border-color: #065f46;
 }
 
-:root.dark-mode .donate-btn:hover {
+:root.dark-mode .market-container .donate-btn:hover {
   background-color: #065f46;
 }
 
@@ -2000,7 +2033,7 @@
   margin-bottom: 0.5rem;
 }
 
-.market-contribution-modal .modal-body .balance-display {
+.market-contribution-modal .modal-body .market-balance-display {
   display: block;
   color: #6c757d;
   font-size: 0.9rem;
@@ -2066,7 +2099,7 @@
   color: #e9ecef;
 }
 
-:root.dark-mode .market-contribution-modal .modal-body .balance-display {
+:root.dark-mode .market-contribution-modal .modal-body .market-balance-display {
   color: #adb5bd;
 }
 
@@ -2139,24 +2172,24 @@
 /* End contribution modal styles */
 
 /* Request image upload styles */
-.form-group {
+.market-form-group {
   margin: 1rem 0;
 }
 
-.form-group label {
+.market-form-group label {
   font-weight: 500;
   display: block;
   margin-bottom: 0.5rem;
   color: #343a40;
 }
 
-.cover-upload {
+.market-cover-upload {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.cover-preview {
+.market-cover-preview {
   border: 1px solid #dee2e6;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   max-width: 200px;
@@ -2165,86 +2198,102 @@
   margin-bottom: 10px;
 }
 
-.upload-btn {
+.market-container .market-request-upload-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #4285f4;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.2s ease;
   border: none;
   text-decoration: none;
   text-align: center;
+  width: auto;
+  white-space: nowrap;
+  margin-bottom: 0;
 }
 
-.upload-btn:hover:not([style*="cursor: not-allowed"]) {
-  background: #3367d6 !important;
+.market-container .market-request-upload-btn.uploading {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.market-container .market-request-upload-btn:hover:not(.uploading) {
+  background: #3367d6;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.form-group .market-upload-btn {
-  display: inline-block !important;
-  padding: 6px 12px !important;
-  background: #4285f4 !important;
-  color: white !important;
-  border-radius: 4px !important;
-  cursor: pointer !important;
-  font-size: 0.9rem !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
-  border: none !important;
-  text-decoration: none !important;
-  text-align: center !important;
-  width: auto !important;
-  white-space: nowrap !important;
-  margin-bottom: 0 !important;
+.market-container .market-edit-upload-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+  text-align: center;
+  margin-top: 8px;
 }
 
-.form-group .market-upload-btn.uploading {
-  background: #6c757d !important;
-  cursor: not-allowed !important;
+.market-container .market-edit-upload-btn.uploading {
+  background: #6c757d;
+  cursor: not-allowed;
 }
 
-.form-group .market-upload-btn:hover:not(.uploading) {
-  background: #3367d6 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+.market-container .market-edit-upload-btn:hover:not(.uploading) {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.upload-helper-text {
+.market-upload-helper-text {
   font-size: 0.85rem;
   color: #6c757d;
   margin: 5px 0 0 0;
 }
 
 /* Dark mode styles for image upload */
-:root.dark-mode .form-group label {
+:root.dark-mode .market-form-group label {
   color: #f8f9fa;
 }
 
-:root.dark-mode .cover-preview {
+:root.dark-mode .market-cover-preview {
   border-color: #495057;
 }
 
-:root.dark-mode .upload-btn {
-  background: #0d6efd !important;
+:root.dark-mode .market-container .market-request-upload-btn {
+  background: #0d6efd;
 }
 
-:root.dark-mode .upload-btn:hover:not([style*="cursor: not-allowed"]) {
-  background: #0b5ed7 !important;
+:root.dark-mode .market-container .market-request-upload-btn.uploading {
+  background: #495057;
 }
 
-:root.dark-mode .form-group .market-upload-btn {
-  background: #0d6efd !important;
+:root.dark-mode .market-container .market-request-upload-btn:hover:not(.uploading) {
+  background: #0b5ed7;
 }
 
-:root.dark-mode .form-group .market-upload-btn.uploading {
-  background: #495057 !important;
+:root.dark-mode .market-container .market-edit-upload-btn {
+  background: #0d6efd;
 }
 
-:root.dark-mode .form-group .market-upload-btn:hover:not(.uploading) {
-  background: #0b5ed7 !important;
+:root.dark-mode .market-container .market-edit-upload-btn.uploading {
+  background: #495057;
 }
 
-:root.dark-mode .upload-helper-text {
+:root.dark-mode .market-container .market-edit-upload-btn:hover:not(.uploading) {
+  background: #0b5ed7;
+}
+
+:root.dark-mode .market-upload-helper-text {
   color: #adb5bd;
 }
 
@@ -2313,40 +2362,58 @@
 }
 
 /* Edit action buttons */
-.edit-btn {
+.market-container .edit-btn {
   background-color: #ffc107;
   color: #212529;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.edit-btn:hover {
+.market-container .edit-btn:hover {
   background-color: #e0a800;
 }
 
-.save-btn {
+.market-container .save-btn {
   background-color: #28a745;
   color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.save-btn:hover:not(:disabled) {
+.market-container .save-btn:hover:not(:disabled) {
   background-color: #218838;
 }
 
-.save-btn:disabled {
+.market-container .save-btn:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   opacity: 0.65;
 }
 
-.cancel-btn {
+.market-container .cancel-btn {
   background-color: #dc3545;
   color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.cancel-btn:hover:not(:disabled) {
+.market-container .cancel-btn:hover:not(:disabled) {
   background-color: #c82333;
 }
 
-.cancel-btn:disabled {
+.market-container .cancel-btn:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   opacity: 0.65;
@@ -2368,12 +2435,12 @@
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
-:root.dark-mode .edit-btn {
+:root.dark-mode .market-container .edit-btn {
   background-color: #ffc107;
   color: #212529;
 }
 
-:root.dark-mode .edit-btn:hover {
+:root.dark-mode .market-container .edit-btn:hover {
   background-color: #e0a800;
 }
 

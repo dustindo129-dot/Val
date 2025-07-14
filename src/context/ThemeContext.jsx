@@ -12,6 +12,7 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('light');
+  const [themeLoaded, setThemeLoaded] = useState(false);
 
   // Initialize theme from localStorage on mount
   useEffect(() => {
@@ -37,6 +38,9 @@ export const ThemeProvider = ({ children }) => {
     // Sync both localStorage keys to ensure consistency
     localStorage.setItem('theme', savedTheme);
     localStorage.setItem('readerTheme', savedTheme);
+    
+    // Mark theme as loaded immediately since theme is now applied in HTML
+    setThemeLoaded(true);
   }, []);
 
   // Apply theme to DOM
@@ -74,7 +78,8 @@ export const ThemeProvider = ({ children }) => {
     setTheme: changeTheme,
     toggleTheme,
     applyTheme: changeTheme, // Alias for backward compatibility with ChapterUtils
-    isDarkMode: theme === 'dark'
+    isDarkMode: theme === 'dark',
+    themeLoaded
   };
 
   return (

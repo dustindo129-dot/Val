@@ -127,6 +127,8 @@
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 0; /* Allow flex shrinking */
+  width: 100%; /* Ensure full width */
 }
 
 .novel-list-header {
@@ -1867,6 +1869,31 @@
   gap: 0.75rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+  min-width: 280px; /* Ensure minimum width even during loading */
+  width: 100%; /* Ensure full width */
+  position: relative; /* For positioning elements */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Prevent search container from shrinking during loading states */
+.novel-search-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  min-height: 48px; /* Ensure minimum height */
+  z-index: -1;
+}
+
+/* Ensure search container maintains size during different states */
+.novel-search-container:empty::after {
+  content: '';
+  display: block;
+  height: 48px; /* Maintain height even when empty */
+  width: 100%;
 }
 
 .novel-search-input {
@@ -1879,6 +1906,7 @@
   color: var(--text-color, #2c3e50);
   font-size: 0.95rem;
   transition: all 0.2s ease;
+  width: 100%; /* Ensure input takes full available width */
 }
 
 .novel-search-input:focus {
@@ -1902,6 +1930,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  flex-shrink: 0; /* Prevent button from shrinking */
+  min-width: 100px; /* Ensure minimum button width */
 }
 
 .search-clear-btn:hover {
@@ -1950,20 +1980,40 @@
 }
 
 /* Search bar responsive */
-.novel-search-container {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.5rem;
+@media (max-width: 768px) {
+  .novel-search-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0; /* Allow shrinking on mobile */
+  }
+
+  .novel-search-container .form-group {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .novel-search-container .form-group input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .search-clear-btn {
+    align-self: flex-end;
+    min-width: 100px;
+  }
 }
 
-.novel-search-input {
-  min-width: 0;
-  width: 100%;
-}
-
-.search-clear-btn {
-  align-self: flex-end;
-  min-width: 100px;
+/* Very small screens */
+@media (max-width: 480px) {
+  .novel-search-container {
+    min-width: 0; /* Allow full shrinking on very small screens */
+  }
+  
+  .search-clear-btn {
+    min-width: 80px; /* Smaller button on very small screens */
+  }
 }
 
 
@@ -2411,6 +2461,21 @@
   border-color: #4a5568;
 }
 
+/* Ensure search container stability during loading */
+.novel-list-header {
+  min-height: 80px; /* Ensure minimum height during loading */
+  position: relative;
+}
+
+.novel-list-header .section-title {
+  min-height: 1.5rem; /* Ensure title has minimum height */
+}
+
+/* Prevent layout shifts during loading */
+.novel-search-container {
+  contain: layout style; /* Improve rendering performance */
+}
+
 /* Enhanced novel list item styling for better readability */
 .novel-list-item {
   padding: 1rem;
@@ -2699,14 +2764,18 @@
 
 /* Search input styling */
 .novel-search-container .form-group {
-  flex: 1;
+  flex: 1 1 auto; /* Allow grow and shrink but maintain auto basis */
   min-width: 200px;
   margin-bottom: 0;
+  width: 100%; /* Ensure full width */
+  max-width: none; /* Remove any max-width constraints */
 }
 
 .novel-search-container .form-group input {
   padding: 0.8rem 0.75rem 0.6rem 0.75rem;
   font-size: 0.95rem;
+  width: 100%; /* Ensure input takes full width */
+  min-width: 200px; /* Maintain minimum width */
 }
 
 .novel-search-container .form-group label {

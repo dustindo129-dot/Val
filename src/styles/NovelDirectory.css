@@ -162,7 +162,7 @@
   text-transform: uppercase;
   background: #4CAF50;
   padding: 2px;
-  border: 2px solid;
+  border: 0.5px solid;
   border-radius: 6px;
 }
 
@@ -182,6 +182,24 @@
 .nd-directory .nd-novel-status[data-status="Hiatus"] {
   background: #dc3545;
   border-color: #B71C1C;
+}
+
+.nd-directory .nd-novel-status[data-status="DROPPED"],
+.nd-directory .nd-novel-status[data-status="Dropped"] {
+  background: #95a5a6;
+  border-color: #7f8c8d;
+}
+
+.nd-directory .nd-novel-status[data-status="LICENSED"],
+.nd-directory .nd-novel-status[data-status="Licensed"] {
+  background: #9b59b6;
+  border-color: #8e44ad;
+}
+
+.nd-directory .nd-novel-status[data-status="AXED"],
+.nd-directory .nd-novel-status[data-status="Axed"] {
+  background: #34495e;
+  border-color: #2c3e50;
 }
 
 /* Right side - Content */

@@ -16,7 +16,7 @@ const ChapterNavigation = ({
     user.role === 'admin' || 
     user.role === 'moderator' ||
     (user.role === 'pj_user' && chapter?.novel && (
-      chapter.novel.active?.pj_user?.includes(user.id) || 
+      chapter.novel.active?.pj_user?.includes(user._id) || 
       chapter.novel.active?.pj_user?.includes(user.username)
     ))
   );

@@ -7,7 +7,7 @@ import '../styles/NovelList.css';
 import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
-import { translateStatus, getStatusForCSS } from '../utils/statusTranslation';
+import { translateStatus, getStatusForDataAttr } from '../utils/statusTranslation';
 
 /**
  * OLNSEO Component
@@ -108,7 +108,7 @@ const NovelImage = memo(({src, alt, status, novelId}) => {
                     loading="lazy"
                     className="novel-cover"
                 />
-                <span className="status-badge" data-status={getStatusForCSS(status)}>
+                <span className="status-badge" data-status={getStatusForDataAttr(status)}>
                     {translateStatus(status)}
                 </span>
             </div>

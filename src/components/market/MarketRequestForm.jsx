@@ -132,14 +132,14 @@ const MarketRequestForm = ({
         )}
         
         {/* Image Upload Section */}
-        <div className="form-group">
+        <div className="market-form-group">
           <label>Ảnh minh họa:</label>
-          <div className="cover-upload">
+          <div className="market-cover-upload">
             {requestImage && (
               <img
                 src={requestImage}
                 alt="Request image preview"
-                className="cover-preview"
+                className="market-cover-preview"
               />
             )}
             <input
@@ -152,12 +152,12 @@ const MarketRequestForm = ({
             />
             <label 
               htmlFor="request-image-upload" 
-              className={`market-upload-btn ${imageUploading ? 'uploading' : ''}`}
+              className={`market-request-upload-btn ${imageUploading ? 'uploading' : ''}`}
             >
               {imageUploading ? 'Đang tải lên...' : 'Tải ảnh minh họa'}
             </label>
             {!requestImage && (
-              <p className="upload-helper-text">
+              <p className="market-upload-helper-text">
                 Nếu không tải ảnh, sẽ sử dụng ảnh mặc định
               </p>
             )}
@@ -193,7 +193,7 @@ const MarketRequestForm = ({
               required
               className="deposit-input"
             />
-            <span className="balance-display">🌾 hiện tại: {userBalance}</span>
+            <span className="market-balance-display">🌾 hiện tại: {userBalance}</span>
             <span className="min-deposit-notice">Số cọc tối thiểu: 100</span>
           </div>
         )}

@@ -235,17 +235,7 @@ const RequestCard = ({
               />
               <label 
                 htmlFor={`edit-image-${request._id}`} 
-                className="upload-btn"
-                style={{
-                  display: 'inline-block',
-                  padding: '6px 12px',
-                  background: isImageUploading ? '#6c757d' : '#007bff',
-                  color: 'white',
-                  borderRadius: '4px',
-                  cursor: isImageUploading ? 'not-allowed' : 'pointer',
-                  fontSize: '0.8rem',
-                  marginTop: '8px'
-                }}
+                className={`market-edit-upload-btn ${isImageUploading ? 'uploading' : ''}`}
               >
                 {isImageUploading ? 'Đang tải...' : 'Thay đổi ảnh'}
               </label>

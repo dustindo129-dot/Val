@@ -55,7 +55,7 @@ const MarketContributionModal = ({
             required
             className="contribution-input"
           />
-          <span className="balance-display">🌾 hiện tại: {userBalance}</span>
+                      <span className="market-balance-display">🌾 hiện tại: {userBalance}</span>
         </div>
         
         <div className="contribution-note-container">

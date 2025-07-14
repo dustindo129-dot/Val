@@ -26,6 +26,40 @@
     <!-- Preload TinyMCE -->
     <script src="/tinymce/js/tinymce/tinymce.min.js"></script>
     <title>Valvrareteam - Đọc Light Novel Vietsub Miễn Phí | Light Novel Tiếng Việt Hay Nhất</title>
+
+    <!-- Theme initialization script - must run before React loads -->
+    <script>
+      (function() {
+        // Check both possible localStorage keys for backward compatibility
+        const globalTheme = localStorage.getItem('theme');
+        const readerTheme = localStorage.getItem('readerTheme');
+        
+        // Prioritize the global theme, fallback to reader theme, then default to light
+        let savedTheme = globalTheme || readerTheme || 'light';
+        
+        // Normalize theme values (handle 'dark' vs other values)
+        if (savedTheme === 'dark') {
+          savedTheme = 'dark';
+        } else if (savedTheme === 'sepia') {
+          savedTheme = 'sepia';
+        } else {
+          savedTheme = 'light';
+        }
+        
+        // Apply theme to DOM immediately
+        document.documentElement.classList.remove('dark-mode', 'sepia-mode');
+        
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark-mode');
+        } else if (savedTheme === 'sepia') {
+          document.documentElement.classList.add('sepia-mode');
+        }
+        
+        // Sync both localStorage keys to ensure consistency
+        localStorage.setItem('theme', savedTheme);
+        localStorage.setItem('readerTheme', savedTheme);
+      })();
+    </script>
   </head>
 
   <body>

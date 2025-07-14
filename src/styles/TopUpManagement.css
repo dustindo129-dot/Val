@@ -151,6 +151,26 @@
   margin-bottom: 10px;
 }
 
+/* Make transaction type and amount display on the same line */
+.topup-management-transaction-details {
+  display: flex;
+  gap: 8px;
+}
+
+.topup-management-transaction-details > .transaction-type {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.topup-management-transaction-details > .transaction-amount {
+  display: inline-block;
+}
+
+/* Create a flex container for type and amount */
+.topup-management-transaction-details .transaction-type + .transaction-amount {
+  display: inline-block;
+}
+
 .transaction-method, 
 .request-method {
   font-size: 14px;

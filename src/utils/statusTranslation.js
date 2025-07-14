@@ -12,12 +12,27 @@
  */
 export const translateStatus = (status) => {
   const statusMap = {
+    // Lowercase versions
     'ongoing': 'Đang tiến hành',
     'completed': 'Hoàn thành',
     'dropped': 'Tạm dừng',
-    'hiatus': 'Tạm nghỉ',
+    'hiatus': 'Tạm ngưng',
     'licensed': 'Đã mua bản quyền',
-    'axed': 'Đã hủy bỏ'
+    'axed': 'Đã hủy bỏ',
+    // Capitalized versions (as stored in database)
+    'Ongoing': 'Đang tiến hành',
+    'Completed': 'Hoàn thành',
+    'Dropped': 'Tạm dừng',
+    'Hiatus': 'Tạm ngưng',
+    'Licensed': 'Đã mua bản quyền',
+    'Axed': 'Đã hủy bỏ',
+    // Uppercase versions
+    'ONGOING': 'Đang tiến hành',
+    'COMPLETED': 'Hoàn thành',
+    'DROPPED': 'Tạm dừng',
+    'HIATUS': 'Tạm ngưng',
+    'LICENSED': 'Đã mua bản quyền',
+    'AXED': 'Đã hủy bỏ'
   };
   
   return statusMap[status] || status;
@@ -29,7 +44,18 @@ export const translateStatus = (status) => {
  * @returns {string} The CSS class name
  */
 export const getStatusForCSS = (status) => {
-  return `status-${status}`;
+  // Convert to lowercase for consistent CSS class naming
+  return `rd-status-${status?.toLowerCase()}`;
+};
+
+/**
+ * Gets the status value for data attributes (without rd- prefix)
+ * @param {string} status - The status value
+ * @returns {string} The status value for data attributes
+ */
+export const getStatusForDataAttr = (status) => {
+  // Keep original capitalization for data attributes
+  return status;
 };
 
 /**
@@ -39,20 +65,20 @@ export const getStatusForCSS = (status) => {
  */
 export const translateChapterModuleStatus = (status) => {
   const statusMap = {
-    'PUBLISHED': 'Đã xuất bản',
+    'PUBLISHED': 'Công khai',
     'PAID': 'Trả phí',
     'DRAFT': 'Bản nháp',
-    'PROTECTED': 'Được bảo vệ',
+    'PROTECTED': 'Bảo mật',
     // Also handle lowercase versions
-    'published': 'Đã xuất bản',
+    'published': 'Công khai',
     'paid': 'Trả phí',
     'draft': 'Bản nháp',
-    'protected': 'Được bảo vệ',
+    'protected': 'Bảo mật',
     // Also handle capitalized versions
-    'Published': 'Đã xuất bản',
+    'Published': 'Công khai',
     'Paid': 'Trả phí',
     'Draft': 'Bản nháp',
-    'Protected': 'Được bảo vệ'
+    'Protected': 'Bảo mật'
   };
   
   return statusMap[status] || status;
