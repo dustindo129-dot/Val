@@ -512,6 +512,20 @@
   margin-left: 0.5rem;
 }
 
+/* Deleted comment placeholder styles */
+.deleted-comment-placeholder {
+  padding: 0.5rem 0;
+  color: #6c757d;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.deleted-user {
+  color: #6c757d !important;
+  font-style: italic;
+  opacity: 0.7;
+}
+
 /* Replies list styles */
 .replies-list {
   margin-top: 1rem;
@@ -826,6 +840,14 @@
 
 :root.dark-mode .edited-indicator {
   color: #adb5bd;
+}
+
+:root.dark-mode .deleted-comment-placeholder {
+  color: #adb5bd;
+}
+
+:root.dark-mode .deleted-user {
+  color: #adb5bd !important;
 }
 
 :root.dark-mode .block-confirm-content {

@@ -72,6 +72,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   });
 
   const { data: authUser } = useAuth();
+  const queryClient = useQueryClient();
   const commentEditorRef = useRef(null);
 
   // Helper function to check if user has rich text editor privileges
@@ -341,30 +342,10 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         { headers: getAuthHeaders() }
       );
       
-      const data = response.data;
-      
-      // Add new comment to the list
-      setComments(prevComments => [
-        {
-          _id: data._id,
-          user: { 
-            username: user.username, 
-            displayName: user.displayName || user.username,
-            avatar: user.avatar || '' 
-          },
-          text: commentContent,
-          contentType: contentType,
-          contentId: contentId,
-          createdAt: new Date().toISOString(),
-          likes: [],
-          replies: [],
-          isDeleted: false,
-          adminDeleted: false,
-          isPinned: false,
-          isEdited: false
-        },
-        ...prevComments
-      ]);
+      // Invalidate React Query cache to force refetch and show new comment
+      await queryClient.invalidateQueries({
+        queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+      });
       
       // Reset to first page when new comment is added
       setCurrentPage(1);
@@ -413,23 +394,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         { headers: getAuthHeaders() }
       );
       
-      // Update the comments list based on whether it's a reply or main comment
-      setComments(prevComments => {
-        if (isReply && parentCommentId) {
-          // If it's a reply, mark it as deleted in the parent comment's replies
-          return prevComments.map(comment => {
-            if (comment._id === parentCommentId) {
-              return {
-                ...comment,
-                replies: comment.replies.filter(reply => reply._id !== commentId)
-              };
-            }
-            return comment;
-          });
-        } else {
-          // If it's a main comment, remove it and its replies from the list
-          return prevComments.filter(comment => comment._id !== commentId);
-        }
+      // Invalidate React Query cache to force refetch and show updated data
+      await queryClient.invalidateQueries({
+        queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
       });
     } catch (err) {
       console.error('Error deleting comment:', err);
@@ -530,64 +497,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
       const data = response.data;
 
-      // Update local state efficiently without refetching
-      setComments(prevComments => {
-        const updatedComments = prevComments.map(comment => {
-          // If this is the comment being pinned/unpinned
-          if (comment._id === commentId) {
-            return {
-              ...comment,
-              isPinned: data.isPinned
-            };
-          }
-          
-          // If a comment was pinned, unpin all other comments at root level
-          if (data.isPinned && comment.isPinned && comment._id !== commentId) {
-            return {
-              ...comment,
-              isPinned: false
-            };
-          }
-          
-          // Check replies for the target comment
-          if (comment.replies && comment.replies.length > 0) {
-            const updatedReplies = comment.replies.map(reply => {
-              if (reply._id === commentId) {
-                return {
-                  ...reply,
-                  isPinned: data.isPinned
-                };
-              }
-              // Unpin other replies if this one was pinned
-              if (data.isPinned && reply.isPinned && reply._id !== commentId) {
-                return {
-                  ...reply,
-                  isPinned: false
-                };
-              }
-              return reply;
-            });
-            
-            return {
-              ...comment,
-              replies: updatedReplies
-            };
-          }
-          
-          return comment;
-        });
-        
-        // Re-sort comments to move pinned comments to the top immediately
-        const resortedComments = updatedComments.sort((a, b) => {
-          // First, check if either comment is pinned
-          if (a.isPinned && !b.isPinned) return -1;
-          if (!a.isPinned && b.isPinned) return 1;
-          
-          // If both are pinned or both are not pinned, sort by date (newest first)
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-        
-        return resortedComments;
+      // Invalidate React Query cache to force refetch and show updated data
+      await queryClient.invalidateQueries({
+        queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
       });
     } catch (err) {
       console.error('Error pinning comment:', err);
@@ -872,16 +784,18 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         
         const data = response.data;
         
-        // Clear the reply form immediately
+        // Invalidate React Query cache to force refetch and show updated data
+        await queryClient.invalidateQueries({
+          queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+        });
+        
+        // Clear the reply form
         if (globalHasRichTextPrivileges && replyEditorRef.current) {
           replyEditorRef.current.setContent('');
         } else {
           setReplyText('');
         }
         setIsReplying(false);
-  
-        // Refetch all comments to ensure correct structure
-        refetch();
       } catch (err) {
         console.error('Error posting reply:', err);
         alert(err.message || 'Không thể đăng trả lời. Vui lòng thử lại.');
@@ -934,26 +848,10 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           { headers: getAuthHeaders() }
         );
         
-        // Update the comment in local state
-        setComments(prevComments => 
-          prevComments.map(c => {
-            if (c._id === comment._id) {
-              return { ...c, text: editContent, isEdited: true };
-            }
-            // Also check replies
-            if (c.replies) {
-              return {
-                ...c,
-                replies: c.replies.map(reply => 
-                  reply._id === comment._id
-                    ? { ...reply, text: editContent, isEdited: true }
-                    : reply
-                )
-              };
-            }
-            return c;
-          })
-        );
+        // Invalidate React Query cache to force refetch and show updated data
+        await queryClient.invalidateQueries({
+          queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+        });
         
         // Clear the edit form
         setEditText('');
@@ -1015,7 +913,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             <div className="comment-user-info">
               <div className="comment-user-line">
                 {comment.isDeleted && !comment.adminDeleted ? (
-                  <span className="comment-username">[đã xóa]</span>
+                  <span className="comment-username deleted-user">[đã xóa]</span>
                 ) : (
                   <Link 
                     to={generateUserProfileUrl(comment.user)} 
@@ -1044,7 +942,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 </div>
               )}
             </div>
-            {isAuthenticated && user && !comment.isDeleted && (comment.user.username !== user.username || canPinThisComment) && (
+            {isAuthenticated && user && !(comment.isDeleted && !comment.adminDeleted) && (comment.user.username !== user.username || canPinThisComment) && (
               <div className="comment-dropdown" ref={dropdownRef}>
                 <button
                   className="comment-dropdown-trigger"
@@ -1096,7 +994,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           </div>
           {!isEditing ? (
             <div className="comment-text" ref={commentContentRef}>
-              {comment.isDeleted && !comment.adminDeleted ? 'Bình luận gốc bị xóa bởi người dùng' : (
+              {comment.isDeleted && !comment.adminDeleted ? (
+                <div className="deleted-comment-placeholder">
+                  <em>[bình luận đã bị xóa]</em>
+                </div>
+              ) : (
                 <div 
                   className={`comment-content-wrapper ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
                   dangerouslySetInnerHTML={{ 
@@ -1112,7 +1014,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   {isExpanded ? 'Thu gọn' : 'Xem thêm'}
                 </button>
               )}
-              {comment.isEdited && (
+              {comment.isEdited && !comment.isDeleted && (
                 <span className="edited-indicator">(đã chỉnh sửa)</span>
               )}
             </div>
@@ -1193,7 +1095,15 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           )}
           {!isEditing && (
             <div className="comment-actions">
-              {!comment.isDeleted && (
+              {comment.isDeleted && !comment.adminDeleted ? (
+                // For deleted comments, only show reply button to maintain thread structure
+                <button 
+                  className="reply-button"
+                  onClick={handleReplyClick}
+                >
+                  Trả lời
+                </button>
+              ) : (
                 <>
                   <button 
                     className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
