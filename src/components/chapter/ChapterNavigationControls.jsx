@@ -36,30 +36,8 @@ const ChapterNavigationControls = ({
     const chapterListRef = useRef(null);
     const activeChapterRef = useRef(null);
 
-    // Check if user can access paid content
-    const canAccessPaidContent = user && (
-        user.role === 'admin' ||
-        user.role === 'moderator' ||
-        (user.role === 'pj_user' && chapter?.novel && (
-            chapter.novel.active?.pj_user?.includes(user.id) ||
-            chapter.novel.active?.pj_user?.includes(user.username)
-        ))
-    );
-
-    // Check if next chapter is paid content
-    const isNextChapterPaid = chapter?.nextChapter?.mode === 'paid';
-
-    // Check if previous chapter is paid content
-    const isPrevChapterPaid = chapter?.prevChapter?.mode === 'paid';
-
-    // Filter out paid chapters from the dropdown for non-admin/mod users
-    const filteredChapters = moduleChapters.filter(moduleChapter => {
-        // Admin/mods and pj_user for their novels see all chapters
-        if (canAccessPaidContent) return true;
-
-        // For regular users, filter out paid chapters
-        return moduleChapter.mode !== 'paid';
-    });
+    // Show all chapters in dropdown - ChapterAccessGuard will handle access control
+    const filteredChapters = moduleChapters;
 
     // Auto-scroll to current chapter when dropdown opens
     useEffect(() => {
@@ -154,51 +132,34 @@ const ChapterNavigationControls = ({
                         {filteredChapters.map((chapterItem, index) => {
                             const isCurrentChapter = chapterItem._id === chapterId;
                             const isPaidChapter = chapterItem.mode === 'paid';
-                            const canAccessThisChapter = canAccessPaidContent || !isPaidChapter;
 
                             return (
                                 <li
                                     key={chapterItem._id}
-                                    className={`${isCurrentChapter ? 'active' : ''} ${!canAccessThisChapter ? 'locked' : ''}`}
+                                    className={`${isCurrentChapter ? 'active' : ''}`}
                                     ref={isCurrentChapter ? activeChapterRef : null}
                                 >
-                                    {canAccessThisChapter ? (
-                                        <Link
-                                            to={generateChapterUrl(
-                                                { _id: novelId, title: novelTitle },
-                                                chapterItem
-                                            )}
-                                            onClick={() => setShowChapterList(false)} // Close dropdown when chapter is selected
-                                        >
-                      <span className="chapter-number">
-                        {index}
-                      </span>
-                                            <span className="chapter-title">
-                        {chapterItem.title}
-                      </span>
-                                            {isPaidChapter && (
-                                                <FontAwesomeIcon
-                                                    icon={faLock}
-                                                    className="paid-icon"
-                                                    title="Chương trả phí"
-                                                />
-                                            )}
-                                        </Link>
-                                    ) : (
-                                        <span className="locked-chapter">
-                      <span className="chapter-number">
-                        {index}
-                      </span>
-                      <span className="chapter-title">
-                        {chapterItem.title}
-                      </span>
-                      <FontAwesomeIcon
-                          icon={faLock}
-                          className="lock-icon"
-                          title="Chương bị khóa"
-                      />
-                    </span>
-                                    )}
+                                    <Link
+                                        to={generateChapterUrl(
+                                            { _id: novelId, title: novelTitle },
+                                            chapterItem
+                                        )}
+                                        onClick={() => setShowChapterList(false)} // Close dropdown when chapter is selected
+                                    >
+                                        <span className="chapter-number">
+                                            {index}
+                                        </span>
+                                        <span className="chapter-title">
+                                            {chapterItem.title}
+                                        </span>
+                                        {isPaidChapter && (
+                                            <FontAwesomeIcon
+                                                icon={faLock}
+                                                className="paid-icon"
+                                                title="Chương trả phí"
+                                            />
+                                        )}
+                                    </Link>
                                 </li>
                             );
                         })}

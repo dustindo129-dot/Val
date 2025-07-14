@@ -77,20 +77,32 @@ const ChapterAccessGuard = ({
             chapter.novel.active?.pj_user?.includes(user.username)
           )); // Draft accessible to admin, moderator, and assigned pj_user
       case 'paid':
-        // Check if backend has already granted access (rental or role-based)
-        if (chapter.content && chapter.content.length > 0) {
-          return true; // Backend has provided content, access is granted
-        }
-        
-        // Fallback: Allow admin, moderator, and pj_user for their assigned novels
-        return user && (
+        // SECURITY FIX: Check user permissions first, not content existence
+        // Admin, moderator, and pj_user for their assigned novels have access
+        if (user && (
           user.role === 'admin' || 
           user.role === 'moderator' ||
           (user.role === 'pj_user' && chapter.novel && (
             chapter.novel.active?.pj_user?.includes(user._id) || 
             chapter.novel.active?.pj_user?.includes(user.username)
           ))
-        );
+        )) {
+          return true;
+        }
+        
+        // Check if user has active rental for this module
+        if (chapter?.rentalInfo?.hasActiveRental) {
+          return true;
+        }
+        
+        // Check if backend has explicitly granted access (e.g., user purchased the chapter)
+        // This should be set by the backend when the user has legitimate access
+        if (chapter.hasUserAccess === true) {
+          return true;
+        }
+        
+        // Default: no access to paid content
+        return false;
       default:
         return true;
     }
@@ -102,20 +114,31 @@ const ChapterAccessGuard = ({
       return true; // Not a paid module
     }
     
-    // Check if user has active rental for this module
-    if (chapter?.rentalInfo?.hasActiveRental) {
-      return true; // User has active rental access
-    }
-    
-    // Fallback: Allow admin, moderator, and pj_user for their assigned novels
-    return user && (
+    // SECURITY FIX: Check user permissions first
+    // Admin, moderator, and pj_user for their assigned novels have access
+    if (user && (
       user.role === 'admin' || 
       user.role === 'moderator' ||
       (user.role === 'pj_user' && moduleData.novel && (
         moduleData.novel.active?.pj_user?.includes(user._id) || 
         moduleData.novel.active?.pj_user?.includes(user.username)
       ))
-    );
+    )) {
+      return true;
+    }
+    
+    // Check if user has active rental for this module
+    if (chapter?.rentalInfo?.hasActiveRental) {
+      return true; // User has active rental access
+    }
+    
+    // Check if backend has explicitly granted access (e.g., user purchased the module)
+    if (moduleData.hasUserAccess === true) {
+      return true;
+    }
+    
+    // Default: no access to paid module content
+    return false;
   };
 
   const hasChapterAccess = canAccessChapterContent(chapter, user);
