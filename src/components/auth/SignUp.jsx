@@ -22,9 +22,10 @@ import '../../styles/Auth.css';
  * SignUp component for user registration
  * @param {Object} props - Component props
  * @param {Function} props.onClose - Callback function when modal is closed
+ * @param {Function} props.onLogin - Callback function to switch to login form
  * @returns {React.ReactElement} SignUp form component
  */
-const SignUp = ({ onClose }) => {
+const SignUp = ({ onClose, onLogin }) => {
   // Get signup function from auth context
   const { signUp } = useAuth();
   
@@ -103,7 +104,7 @@ const SignUp = ({ onClose }) => {
           name="username"
           value={formData.username}
           onChange={handleChange}
-          placeholder="Tên người dùng (*)"
+          placeholder="Tên đăng nhập (*)"
           className="auth-input"
           required
         />
@@ -166,7 +167,7 @@ const SignUp = ({ onClose }) => {
         <button 
           type="button" 
           className="login-link" 
-          onClick={onClose}
+          onClick={onLogin}
         >
           Đăng nhập!
         </button>

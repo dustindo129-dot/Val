@@ -2,7 +2,7 @@
  * Login.jsx
  * 
  * Login component that handles user authentication through a form interface.
- * Provides email/password login with validation, error handling, and
+ * Provides username/email and password login with validation, error handling, and
  * integration with the authentication system.
  * 
  * Features:
@@ -12,6 +12,7 @@
  * - Remember me option
  * - Forgot password link
  * - Sign up link
+ * - Accepts both username and email as login identifier
  */
 
 import React, { useState, useEffect } from 'react';
@@ -66,7 +67,7 @@ const Login = ({ onClose, onSignUp }) => {
       const response = await login(formData.username, formData.password, formData.rememberMe);
       onClose(); // Close modal on successful login
     } catch (err) {
-      setError('Tên người dùng hoặc mật khẩu không chính xác');
+      setError('Tên đăng nhập/Email hoặc mật khẩu không chính xác');
       console.error('Login error:', err);
     } finally {
       setLoading(false);
@@ -84,14 +85,14 @@ const Login = ({ onClose, onSignUp }) => {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      {/* Username input field */}
+      {/* Username or Email input field */}
       <div className="form-group">
         <input
           type="text"
           name="username"
           value={formData.username}
           onChange={handleChange}
-          placeholder="Tên người dùng (*)"
+          placeholder="Tên đăng nhập hoặc Email (*)"
           className="auth-input"
           required
         />

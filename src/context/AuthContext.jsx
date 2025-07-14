@@ -472,7 +472,7 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Handles user login
-   * @param {string} username - User's username
+   * @param {string} username - User's username or email
    * @param {string} password - User's password
    * @param {boolean} rememberMe - Whether to extend the session timeout
    * @returns {Promise<Object>} Response data from login API
