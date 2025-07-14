@@ -44,14 +44,17 @@ const ChapterAccessGuard = ({
     const isPaidChapter = chapter?.mode === 'paid';
     const isPaidModule = moduleData?.mode === 'paid';
     const moduleHasRentBalance = moduleData?.rentBalance > 0;
+    const moduleIsInRentMode = moduleData?.mode === 'rent';
     
     // Show rental button if:
     // 1. Module exists
     // 2. Either chapter or module is paid
     // 3. Module has rental price set
+    // 4. Module is in rent mode (supports rentals)
     const shouldShow = moduleData && 
                       (isPaidChapter || isPaidModule) && 
-                      moduleHasRentBalance;
+                      moduleHasRentBalance &&
+                      moduleIsInRentMode;
     
     return shouldShow;
   }, [chapter, moduleData]);
