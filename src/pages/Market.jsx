@@ -96,6 +96,7 @@ const Market = () => {
   const [requestType, setRequestType] = useState('new'); // 'new' or 'web'
   const [requestText, setRequestText] = useState('');
   const [requestNote, setRequestNote] = useState('');
+  const [requestContactInfo, setRequestContactInfo] = useState('');
   const [requestImage, setRequestImage] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
@@ -312,6 +313,11 @@ const Market = () => {
       return;
     }
 
+    if (requestType === 'new' && !requestContactInfo.trim()) {
+      alert('Vui lòng cung cấp thông tin liên lạc của bạn');
+      return;
+    }
+
     if (requestType === 'web') {
       // For web requests, just validate the title
       if (!requestText.trim()) {
@@ -378,6 +384,11 @@ const Market = () => {
         requestData.note = DOMPurify.sanitize(requestNote);
       }
       
+      // Add contactInfo if provided (only for 'new' requests)
+      if (requestType === 'new' && requestContactInfo.trim()) {
+        requestData.contactInfo = DOMPurify.sanitize(requestContactInfo);
+      }
+      
       // Add image if provided, otherwise use default
       if (requestImage) {
         requestData.image = requestImage;
@@ -416,6 +427,7 @@ const Market = () => {
       // Reset form in all cases
       setRequestText('');
       setRequestNote('');
+      setRequestContactInfo('');
       setRequestImage('');
       setDepositAmount('');
       setGoalAmount('1000');
@@ -435,6 +447,7 @@ const Market = () => {
     // Clear inputs when switching types
     setRequestText('');
     setRequestNote('');
+    setRequestContactInfo('');
     setRequestImage('');
     setDepositAmount('');
     setGoalAmount('1000');
@@ -484,6 +497,7 @@ const Market = () => {
   const handleClearForm = () => {
     setRequestText('');
     setRequestNote('');
+    setRequestContactInfo('');
     setRequestImage('');
     setDepositAmount('');
     setGoalAmount('1000');
@@ -496,16 +510,29 @@ const Market = () => {
 
   // Fetch request history with optimized contribution loading
   const fetchRequestHistory = useCallback(async () => {
-    if (!isAuthenticated) {
-      return;
-    }
-    
     setHistoryLoading(true);
     try {
-      const response = await axios.get(
-        `${config.backendUrl}/api/requests/all`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      let response;
+      
+      if (isAuthenticated) {
+        // For authenticated users, try to get all requests (admin/mod gets all, regular users get their own)
+        try {
+          response = await axios.get(
+            `${config.backendUrl}/api/requests/all`,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+        } catch (error) {
+          // If user doesn't have permission for /all endpoint, fall back to public requests with includeAll
+          if (error.response?.status === 403) {
+            response = await axios.get(`${config.backendUrl}/api/requests?includeAll=true`);
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        // For non-authenticated users, show all public requests (including approved/declined)
+        response = await axios.get(`${config.backendUrl}/api/requests?includeAll=true`);
+      }
       
       setRequestHistory(response.data);
       setShowHistory(true);
@@ -1063,6 +1090,7 @@ const Market = () => {
               contributions={contributions}
               loadingContributions={loadingContributions}
               setShowHistory={setShowHistory}
+              user={user}
             />
           )}
         </section>
@@ -1070,6 +1098,13 @@ const Market = () => {
         <section className="market-section">
           <div className="market-header">
             <h2>Tạo yêu cầu mới</h2>
+            {/* History Button - Available to all users */}
+            <button 
+              className={`type-tab history-tab ${showHistory ? 'active' : ''}`} 
+              onClick={toggleHistory}
+            >
+              Lịch sử yêu cầu
+            </button>
           </div>
           
           {isAuthenticated ? (
@@ -1082,6 +1117,8 @@ const Market = () => {
               setRequestText={setRequestText}
               requestNote={requestNote}
               setRequestNote={setRequestNote}
+              requestContactInfo={requestContactInfo}
+              setRequestContactInfo={setRequestContactInfo}
               requestImage={requestImage}
               handleImageUpload={handleImageUpload}
               imageUploading={imageUploading}

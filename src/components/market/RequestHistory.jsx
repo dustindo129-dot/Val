@@ -16,6 +16,7 @@ import { translateRequestStatus, translateRequestType, translateContributionStat
  * @param {Object} props.contributions - Object mapping request IDs to contribution arrays
  * @param {Set} props.loadingContributions - Set of request IDs with loading contributions
  * @param {Function} props.setShowHistory - Function to toggle history visibility
+ * @param {Object} props.user - The current user data
  * @returns {JSX.Element} Request history component
  */
 const RequestHistory = ({
@@ -23,7 +24,8 @@ const RequestHistory = ({
   historyLoading,
   contributions,
   loadingContributions,
-  setShowHistory
+  setShowHistory,
+  user
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const requestsPerPage = 5;
@@ -109,6 +111,15 @@ const RequestHistory = ({
                   <div className="history-note" dangerouslySetInnerHTML={{ 
                     __html: DOMPurify.sanitize(processNoteContent(request.note)) 
                   }} />
+                )}
+                {/* Contact Info - only visible for 'new' requests and only to admin/mod or request owner */}
+                {request.type === 'new' && 
+                 request.contactInfo && 
+                 user && 
+                 (user.role === 'admin' || user.role === 'moderator' || request.user._id === (user._id || user.id)) && (
+                  <div className="request-contact-info">
+                    <strong>Thông tin liên lạc:</strong> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processNoteContent(request.contactInfo)) }} />
+                  </div>
                 )}
                 {request.novel && (
                   <div className="history-novel">

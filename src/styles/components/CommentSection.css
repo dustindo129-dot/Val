@@ -1134,7 +1134,7 @@
   }
   
   .comment-item {
-    padding-bottom: 1rem;
+    padding-bottom: 0.2rem;
   }
 
   .comment-avatar img,
@@ -1263,7 +1263,7 @@
   }
   
   .comment-item {
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.1rem;
   }
 
   .comment-avatar {
@@ -1667,9 +1667,9 @@
 
 .pagination-buttons {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
   justify-content: center;
 }
 
@@ -1699,6 +1699,13 @@
 .page-numbers {
   display: flex;
   gap: 0.25rem;
+  order: 1;
+}
+
+.pagination-nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+  order: 2;
 }
 
 .page-number-btn {
@@ -1799,6 +1806,10 @@
   }
   
   .pagination-buttons {
+    gap: 0.5rem;
+  }
+  
+  .pagination-nav-buttons {
     gap: 0.25rem;
   }
   
@@ -1828,12 +1839,11 @@
   }
   
   .pagination-buttons {
-    flex-direction: column;
     gap: 0.5rem;
   }
   
-  .page-numbers {
-    order: -1;
+  .pagination-nav-buttons {
+    gap: 0.5rem;
   }
   
   .pagination-btn {

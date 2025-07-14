@@ -41,6 +41,32 @@
   gap: 1rem;
 }
 
+/* History button in market header */
+.market-header .history-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #212529;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.market-header .history-tab:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.market-header .history-tab.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
 /* Sort controls */
 .sort-controls {
   display: flex;
@@ -627,6 +653,24 @@
 :root.dark-mode .market-container .discard-btn:hover {
   background-color: #212529;
   color: #e9ecef;
+}
+
+/* Dark mode styles for history button in market header */
+:root.dark-mode .market-header .history-tab {
+  background-color: #212529;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+:root.dark-mode .market-header .history-tab:hover {
+  background-color: #343a40;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .market-header .history-tab.active {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
 }
 
 :root.dark-mode .request-item {
@@ -1571,7 +1615,7 @@
 
 /* FAQ section styles */
 .faq-item {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   padding: 1.25rem;
   background-color: #f0f8ff;
   border-left: 4px solid #007bff;
@@ -1729,6 +1773,21 @@
   font-size: 0.9rem;
   font-style: italic;
   color: #64748b;
+}
+
+.request-contact-info {
+  margin: 8px 15px;
+  padding: 6px 8px;
+  background-color: rgba(0, 123, 255, 0.05);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #495057;
+  border: 1px solid rgba(0, 123, 255, 0.1);
+}
+
+.request-contact-info strong {
+  color: #0056b3;
+  font-weight: 500;
 }
 
 .request-stats {
@@ -1894,6 +1953,17 @@
 
 :root.dark-mode .request-note {
   color: #ced4da;
+}
+
+:root.dark-mode .request-contact-info {
+  background-color: rgba(13, 110, 253, 0.08);
+  color: #ced4da;
+  border-color: rgba(13, 110, 253, 0.15);
+}
+
+:root.dark-mode .request-contact-info strong {
+  color: #6ea8fe;
+  font-weight: 500;
 }
 
 :root.dark-mode .progress-container {

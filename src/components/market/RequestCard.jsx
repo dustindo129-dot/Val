@@ -55,6 +55,7 @@ const RequestCard = ({
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editNote, setEditNote] = useState(request.note || '');
+  const [editContactInfo, setEditContactInfo] = useState(request.contactInfo || '');
   const [editImage, setEditImage] = useState(request.illustration || '');
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -63,9 +64,10 @@ const RequestCard = ({
   React.useEffect(() => {
     if (!isEditing) {
       setEditNote(request.note || '');
+      setEditContactInfo(request.contactInfo || '');
       setEditImage(request.illustration || '');
     }
-  }, [request.note, request.illustration, isEditing]);
+  }, [request.note, request.contactInfo, request.illustration, isEditing]);
   
   // Check if user can edit (admin, moderator, or user who created a 'new' request)
   const canEdit = user && (
@@ -119,6 +121,7 @@ const RequestCard = ({
         `${config.backendUrl}/api/requests/${request._id}`,
         {
           note: editNote,
+          contactInfo: editContactInfo,
           illustration: editImage
         },
         {
@@ -148,6 +151,7 @@ const RequestCard = ({
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditNote(request.note || '');
+    setEditContactInfo(request.contactInfo || '');
     setEditImage(request.illustration || '');
   };
 
@@ -279,6 +283,63 @@ const RequestCard = ({
         </div>
       )}
       
+      {/* Contact Info Edit Field - only for 'new' requests */}
+      {request.type === 'new' && 
+       request.contactInfo && 
+       user && 
+       (user.role === 'admin' || user.role === 'moderator' || request.user._id === (user._id || user.id)) && (
+        <div className="request-contact-info">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editContactInfo}
+              onChange={(e) => setEditContactInfo(e.target.value)}
+              placeholder="Thông tin liên lạc của bạn (Facebook, Discord, Zalo,...)"
+              className="edit-note-textarea"
+              disabled={isSaving}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ced4da',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+                fontSize: '0.9rem'
+              }}
+            />
+          ) : (
+            <div>
+              <strong>Thông tin liên lạc:</strong> <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processNoteContent(request.contactInfo)) }} />
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Contact Info Edit Field - only render when editing and for 'new' requests */}
+      {request.type === 'new' && 
+       isEditing && 
+       !request.contactInfo && 
+       user && 
+       (user.role === 'admin' || user.role === 'moderator' || request.user._id === (user._id || user.id)) && (
+        <div className="request-contact-info">
+          <input
+            type="text"
+            value={editContactInfo}
+            onChange={(e) => setEditContactInfo(e.target.value)}
+            placeholder="Thông tin liên lạc của bạn (Facebook, Discord, Zalo,...)"
+            className="edit-note-textarea"
+            disabled={isSaving}
+            style={{
+              width: '100%',
+              padding: '8px',
+              border: '1px solid #ced4da',
+              borderRadius: '4px',
+              fontFamily: 'inherit',
+              fontSize: '0.9rem'
+            }}
+          />
+        </div>
+      )}
+      
       <div className="request-stats">
         <div className="stat-item">
           <i className="fas fa-thumbs-up"></i>
@@ -375,6 +436,7 @@ const RequestCard = ({
               onClick={() => {
                 // Ensure we start with current values
                 setEditNote(request.note || '');
+                setEditContactInfo(request.contactInfo || '');
                 setEditImage(request.illustration || '');
                 setIsEditing(true);
               }}

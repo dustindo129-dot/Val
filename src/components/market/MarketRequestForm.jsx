@@ -14,6 +14,8 @@ import React from 'react';
  * @param {Function} props.setRequestText - Function to update request text
  * @param {string} props.requestNote - Request note input value
  * @param {Function} props.setRequestNote - Function to update request note
+ * @param {string} props.requestContactInfo - Request contact info input value
+ * @param {Function} props.setRequestContactInfo - Function to update request contact info
  * @param {string} props.requestImage - Request image URL
  * @param {Function} props.handleImageUpload - Function to handle image upload
  * @param {boolean} props.imageUploading - Whether image is uploading
@@ -38,6 +40,8 @@ const MarketRequestForm = ({
   setRequestText,
   requestNote,
   setRequestNote,
+  requestContactInfo,
+  setRequestContactInfo,
   requestImage,
   handleImageUpload,
   imageUploading,
@@ -74,15 +78,6 @@ const MarketRequestForm = ({
           </button>
         )}
         
-        {/* Request History Button - Visible to all logged-in users */}
-        {isAuthenticated && (
-          <button 
-            className={`type-tab history-tab ${showHistory ? 'active' : ''}`} 
-            onClick={toggleHistory}
-          >
-            Lịch sử yêu cầu
-          </button>
-        )}
       </div>
       
       <form className="request-form" onSubmit={handleSubmit}>
@@ -117,6 +112,15 @@ const MarketRequestForm = ({
               placeholder="Tên truyện bạn muốn yêu cầu..."
               value={requestText}
               onChange={(e) => setRequestText(e.target.value)}
+              disabled={submitting}
+              required
+            />
+            <input
+              type="text"
+              className="request-title-input"
+              placeholder="Thông tin liên lạc của bạn (Facebook, Discord, Zalo,...) - Để đảm bảo quyền riêng tư thông tin này chỉ được thấy bởi admin/mod."
+              value={requestContactInfo}
+              onChange={(e) => setRequestContactInfo(e.target.value)}
               disabled={submitting}
               required
             />

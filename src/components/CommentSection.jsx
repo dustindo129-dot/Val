@@ -1472,14 +1472,6 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
               </div>
               
               <div className="pagination-buttons">
-                <button 
-                  className="pagination-btn prev-btn"
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                >
-                  ← Trước
-                </button>
-                
                 {/* Page numbers */}
                 <div className="page-numbers">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -1506,13 +1498,24 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   })}
                 </div>
                 
-                <button 
-                  className="pagination-btn next-btn"
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                >
-                  Sau →
-                </button>
+                {/* Navigation buttons */}
+                <div className="pagination-nav-buttons">
+                  <button 
+                    className="pagination-btn prev-btn"
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                  >
+                    ← Trước
+                  </button>
+                  
+                  <button 
+                    className="pagination-btn next-btn"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Sau →
+                  </button>
+                </div>
               </div>
             </div>
           )}
