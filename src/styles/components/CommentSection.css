@@ -215,21 +215,21 @@
 
 .chapter-link {
   font-size: 0.75rem;
-  color: #007bff;
+  color: #ff6b6b;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 2px 6px;
-  background-color: rgba(0, 123, 255, 0.1);
+  background-color: rgba(255, 107, 107, 0.1);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .chapter-link:hover {
-  background-color: rgba(0, 123, 255, 0.2);
+  background-color: rgba(255, 107, 107, 0.2);
   text-decoration: none;
-  color: #0056b3;
+  color: #e74c3c;
 }
 
 .comment-text {
@@ -765,13 +765,13 @@
 }
 
 :root.dark-mode .chapter-link {
-  color: #66b0ff;
-  background-color: rgba(102, 176, 255, 0.1);
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.1);
 }
 
 :root.dark-mode .chapter-link:hover {
-  background-color: rgba(102, 176, 255, 0.2);
-  color: #99ccff;
+  background-color: rgba(255, 107, 107, 0.2);
+  color: #ff9999;
 }
 
 :root.dark-mode .no-comments, 
@@ -1633,7 +1633,7 @@
 .show-less-replies-btn {
   background: none;
   border: none;
-  color: #007bff;
+  color: #ff6b6b;
   font-size: 0.85rem;
   padding: 0.5rem 0;
   cursor: pointer;
@@ -1644,12 +1644,12 @@
 
 .show-more-replies-btn:hover,
 .show-less-replies-btn:hover {
-  color: #0056b3;
+  color: #e74c3c;
   text-decoration: underline;
 }
 
 /* Comment pagination styles */
-.pagination-controls {
+.comment-pagination-controls {
   margin-top: 2rem;
   padding: 1.5rem 0;
   border-top: 1px solid #e9ecef;
@@ -1659,13 +1659,13 @@
   gap: 1rem;
 }
 
-.pagination-info {
+.comment-pagination-info {
   font-size: 0.9rem;
   color: #6c757d;
   text-align: center;
 }
 
-.pagination-buttons {
+.comment-pagination-buttons {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1673,7 +1673,7 @@
   justify-content: center;
 }
 
-.pagination-btn {
+.comment-pagination-btn {
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
   color: #495057;
@@ -1684,31 +1684,31 @@
   transition: all 0.2s ease;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.comment-pagination-btn:hover:not(:disabled) {
   background-color: #e9ecef;
   border-color: #adb5bd;
 }
 
-.pagination-btn:disabled {
+.comment-pagination-btn:disabled {
   background-color: #f8f9fa;
   color: #6c757d;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.page-numbers {
+.comment-page-numbers {
   display: flex;
   gap: 0.25rem;
   order: 1;
 }
 
-.pagination-nav-buttons {
+.comment-pagination-nav-buttons {
   display: flex;
   gap: 0.5rem;
   order: 2;
 }
 
-.page-number-btn {
+.comment-page-number-btn {
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
   color: #495057;
@@ -1720,105 +1720,105 @@
   transition: all 0.2s ease;
 }
 
-.page-number-btn:hover {
+.comment-page-number-btn:hover {
   background-color: #e9ecef;
   border-color: #adb5bd;
 }
 
-.page-number-btn.active {
-  background-color: #007bff;
-  border-color: #007bff;
+.comment-page-number-btn.active {
+  background-color: #ff6b6b;
+  border-color: #ff6b6b;
   color: white;
 }
 
-.page-number-btn.active:hover {
-  background-color: #0056b3;
-  border-color: #0056b3;
+.comment-page-number-btn.active:hover {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
 }
 
 /* Dark mode styles for pagination */
 :root.dark-mode .show-more-replies-btn,
 :root.dark-mode .show-less-replies-btn {
-  color: #4dabf7;
+  color: #ff6b6b;
 }
 
 :root.dark-mode .show-more-replies-btn:hover,
 :root.dark-mode .show-less-replies-btn:hover {
-  color: #74c0fc;
+  color: #ff9999;
 }
 
-:root.dark-mode .pagination-controls {
+:root.dark-mode .comment-pagination-controls {
   border-top-color: #495057;
 }
 
-:root.dark-mode .pagination-info {
+:root.dark-mode .comment-pagination-info {
   color: #adb5bd;
 }
 
-:root.dark-mode .pagination-btn {
+:root.dark-mode .comment-pagination-btn {
   background-color: #495057;
   border-color: #6c757d;
   color: #f8f9fa;
 }
 
-:root.dark-mode .pagination-btn:hover:not(:disabled) {
+:root.dark-mode .comment-pagination-btn:hover:not(:disabled) {
   background-color: #6c757d;
   border-color: #adb5bd;
 }
 
-:root.dark-mode .pagination-btn:disabled {
+:root.dark-mode .comment-pagination-btn:disabled {
   background-color: #343a40;
   color: #6c757d;
 }
 
-:root.dark-mode .page-number-btn {
+:root.dark-mode .comment-page-number-btn {
   background-color: #495057;
   border-color: #6c757d;
   color: #f8f9fa;
 }
 
-:root.dark-mode .page-number-btn:hover {
+:root.dark-mode .comment-page-number-btn:hover {
   background-color: #6c757d;
   border-color: #adb5bd;
 }
 
-:root.dark-mode .page-number-btn.active {
-  background-color: #4dabf7;
-  border-color: #4dabf7;
-  color: #212529;
+:root.dark-mode .comment-page-number-btn.active {
+  background-color: #ff6b6b;
+  border-color: #ff6b6b;
+  color: white;
 }
 
-:root.dark-mode .page-number-btn.active:hover {
-  background-color: #74c0fc;
-  border-color: #74c0fc;
+:root.dark-mode .comment-page-number-btn.active:hover {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
 }
 
-/* Mobile responsive styles for pagination */
+/* Mobile responsive styles for comment pagination */
 @media (max-width: 768px) {
-  .pagination-controls {
+  .comment-pagination-controls {
     margin-top: 1.5rem;
     padding: 1rem 0;
     gap: 0.75rem;
   }
   
-  .pagination-info {
+  .comment-pagination-info {
     font-size: 0.8rem;
   }
   
-  .pagination-buttons {
+  .comment-pagination-buttons {
     gap: 0.5rem;
   }
   
-  .pagination-nav-buttons {
+  .comment-pagination-nav-buttons {
     gap: 0.25rem;
   }
   
-  .pagination-btn {
+  .comment-pagination-btn {
     padding: 0.4rem 0.8rem;
     font-size: 0.8rem;
   }
   
-  .page-number-btn {
+  .comment-page-number-btn {
     padding: 0.4rem 0.6rem;
     font-size: 0.8rem;
     min-width: 36px;
@@ -1832,21 +1832,21 @@
 }
 
 @media (max-width: 576px) {
-  .pagination-controls {
+  .comment-pagination-controls {
     margin-top: 1rem;
     padding: 0.75rem 0;
     gap: 0.5rem;
   }
   
-  .pagination-buttons {
+  .comment-pagination-buttons {
     gap: 0.5rem;
   }
   
-  .pagination-nav-buttons {
+  .comment-pagination-nav-buttons {
     gap: 0.5rem;
   }
   
-  .pagination-btn {
+  .comment-pagination-btn {
     padding: 0.5rem 1rem;
     min-width: 80px;
   }

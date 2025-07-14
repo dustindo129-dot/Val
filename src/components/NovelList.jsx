@@ -419,14 +419,14 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                 <Link
                     key="1"
                     to="/"
-                    className={`pagination-button ${1 === currentPage ? 'active' : ''}`}
+                    className={`novel-pagination-button ${1 === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
                     1
                 </Link>
             );
             if (startPage > 2) {
-                pages.push(<span key="ellipsis1" className="pagination-ellipsis">...</span>);
+                pages.push(<span key="ellipsis1" className="novel-pagination-ellipsis">...</span>);
             }
         }
 
@@ -435,7 +435,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                 <Link
                     key={i}
                     to={i === 1 ? "/" : `/trang/${i}`}
-                    className={`pagination-button ${i === currentPage ? 'active' : ''}`}
+                    className={`novel-pagination-button ${i === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
                     {i}
@@ -445,13 +445,13 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
 
         if (endPage < pagination.totalPages) {
             if (endPage < pagination.totalPages - 1) {
-                pages.push(<span key="ellipsis2" className="pagination-ellipsis">...</span>);
+                pages.push(<span key="ellipsis2" className="novel-pagination-ellipsis">...</span>);
             }
             pages.push(
                 <Link
                     key={pagination.totalPages}
                     to={pagination.totalPages === 1 ? "/" : `/trang/${pagination.totalPages}`}
-                    className={`pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
+                    className={`novel-pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
                     {pagination.totalPages}
@@ -460,14 +460,14 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
         }
 
         return (
-            <div className="pagination">
+            <div className="novel-pagination">
                 <Link
                     to={currentPage > 1 ? (currentPage === 2 ? "/" : `/trang/${currentPage - 1}`) : '#'}
                     onClick={(e) => {
                         if (currentPage === 1) e.preventDefault();
                         else window.scrollTo(0, 0);
                     }}
-                    className={`pagination-button nav ${currentPage === 1 ? 'disabled' : ''}`}
+                    className={`novel-pagination-button nav ${currentPage === 1 ? 'disabled' : ''}`}
                 >
                     ‹
                 </Link>
@@ -478,7 +478,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                         if (currentPage === pagination.totalPages) e.preventDefault();
                         else window.scrollTo(0, 0);
                     }}
-                    className={`pagination-button nav ${currentPage === pagination.totalPages ? 'disabled' : ''}`}
+                    className={`novel-pagination-button nav ${currentPage === pagination.totalPages ? 'disabled' : ''}`}
                 >
                     ›
                 </Link>

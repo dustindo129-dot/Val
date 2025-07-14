@@ -1466,14 +1466,14 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="pagination-controls">
-              <div className="pagination-info">
+            <div className="comment-pagination-controls">
+              <div className="comment-pagination-info">
                 Trang {currentPage} / {totalPages} ({totalComments} bình luận)
               </div>
               
-              <div className="pagination-buttons">
+              <div className="comment-pagination-buttons">
                 {/* Page numbers */}
-                <div className="page-numbers">
+                <div className="comment-page-numbers">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
                     if (totalPages <= 5) {
@@ -1489,7 +1489,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                     return (
                       <button
                         key={pageNum}
-                        className={`page-number-btn ${currentPage === pageNum ? 'active' : ''}`}
+                        className={`comment-page-number-btn ${currentPage === pageNum ? 'active' : ''}`}
                         onClick={() => handlePageChange(pageNum)}
                       >
                         {pageNum}
@@ -1499,9 +1499,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 </div>
                 
                 {/* Navigation buttons */}
-                <div className="pagination-nav-buttons">
+                <div className="comment-pagination-nav-buttons">
                   <button 
-                    className="pagination-btn prev-btn"
+                    className="comment-pagination-btn prev-btn"
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
                   >
@@ -1509,7 +1509,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   </button>
                   
                   <button 
-                    className="pagination-btn next-btn"
+                    className="comment-pagination-btn next-btn"
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                   >

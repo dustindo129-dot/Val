@@ -2538,8 +2538,8 @@
   color: #ced4da;
 }
 
-/* Pagination controls */
-.pagination-controls {
+/* Market Pagination controls */
+.market-pagination-controls {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2547,7 +2547,7 @@
   gap: 0.5rem;
 }
 
-.pagination-btn {
+.market-pagination-btn {
   background-color: #f8f9fa;
   border: 1px solid #ced4da;
   border-radius: 4px;
@@ -2560,34 +2560,34 @@
   transition: all 0.2s ease;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.market-pagination-btn:hover:not(:disabled) {
   background-color: #e9ecef;
   color: #495057;
 }
 
-.pagination-btn:disabled {
+.market-pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.pagination-info {
+.market-pagination-info {
   margin: 0 0.5rem;
   font-size: 0.9rem;
   color: #6c757d;
 }
 
-/* Dark mode styles for pagination */
-:root.dark-mode .pagination-btn {
+/* Dark mode styles for Market pagination */
+:root.dark-mode .market-pagination-btn {
   background-color: #343a40;
   border-color: #495057;
   color: #adb5bd;
 }
 
-:root.dark-mode .pagination-btn:hover:not(:disabled) {
+:root.dark-mode .market-pagination-btn:hover:not(:disabled) {
   background-color: #212529;
   color: #e9ecef;
 }
 
-:root.dark-mode .pagination-info {
+:root.dark-mode .market-pagination-info {
   color: #adb5bd;
 }

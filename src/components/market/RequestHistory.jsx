@@ -169,33 +169,33 @@ const RequestHistory = ({
           
           {/* Pagination controls */}
           {totalPages > 1 && (
-            <div className="pagination-controls">
+            <div className="market-pagination-controls">
               <button 
-                className="pagination-btn" 
+                className="market-pagination-btn" 
                 onClick={() => goToPage(1)} 
                 disabled={currentPage === 1}
               >
                 <i className="fas fa-angle-double-left"></i>
               </button>
               <button 
-                className="pagination-btn" 
+                className="market-pagination-btn" 
                 onClick={() => goToPage(currentPage - 1)} 
                 disabled={currentPage === 1}
               >
                 <i className="fas fa-angle-left"></i>
               </button>
-              <span className="pagination-info">
+              <span className="market-pagination-info">
                 Trang {currentPage} / {totalPages}
               </span>
               <button 
-                className="pagination-btn" 
+                className="market-pagination-btn" 
                 onClick={() => goToPage(currentPage + 1)} 
                 disabled={currentPage === totalPages}
               >
                 <i className="fas fa-angle-right"></i>
               </button>
               <button 
-                className="pagination-btn" 
+                className="market-pagination-btn" 
                 onClick={() => goToPage(totalPages)} 
                 disabled={currentPage === totalPages}
               >

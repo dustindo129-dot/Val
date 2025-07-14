@@ -944,7 +944,7 @@ const TopUpManagement = () => {
               
               {/* Pagination */}
               {novelTotalPages > 1 && (
-                <div className="pagination">
+                <div className="topup-pagination">
                   <button 
                     onClick={() => handleNovelPageChange(1)}
                     disabled={novelCurrentPage === 1}
@@ -958,7 +958,7 @@ const TopUpManagement = () => {
                     &lt;
                   </button>
                   
-                  <span className="page-info">
+                  <span className="topup-page-info">
                     Trang {novelCurrentPage} / {novelTotalPages}
                   </span>
                   
@@ -1093,7 +1093,7 @@ const TopUpManagement = () => {
               
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="pagination">
+                <div className="topup-pagination">
                   <button 
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
@@ -1107,7 +1107,7 @@ const TopUpManagement = () => {
                     &lt;
                   </button>
                   
-                  <span className="page-info">
+                  <span className="topup-page-info">
                     Trang {currentPage} / {totalPages}
                   </span>
                   
@@ -1514,7 +1514,7 @@ const TopUpManagement = () => {
               
               {/* Pagination for recent transactions */}
               {recentTotalPages > 1 && (
-                <div className="pagination">
+                <div className="topup-pagination">
                   <button 
                     onClick={() => handleRecentPageChange(1)}
                     disabled={recentCurrentPage === 1}
@@ -1528,7 +1528,7 @@ const TopUpManagement = () => {
                     &lt;
                   </button>
                   
-                  <span className="page-info">
+                  <span className="topup-page-info">
                     Trang {recentCurrentPage} / {recentTotalPages}
                   </span>
                   
