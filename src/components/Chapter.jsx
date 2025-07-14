@@ -576,7 +576,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     }
   }, [interactions, chapter]);
 
-  // Effect to handle chapter view tracking with optimistic updates
+  // Effect to handle chapter view tracking with proper cooldown
   useEffect(() => {
     if (!chapter || !chapterId || hasTrackedView) return;
 
@@ -589,39 +589,23 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     // Only count view if:
     // 1. Never viewed before, or
     // 2. Last viewed more than 4 hours ago
-    // 3. Not currently in cache (fresh visit)
     const shouldCountView = !lastViewed || (now - parseInt(lastViewed, 10)) > fourHours;
 
     if (shouldCountView) {
-      // OPTIMISTIC UPDATE: Increment view count immediately for better UX
-      // This shows the user that their view has been counted without waiting for server response
-      setViewCount(prevCount => prevCount + 1);
-      
-      // Update the query cache as well for consistency
-      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          chapter: {
-            ...old.chapter,
-            views: (old.chapter.views || 0) + 1
-          }
-        };
-      });
-      
-      // Update localStorage to prevent multiple counts
+      // Update localStorage immediately to prevent multiple counts
       localStorage.setItem(viewKey, now.toString());
       
-      // Mark as tracked to prevent multiple calls
+      // Mark as tracked to prevent multiple calls in this session
       setHasTrackedView(true);
       
-      // The backend will handle the actual view tracking on the next data fetch
-      // This provides immediate visual feedback while maintaining data consistency
+      // Don't do optimistic updates - let the server handle the actual increment
+      // The server will increment the view count and we'll get the updated count
+      // when the data refreshes naturally
     } else {
       // Mark as tracked even if we didn't count to prevent loops
       setHasTrackedView(true);
     }
-  }, [chapter, chapterId, hasTrackedView, queryClient, user?.id]);
+  }, [chapter, chapterId, hasTrackedView]);
 
   // Reset view tracking when chapter changes
   useEffect(() => {
