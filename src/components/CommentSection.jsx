@@ -41,6 +41,20 @@ const decodeHTMLEntities = (text) => {
   return textarea.value;
 };
 
+// Helper function to get role display text and class
+const getRoleTag = (role) => {
+  switch (role) {
+    case 'admin':
+      return { text: 'ADMIN', className: 'role-tag admin-tag' };
+    case 'moderator':
+      return { text: 'MOD', className: 'role-tag mod-tag' };
+    case 'pj_user':
+      return { text: 'QUẢN LÍ DỰ ÁN', className: 'role-tag pj-user-tag' };
+    default:
+      return null;
+  }
+};
+
 const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null }) => {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -624,10 +638,20 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         // Basic HTML sanitization while preserving images and formatting
         let processedContent = contentString;
         
-        // Images will be styled via CSS, no need for inline styles
+        // Convert line breaks to <br> tags
+        processedContent = processedContent.replace(/\n/g, '<br>');
         
-        // Convert br tags to proper line breaks
-        processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
+        // Convert URLs to clickable links
+        const urlRegex = /(https?:\/\/[^\s<>"]+)/gi;
+        processedContent = processedContent.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+        // Convert www links to clickable links
+        const wwwRegex = /(^|[^\/])(www\.[^\s<>"]+)/gi;
+        processedContent = processedContent.replace(wwwRegex, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer">$2</a>');
+
+        // Convert email addresses to mailto links
+        const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
+        processedContent = processedContent.replace(emailRegex, '<a href="mailto:$1">$1</a>');
         
         // If content doesn't have paragraph structure, wrap in paragraphs
         if (!processedContent.includes('<p')) {
@@ -915,18 +939,23 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 {comment.isDeleted && !comment.adminDeleted ? (
                   <span className="comment-username deleted-user">[đã xóa]</span>
                 ) : (
-                  <Link 
-                    to={generateUserProfileUrl(comment.user)} 
-                    className="comment-username-link"
-                  >
-                    <span className="comment-username">
-                      {comment.user.displayName || comment.user.username}
-                      {comment.isPinned && (
-                        (contentType === 'novels' && comment.contentType === 'novels') || 
-                        (contentType === 'chapters' && comment.contentType === 'chapters')
-                      ) && <span className="pinned-indicator">📌</span>}
-                    </span>
-                  </Link>
+                                  <Link 
+                  to={generateUserProfileUrl(comment.user)} 
+                  className="comment-username-link"
+                >
+                  <span className="comment-username">
+                    {comment.user.displayName || comment.user.username}
+                    {getRoleTag(comment.user.role) && (
+                      <span className={getRoleTag(comment.user.role).className}>
+                        {getRoleTag(comment.user.role).text}
+                      </span>
+                    )}
+                    {comment.isPinned && (
+                      (contentType === 'novels' && comment.contentType === 'novels') || 
+                      (contentType === 'chapters' && comment.contentType === 'chapters')
+                    ) && <span className="pinned-indicator">📌</span>}
+                  </span>
+                </Link>
                 )}
                 <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
               </div>

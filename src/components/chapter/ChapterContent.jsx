@@ -942,6 +942,25 @@ const ChapterContent = React.memo(({
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$1]</a></sup>'
             );
 
+            // Fix inconsistent HTML footnotes - ensure all footnote references have proper id attributes
+            // Pattern 1: Standard format without id attribute
+            processedContent = processedContent.replace(
+                /<sup><a href="#note-(\w+)" class="footnote-ref" data-footnote="\1">\[(\w+)\]<\/a><\/sup>/g,
+                '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
+            );
+            
+            // Pattern 2: Format with attributes in different order
+            processedContent = processedContent.replace(
+                /<sup><a href="#note-(\w+)" data-footnote="\1" class="footnote-ref">\[(\w+)\]<\/a><\/sup>/g,
+                '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
+            );
+            
+            // Pattern 3: Format with only href and data-footnote
+            processedContent = processedContent.replace(
+                /<sup><a href="#note-(\w+)" data-footnote="\1">\[(\w+)\]<\/a><\/sup>/g,
+                '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
+            );
+
             // Convert br tags to paragraph breaks
             processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
 

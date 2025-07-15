@@ -204,6 +204,35 @@
   color: #007bff;
 }
 
+/* Role tag styles */
+.role-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.admin-tag {
+  background-color: #dc3545;
+  color: white;
+}
+
+.mod-tag {
+  background-color: #28a745;
+  color: white;
+}
+
+.pj-user-tag {
+  background-color: #ffc107;
+  color: #212529;
+}
+
 .comment-time {
   font-size: 0.8rem;
   color: #6c757d;
@@ -771,6 +800,22 @@
 
 :root.dark-mode .comment-username-link:hover .comment-username {
   color: #66b0ff;
+}
+
+/* Dark mode role tag styles */
+:root.dark-mode .admin-tag {
+  background-color: #dc3545;
+  color: white;
+}
+
+:root.dark-mode .mod-tag {
+  background-color: #28a745;
+  color: white;
+}
+
+:root.dark-mode .pj-user-tag {
+  background-color: #ffc107;
+  color: #212529;
 }
 
 :root.dark-mode .comment-text {
