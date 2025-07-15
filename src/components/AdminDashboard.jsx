@@ -2088,7 +2088,7 @@ const AdminDashboard = () => {
                                                 <option value="pj_user">Quản lý dự án</option>
                                                 <option value="translator">Dịch giả</option>
                                                 <option value="editor">Biên tập</option>
-                                                <option value="proofreader">Kiểm tra chất lượng</option>
+                                                <option value="proofreader">Hiệu đính</option>
                                             </select>
                                             {canEditStaff && (
                                                 <button
@@ -2140,7 +2140,7 @@ const AdminDashboard = () => {
                                                 <option value="pj_user">Quản lý dự án</option>
                                                 <option value="translator">Dịch giả</option>
                                                 <option value="editor">Biên tập viên</option>
-                                                <option value="proofreader">Người kiểm tra chất lượng</option>
+                                                <option value="proofreader">Hiệu đính</option>
                                             </select>
                                             {canEditStaff && (
                                                 <button

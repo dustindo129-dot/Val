@@ -1591,7 +1591,7 @@ const ChapterContent = React.memo(({
                                     </div>
 
                                     <div className="chapter-staff-group">
-                                        <label>Người kiểm tra chất lượng:</label>
+                                        <label>Hiệu đính:</label>
                                         <select
                                             className="chapter-staff-dropdown"
                                             value={editedProofreader || ''}
@@ -1641,7 +1641,7 @@ const ChapterContent = React.memo(({
                                     </div>
 
                                     <div className="chapter-staff-group">
-                                        <label>Người kiểm tra chất lượng:</label>
+                                        <label>Hiệu đính:</label>
                                         <select
                                             className="chapter-staff-dropdown"
                                             value={editedProofreader || ''}

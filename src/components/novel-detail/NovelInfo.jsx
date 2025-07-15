@@ -1307,7 +1307,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                     {/* Proofreaders */}
                                     <div className="rd-staff-role rd-role-qc">
                   <span className="rd-role-badge rd-qc-badge">
-                    <FontAwesomeIcon icon={faCheckDouble} style={{marginRight: '4px'}}/> Kiểm tra chất lượng:
+                                          <FontAwesomeIcon icon={faCheckDouble} style={{marginRight: '4px'}}/> Hiệu đính:
                   </span>
                                     </div>
                                     <div className="rd-staff-members">
@@ -1365,7 +1365,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                                 <>
                                                     <div className="rd-staff-role rd-role-qc">
                           <span className="rd-role-badge rd-qc-badge">
-                            <FontAwesomeIcon icon={faCheckDouble} style={{marginRight: '4px'}}/> Kiểm tra chất lượng:
+                            <FontAwesomeIcon icon={faCheckDouble} style={{marginRight: '4px'}}/> Hiệu đính:
                           </span>
                                                     </div>
                                                     <div className="rd-staff-members">

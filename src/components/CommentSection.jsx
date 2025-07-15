@@ -50,9 +50,40 @@ const getRoleTag = (role) => {
       return { text: 'MOD', className: 'role-tag mod-tag' };
     case 'pj_user':
       return { text: 'QUẢN LÍ DỰ ÁN', className: 'role-tag pj-user-tag' };
+    case 'translator':
+      return { text: 'DỊCH GIẢ', className: 'role-tag translator-tag' };
+    case 'editor':
+      return { text: 'BIÊN TẬP', className: 'role-tag editor-tag' };
+    case 'proofreader':
+      return { text: 'HIỆU ĐÍNH', className: 'role-tag proofreader-tag' };
     default:
       return null;
   }
+};
+
+// Helper function to get all role tags for a user
+const getAllRoleTags = (globalRole, novelRoles = []) => {
+  const tags = [];
+  
+  // Add global role tag
+  if (globalRole) {
+    const globalTag = getRoleTag(globalRole);
+    if (globalTag) {
+      tags.push(globalTag);
+    }
+  }
+  
+  // Add novel-specific role tags
+  if (novelRoles && novelRoles.length > 0) {
+    novelRoles.forEach(role => {
+      const roleTag = getRoleTag(role);
+      if (roleTag && !tags.some(tag => tag.text === roleTag.text)) {
+        tags.push(roleTag);
+      }
+    });
+  }
+  
+  return tags;
 };
 
 const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null }) => {
@@ -945,11 +976,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 >
                   <span className="comment-username">
                     {comment.user.displayName || comment.user.username}
-                    {getRoleTag(comment.user.role) && (
-                      <span className={getRoleTag(comment.user.role).className}>
-                        {getRoleTag(comment.user.role).text}
+                    {getAllRoleTags(comment.user.role, comment.user.novelRoles).map((roleTag, index) => (
+                      <span key={index} className={roleTag.className}>
+                        {roleTag.text}
                       </span>
-                    )}
+                    ))}
                     {comment.isPinned && (
                       (contentType === 'novels' && comment.contentType === 'novels') || 
                       (contentType === 'chapters' && comment.contentType === 'chapters')

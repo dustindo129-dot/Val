@@ -1122,7 +1122,7 @@ const ChapterDashboard = () => {
 
                   {/* Proofreader dropdown */}
                   <div className="chapter-form-group">
-                    <label className="chapter-form-label">Người kiểm tra chất lượng:</label>
+                    <label className="chapter-form-label">Hiệu đính:</label>
                     <select
                         className="chapter-staff-dropdown mode-dropdown"
                         value={proofreader}
@@ -1176,7 +1176,7 @@ const ChapterDashboard = () => {
 
                   {/* Proofreader dropdown */}
                   <div className="chapter-form-group">
-                    <label className="chapter-form-label">Người kiểm tra chất lượng:</label>
+                    <label className="chapter-form-label">Hiệu đính:</label>
                     <select
                         className="chapter-staff-dropdown mode-dropdown"
                         value={proofreader}

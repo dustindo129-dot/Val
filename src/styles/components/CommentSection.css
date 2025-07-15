@@ -236,6 +236,21 @@
   color: #212529;
 }
 
+.translator-tag {
+  background-color: #6f42c1;
+  color: white;
+}
+
+.editor-tag {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.proofreader-tag {
+  background-color: #20c997;
+  color: white;
+}
+
 .comment-time {
   font-size: 0.8rem;
   color: #6c757d;
@@ -819,6 +834,21 @@
 :root.dark-mode .pj-user-tag {
   background-color: #ffc107;
   color: #212529;
+}
+
+:root.dark-mode .translator-tag {
+  background-color: #8b5cf6;
+  color: white;
+}
+
+:root.dark-mode .editor-tag {
+  background-color: #f97316;
+  color: white;
+}
+
+:root.dark-mode .proofreader-tag {
+  background-color: #06d6a0;
+  color: white;
 }
 
 :root.dark-mode .comment-text {
