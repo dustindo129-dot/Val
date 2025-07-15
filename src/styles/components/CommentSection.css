@@ -206,7 +206,8 @@
 
 /* Role tag styles */
 .role-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 6px;
@@ -215,7 +216,9 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   line-height: 1;
-  vertical-align: middle;
+  height: 16px; /* Fixed height to ensure consistency */
+  position: relative;
+  top: -1px;
 }
 
 .admin-tag {
