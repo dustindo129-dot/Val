@@ -1113,6 +1113,62 @@ const ChapterContent = React.memo(({
                 '<div class="content-frame themed-container">'
             );
 
+            // Convert fixed-width tables to responsive ones
+            processedContent = processedContent.replace(
+                /<table([^>]*?)width="(\d+)"([^>]*?)style="([^"]*?)width:\s*[\d.]+pt;?([^"]*?)"([^>]*?)>/gi,
+                (match, beforeWidth, widthValue, afterWidth, beforeStyle, afterStyle, afterStyle2) => {
+                    // Convert fixed pixel/point width to responsive percentage
+                    // For content tables, use reasonable responsive widths
+                    let responsiveWidth = '90%';
+                    
+                    // Different responsive widths based on original size
+                    const originalWidth = parseInt(widthValue);
+                    if (originalWidth <= 400) {
+                        responsiveWidth = '80%';
+                    } else if (originalWidth <= 500) {
+                        responsiveWidth = '85%';
+                    } else if (originalWidth <= 600) {
+                        responsiveWidth = '90%';
+                    } else {
+                        responsiveWidth = '95%';
+                    }
+                    
+                    // Clean up the style attribute, removing the fixed width
+                    let newStyle = beforeStyle + afterStyle;
+                    newStyle = newStyle.replace(/width:\s*[\d.]+pt;?/gi, '');
+                    newStyle = newStyle.replace(/width:\s*[\d.]+px;?/gi, '');
+                    newStyle = newStyle.trim();
+                    
+                    // Add responsive width to style
+                    if (newStyle && !newStyle.endsWith(';')) {
+                        newStyle += ';';
+                    }
+                    newStyle += ` width: ${responsiveWidth}; max-width: 100%;`;
+                    
+                    return `<table${beforeWidth}${afterWidth} style="${newStyle}"${afterStyle2}>`;
+                }
+            );
+
+            // Also handle tables with only style width (no width attribute)
+            processedContent = processedContent.replace(
+                /<table([^>]*?)style="([^"]*?)width:\s*[\d.]+pt;?([^"]*?)"([^>]*?)>/gi,
+                (match, beforeStyle, styleStart, styleEnd, afterStyle) => {
+                    // Clean up the style attribute, removing the fixed width
+                    let newStyle = styleStart + styleEnd;
+                    newStyle = newStyle.replace(/width:\s*[\d.]+pt;?/gi, '');
+                    newStyle = newStyle.replace(/width:\s*[\d.]+px;?/gi, '');
+                    newStyle = newStyle.trim();
+                    
+                    // Add responsive width to style
+                    if (newStyle && !newStyle.endsWith(';')) {
+                        newStyle += ';';
+                    }
+                    newStyle += ' width: 90%; max-width: 100%;';
+                    
+                    return `<table${beforeStyle} style="${newStyle}"${afterStyle}>`;
+                }
+            );
+
             // Handle existing paragraphs
             if (processedContent.includes('<p')) {
                 let finalContent = processedContent;
@@ -1127,8 +1183,8 @@ const ChapterContent = React.memo(({
                 );
 
                 return DOMPurify.sanitize(finalContent, {
-                    ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
-                    ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
+                    ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
+                    ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                     KEEP_CONTENT: false,
                     ALLOW_EMPTY_TAGS: ['p'],
                 });
@@ -1165,8 +1221,8 @@ const ChapterContent = React.memo(({
             }
 
             return DOMPurify.sanitize(finalContent, {
-                ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
-                ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
+                ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
+                ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                 KEEP_CONTENT: false,
                 ALLOW_EMPTY_TAGS: ['p'],
             });
