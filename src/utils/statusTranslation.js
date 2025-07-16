@@ -139,6 +139,32 @@ export const getStatusCssClass = (status) => {
 };
 
 /**
+ * Translates top-up transaction status from English to Vietnamese
+ * @param {string} status - The transaction status in English
+ * @returns {string} The translated status in Vietnamese
+ */
+export const translateTopUpStatus = (status) => {
+  const statusMap = {
+    'Completed': 'Hoàn thành',
+    'Pending': 'Đang chờ xử lý',
+    'Failed': 'Thất bại',
+    'Cancelled': 'Đã hủy',
+    // Also handle lowercase versions
+    'completed': 'Hoàn thành',
+    'pending': 'Đang chờ xử lý',
+    'failed': 'Thất bại',
+    'cancelled': 'Đã hủy',
+    // Also handle uppercase versions
+    'COMPLETED': 'Hoàn thành',
+    'PENDING': 'Đang chờ xử lý',
+    'FAILED': 'Thất bại',
+    'CANCELLED': 'Đã hủy'
+  };
+  
+  return statusMap[status] || status;
+};
+
+/**
  * Gets status color information for UI styling
  * @param {string} status - The status value
  * @returns {Object} Object containing color information

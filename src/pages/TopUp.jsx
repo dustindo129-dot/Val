@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
+import { translateTopUpStatus } from '../utils/statusTranslation';
 import '../styles/TopUp.css';
 
 /**
@@ -450,6 +451,30 @@ const TopUp = () => {
     return new Intl.NumberFormat('vi-VN').format(price) + '₫';
   };
 
+  // Get transaction type display text
+  const getTransactionTypeText = (type) => {
+    const typeMap = {
+      'topup': 'Nạp tiền (tự động)',
+      'admin_topup': 'Nạp tiền (admin)',
+      'request': 'Yêu cầu truyện mới',
+      'admin': 'Điều chỉnh thủ công',
+      'contribution': 'Đóng góp',
+      'gift': 'Quà tặng',
+      'gift_received': 'Nhận quà tặng',
+      'refund': 'Hoàn tiền',
+      'withdrawal': 'Rút tiền',
+      'rental': 'Mở tạm thời tập',
+      'open': 'Mở khóa nội dung',
+      'other': 'Khác'
+    };
+    return typeMap[type] || type;
+  };
+
+  // Get transaction amount class based on whether it's positive or negative
+  const getAmountClass = (amount) => {
+    return amount >= 0 ? 'amount-positive' : 'amount-negative';
+  };
+
   // Format date for display in Vietnamese format (DD/MM/YYYY HH:MM)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -472,20 +497,42 @@ const TopUp = () => {
       setFetchingHistory(true);
       
       try {
-        // Get all transactions including pending ones from the history endpoint
-        const historyResponse = await axios.get(
+        // Get comprehensive user transactions from the same endpoint as admin panel
+        const userTransactionsResponse = await axios.get(
+          `${config.backendUrl}/api/transactions/user-transactions?limit=50&offset=0&username=${user.username}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        // Also get TopUpRequest history for pending requests
+        const topUpHistoryResponse = await axios.get(
           `${config.backendUrl}/api/topup/history`,
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
         );
         
-        // Set history data
-        setHistory(historyResponse.data);
+        // Combine both types of transactions
+        const userTransactions = userTransactionsResponse.data.transactions || [];
+        const topUpHistory = topUpHistoryResponse.data || [];
+        
+        // Set comprehensive history data
+        setHistory(userTransactions);
         
         // Extract pending requests for cancel functionality
-        const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
+        const pendingRequests = topUpHistory.filter(item => item.status === 'Pending');
         setPendingRequests(pendingRequests);
       } catch (err) {
         console.error('Failed to fetch history:', err);
+        // Fallback to original TopUp history if user transactions fail
+        try {
+          const historyResponse = await axios.get(
+            `${config.backendUrl}/api/topup/history`,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          setHistory(historyResponse.data);
+          const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
+          setPendingRequests(pendingRequests);
+        } catch (fallbackErr) {
+          console.error('Failed to fetch fallback history:', fallbackErr);
+        }
       } finally {
         setFetchingHistory(false);
       }
@@ -519,23 +566,45 @@ const TopUp = () => {
     setFetchingHistory(true);
     
     try {
-      // Get all transactions including pending ones from the history endpoint
-      const historyResponse = await axios.get(
+      // Get comprehensive user transactions from the same endpoint as admin panel
+      const userTransactionsResponse = await axios.get(
+        `${config.backendUrl}/api/transactions/user-transactions?limit=50&offset=0&username=${user.username}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      // Also get TopUpRequest history for pending requests
+      const topUpHistoryResponse = await axios.get(
         `${config.backendUrl}/api/topup/history`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       
-      // Set history data
-      setHistory(historyResponse.data);
+      // Combine both types of transactions
+      const userTransactions = userTransactionsResponse.data.transactions || [];
+      const topUpHistory = topUpHistoryResponse.data || [];
+      
+      // Set comprehensive history data
+      setHistory(userTransactions);
       
       // Extract pending requests for cancel functionality
-      const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
+      const pendingRequests = topUpHistory.filter(item => item.status === 'Pending');
       setPendingRequests(pendingRequests);
       
       // Notify SecondaryNavbar to refresh balance display (manual fallback)
       window.dispatchEvent(new Event('balanceUpdated'));
     } catch (err) {
       console.error('Failed to fetch history:', err);
+      // Fallback to original TopUp history if user transactions fail
+      try {
+        const historyResponse = await axios.get(
+          `${config.backendUrl}/api/topup/history`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setHistory(historyResponse.data);
+        const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
+        setPendingRequests(pendingRequests);
+      } catch (fallbackErr) {
+        console.error('Failed to fetch fallback history:', fallbackErr);
+      }
     } finally {
       setFetchingHistory(false);
     }
@@ -797,7 +866,7 @@ const TopUp = () => {
           </button>
         </div>
 
-        {/* Transaction history */}
+                {/* Transaction history */}
         {viewHistory && (
           <section className="top-up-section">
             <div className="transaction-header-container">
@@ -816,37 +885,73 @@ const TopUp = () => {
               <p>Không có lịch sử giao dịch</p>
             ) : (
               <div className="transaction-history">
-                {history.map(transaction => (
-                  <div key={transaction._id} className={`transaction-item status-${transaction.status.toLowerCase()}`}>
-                    <div className="transaction-header">
-                      <div className="transaction-date">{formatDate(transaction.createdAt)}</div>
-                      <div className="transaction-status">{transaction.status}</div>
-                    </div>
-                    <div className="transaction-body">
-                      <div className="transaction-amounts">
-                        <div className="transaction-price">{formatPrice(transaction.amount)}</div>
-                        <div className="transaction-credits">
-                          {transaction.balance} 🌾
+                {history.map(transaction => {
+                  // Handle both old TopUpRequest format and new UserTransaction format
+                  const isOldFormat = transaction.paymentMethod && transaction.balance;
+                  
+                  return (
+                    <div key={transaction._id} className={`transaction-item ${isOldFormat ? `status-${transaction.status?.toLowerCase()}` : ''}`}>
+                      <div className="transaction-header">
+                        <div className="transaction-user">
+                          <span className="transaction-id">ID: {transaction._id}</span>
                         </div>
+                        <div className="transaction-date">{formatDate(transaction.createdAt)}</div>
                       </div>
-                      <div className="transaction-method">
-                        {transaction.paymentMethod === 'bank' 
-                          ? 'Chuyển khoản ngân hàng' 
-                          : 'Thẻ trả trước'}
+                      <div className="transaction-body">
+                        {isOldFormat ? (
+                          // Old TopUpRequest format
+                          <>
+                            <div className="transaction-amounts">
+                              <div className="transaction-price">{formatPrice(transaction.amount)}</div>
+                              <div className="transaction-credits">
+                                {transaction.balance} 🌾
+                              </div>
+                            </div>
+                            <div className="transaction-method">
+                              {transaction.paymentMethod === 'bank' 
+                                ? 'Chuyển khoản ngân hàng' 
+                                : 'Thẻ trả trước'}
+                            </div>
+                            <div className="transaction-status">{translateTopUpStatus(transaction.status)}</div>
+                          </>
+                        ) : (
+                          // New UserTransaction format
+                          <>
+                            <div className="transaction-details">
+                              <div className="transaction-type">
+                                {getTransactionTypeText(transaction.type)}
+                              </div>
+                              <div className={`transaction-amount ${getAmountClass(transaction.amount)}`}>
+                                {transaction.amount >= 0 ? '+' : ''}{transaction.amount} 🌾
+                              </div>
+                              <div className="transaction-balance-after">
+                                Số dư sau giao dịch: {transaction.balanceAfter} 🌾
+                              </div>
+                            </div>
+                            <div className="transaction-description">
+                              {transaction.description}
+                            </div>
+                            {transaction.performedBy && (
+                              <div className="transaction-admin">
+                                Thực hiện bởi: {transaction.performedBy.displayName || transaction.performedBy.username}
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
+                      {isOldFormat && transaction.status === 'Pending' && (
+                        <div className="transaction-actions">
+                          <button 
+                            className="cancel-button"
+                            onClick={() => handleCancelRequest(transaction._id)}
+                          >
+                            Hủy bỏ
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {transaction.status === 'Pending' && (
-                      <div className="transaction-actions">
-                        <button 
-                          className="cancel-button"
-                          onClick={() => handleCancelRequest(transaction._id)}
-                        >
-                          Hủy bỏ
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
