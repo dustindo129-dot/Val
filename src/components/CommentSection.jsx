@@ -461,13 +461,13 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       return 'vừa xong';
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} phút trước`;
+      return `${minutes} phút`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} giờ trước`;
+      return `${hours} giờ`;
     } else if (diffInSeconds < 2592000) {
       const days = Math.floor(diffInSeconds / 86400);
-      return `${days} ngày trước`;
+      return `${days} ngày`;
     } else {
       const day = date.getDate().toString().padStart(2, '0');
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -970,25 +970,24 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 {comment.isDeleted && !comment.adminDeleted ? (
                   <span className="comment-username deleted-user">[đã xóa]</span>
                 ) : (
-                                  <Link 
-                  to={generateUserProfileUrl(comment.user)} 
-                  className="comment-username-link"
-                >
-                  <span className="comment-username">
-                    {comment.user.displayName || comment.user.username}
-                    {getAllRoleTags(comment.user.role, comment.user.novelRoles).map((roleTag, index) => (
-                      <span key={index} className={roleTag.className}>
-                        {roleTag.text}
-                      </span>
-                    ))}
-                    {comment.isPinned && (
-                      (contentType === 'novels' && comment.contentType === 'novels') || 
-                      (contentType === 'chapters' && comment.contentType === 'chapters')
-                    ) && <span className="pinned-indicator">📌</span>}
-                  </span>
-                </Link>
+                  <Link 
+                    to={generateUserProfileUrl(comment.user)} 
+                    className="comment-username-link"
+                  >
+                    <span className="comment-username">
+                      {comment.user.displayName || comment.user.username}
+                      {getAllRoleTags(comment.user.role, comment.user.novelRoles).map((roleTag, index) => (
+                        <span key={index} className={roleTag.className}>
+                          {roleTag.text}
+                        </span>
+                      ))}
+                      {comment.isPinned && (
+                        (contentType === 'novels' && comment.contentType === 'novels') || 
+                        (contentType === 'chapters' && comment.contentType === 'chapters')
+                      ) && <span className="pinned-indicator">📌</span>}
+                    </span>
+                  </Link>
                 )}
-                <span className="comment-time">{formatRelativeTime(comment.createdAt)}</span>
               </div>
               {/* Show chapter link for chapter comments on novel detail page */}
               {contentType === 'novels' && comment.contentType === 'chapters' && comment.chapterInfo && (
@@ -1036,6 +1035,18 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                         ✏️ Chỉnh sửa
                       </button>
                     )}
+                    {comment.user.username === user.username && (
+                      <button
+                        className="comment-dropdown-item"
+                        onClick={() => {
+                          handleDelete(comment._id, level > 0, comment.parentId);
+                          setShowDropdown(false);
+                        }}
+                        disabled={deleting}
+                      >
+                        🗑️ {deleting ? 'Đang xóa...' : 'Xóa'}
+                      </button>
+                    )}
                     {comment.user.username !== user.username && (
                       <button
                         className="comment-dropdown-item"
@@ -1073,9 +1084,6 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 >
                   {isExpanded ? 'Thu gọn' : 'Xem thêm'}
                 </button>
-              )}
-              {comment.isEdited && !comment.isDeleted && (
-                <span className="edited-indicator">(đã chỉnh sửa)</span>
               )}
             </div>
           ) : (
@@ -1156,15 +1164,19 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           {!isEditing && (
             <div className="comment-actions">
               {comment.isDeleted && !comment.adminDeleted ? (
-                // For deleted comments, only show reply button to maintain thread structure
-                <button 
-                  className="reply-button"
-                  onClick={handleReplyClick}
-                >
-                  Trả lời
-                </button>
+                // For deleted comments, only show time and reply button to maintain thread structure
+                <>
+                  <span className="comment-time action-time">{formatRelativeTime(comment.createdAt)}</span>
+                  <button 
+                    className="reply-button"
+                    onClick={handleReplyClick}
+                  >
+                    Trả lời
+                  </button>
+                </>
               ) : (
                 <>
+                  <span className="comment-time action-time">{formatRelativeTime(comment.createdAt)}</span>
                   <button 
                     className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
                     onClick={() => handleLike(comment._id)}
@@ -1181,14 +1193,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   >
                     Trả lời
                   </button>
-                  {isAuthenticated && user && (user.username === comment.user.username || user.role === 'admin') && (
-                    <button 
-                      className="delete-button"
-                      onClick={() => handleDelete(comment._id, level > 0, comment.parentId)}
-                      disabled={deleting}
-                    >
-                      {deleting ? 'Đang xóa...' : 'Xóa'}
-                    </button>
+                  {comment.isEdited && !comment.isDeleted && (
+                    <span className="edited-indicator">(đã chỉnh sửa)</span>
                   )}
                 </>
               )}
