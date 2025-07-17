@@ -11,6 +11,7 @@ import { getAuthHeaders } from '../utils/auth';
 import { Editor } from '@tinymce/tinymce-react';
 import bunnyUploadService from '../services/bunnyUploadService';
 import { createUniqueSlug, generateUserProfileUrl } from '../utils/slugUtils';
+import cdnConfig from '../config/bunny';
 
 /**
  * Comment section component for novels
@@ -100,6 +101,30 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const [likingComments, setLikingComments] = useState(new Set());
   const [sortOrder, setSortOrder] = useState(defaultSort);
   const [pinningComments, setPinningComments] = useState(new Set());
+
+  // Image error handler for fallback
+  const handleImageError = (e) => {
+    const img = e.target;
+    const src = img.src;
+    
+    // If it's already the fallback, don't try again
+    if (img.dataset.fallbackAttempted) {
+      img.style.display = 'none';
+      return;
+    }
+    
+    // Mark that we've attempted fallback
+    img.dataset.fallbackAttempted = 'true';
+    
+    // If it's a Bunny.net URL with optimizer parameters, try without them
+    if (src.includes('valvrareteam.b-cdn.net') && src.includes('?')) {
+      const originalUrl = src.split('?')[0];
+      img.src = originalUrl;
+    } else {
+      // As a last resort, hide the image
+      img.style.display = 'none';
+    }
+  };
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -200,7 +225,15 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         
         // Upload to bunny.net comments folder
         const url = await bunnyUploadService.uploadFile(file, 'comments');
-        return url;
+        
+        // Return optimizer-compatible URL
+        const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
+          quality: 85,
+          format: 'auto',
+          optimizer: true
+        });
+        
+        return optimizedUrl;
       } catch (error) {
         console.error('Error uploading image:', error);
         throw new Error('Failed to upload image');
@@ -219,7 +252,15 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           if (file) {
             try {
               const url = await bunnyUploadService.uploadFile(file, 'comments');
-              callback(url, { alt: file.name });
+              
+              // Return optimizer-compatible URL
+              const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
+                quality: 85,
+                format: 'auto',
+                optimizer: true
+              });
+              
+              callback(optimizedUrl, { alt: file.name });
             } catch (error) {
               console.error('Error uploading image:', error);
               alert('Failed to upload image');
@@ -250,6 +291,75 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
     checkBanStatus();
   }, [user, isAuthenticated]);
+
+  // Add image error handling to existing images
+  useEffect(() => {
+    const handleImageErrors = () => {
+      const images = document.querySelectorAll('.comments-section img[src*="valvrareteam.b-cdn.net"]');
+      
+      images.forEach((img, index) => {
+        if (!img.dataset.errorHandlerAdded) {
+          img.addEventListener('error', handleImageError);
+          img.dataset.errorHandlerAdded = 'true';
+        }
+      });
+    };
+
+    // Run after comments are rendered
+    const timer = setTimeout(handleImageErrors, 100);
+    return () => clearTimeout(timer);
+  }, [comments]);
+
+  // Add global debug function (only in development)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      // Add debugging helper to window
+      window.debugCommentImages = () => {
+        const images = document.querySelectorAll('.comments-section img[src*="valvrareteam.b-cdn.net"]');
+        console.log('Found', images.length, 'comment images');
+        
+        images.forEach((img, index) => {
+          console.log(`Image ${index + 1}:`, {
+            src: img.src,
+            complete: img.complete,
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            originalUrl: img.dataset.originalUrl
+          });
+        });
+      };
+
+      // Add specific test function for the broken image URL
+      window.testImageUrl = (url) => {
+        console.log('Testing image URL:', url);
+        
+        // Test both versions
+        const originalUrl = url.split('?')[0];
+        const optimizedUrl = originalUrl + '?quality=85&format=auto&optimizer=true';
+        
+        console.log('Original URL:', originalUrl);
+        console.log('Optimized URL:', optimizedUrl);
+        
+        // Test original
+        const testImg1 = new Image();
+        testImg1.onload = () => console.log('Original URL loaded successfully');
+        testImg1.onerror = () => console.error('Original URL failed to load');
+        testImg1.src = originalUrl;
+        
+        // Test optimized
+        const testImg2 = new Image();
+        testImg2.onload = () => console.log('Optimized URL loaded successfully');
+        testImg2.onerror = () => console.error('Optimized URL failed to load');
+        testImg2.src = optimizedUrl;
+      };
+
+      // Cleanup
+      return () => {
+        delete window.debugCommentImages;
+        delete window.testImageUrl;
+      };
+    }
+  }, []);
 
   // Fetch comments (optimized to reduce refetches)
   const { data: commentsData = [], isLoading: commentsLoading, error: commentsError, refetch } = useQuery({
@@ -666,13 +776,29 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       try {
         const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
         
+
+        
         // Basic HTML sanitization while preserving images and formatting
         let processedContent = contentString;
         
         // Convert line breaks to <br> tags
         processedContent = processedContent.replace(/\n/g, '<br>');
         
-        // Convert URLs to clickable links
+        // Convert URLs to clickable links (but NOT if they're already inside HTML tags)
+        // First, temporarily replace HTML tags with placeholders to avoid processing URLs inside them
+        const htmlTagRegex = /<[^>]+>/g;
+        const htmlTags = [];
+        let placeholderIndex = 0;
+        
+        // Store HTML tags and replace with placeholders
+        processedContent = processedContent.replace(htmlTagRegex, (match) => {
+          const placeholder = `__HTML_TAG_${placeholderIndex}__`;
+          htmlTags[placeholderIndex] = match;
+          placeholderIndex++;
+          return placeholder;
+        });
+        
+        // Now process URLs in the text content (not in HTML tags)
         const urlRegex = /(https?:\/\/[^\s<>"]+)/gi;
         processedContent = processedContent.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
@@ -683,6 +809,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         // Convert email addresses to mailto links
         const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
         processedContent = processedContent.replace(emailRegex, '<a href="mailto:$1">$1</a>');
+        
+        // Restore HTML tags
+        for (let i = 0; i < htmlTags.length; i++) {
+          processedContent = processedContent.replace(`__HTML_TAG_${i}__`, htmlTags[i]);
+        }
         
         // If content doesn't have paragraph structure, wrap in paragraphs
         if (!processedContent.includes('<p')) {
@@ -699,9 +830,22 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             .join('');
         }
         
+        // Process bunny.net image URLs for optimizer compatibility
+        processedContent = cdnConfig.processImageUrls(processedContent);
+        
+        // Add error handling for images - fallback to original URL if optimizer fails
+        processedContent = processedContent.replace(
+          /(<img[^>]*src=")([^"]*valvrareteam\.b-cdn\.net[^"]*?)(")/gi,
+          (match, prefix, url, suffix) => {
+            // Add onerror handler to fallback to original URL without optimizer params
+            const originalUrl = url.split('?')[0]; // Remove query parameters
+            return `${prefix}${url}${suffix.replace('>', ` onerror="this.src='${originalUrl}'; this.onerror=null;" data-original-url="${originalUrl}"`)}`;
+          }
+        );
+        
         return DOMPurify.sanitize(processedContent, {
           ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'u', 's', 'strike', 'del'],
-          ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height', 'style', 'class']
+          ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height', 'style', 'class', 'onerror', 'data-original-url']
         });
       } catch (error) {
         console.error('Error processing comment content:', error);
@@ -1126,7 +1270,29 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                       `,
                       // Remove statusbar and menubar for cleaner look
                       statusbar: false,
-                      menubar: false
+                      menubar: false,
+                      // Override image upload handler for edit mode
+                      images_upload_handler: async (blobInfo, progress) => {
+                        try {
+                          const file = new File([blobInfo.blob()], blobInfo.filename(), {
+                            type: blobInfo.blob().type
+                          });
+                          
+                          const url = await bunnyUploadService.uploadFile(file, 'comments');
+                          
+                          // Return optimizer-compatible URL
+                          const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
+                            quality: 85,
+                            format: 'auto',
+                            optimizer: true
+                          });
+                          
+                          return optimizedUrl;
+                        } catch (error) {
+                          console.error('Error uploading image:', error);
+                          throw new Error('Failed to upload image');
+                        }
+                      }
                     }}
                   />
                 </div>
@@ -1212,7 +1378,29 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                       init={{
                         ...getTinyMCEConfig(),
                         height: 150,
-                        placeholder: 'Viết trả lời...'
+                        placeholder: 'Viết trả lời...',
+                        // Override image upload handler for reply mode
+                        images_upload_handler: async (blobInfo, progress) => {
+                          try {
+                            const file = new File([blobInfo.blob()], blobInfo.filename(), {
+                              type: blobInfo.blob().type
+                            });
+                            
+                            const url = await bunnyUploadService.uploadFile(file, 'comments');
+                            
+                            // Return optimizer-compatible URL
+                            const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
+                              quality: 85,
+                              format: 'auto',
+                              optimizer: true
+                            });
+                            
+                            return optimizedUrl;
+                          } catch (error) {
+                            console.error('Error uploading image:', error);
+                            throw new Error('Failed to upload image');
+                          }
+                        }
                       }}
                     />
                   </div>
