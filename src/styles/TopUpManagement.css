@@ -1293,6 +1293,17 @@
     gap: 12px;
   }
 
+  /* Add flex column for transaction details */
+  .transaction-item .topup-management-transaction-details {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .transaction-item .topup-management-transaction-details > * {
+    width: 100%;
+  }
+
   /* Further reduce font sizes for very small screens */
   .transaction-item,
   .pending-request-item,
