@@ -344,8 +344,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     user.role === 'admin' || 
     user.role === 'moderator' ||
     (user.role === 'pj_user' && novel && (
-      novel.active?.pj_user?.includes(user._id) || 
-      novel.active?.pj_user?.includes(user.username)
+      novel.active?.pj_user?.includes(user.id) || 
+      novel.active?.pj_user?.includes(user._id) ||
+      novel.active?.pj_user?.includes(user.username) ||
+      novel.active?.pj_user?.includes(user.displayName)
     ))
   );
 
@@ -408,8 +410,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     user.role === 'admin' || 
     user.role === 'moderator' || 
     (user?.role === 'pj_user' && (
-      novel?.active?.pj_user?.includes(user._id) || 
-      novel?.active?.pj_user?.includes(user.username)
+      novel?.active?.pj_user?.includes(user.id) || 
+      novel?.active?.pj_user?.includes(user._id) ||
+      novel?.active?.pj_user?.includes(user.username) ||
+      novel?.active?.pj_user?.includes(user.displayName)
     ))
   ), [user, novel?.active?.pj_user]);
   
