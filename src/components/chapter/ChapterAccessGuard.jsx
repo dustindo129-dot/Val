@@ -76,8 +76,10 @@ const ChapterAccessGuard = ({
       case 'draft':
         return user?.role === 'admin' || user?.role === 'moderator' ||
           (user?.role === 'pj_user' && chapter.novel && (
-            chapter.novel.active?.pj_user?.includes(user._id) || 
-            chapter.novel.active?.pj_user?.includes(user.username)
+            chapter.novel.active?.pj_user?.includes(user.id) || 
+            chapter.novel.active?.pj_user?.includes(user._id) ||
+            chapter.novel.active?.pj_user?.includes(user.username) ||
+            chapter.novel.active?.pj_user?.includes(user.displayName)
           )); // Draft accessible to admin, moderator, and assigned pj_user
       case 'paid':
         // SECURITY FIX: Check user permissions first, not content existence
@@ -86,8 +88,10 @@ const ChapterAccessGuard = ({
           user.role === 'admin' || 
           user.role === 'moderator' ||
           (user.role === 'pj_user' && chapter.novel && (
-            chapter.novel.active?.pj_user?.includes(user._id) || 
-            chapter.novel.active?.pj_user?.includes(user.username)
+            chapter.novel.active?.pj_user?.includes(user.id) || 
+            chapter.novel.active?.pj_user?.includes(user._id) ||
+            chapter.novel.active?.pj_user?.includes(user.username) ||
+            chapter.novel.active?.pj_user?.includes(user.displayName)
           ))
         )) {
           return true;
@@ -123,8 +127,10 @@ const ChapterAccessGuard = ({
       user.role === 'admin' || 
       user.role === 'moderator' ||
       (user.role === 'pj_user' && moduleData.novel && (
-        moduleData.novel.active?.pj_user?.includes(user._id) || 
-        moduleData.novel.active?.pj_user?.includes(user.username)
+        moduleData.novel.active?.pj_user?.includes(user.id) || 
+        moduleData.novel.active?.pj_user?.includes(user._id) ||
+        moduleData.novel.active?.pj_user?.includes(user.username) ||
+        moduleData.novel.active?.pj_user?.includes(user.displayName)
       ))
     )) {
       return true;
@@ -153,12 +159,16 @@ const ChapterAccessGuard = ({
     user.role === 'moderator' ||
     (user.role === 'pj_user' && (
       (chapter?.novel && (
-        chapter.novel.active?.pj_user?.includes(user._id) || 
-        chapter.novel.active?.pj_user?.includes(user.username)
+        chapter.novel.active?.pj_user?.includes(user.id) || 
+        chapter.novel.active?.pj_user?.includes(user._id) ||
+        chapter.novel.active?.pj_user?.includes(user.username) ||
+        chapter.novel.active?.pj_user?.includes(user.displayName)
       )) ||
       (moduleData?.novel && (
-        moduleData.novel.active?.pj_user?.includes(user._id) || 
-        moduleData.novel.active?.pj_user?.includes(user.username)
+        moduleData.novel.active?.pj_user?.includes(user.id) || 
+        moduleData.novel.active?.pj_user?.includes(user._id) ||
+        moduleData.novel.active?.pj_user?.includes(user.username) ||
+        moduleData.novel.active?.pj_user?.includes(user.displayName)
       ))
     ))
   );
