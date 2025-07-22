@@ -1,11 +1,216 @@
+/*
+ * ChapterFootnotes.css
+ * Styles for the chapter footnotes component and its child elements
+ * 
+ * Structure:
+ * - Base footnote container and section styles
+ * - Input and textarea styles with floating labels
+ * - Control buttons (move, delete) styles
+ * - Instructions and help text styles
+ * - Footnote content and reference styles
+ * - Responsive adjustments
+ * - Dark mode styles (consolidated at the end)
+ */
+
 .chapter-footnotes {
   margin-top: 3rem;
   padding-top: 2rem;
   border-top: 1px solid var(--border-color, #ddd);
 }
 
-:root.dark-mode .chapter-footnotes {
-  border-top-color: var(--border-color, #444);
+/* Footnote Section Styles with Float Labels */
+.footnote-section {
+  margin: 30px 0;
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.footnote-section h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+.footnote-input-container {
+  position: relative;
+  flex: 1;
+  min-height: 60px;
+}
+
+.footnote-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 20px 12px 8px 12px;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  background-color: white;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.footnote-textarea:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.footnote-textarea:focus + .footnote-float-label,
+.footnote-textarea:not(:placeholder-shown) + .footnote-float-label {
+  color: #007bff;
+  background-color: white;
+  border-color: #007bff;
+}
+
+.footnote-float-label {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #007bff;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  background-color: white;
+  padding: 0 6px;
+  border-radius: 3px;
+  border: 1px solid #007bff;
+}
+
+.footnote-controls {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 10px;
+  gap: 10px;
+}
+
+.footnote-move-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.footnote-move-btn {
+  background: #6c757d;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  font-weight: bold;
+}
+
+.footnote-move-btn:hover:not(:disabled) {
+  background: #545b62;
+  transform: translateY(-1px);
+}
+
+.footnote-move-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.footnote-delete-btn {
+  background: #dc3545;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.footnote-delete-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+/* Instructions Styling */
+.footnote-instructions {
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.footnote-instructions h4 {
+  margin: 0 0 15px 0;
+  color: #1565c0;
+  font-size: 16px;
+}
+
+.footnote-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #424242;
+}
+
+.footnote-instructions li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.footnote-instructions code {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  border: 1px solid #ffcc02;
+}
+
+.footnote-instructions strong {
+  color: #1565c0;
+}
+
+.add-footnote-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.add-footnote-btn:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+}
+
+.add-footnote-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .footnotes-title {
@@ -14,18 +219,25 @@
   color: var(--text-color, #333);
 }
 
-:root.dark-mode .footnotes-title {
-  color: var(--text-color, #e0e0e0);
-}
-
 .footnotes-list {
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--text-color, #333);
 }
 
-:root.dark-mode .footnotes-list {
-  color: var(--text-color, #e0e0e0);
+/* Footnote reference styling */
+.footnote-ref {
+  color: var(--link-color, #0066cc);
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 0;
+  padding: 0 2px;
+}
+
+.footnote-ref:hover {
+  text-decoration: underline;
 }
 
 .footnote-item {
@@ -33,6 +245,9 @@
   padding: 0.5rem;
   border-radius: 4px;
   transition: background-color 0.3s ease;
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  background-color: white;
 }
 
 .footnote-item:target {
@@ -40,9 +255,8 @@
   animation: highlight-fade 2s ease-out;
 }
 
-:root.dark-mode .footnote-item:target {
-  background-color: var(--highlight-color, #2d2d2d);
-  animation: highlight-fade-dark 2s ease-out;
+.footnote-item:last-child {
+  border-bottom: none;
 }
 
 .footnote-backref {
@@ -52,10 +266,6 @@
   font-weight: bold;
 }
 
-:root.dark-mode .footnote-backref {
-  color: var(--link-color, #66b3ff);
-}
-
 .footnote-backref:hover {
   text-decoration: underline;
 }
@@ -63,10 +273,9 @@
 .footnote-content {
   display: inline-block;
   color: var(--text-color, #333);
-}
-
-:root.dark-mode .footnote-content {
-  color: #000;
+  line-height: 1.6;
+  flex: 1;
+  padding: 0;
 }
 
 /* Styles for links within footnote content */
@@ -76,20 +285,12 @@
   word-break: break-word;
 }
 
-:root.dark-mode .footnote-content a {
-  color: var(--link-color, #66b3ff);
-}
-
 .footnote-content a:hover {
   text-decoration: underline;
 }
 
 .footnote-content a:visited {
   color: var(--visited-link-color, #551a8b);
-}
-
-:root.dark-mode .footnote-content a:visited {
-  color: var(--visited-link-color, #bb86fc);
 }
 
 /* External link indicator */
@@ -108,9 +309,32 @@
   font-style: italic;
 }
 
-/* Better line spacing for multi-line footnotes */
-.footnote-content {
-  line-height: 1.6;
+.footnote-content textarea {
+  width: 100%;
+  padding: 15px;
+  min-height: 80px;
+  border: none;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.footnote-content textarea:focus {
+  outline: none;
+  background-color: #f8f9fa;
+}
+
+/* Float Label Footnote Items */
+.footnote-item-improved {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
 }
 
 /* Animation for highlighting when navigating to footnote */
@@ -137,5 +361,145 @@
 
   .footnotes-list {
     font-size: 0.85rem;
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .footnote-item-improved {
+    flex-direction: row;
+    gap: 10px;
+    padding: 6px;
+  }
+
+  .footnote-controls {
+    align-self: center;
+    padding: 2px;
+  }
+}
+
+/* Footnote section styles */
+.footnote-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  padding: 15px 10px;
+  border-right: 1px solid #ddd;
+}
+
+/* Dark Mode Styles - Consolidated */
+:root.dark-mode {
+  /* Section styles */
+  .chapter-footnotes {
+    border-top-color: var(--border-color, #444);
+  }
+
+  .footnote-section {
+    background: #1a1a1a;
+    border: 1px solid #333;
+  }
+
+  .footnote-section h3,
+  .footnote-section p {
+    color: #e0e0e0;
+  }
+
+  /* Textarea and input styles */
+  .footnote-textarea {
+    background-color: #333;
+    border-color: #555;
+    color: #e0e0e0;
+  }
+
+  .footnote-textarea:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  }
+
+  .footnote-float-label {
+    color: #60a5fa;
+    background-color: #333;
+    border-color: #60a5fa;
+  }
+
+  .footnote-textarea:focus + .footnote-float-label,
+  .footnote-textarea:not(:placeholder-shown) + .footnote-float-label {
+    color: #60a5fa;
+    background-color: #333;
+    border-color: #60a5fa;
+  }
+
+  /* Instructions styles */
+  .footnote-instructions {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+  }
+
+  .footnote-instructions h4 {
+    color: #93c5fd;
+  }
+
+  .footnote-instructions ol,
+  .footnote-instructions li {
+    color: #d1d5db;
+  }
+
+  .footnote-instructions code {
+    background: #451a03;
+    color: #fbbf24;
+    border-color: #d97706;
+  }
+
+  .footnote-instructions strong {
+    color: #93c5fd;
+  }
+
+  /* Button styles */
+  .add-footnote-btn {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  }
+
+  .add-footnote-btn:hover {
+    background: linear-gradient(135deg, #1e40af, #1e3a8a);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  }
+
+  /* Content styles */
+  .footnotes-title,
+  .footnotes-list,
+  .footnote-content {
+    color: var(--text-color, #e0e0e0);
+  }
+
+  /* Link styles */
+  .footnote-ref,
+  .footnote-backref,
+  .footnote-content a {
+    color: var(--link-color, #66b3ff);
+  }
+
+  .footnote-content a:visited {
+    color: var(--visited-link-color, #bb86fc);
+  }
+
+  /* Item styles */
+  .footnote-item-improved {
+    background-color: #2d2d2d;
+    border-color: #444;
+  }
+
+  .footnote-item {
+    background-color: #1a1a1a;
+    border-bottom-color: #444;
+  }
+
+  .footnote-item:target {
+    background-color: var(--highlight-color, #2d2d2d);
   }
 } 
