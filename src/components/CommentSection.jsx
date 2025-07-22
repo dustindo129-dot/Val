@@ -1225,44 +1225,53 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       try {
         const contentString = typeof content === 'object' ? JSON.stringify(content) : String(content);
         
-
-        
         // Basic HTML sanitization while preserving images and formatting
         let processedContent = contentString;
         
         // Convert line breaks to <br> tags
         processedContent = processedContent.replace(/\n/g, '<br>');
         
-        // Convert URLs to clickable links (but NOT if they're already inside HTML tags)
-        // First, temporarily replace HTML tags with placeholders to avoid processing URLs inside them
-        const htmlTagRegex = /<[^>]+>/g;
+        // Store existing HTML tags to avoid processing their contents
         const htmlTags = [];
-        let placeholderIndex = 0;
+        let tempContent = processedContent;
         
-        // Store HTML tags and replace with placeholders
-        processedContent = processedContent.replace(htmlTagRegex, (match) => {
-          const placeholder = `__HTML_TAG_${placeholderIndex}__`;
-          htmlTags[placeholderIndex] = match;
-          placeholderIndex++;
+        // First extract all existing HTML tags
+        tempContent = tempContent.replace(/<[^>]+>/g, (match) => {
+          const placeholder = `__HTML_TAG_${htmlTags.length}__`;
+          htmlTags.push(match);
           return placeholder;
         });
         
-        // Now process URLs in the text content (not in HTML tags)
-        const urlRegex = /(https?:\/\/[^\s<>"]+)/gi;
-        processedContent = processedContent.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+        // Now process URLs in the remaining text
+        // Handle URLs that are not already in anchor tags
+        tempContent = tempContent.replace(/(https?:\/\/[^\s<>"]+)/gi, (match) => {
+          // Check if this URL is not already part of a placeholder
+          if (!match.includes('__HTML_TAG_')) {
+            return `<a href="${match}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+          }
+          return match;
+        });
 
         // Convert www links to clickable links
-        const wwwRegex = /(^|[^\/])(www\.[^\s<>"]+)/gi;
-        processedContent = processedContent.replace(wwwRegex, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer">$2</a>');
+        tempContent = tempContent.replace(/(^|[^\/])(www\.[^\s<>"]+)/gi, (match, p1, p2) => {
+          if (!match.includes('__HTML_TAG_')) {
+            return `${p1}<a href="http://${p2}" target="_blank" rel="noopener noreferrer">${p2}</a>`;
+          }
+          return match;
+        });
 
         // Convert email addresses to mailto links
-        const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
-        processedContent = processedContent.replace(emailRegex, '<a href="mailto:$1">$1</a>');
+        tempContent = tempContent.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi, (match) => {
+          if (!match.includes('__HTML_TAG_')) {
+            return `<a href="mailto:${match}">${match}</a>`;
+          }
+          return match;
+        });
         
-        // Restore HTML tags
-        for (let i = 0; i < htmlTags.length; i++) {
-          processedContent = processedContent.replace(`__HTML_TAG_${i}__`, htmlTags[i]);
-        }
+        // Restore original HTML tags
+        processedContent = tempContent.replace(/__HTML_TAG_(\d+)__/g, (match, index) => {
+          return htmlTags[parseInt(index)] || '';
+        });
         
         // If content doesn't have paragraph structure, wrap in paragraphs
         if (!processedContent.includes('<p')) {
@@ -1282,12 +1291,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         // Process bunny.net image URLs for optimizer compatibility
         processedContent = cdnConfig.processImageUrls(processedContent);
         
-        // Add error handling for images - fallback to original URL if optimizer fails
+        // Add error handling for images
         processedContent = processedContent.replace(
           /(<img[^>]*src=")([^"]*valvrareteam\.b-cdn\.net[^"]*?)(")/gi,
           (match, prefix, url, suffix) => {
-            // Add onerror handler to fallback to original URL without optimizer params
-            const originalUrl = url.split('?')[0]; // Remove query parameters
+            const originalUrl = url.split('?')[0];
             return `${prefix}${url}${suffix.replace('>', ` onerror="this.src='${originalUrl}'; this.onerror=null;" data-original-url="${originalUrl}"`)}`;
           }
         );

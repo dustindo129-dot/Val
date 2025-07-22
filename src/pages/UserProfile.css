@@ -297,7 +297,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 }
 
 :root.dark-mode .notes-content p {
-  color: #a0a0a0;
+  color: #fff;
 }
 
 /* Introduction Editor Styles */
