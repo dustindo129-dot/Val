@@ -309,6 +309,7 @@
   font-size: 0.85rem;
   line-height: 1.5;
   padding: 0.25rem 0.5rem;
+  position: relative;
 }
 
 .like-button:disabled {
@@ -331,6 +332,49 @@
 .like-button .fa-thumbs-up {
   color: #6c757d;
   transition: color 0.2s ease;
+}
+
+/* Facebook-style like states */
+.like-button.pending {
+  color: #ffc107;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.like-button.pending::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px dashed #ffc107;
+  border-radius: 6px;
+  animation: pendingPulse 2s infinite;
+}
+
+.like-button.error {
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.like-button.error::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px solid #dc3545;
+  border-radius: 6px;
+}
+
+@keyframes pendingPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .like-icon {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import '../styles/components/CommentSection.css';
 import axios from 'axios';
 import config from '../config/config';
@@ -12,6 +12,279 @@ import { Editor } from '@tinymce/tinymce-react';
 import bunnyUploadService from '../services/bunnyUploadService';
 import { createUniqueSlug, generateUserProfileUrl } from '../utils/slugUtils';
 import cdnConfig from '../config/bunny';
+
+// Facebook-style Like System Components
+class LikeQueue {
+  constructor(sendToServer) {
+    this.queue = new Map(); // commentId -> { targetState, timestamp, retryCount }
+    this.processing = new Set();
+    this.sendToServer = sendToServer;
+    this.deviceId = this.generateDeviceId();
+  }
+
+  generateDeviceId() {
+    return localStorage.getItem('deviceId') || 
+           (() => {
+             const id = 'device_' + Math.random().toString(36).substr(2, 9);
+             localStorage.setItem('deviceId', id);
+             return id;
+           })();
+  }
+
+  async addToQueue(commentId, currentState, userId) {
+    const timestamp = Date.now();
+    const targetState = !currentState;
+    
+    // Store intended final state with metadata
+    this.queue.set(commentId, {
+      targetState,
+      timestamp,
+      userId,
+      deviceId: this.deviceId,
+      retryCount: 0
+    });
+
+    // Process if not already processing
+    if (!this.processing.has(commentId)) {
+      await this.processQueue(commentId);
+    }
+  }
+
+  async processQueue(commentId) {
+    this.processing.add(commentId);
+
+    try {
+      while (this.queue.has(commentId)) {
+        const queueItem = this.queue.get(commentId);
+        this.queue.delete(commentId);
+
+        try {
+          // Make API call
+          await this.sendToServer(commentId, queueItem);
+        } catch (error) {
+          // Handle retry logic
+          if (queueItem.retryCount < 3 && this.isRetryableError(error)) {
+            queueItem.retryCount++;
+            this.queue.set(commentId, queueItem);
+            
+            // Exponential backoff
+            await this.delay(Math.pow(2, queueItem.retryCount) * 1000);
+          } else {
+            throw error; // Let error recovery handle it
+          }
+        }
+      }
+    } finally {
+      this.processing.delete(commentId);
+    }
+  }
+
+  isRetryableError(error) {
+    return error.code === 'NETWORK_ERROR' || 
+           error.response?.status >= 500 ||
+           error.code === 'TIMEOUT';
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  clear() {
+    this.queue.clear();
+    this.processing.clear();
+  }
+}
+
+class LikeBatcher {
+  constructor(flushCallback) {
+    this.batch = new Map();
+    this.timeout = null;
+    this.flushCallback = flushCallback;
+    this.batchSize = 10;
+    this.batchDelay = 50; // 50ms
+  }
+
+  addToBatch(commentId, data) {
+    this.batch.set(commentId, data);
+    
+    // Flush if batch is full
+    if (this.batch.size >= this.batchSize) {
+      this.flush();
+      return;
+    }
+
+    // Set timeout if not already set
+    if (!this.timeout) {
+      this.timeout = setTimeout(() => this.flush(), this.batchDelay);
+    }
+  }
+
+  async flush() {
+    if (this.batch.size === 0) return;
+
+    const actions = Array.from(this.batch.entries());
+    this.batch.clear();
+    
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+
+    // Send batch to callback
+    await this.flushCallback(actions);
+  }
+
+  clear() {
+    this.batch.clear();
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+  }
+}
+
+class LikeRateLimiter {
+  constructor() {
+    this.actionCount = new Map();
+    this.windowStart = new Map();
+    this.maxActionsPerMinute = 10;
+    this.windowDuration = 60000; // 1 minute
+  }
+
+  canLike(commentId) {
+    const now = Date.now();
+    const windowStart = this.windowStart.get(commentId) || 0;
+    const count = this.actionCount.get(commentId) || 0;
+
+    // Reset window if needed
+    if (now - windowStart > this.windowDuration) {
+      this.actionCount.set(commentId, 0);
+      this.windowStart.set(commentId, now);
+      return true;
+    }
+
+    return count < this.maxActionsPerMinute;
+  }
+
+  recordAction(commentId) {
+    const count = this.actionCount.get(commentId) || 0;
+    this.actionCount.set(commentId, count + 1);
+  }
+
+  clear() {
+    this.actionCount.clear();
+    this.windowStart.clear();
+  }
+}
+
+class LikeErrorRecovery {
+  constructor(updateCallback) {
+    this.pendingActions = new Map();
+    this.updateCallback = updateCallback;
+    this.dbName = 'CommentLikes';
+    this.storeName = 'pendingLikes';
+    this.initDB();
+  }
+
+  async initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName, { keyPath: 'commentId' });
+        }
+      };
+    });
+  }
+
+  async storePendingAction(commentId, action) {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readwrite');
+    const store = transaction.objectStore(this.storeName);
+    
+    await new Promise((resolve, reject) => {
+      const request = store.put({ commentId, ...action, timestamp: Date.now() });
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    this.pendingActions.set(commentId, action);
+    this.updateCallback(commentId, 'pending');
+  }
+
+  async removePendingAction(commentId) {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readwrite');
+    const store = transaction.objectStore(this.storeName);
+    
+    await new Promise((resolve, reject) => {
+      const request = store.delete(commentId);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    this.pendingActions.delete(commentId);
+  }
+
+  async retryPendingActions() {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readonly');
+    const store = transaction.objectStore(this.storeName);
+    
+    const pendingActions = await new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    for (const action of pendingActions) {
+      try {
+        // Retry the action
+        await this.retryAction(action);
+        await this.removePendingAction(action.commentId);
+      } catch (error) {
+        console.error('Failed to retry action:', error);
+      }
+    }
+  }
+
+  async retryAction(action) {
+    // This will be implemented by the component
+    throw new Error('retryAction must be implemented');
+  }
+}
+
+class LikeConflictResolver {
+  constructor() {
+    this.lastActionTimestamp = new Map();
+  }
+
+  recordAction(commentId, timestamp) {
+    this.lastActionTimestamp.set(commentId, timestamp);
+  }
+
+  shouldAcceptUpdate(commentId, serverTimestamp) {
+    const lastAction = this.lastActionTimestamp.get(commentId);
+    
+    // Accept if we haven't acted on this comment or server is newer
+    return !lastAction || serverTimestamp > lastAction;
+  }
+
+  clear() {
+    this.lastActionTimestamp.clear();
+  }
+}
 
 /**
  * Comment section component for novels
@@ -98,9 +371,267 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const [userToBlock, setUserToBlock] = useState(null);
   const [message, setMessage] = useState(null);
   const [isBanned, setIsBanned] = useState(false);
-  const [likingComments, setLikingComments] = useState(new Set());
   const [sortOrder, setSortOrder] = useState(defaultSort);
   const [pinningComments, setPinningComments] = useState(new Set());
+  
+  // Facebook-style like system state
+  const [likeStates, setLikeStates] = useState(new Map()); // commentId -> { isLiked, count, status }
+  const likeSystemRef = useRef(null);
+
+  // Initialize Facebook-style like system
+  useEffect(() => {
+    const likeSystem = {
+      queue: new LikeQueue(async (commentId, queueItem) => {
+        return await sendLikeToServer(commentId, queueItem);
+      }),
+      
+      batcher: new LikeBatcher(async (actions) => {
+        await processBatchedLikes(actions);
+      }),
+      
+      rateLimiter: new LikeRateLimiter(),
+      
+      errorRecovery: new LikeErrorRecovery((commentId, status) => {
+        updateLikeState(commentId, { status });
+      }),
+      
+      conflictResolver: new LikeConflictResolver()
+    };
+
+    // Implement retry action for error recovery
+    likeSystem.errorRecovery.retryAction = async (action) => {
+      await likeSystem.queue.addToQueue(action.commentId, !action.targetState, action.userId);
+    };
+
+    likeSystemRef.current = likeSystem;
+
+    // Setup online/offline handlers
+    const handleOnline = () => {
+      likeSystem.errorRecovery.retryPendingActions();
+    };
+
+    const handleOffline = () => {
+      console.log('Offline - likes will be queued');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Retry pending actions on component mount
+    if (navigator.onLine) {
+      likeSystem.errorRecovery.retryPendingActions();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      
+      // Cleanup
+      likeSystem.queue.clear();
+      likeSystem.batcher.clear();
+      likeSystem.rateLimiter.clear();
+      likeSystem.conflictResolver.clear();
+    };
+  }, []);
+
+  // Update like state helper
+  const updateLikeState = useCallback((commentId, updates) => {
+    setLikeStates(prev => {
+      const current = prev.get(commentId) || { isLiked: false, count: 0, status: 'idle' };
+      const newState = { ...current, ...updates };
+      const newMap = new Map(prev);
+      newMap.set(commentId, newState);
+      return newMap;
+    });
+  }, []);
+
+  // Send like to server
+  const sendLikeToServer = async (commentId, queueItem) => {
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/comments/${commentId}/like`,
+        {
+          timestamp: queueItem.timestamp,
+          deviceId: queueItem.deviceId
+        },
+        { 
+          headers: getAuthHeaders(),
+          timeout: 10000 // 10 second timeout
+        }
+      );
+
+      const data = response.data;
+
+      // Update state with server response
+      updateLikeState(commentId, {
+        isLiked: data.liked,
+        count: data.likes,
+        status: 'success',
+        serverTimestamp: data.timestamp || Date.now()
+      });
+
+      // Remove from error recovery if it was there
+      await likeSystemRef.current.errorRecovery.removePendingAction(commentId);
+
+      return data;
+    } catch (error) {
+      // Handle different types of errors
+      if (error.code === 'ECONNABORTED') {
+        error.code = 'TIMEOUT';
+      } else if (!navigator.onLine) {
+        error.code = 'NETWORK_ERROR';
+      }
+
+      // Store for retry if it's a recoverable error
+      if (likeSystemRef.current.queue.isRetryableError(error)) {
+        await likeSystemRef.current.errorRecovery.storePendingAction(commentId, queueItem);
+      } else {
+        // Revert optimistic update for non-recoverable errors
+        const currentComment = comments.find(c => c._id === commentId) || 
+                             comments.find(c => c.replies?.some(r => r._id === commentId))?.replies?.find(r => r._id === commentId);
+        
+        updateLikeState(commentId, {
+          isLiked: currentComment?.likes?.includes(user?.id || user?._id) || false,
+          count: currentComment?.likes?.length || 0,
+          status: 'error'
+        });
+      }
+
+      throw error;
+    }
+  };
+
+  // Process batched likes
+  const processBatchedLikes = async (actions) => {
+    // For now, process individually - could be optimized with a batch endpoint
+    for (const [commentId, queueItem] of actions) {
+      try {
+        await likeSystemRef.current.queue.addToQueue(commentId, !queueItem.targetState, queueItem.userId);
+      } catch (error) {
+        console.error('Failed to process batched like:', error);
+      }
+    }
+  };
+
+  // Initialize like states from comments
+  useEffect(() => {
+    if (comments.length > 0 && user) {
+      const userId = user.id || user._id;
+      
+      comments.forEach(comment => {
+        // Initialize root comment
+        if (!likeStates.has(comment._id)) {
+          updateLikeState(comment._id, {
+            isLiked: comment.likes?.includes(userId) || false,
+            count: comment.likes?.length || 0,
+            status: 'idle'
+          });
+        }
+
+        // Initialize replies
+        if (comment.replies) {
+          comment.replies.forEach(reply => {
+            if (!likeStates.has(reply._id)) {
+              updateLikeState(reply._id, {
+                isLiked: reply.likes?.includes(userId) || false,
+                count: reply.likes?.length || 0,
+                status: 'idle'
+              });
+            }
+          });
+        }
+      });
+    }
+  }, [comments, user, likeStates, updateLikeState]);
+
+  // Main like handler - Facebook style
+  const handleLike = useCallback(async (commentId) => {
+    if (!isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
+      return;
+    }
+
+    if (!user || (!user._id && !user.id)) {
+      alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
+      return;
+    }
+
+    if (isBanned) {
+      alert('Bạn không thể thích bình luận vì đã bị chặn');
+      return;
+    }
+
+    const userId = user.id || user._id;
+    const likeSystem = likeSystemRef.current;
+
+    // Check rate limit
+    if (!likeSystem.rateLimiter.canLike(commentId)) {
+      alert('Bạn đang thích quá nhanh. Vui lòng chờ một chút.');
+      return;
+    }
+
+    // Get current state
+    const currentState = likeStates.get(commentId) || { isLiked: false, count: 0 };
+    
+    // Record action for conflict resolution
+    const timestamp = Date.now();
+    likeSystem.conflictResolver.recordAction(commentId, timestamp);
+    
+    // Record rate limit action
+    likeSystem.rateLimiter.recordAction(commentId);
+
+    // Optimistic update
+    updateLikeState(commentId, {
+      isLiked: !currentState.isLiked,
+      count: currentState.isLiked ? currentState.count - 1 : currentState.count + 1,
+      status: 'loading'
+    });
+
+    // Add to queue
+    try {
+      await likeSystem.queue.addToQueue(commentId, currentState.isLiked, userId);
+    } catch (error) {
+      console.error('Failed to add like to queue:', error);
+      
+      // Revert optimistic update
+      updateLikeState(commentId, {
+        isLiked: currentState.isLiked,
+        count: currentState.count,
+        status: 'error'
+      });
+    }
+  }, [isAuthenticated, user, isBanned, likeStates, updateLikeState]);
+
+  // Handle real-time updates via SSE
+  useEffect(() => {
+    const handleRealtimeUpdate = (event) => {
+      const data = event.detail;
+      
+      if (data.type === 'comment_like_update') {
+        const { commentId, likeCount, likedBy, timestamp } = data;
+        const likeSystem = likeSystemRef.current;
+        
+        // Check if we should accept this update (conflict resolution)
+        if (likeSystem.conflictResolver.shouldAcceptUpdate(commentId, timestamp)) {
+          const userId = user?.id || user?._id;
+          
+          updateLikeState(commentId, {
+            isLiked: likedBy.includes(userId),
+            count: likeCount,
+            status: 'success',
+            serverTimestamp: timestamp
+          });
+        }
+      }
+    };
+
+    // Listen for real-time updates
+    window.addEventListener('realtime_update', handleRealtimeUpdate);
+    
+    return () => {
+      window.removeEventListener('realtime_update', handleRealtimeUpdate);
+    };
+  }, [user, updateLikeState]);
 
   // Image error handler for fallback
   const handleImageError = (e) => {
@@ -669,88 +1200,6 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     }
   };
 
-  // Add this function before the RenderComment component
-  const handleLike = async (commentId) => {
-    if (!isAuthenticated) {
-      window.dispatchEvent(new CustomEvent('openLoginModal'));
-      return;
-    }
-
-    if (!user || (!user._id && !user.id)) {
-      alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
-      console.error('Thông tin người dùng bị thiếu:', user);
-      return;
-    }
-
-    // Prevent multiple simultaneous likes on the same comment
-    if (likingComments.has(commentId)) {
-      return;
-    }
-
-    // Use user.id since that's the property in the user object
-    const userId = user.id || user._id;
-
-    if (isBanned) {
-      alert('Bạn không thể thích bình luận vì đã bị chặn');
-      return;
-    }
-
-    try {
-      // Add comment to loading state
-      setLikingComments(prev => new Set([...prev, commentId]));
-
-      // Send the user ID in the request body to ensure it's available
-      const response = await axios.post(
-        `${config.backendUrl}/api/comments/${commentId}/like`,
-        {},
-        { headers: getAuthHeaders() }
-      );
-
-      const data = response.data;
-
-      // Update comments state to reflect the new like status
-      setComments(prevComments => 
-        prevComments.map(comment => {
-          if (comment._id === commentId) {
-            return {
-              ...comment,
-              likes: data.liked 
-                ? [...(comment.likes || []), userId]
-                : (comment.likes || []).filter(id => id !== userId)
-            };
-          }
-          // Also check replies
-          if (comment.replies) {
-            return {
-              ...comment,
-              replies: comment.replies.map(reply => 
-                reply._id === commentId
-                  ? {
-                      ...reply,
-                      likes: data.liked 
-                        ? [...(reply.likes || []), userId]
-                        : (reply.likes || []).filter(id => id !== userId)
-                    }
-                  : reply
-              )
-            };
-          }
-          return comment;
-        })
-      );
-    } catch (err) {
-      console.error('Error liking comment:', err);
-      alert(`Không thể thích bình luận: ${err.message}`);
-    } finally {
-      // Remove comment from loading state
-      setLikingComments(prev => {
-        const next = new Set(prev);
-        next.delete(commentId);
-        return next;
-      });
-    }
-  };
-
   // Create a recursive component for rendering comments and their replies
   const RenderComment = ({ comment, level = 0 }) => {
     // Move reply state inside this component
@@ -1067,10 +1516,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     // Use user.id since that's the property in the user object
     const userId = user?.id || user?._id;
     
-    // Check if the current user has liked this comment
-    const isLikedByCurrentUser = isAuthenticated && user && userId && 
-      comment.likes && Array.isArray(comment.likes) && 
-      comment.likes.some(likeId => likeId === userId);
+    // Check if the current user has liked this comment using the new like system
+    const likeState = likeStates.get(comment._id) || { isLiked: false, count: 0, status: 'idle' };
+    const isLikedByCurrentUser = likeState.isLiked;
 
     // Check if user can pin comments
     // For novel detail pages: only novel-level comments can be pinned
@@ -1344,14 +1792,17 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 <>
                   <span className="comment-time action-time">{formatRelativeTime(comment.createdAt)}</span>
                   <button 
-                    className={`like-button ${isLikedByCurrentUser ? 'liked' : ''}`}
+                    className={`like-button ${isLikedByCurrentUser ? 'liked' : ''} ${likeState.status === 'pending' ? 'pending' : ''} ${likeState.status === 'error' ? 'error' : ''}`}
                     onClick={() => handleLike(comment._id)}
-                    disabled={likingComments.has(comment._id)}
+                    disabled={likeState.status === 'loading'}
                   >
                     <span className="like-icon comment-like-icon">
-                      {likingComments.has(comment._id) ? '⏳' : <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
+                      {likeState.status === 'loading' ? '⏳' : 
+                       likeState.status === 'pending' ? '⏸️' :
+                       likeState.status === 'error' ? '❌' :
+                       <i className={`fa-solid fa-thumbs-up ${isLikedByCurrentUser ? 'liked' : ''}`}></i>}
                     </span>
-                    <span className="like-count">{comment.likes ? comment.likes.length : 0}</span>
+                    <span className="like-count">{likeState.count}</span>
                   </button>
                   <button 
                     className="reply-button"
