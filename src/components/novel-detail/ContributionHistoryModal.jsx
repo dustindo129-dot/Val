@@ -157,7 +157,7 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
                                     Hệ thống
                                   </>
                               ) : (
-                                  contribution.user?.username || 'Người dùng ẩn danh'
+                                  contribution.user?.displayName || 'Người dùng ẩn danh'
                               )}
                             </div>
                             <div className="contribution-date">

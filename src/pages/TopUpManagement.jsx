@@ -406,7 +406,7 @@ const TopUpManagement = () => {
   // Handle user selection for transaction filtering
   const handleTransactionUserSelect = (user) => {
     setSelectedTransactionUser(user);
-    setTransactionUsername(user.username);
+    setTransactionUsername(user.displayName || user.username);
     setShowTransactionSearch(false);
     
     // Fetch transactions for selected user
