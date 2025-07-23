@@ -1601,7 +1601,17 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 </div>
               )}
             </div>
-            {isAuthenticated && user && !(comment.isDeleted && !comment.adminDeleted) && (comment.user.username !== user.username || canPinThisComment) && (
+            {isAuthenticated && user && !(comment.isDeleted && !comment.adminDeleted) && (
+              // Show dropdown if:
+              // 1. It's the user's own comment OR
+              // 2. User can pin the comment OR
+              // 3. It's someone else's comment (for blocking)
+              (comment.user.username === user.username || 
+               comment.user.id === user.id || 
+               comment.user._id === user._id ||
+               comment.user.displayName === user.displayName ||
+               canPinThisComment ||
+               comment.user.username !== user.username)) && (
               <div className="comment-dropdown" ref={dropdownRef}>
                 <button
                   className="comment-dropdown-trigger"
@@ -1624,7 +1634,10 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                         {pinningComments.has(comment._id) ? '⏳' : (comment.isPinned ? '📌' : '📌')} {comment.isPinned ? 'Bỏ ghim' : 'Ghim'}
                       </button>
                     )}
-                    {comment.user.username === user.username && (
+                    {(comment.user.username === user.username || 
+                       comment.user.id === user.id || 
+                       comment.user._id === user._id ||
+                       comment.user.displayName === user.displayName) && (
                       <button
                         className="comment-dropdown-item"
                         onClick={() => {
@@ -1635,7 +1648,10 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                         ✏️ Chỉnh sửa
                       </button>
                     )}
-                    {comment.user.username === user.username && (
+                    {(comment.user.username === user.username || 
+                      comment.user.id === user.id || 
+                      comment.user._id === user._id ||
+                      comment.user.displayName === user.displayName) && (
                       <button
                         className="comment-dropdown-item"
                         onClick={() => {
