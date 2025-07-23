@@ -19,6 +19,18 @@ import { useAuth } from '../../context/AuthContext';
 import '../../styles/Auth.css';
 
 /**
+ * Validates username format
+ * @param {string} username - Username to validate
+ * @returns {boolean} True if username is valid
+ */
+const isValidUsername = (username) => {
+  // Only allow letters, numbers, and underscores
+  // Username must be 3-20 characters long
+  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+  return usernameRegex.test(username);
+};
+
+/**
  * SignUp component for user registration
  * @param {Object} props - Component props
  * @param {Function} props.onClose - Callback function when modal is closed
@@ -57,14 +69,30 @@ const SignUp = ({ onClose, onLogin }) => {
    * @returns {boolean} True if form is valid, false otherwise
    */
   const validateForm = () => {
+    // Check for empty fields
     if (!formData.username || !formData.email || !formData.password || !formData.verifyPassword) {
       setError('Vui lòng điền tất cả thông tin');
       return false;
     }
+
+    // Validate username format
+    if (!isValidUsername(formData.username)) {
+      setError('Tên người dùng chỉ được chứa chữ cái, số và dấu gạch dưới (_), độ dài từ 3-20 ký tự');
+      return false;
+    }
+
+    // Check if username is same as email
+    if (formData.username === formData.email) {
+      setError('Tên người dùng không được giống với email');
+      return false;
+    }
+
+    // Validate password match
     if (formData.password !== formData.verifyPassword) {
       setError('Mật khẩu không khớp');
       return false;
     }
+
     return true;
   };
 
@@ -107,6 +135,8 @@ const SignUp = ({ onClose, onLogin }) => {
           placeholder="Tên đăng nhập (*)"
           className="auth-input"
           required
+          pattern="[a-zA-Z0-9_]{3,20}"
+          title="Tên người dùng chỉ được chứa chữ cái, số và dấu gạch dưới (_), độ dài từ 3-20 ký tự"
         />
       </div>
 
