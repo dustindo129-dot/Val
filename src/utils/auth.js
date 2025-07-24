@@ -41,22 +41,13 @@ export const decodeJWT = (token) => {
 // Helper function to check if token is expired or will expire soon
 export const isTokenExpired = (token, bufferMinutes = 5) => {
   const payload = decodeJWT(token);
-  if (!payload || !payload.exp) {
-    console.log(`[IS TOKEN EXPIRED] Invalid payload or no exp field`);
-    return true;
-  }
+  if (!payload || !payload.exp) return true;
   
   const now = Math.floor(Date.now() / 1000);
   const bufferSeconds = bufferMinutes * 60;
-  const expiresAt = payload.exp;
-  const expiresWithBuffer = now + bufferSeconds;
-  const isExpired = expiresAt <= expiresWithBuffer;
-  
-  console.log(`[IS TOKEN EXPIRED] Current time: ${now}, Token expires: ${expiresAt}, Buffer: ${bufferMinutes}min, Expires with buffer: ${expiresWithBuffer}, Is expired: ${isExpired}`);
-  console.log(`[IS TOKEN EXPIRED] Time until expiry: ${Math.round((expiresAt - now) / 60)} minutes`);
   
   // Consider token expired if it expires within the buffer time
-  return isExpired;
+  return payload.exp <= (now + bufferSeconds);
 };
 
 // Helper function to get token expiration time
@@ -107,17 +98,8 @@ export const getValidToken = () => {
 
 // Helper function to check if token needs refresh (expires within 10 minutes)
 export const shouldRefreshToken = (token) => {
-  console.log('[SHOULD REFRESH TOKEN] Checking if token needs refresh...');
-  
-  if (!isValidJWT(token)) {
-    console.log('[SHOULD REFRESH TOKEN] Token is not valid JWT, no refresh needed');
-    return false;
-  }
-  
-  const needsRefresh = isTokenExpired(token, 10); // Refresh if expires within 10 minutes
-  console.log(`[SHOULD REFRESH TOKEN] Token needs refresh: ${needsRefresh}`);
-  
-  return needsRefresh;
+  if (!isValidJWT(token)) return false;
+  return isTokenExpired(token, 10); // Refresh if expires within 10 minutes
 };
 
 // Helper function to create authorization headers
