@@ -1107,13 +1107,25 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
     // Check if user is admin or moderator
     const isModAction = user.role === 'admin' || user.role === 'moderator';
+    const isOwnComment = comment => {
+      return comment.user.username === user.username || 
+             comment.user.id === user.id || 
+             comment.user._id === user._id ||
+             comment.user.displayName === user.displayName;
+    };
     
-    if (isModAction) {
-      // Show reason modal for admin/moderator
+    // Find the comment to be deleted
+    const targetComment = comments.find(c => c._id === commentId) || 
+                         comments.find(c => c.replies?.some(r => r._id === commentId))?.replies?.find(r => r._id === commentId);
+    
+    if (!targetComment) return;
+
+    // If it's a mod action on someone else's comment, show the reason modal
+    if (isModAction && !isOwnComment(targetComment)) {
       setCommentToDelete({ commentId, isReply, parentCommentId });
       setShowDeleteReasonModal(true);
     } else {
-      // Regular user deletion with confirmation
+      // For own comments or regular user deletion, show confirmation
       if (!window.confirm('Bạn có chắc chắn muốn xóa bình luận này không?')) {
         return;
       }
