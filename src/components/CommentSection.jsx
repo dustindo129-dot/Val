@@ -1097,7 +1097,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   };
 
   // Handle delete with reason modal for admin/moderator
-  const handleDeleteWithReason = (commentId, isReply = false, parentCommentId = null) => {
+  const handleDeleteWithReason = (commentId, isReply = false, parentCommentId = null, targetComment = null) => {
     if (!isAuthenticated || deleting) return;
     
     if (!user || (!user._id && !user.id)) {
@@ -1107,6 +1107,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
     // Check if user is admin or moderator
     const isModAction = user.role === 'admin' || user.role === 'moderator';
+
     const isOwnComment = comment => {
       return comment.user.username === user.username || 
              comment.user.id === user.id || 
@@ -1114,14 +1115,13 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
              comment.user.displayName === user.displayName;
     };
     
-    // Find the comment to be deleted
-    const targetComment = comments.find(c => c._id === commentId) || 
-                         comments.find(c => c.replies?.some(r => r._id === commentId))?.replies?.find(r => r._id === commentId);
-    
+    // Use the passed comment object instead of searching for it
     if (!targetComment) return;
 
     // If it's a mod action on someone else's comment, show the reason modal
-    if (isModAction && !isOwnComment(targetComment)) {
+    const shouldShowModal = isModAction && !isOwnComment(targetComment);
+
+    if (shouldShowModal) {
       setCommentToDelete({ commentId, isReply, parentCommentId });
       setShowDeleteReasonModal(true);
     } else {
@@ -1715,7 +1715,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                       <button
                         className="comment-dropdown-item"
                         onClick={() => {
-                          handleDeleteWithReason(comment._id, level > 0, comment.parentId);
+                          handleDeleteWithReason(comment._id, level > 0, comment.parentId, comment);
                           setShowDropdown(false);
                         }}
                         disabled={deleting}
