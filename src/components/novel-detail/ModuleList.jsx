@@ -10,6 +10,7 @@ import LoadingSpinner from '../LoadingSpinner';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
 import axios from 'axios';
 import config from '../../config/config';
+import cdnConfig from '../../config/bunny';
 
 // Lazy load ModuleChapters for consistency
 const ModuleChapters = lazy(() => import('./ModuleChapters'));
@@ -324,7 +325,7 @@ const ModuleList = memo(({
           <div className="module-content">
             <div className="module-cover">
               <img 
-                src={module.illustration || "https://valvrareteam.b-cdn.net/defaults/missing-image.png"} 
+                src={cdnConfig.getIllustrationUrl(module.illustration)} 
                 alt={`${module.title} cover`}
                 className="module-cover-image"
               />

@@ -401,11 +401,11 @@ const Navbar = () => {
                       onClick={() => handleNovelClick(novel)}
                     >
                       <img 
-                        src={novel.illustration || 'https://Valvrareteam.b-cdn.net/%C6%A0%20l%E1%BB%97i%20h%C3%ACnh%20m%E1%BA%A5t%20r%E1%BB%93i.png'}
+                        src={cdnConfig.getIllustrationUrl(novel.illustration)}
                         alt={novel.title} 
                         className="search-result-cover"
                         onError={(e) => {
-                          e.target.src = cdnConfig.defaultImages.novel;
+                          e.target.src = cdnConfig.getIllustrationUrl(null);
                         }}
                       />
                       <div className="search-result-info">
@@ -469,7 +469,7 @@ const Navbar = () => {
                   <div className="user-dropdown-container">
                     <div className="navbar-user-avatar" onClick={toggleDropdown}>
                       <img 
-                        src={user.avatar || '/default-avatar.png'} 
+                        src={cdnConfig.getAvatarUrl(user.avatar)} 
                         alt={`${user.displayName || user.username}'s avatar`} 
                         className="avatar-image"
                       />

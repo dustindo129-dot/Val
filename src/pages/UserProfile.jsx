@@ -17,6 +17,7 @@ import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
+import cdnConfig from '../config/bunny';
 
 import DraggableModuleList from '../components/DraggableModuleList';
 import InterestTagsManager from '../components/InterestTagsManager';
@@ -66,7 +67,7 @@ const UserProfileSEO = ({ profileUser, username }) => {
       {/* Open Graph meta tags */}
       <meta property="og:title" content={`${displayName} - Trang Cá Nhân | Valvrareteam`} />
       <meta property="og:description" content={`Trang cá nhân của ${displayName} tại Valvrareteam.`} />
-      <meta property="og:image" content={profileUser?.avatar || "https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif"} />
+              <meta property="og:image" content={cdnConfig.getAvatarUrl(profileUser?.avatar) || "https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif"} />
       <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${username}/trang-ca-nhan`} />
       <meta property="og:type" content="profile" />
       <meta property="og:site_name" content="Valvrareteam" />
@@ -76,7 +77,7 @@ const UserProfileSEO = ({ profileUser, username }) => {
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={`${displayName} - Trang Cá Nhân | Valvrareteam`} />
       <meta name="twitter:description" content={`Trang cá nhân của ${displayName} tại Valvrareteam.`} />
-      <meta name="twitter:image" content={profileUser?.avatar || "https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif"} />
+              <meta name="twitter:image" content={cdnConfig.getAvatarUrl(profileUser?.avatar) || "https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif"} />
     </Helmet>
   );
 };
@@ -720,7 +721,7 @@ const UserProfile = () => {
             <div className="profile-avatar-section">
               <div className="profile-avatar-wrapper">
                 <img
-                  src={profileUser.avatar || '/default-avatar.png'}
+                  src={cdnConfig.getAvatarUrl(profileUser.avatar)}
                   alt={`${profileUser.displayName || profileUser.username}'s avatar`}
                   className="profile-avatar-image"
                 />

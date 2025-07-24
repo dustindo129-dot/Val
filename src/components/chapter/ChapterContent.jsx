@@ -10,6 +10,7 @@ import {faPlus, faTrash} from '@fortawesome/free-solid-svg-icons';
 import './ChapterContent.css';
 import bunnyUploadService from '../../services/bunnyUploadService';
 import {translateChapterModuleStatus} from '../../utils/statusTranslation';
+import cdnConfig from '../../config/bunny';
 
 const ChapterContent = React.memo(({
                                        chapter,
@@ -1433,7 +1434,9 @@ const ChapterContent = React.memo(({
 
                 bunnyUploadService.uploadFile(file, 'illustrations')
                     .then(url => {
-                        resolve(url);
+                        // Apply illustration class to uploaded images
+                        const optimizedUrl = cdnConfig.getIllustrationUrl(url);
+                        resolve(optimizedUrl);
                     })
                     .catch(error => {
                         console.error('Image upload error:', error);

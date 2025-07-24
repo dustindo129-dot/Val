@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
+import cdnConfig from '../config/bunny';
 import '../styles/TopUpManagement.css';
 import '../styles/TopUp.css';
 
@@ -786,7 +787,7 @@ const TopUpManagement = () => {
                     >
                       <div className="user-avatar">
                         {user.avatar ? (
-                          <img src={user.avatar} alt={user.displayName || user.username} />
+                          <img src={cdnConfig.getAvatarUrl(user.avatar)} alt={user.displayName || user.username} />
                         ) : (
                           <div className="default-avatar">
                             {(user.displayName || user.username).charAt(0).toUpperCase()}
@@ -857,9 +858,9 @@ const TopUpManagement = () => {
                         onClick={() => handleNovelSelect(novel)}
                       >
                         <div className="user-avatar">
-                          {novel.illustration ? (
-                            <img src={novel.illustration} alt={novel.title} />
-                          ) : (
+                                                  {novel.illustration ? (
+                          <img src={cdnConfig.getIllustrationUrl(novel.illustration)} alt={novel.title} />
+                        ) : (
                             <div className="default-avatar">
                               {novel.title.charAt(0).toUpperCase()}
                             </div>
@@ -1006,7 +1007,7 @@ const TopUpManagement = () => {
                       >
                         <div className="user-avatar">
                           {user.avatar ? (
-                            <img src={user.avatar} alt={user.displayName || user.username} />
+                            <img src={cdnConfig.getAvatarUrl(user.avatar)} alt={user.displayName || user.username} />
                           ) : (
                             <div className="default-avatar">
                               {(user.displayName || user.username).charAt(0).toUpperCase()}
@@ -1212,7 +1213,7 @@ const TopUpManagement = () => {
                                 >
                                   <div className="user-avatar">
                                     {user.avatar ? (
-                                      <img src={user.avatar} alt={user.displayName || user.username} />
+                                      <img src={cdnConfig.getAvatarUrl(user.avatar)} alt={user.displayName || user.username} />
                                     ) : (
                                       <div className="default-avatar">
                                         {(user.displayName || user.username).charAt(0).toUpperCase()}

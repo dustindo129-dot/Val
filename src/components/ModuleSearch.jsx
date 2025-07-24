@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import config from '../config/config';
+import cdnConfig from '../config/bunny';
 import './ModuleSearch.css';
 
 const ModuleSearch = ({ onModuleSelect, placeholder = "Tìm kiếm tập..." }) => {
@@ -126,11 +127,11 @@ const ModuleSearch = ({ onModuleSelect, placeholder = "Tìm kiếm tập..." }) 
                 >
                   <div className="module-result-content">
                     <img
-                      src={module.illustration || module.novelIllustration}
+                      src={cdnConfig.getIllustrationUrl(module.illustration || module.novelIllustration)}
                       alt={module.title}
                       className="module-result-image"
                       onError={(e) => {
-                        e.target.src = 'https://Valvrareteam.b-cdn.net/defaults/missing-image.png';
+                        e.target.src = cdnConfig.getIllustrationUrl(null);
                       }}
                     />
                     <div className="module-result-info">

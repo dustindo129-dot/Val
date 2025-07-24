@@ -486,11 +486,11 @@ const UserBookmarks = () => {
                   {/* Left side - Cover image */}
                   <div className="ub-cover-container">
                     <img
-                        src={novel.illustration || cdnConfig.defaultImages.novel}
+                        src={cdnConfig.getIllustrationUrl(novel.illustration)}
                         alt={novel.title}
                         className="ub-bookmark-cover"
                         onError={(e) => {
-                          e.target.src = cdnConfig.defaultImages.novel;
+                          e.target.src = cdnConfig.getIllustrationUrl(null);
                         }}
                     />
                     <div className="ub-update-time">

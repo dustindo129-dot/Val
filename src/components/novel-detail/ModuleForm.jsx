@@ -2,6 +2,7 @@ import React, { memo, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { translateChapterModuleStatus } from '../../utils/statusTranslation';
+import cdnConfig from '../../config/bunny';
 import '../../styles/components/ModuleForm.css';
 
 const ModuleForm = memo(({ 
@@ -298,7 +299,7 @@ const ModuleForm = memo(({
           <div className="cover-upload">
             {moduleForm.illustration && (
               <img
-                src={moduleForm.illustration}
+                src={cdnConfig.getIllustrationUrl(moduleForm.illustration)}
                 alt="Cover preview"
                 className="module-form-cover-preview"
               />

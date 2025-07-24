@@ -25,6 +25,7 @@ import config from '../config/config';
 import ReportPanel from '../components/ReportPanel';
 import bunnyUploadService from '../services/bunnyUploadService';
 import LoadingSpinner from '../components/LoadingSpinner';
+import cdnConfig from '../config/bunny';
 
 /**
  * UserSettingsSEO Component
@@ -513,7 +514,7 @@ const UserSettings = () => {
           <div className="avatar-container">
             <div className="avatar-wrapper">
               <img
-                src={avatar || '/default-avatar.png'}
+                src={cdnConfig.getAvatarUrl(avatar)}
                 alt="Profile"
                 className="profile-avatar"
               />
@@ -664,7 +665,7 @@ const UserSettings = () => {
                 <div key={bannedUser._id} className="blocked-user-item">
                   <div className="blocked-user-info">
                     <img 
-                      src={bannedUser.avatar || '/default-avatar.png'} 
+                      src={cdnConfig.getAvatarUrl(bannedUser.avatar)} 
                       alt={`${bannedUser.username}'s avatar`} 
                       className="blocked-user-avatar"
                     />
@@ -684,7 +685,7 @@ const UserSettings = () => {
                 <div key={blockedUser._id} className="blocked-user-item">
                   <div className="blocked-user-info">
                     <img 
-                      src={blockedUser.avatar || '/default-avatar.png'} 
+                      src={cdnConfig.getAvatarUrl(blockedUser.avatar)} 
                       alt={`${blockedUser.username}'s avatar`} 
                       className="blocked-user-avatar"
                     />

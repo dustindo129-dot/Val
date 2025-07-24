@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import config from '../../config/config';
+import cdnConfig from '../../config/bunny';
 import '../../styles/components/ModuleRentalModal.css';
 
 /**
@@ -173,11 +174,11 @@ const ModuleRentalModal = ({
         <div className="rental-modal-content">
           <div className="rental-module-info">
             <img 
-              src={module.illustration} 
+              src={cdnConfig.getIllustrationUrl(module.illustration)} 
               alt={module.title}
               className="rental-module-cover"
               onError={(e) => {
-                e.target.src = 'https://Valvrareteam.b-cdn.net/defaults/missing-image.png';
+                e.target.src = cdnConfig.getIllustrationUrl(null);
               }}
             />
             <div className="rental-module-details">

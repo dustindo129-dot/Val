@@ -15,6 +15,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { createUniqueSlug } from '../utils/slugUtils';
 import axios from 'axios';
 import config from '../config/config';
+import cdnConfig from '../config/bunny';
 
 // Simple cache to avoid fetching the same novel genres multiple times
 const genreCache = new Map();
@@ -138,11 +139,11 @@ const SortableModuleItem = ({ moduleData, canManageModules, canRemoveModules, on
       
       <div className="module-cover-container">
         <img 
-          src={moduleData.moduleId?.illustration || moduleData.moduleId?.novelId?.illustration} 
+          src={cdnConfig.getIllustrationUrl(moduleData.moduleId?.illustration || moduleData.moduleId?.novelId?.illustration)} 
           alt={moduleData.moduleId?.title} 
           className="module-cover" 
           onError={(e) => {
-            e.target.src = 'https://Valvrareteam.b-cdn.net/defaults/missing-image.png';
+            e.target.src = cdnConfig.getIllustrationUrl(null);
           }}
         />
       </div>

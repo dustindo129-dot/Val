@@ -34,6 +34,7 @@ import bunnyUploadService from '../services/bunnyUploadService';
 import {generateNovelUrl} from '../utils/slugUtils';
 import LoadingSpinner from './LoadingSpinner';
 import {FixedSizeList as List} from 'react-window';
+import cdnConfig from '../config/bunny';
 
 /**
  * FloatingLabelInput Component
@@ -2300,10 +2301,12 @@ const AdminDashboard = () => {
                                             return new Promise((resolve, reject) => {
                                                 const file = blobInfo.blob();
 
-                                                bunnyUploadService.uploadFile(file, 'illustrations')
-                                                    .then(url => {
-                                                        resolve(url);
-                                                    })
+                                                                    bunnyUploadService.uploadFile(file, 'illustrations')
+                        .then(url => {
+                            // Apply illustration class to uploaded images
+                            const optimizedUrl = cdnConfig.getIllustrationUrl(url);
+                            resolve(optimizedUrl);
+                        })
                                                     .catch(error => {
                                                         console.error('Image upload error:', error);
                                                         reject('Image upload failed');
@@ -2388,7 +2391,7 @@ const AdminDashboard = () => {
                             <div className="illustration-upload">
                                 {(editingNovel?.illustration || newNovel.illustration) && (
                                     <img
-                                        src={editingNovel ? editingNovel.illustration : newNovel.illustration}
+                                        src={cdnConfig.getIllustrationUrl(editingNovel ? editingNovel.illustration : newNovel.illustration)}
                                         alt="Illustration preview"
                                         className="illustration-preview"
                                     />

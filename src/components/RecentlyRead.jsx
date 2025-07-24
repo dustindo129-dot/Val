@@ -52,10 +52,10 @@ const RecentlyReadCard = memo(({ readItem }) => {
       <div className="recently-read-cover">
         <img
           className="recently-read-image"
-          src={novel.illustration || cdnConfig.defaultImages.novel}
+                      src={cdnConfig.getIllustrationUrl(novel.illustration)}
           alt={novel.title || 'Novel'}
           onError={(e) => {
-            e.target.src = cdnConfig.defaultImages.novel;
+            e.target.src = cdnConfig.getIllustrationUrl(null);
           }}
         />
       </div>

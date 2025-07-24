@@ -762,12 +762,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         // Upload to bunny.net comments folder
         const url = await bunnyUploadService.uploadFile(file, 'comments');
         
-        // Return optimizer-compatible URL
-        const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
-          quality: 85,
-          format: 'auto',
-          optimizer: true
-        });
+        // Return URL with comment image class
+        const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
         
         return optimizedUrl;
       } catch (error) {
@@ -789,12 +785,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             try {
               const url = await bunnyUploadService.uploadFile(file, 'comments');
               
-              // Return optimizer-compatible URL
-              const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
-                quality: 85,
-                format: 'auto',
-                optimizer: true
-              });
+              // Return URL with comment image class
+              const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
               
               callback(optimizedUrl, { alt: file.name });
             } catch (error) {
@@ -1611,7 +1603,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         <div className="comment-main">
           <div className="comment-avatar">
             {comment.user.avatar ? (
-              <img src={comment.user.avatar} alt={comment.user.displayName || comment.user.username} />
+              <img src={cdnConfig.getAvatarUrl(comment.user.avatar)} alt={comment.user.displayName || comment.user.username} />
             ) : (
               <div className="default-avatar">
                 {(comment.user.displayName || comment.user.username).charAt(0).toUpperCase()}

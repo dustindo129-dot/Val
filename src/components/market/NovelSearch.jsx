@@ -1,4 +1,5 @@
 import React from 'react';
+import cdnConfig from '../../config/bunny';
 
 /**
  * Novel Search Component
@@ -53,7 +54,7 @@ const NovelSearch = ({
               onClick={() => handleNovelSelect(novel)}
             >
               <img 
-                src={novel.illustration || 'https://placeholder.com/book'} 
+                src={cdnConfig.getIllustrationUrl(novel.illustration)} 
                 alt={novel.title} 
                 className="novel-result-cover"
               />

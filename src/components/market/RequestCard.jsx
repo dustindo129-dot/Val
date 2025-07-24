@@ -221,11 +221,11 @@ const RequestCard = ({
         {isEditing ? (
           <div className="edit-image-section">
             <img
-              src={editImage || cdnConfig.defaultImages.novel}
+              src={cdnConfig.getRequestImageUrl(editImage)}
               alt={request.title || "Yêu cầu truyện"}
               className="request-image"
               onError={(e) => {
-                e.target.src = cdnConfig.defaultImages.novel;
+                e.target.src = cdnConfig.getRequestImageUrl(null);
               }}
             />
             <div className="image-upload-controls">
@@ -247,11 +247,11 @@ const RequestCard = ({
           </div>
         ) : (
           <img
-            src={request.illustration || cdnConfig.defaultImages.novel}
+            src={cdnConfig.getRequestImageUrl(request.illustration)}
             alt={request.title || "Yêu cầu truyện"}
             className="request-image"
             onError={(e) => {
-              e.target.src = cdnConfig.defaultImages.novel;
+              e.target.src = cdnConfig.getRequestImageUrl(null);
             }}
           />
         )}

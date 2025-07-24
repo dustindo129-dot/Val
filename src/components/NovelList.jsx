@@ -685,7 +685,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                                         <div className="novel-main">
                                             {/* Novel cover image with status */}
                                             <NovelImage
-                                                src={novel.illustration || cdnConfig.defaultImages.novel}
+                                                src={cdnConfig.getIllustrationUrl(novel.illustration)}
                                                 alt={novel.title}
                                                 status={novel.status}
                                                 novelId={novel._id}

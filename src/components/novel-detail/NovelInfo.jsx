@@ -1014,11 +1014,11 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                         </div>
                                     )}
                                     <img
-                                        src={novelData.illustration || 'https://Valvrareteam.b-cdn.net/%C6%A0%20l%E1%BB%97i%20h%C3%ACnh%20m%E1%BA%A5t%20r%E1%BB%93i.png'}
+                                        src={cdnConfig.getIllustrationUrl(novelData.illustration)}
                                         alt={novelData.title}
                                         className="rd-cover-image"
                                         onError={(e) => {
-                                            e.target.src = cdnConfig.defaultImages.novel;
+                                            e.target.src = cdnConfig.getIllustrationUrl(null);
                                         }}
                                     />
                                     <div className="rd-update-time">
@@ -1446,11 +1446,11 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                     onClick={() => scrollToModule(module._id)}
                                 >
                                     <img
-                                        src={module.illustration || novelData.illustration || cdnConfig.defaultImages.novel}
+                                        src={cdnConfig.getIllustrationUrl(module.illustration || novelData.illustration)}
                                         alt={module.title}
                                         className="module-nav-cover"
                                         onError={(e) => {
-                                            e.target.src = cdnConfig.defaultImages.novel;
+                                            e.target.src = cdnConfig.getIllustrationUrl(null);
                                         }}
                                     />
                                     <span className="module-nav-title">

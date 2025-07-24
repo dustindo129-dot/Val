@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import config from '../config/config';
 import { translateTopUpStatus } from '../utils/statusTranslation';
+import cdnConfig from '../config/bunny';
 import '../styles/TopUp.css';
 
 /**
@@ -661,7 +662,7 @@ const TopUp = () => {
             >
               <div className="payment-logos">
                 <div className="payment-logo">
-                  <img src="https://Valvrareteam.b-cdn.net/vietinbank.jpg" alt="Banks" />
+                  <img src={cdnConfig.getOptimizedImageUrl("vietinbank.jpg", cdnConfig.imageClasses.avatar)} alt="Banks" />
                 </div>
               </div>
               <p>Chuyển khoản ngân hàng</p>
@@ -673,13 +674,13 @@ const TopUp = () => {
             >
               <div className="payment-logos">
                 <div className="payment-logo">
-                  <img src="https://Valvrareteam.b-cdn.net/viettel.png" alt="Viettel" />
+                  <img src={cdnConfig.getOptimizedImageUrl("viettel.png", cdnConfig.imageClasses.avatar)} alt="Viettel" />
                 </div>
                 <div className="payment-logo">
-                  <img src="https://Valvrareteam.b-cdn.net/vinaphone.png" alt="Vinaphone" />
+                  <img src={cdnConfig.getOptimizedImageUrl("vinaphone.png", cdnConfig.imageClasses.avatar)} alt="Vinaphone" />
                 </div>
                 <div className="payment-logo">
-                  <img src="https://Valvrareteam.b-cdn.net/mobiphone.png" alt="Mobiphone" />
+                  <img src={cdnConfig.getOptimizedImageUrl("mobiphone.png", cdnConfig.imageClasses.avatar)} alt="Mobiphone" />
                 </div>
               </div>
               <p>Thẻ trả trước (Thẻ cào)</p>

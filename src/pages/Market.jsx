@@ -389,11 +389,9 @@ const Market = () => {
         requestData.contactInfo = DOMPurify.sanitize(requestContactInfo);
       }
       
-      // Add image if provided, otherwise use default
+      // Add image if provided
       if (requestImage) {
         requestData.image = requestImage;
-      } else {
-        requestData.image = cdnConfig.defaultImages.novel;
       }
 
       const response = await axios.post(

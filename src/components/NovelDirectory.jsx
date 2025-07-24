@@ -181,7 +181,7 @@ const NovelDirectorySEO = ({ currentPage = 1, appliedGenres = {}, appliedStatus 
  */
 const NovelImage = memo(({ src, alt, status, novelId, updatedAt }) => {
     const [imgSrc, setImgSrc] = useState(src);
-    const defaultImage = cdnConfig.defaultImageUrl;
+    const defaultImage = cdnConfig.getIllustrationUrl(null);
 
     useEffect(() => {
         setImgSrc(src || defaultImage);
@@ -771,7 +771,7 @@ const NovelDirectory = () => {
                                     <div key={novel._id} className="nd-novel-card">
                                         {/* Left side - Cover image with update time and status overlay */}
                                         <NovelImage
-                                            src={novel.illustration || cdnConfig.defaultImageUrl}
+                                            src={cdnConfig.getIllustrationUrl(novel.illustration)}
                                             alt={novel.title}
                                             status={novel.status}
                                             novelId={novel._id}

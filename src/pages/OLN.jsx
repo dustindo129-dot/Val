@@ -8,6 +8,7 @@ import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { generateNovelUrl, generateChapterUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForDataAttr } from '../utils/statusTranslation';
+import cdnConfig from '../config/bunny';
 
 /**
  * OLNSEO Component
@@ -600,7 +601,7 @@ const OLN = () => {
                                         <div className="novel-main">
                                             {/* Updated: Novel cover image with status only (no first chapter link) */}
                                             <NovelImage
-                                                src={novel.illustration || 'https://valvrareteam.b-cdn.net/defaults/missing-image.png'}
+                                                src={cdnConfig.getIllustrationUrl(novel.illustration)}
                                                 alt={novel.title}
                                                 status={novel.status}
                                                 novelId={novel._id}

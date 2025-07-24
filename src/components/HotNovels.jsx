@@ -39,10 +39,10 @@ const NovelCard = memo(({ novel }) => {
             <div className="hot-novel-cover">
                 <img
                     className="novel-card-image"
-                    src={novel.illustration || cdnConfig.defaultImages.novel}
+                    src={cdnConfig.getIllustrationUrl(novel.illustration)}
                     alt={novel.title}
                     onError={(e) => {
-                        e.target.src = cdnConfig.defaultImages.novel;
+                        e.target.src = cdnConfig.getIllustrationUrl(null);
                     }}
                 />
             </div>
