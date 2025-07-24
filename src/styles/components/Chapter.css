@@ -2109,10 +2109,61 @@
 
 .chapter-content .text-italic {
   font-style: italic;
+  /* Add specific font families that handle Vietnamese diacritics well */
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Noto Sans", "Roboto", Arial, sans-serif !important;
+  /* Prevent browser from synthesizing italic style */
+  font-synthesis: none;
+  /* Force Edge to use proper italic rendering */
+  -webkit-font-feature-settings: "ital" 1;
+  font-feature-settings: "ital" 1;
 }
 
 .chapter-content .text-underline {
   text-decoration: underline;
+}
+
+/* Combination classes */
+.chapter-content .text-bold.text-italic {
+  font-weight: bold;
+  font-style: italic;
+  /* Add specific font families that handle Vietnamese diacritics well */
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Noto Sans", "Roboto", Arial, sans-serif !important;
+  /* Prevent browser from synthesizing italic style */
+  font-synthesis: none;
+  /* Force Edge to use proper italic rendering */
+  -webkit-font-feature-settings: "ital" 1;
+  font-feature-settings: "ital" 1;
+}
+
+/* Ensure spans with italic class also get the fix */
+.chapter-content span.text-italic {
+  font-style: italic;
+  /* Add specific font families that handle Vietnamese diacritics well */
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Noto Sans", "Roboto", Arial, sans-serif !important;
+  /* Prevent browser from synthesizing italic style */
+  font-synthesis: none;
+  /* Force Edge to use proper italic rendering */
+  -webkit-font-feature-settings: "ital" 1;
+  font-feature-settings: "ital" 1;
+  /* Make the font slightly thicker */
+  font-weight: 450;
+}
+
+/* Add font-face declarations for better Vietnamese support */
+@font-face {
+  font-family: "Noto Sans";
+  src: local("Noto Sans"), url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,450;1,400;1,450&display=swap");
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: local("Noto Sans Italic"), url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,450;1,400;1,450&display=swap");
+  font-style: italic;
+  font-weight: normal;
+  font-display: swap;
 }
 
 /* Text alignment classes */
