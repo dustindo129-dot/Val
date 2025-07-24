@@ -1651,7 +1651,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                     {(comment.user.username === user.username || 
                       comment.user.id === user.id || 
                       comment.user._id === user._id ||
-                      comment.user.displayName === user.displayName) && (
+                      comment.user.displayName === user.displayName ||
+                      user.role === 'admin') && (
                       <button
                         className="comment-dropdown-item"
                         onClick={() => {
