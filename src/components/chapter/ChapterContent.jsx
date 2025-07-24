@@ -905,7 +905,7 @@ const ChapterContent = React.memo(({
         }
     }, [userRole, originalMode, isModulePaid]);
 
-    // Process content for display (with backward compatibility)
+    // Process content for display (with backward compatibility and spacing fixes)
     const processContent = (content) => {
         if (!content) return '';
 
@@ -913,7 +913,6 @@ const ChapterContent = React.memo(({
         const isVeryLongContent = content.length > 300000; // 300KB+
         if (isVeryLongContent) {
             // For very long content, add a small delay to prevent UI blocking
-            // This helps with the race condition issue on long chapters
             requestAnimationFrame(() => {
                 // Content processing will continue normally
             });
@@ -949,17 +948,29 @@ const ChapterContent = React.memo(({
                 /<sup><a href="#note-(\w+)" class="footnote-ref" data-footnote="\1">\[(\w+)\]<\/a><\/sup>/g,
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
             );
-            
+
             // Pattern 2: Format with attributes in different order
             processedContent = processedContent.replace(
                 /<sup><a href="#note-(\w+)" data-footnote="\1" class="footnote-ref">\[(\w+)\]<\/a><\/sup>/g,
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
             );
-            
+
             // Pattern 3: Format with only href and data-footnote
             processedContent = processedContent.replace(
                 /<sup><a href="#note-(\w+)" data-footnote="\1">\[(\w+)\]<\/a><\/sup>/g,
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
+            );
+
+            // NEW: Clean up empty paragraphs and spans first (SPACING FIX)
+            processedContent = processedContent.replace(
+                /<p[^>]*>\s*<span[^>]*>\s*<\/span>\s*<\/p>/gi,
+                ''
+            );
+
+            // NEW: Remove paragraphs that only contain whitespace or &nbsp; (SPACING FIX)
+            processedContent = processedContent.replace(
+                /<p[^>]*>\s*(&nbsp;|\s)*\s*<\/p>/gi,
+                ''
             );
 
             // Convert br tags to paragraph breaks
@@ -1026,7 +1037,7 @@ const ChapterContent = React.memo(({
                         'orphans', 'text-align', 'text-indent', 'text-transform', 'white-space',
                         'widows', 'word-spacing', '-webkit-tap-highlight-color', '-webkit-text-size-adjust',
                         '-webkit-text-stroke-width', 'text-decoration', 'caret-color', 'font-family',
-                        'font-size', 'line-height', 'margin', 'padding'
+                        'font-size', 'line-height', 'margin', 'padding', 'margin-top', 'margin-bottom'
                     ];
 
                     problematicStyles.forEach(prop => {
@@ -1085,13 +1096,13 @@ const ChapterContent = React.memo(({
                         classes.push('text-default-color');
                     }
 
-                    // Remove ALL other problematic styles
+                    // Remove ALL other problematic styles (ENHANCED FOR SPACING)
                     const problematicStyles = [
                         'font-style', 'font-variant-caps', 'font-weight', 'letter-spacing',
                         'orphans', 'text-indent', 'text-transform', 'white-space',
                         'widows', 'word-spacing', '-webkit-tap-highlight-color', '-webkit-text-size-adjust',
                         '-webkit-text-stroke-width', 'text-decoration', 'caret-color', 'font-family',
-                        'font-size', 'line-height', 'margin', 'padding'
+                        'font-size', 'line-height', 'margin', 'padding', 'margin-top', 'margin-bottom'
                     ];
 
                     problematicStyles.forEach(prop => {
@@ -1119,10 +1130,8 @@ const ChapterContent = React.memo(({
                 /<table([^>]*?)width="(\d+)"([^>]*?)style="([^"]*?)width:\s*[\d.]+pt;?([^"]*?)"([^>]*?)>/gi,
                 (match, beforeWidth, widthValue, afterWidth, beforeStyle, afterStyle, afterStyle2) => {
                     // Convert fixed pixel/point width to responsive percentage
-                    // For content tables, use reasonable responsive widths
                     let responsiveWidth = '90%';
-                    
-                    // Different responsive widths based on original size
+
                     const originalWidth = parseInt(widthValue);
                     if (originalWidth <= 400) {
                         responsiveWidth = '80%';
@@ -1133,19 +1142,17 @@ const ChapterContent = React.memo(({
                     } else {
                         responsiveWidth = '95%';
                     }
-                    
-                    // Clean up the style attribute, removing the fixed width
+
                     let newStyle = beforeStyle + afterStyle;
                     newStyle = newStyle.replace(/width:\s*[\d.]+pt;?/gi, '');
                     newStyle = newStyle.replace(/width:\s*[\d.]+px;?/gi, '');
                     newStyle = newStyle.trim();
-                    
-                    // Add responsive width to style
+
                     if (newStyle && !newStyle.endsWith(';')) {
                         newStyle += ';';
                     }
                     newStyle += ` width: ${responsiveWidth}; max-width: 100%;`;
-                    
+
                     return `<table${beforeWidth}${afterWidth} style="${newStyle}"${afterStyle2}>`;
                 }
             );
@@ -1154,18 +1161,16 @@ const ChapterContent = React.memo(({
             processedContent = processedContent.replace(
                 /<table([^>]*?)style="([^"]*?)width:\s*[\d.]+pt;?([^"]*?)"([^>]*?)>/gi,
                 (match, beforeStyle, styleStart, styleEnd, afterStyle) => {
-                    // Clean up the style attribute, removing the fixed width
                     let newStyle = styleStart + styleEnd;
                     newStyle = newStyle.replace(/width:\s*[\d.]+pt;?/gi, '');
                     newStyle = newStyle.replace(/width:\s*[\d.]+px;?/gi, '');
                     newStyle = newStyle.trim();
-                    
-                    // Add responsive width to style
+
                     if (newStyle && !newStyle.endsWith(';')) {
                         newStyle += ';';
                     }
                     newStyle += ' width: 90%; max-width: 100%;';
-                    
+
                     return `<table${beforeStyle} style="${newStyle}"${afterStyle}>`;
                 }
             );
@@ -1173,25 +1178,38 @@ const ChapterContent = React.memo(({
             // Handle existing paragraphs
             if (processedContent.includes('<p')) {
                 let finalContent = processedContent;
+
+                // ENHANCED: Better empty paragraph cleanup (SPACING FIX)
                 finalContent = finalContent.replace(
                     /<p(\s[^>]*)?>\s*<span[^>]*>\s*<\/span>\s*<\/p>/gi,
-                    '<p$1>&nbsp;</p>'
+                    ''
                 );
-                finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '<p$1>&nbsp;</p>');
+                finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '');
                 finalContent = finalContent.replace(
                     /<p(\s[^>]*)?>\s*<span[^>]*>[\s\u00A0]*<\/span>\s*<\/p>/gi,
-                    '<p$1>&nbsp;</p>'
+                    ''
+                );
+
+                // ENHANCED: Handle Word document margin issues (SPACING FIX)
+                finalContent = finalContent.replace(
+                    /<p(\s[^>]*)?style="[^"]*margin-top:\s*0pt[^"]*margin-bottom:\s*0pt[^"]*"([^>]*)>/gi,
+                    (match, beforeStyle, afterStyle) => {
+                        // Remove the problematic margin styles
+                        const cleanMatch = match.replace(/margin-top:\s*0pt;?/gi, '')
+                            .replace(/margin-bottom:\s*0pt;?/gi, '');
+                        return cleanMatch;
+                    }
                 );
 
                 return DOMPurify.sanitize(finalContent, {
                     ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
                     ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                     KEEP_CONTENT: false,
-                    ALLOW_EMPTY_TAGS: ['p'],
+                    ALLOW_EMPTY_TAGS: [], // CHANGED: Don't allow empty paragraphs
                 });
             }
 
-            // Fallback paragraph processing
+            // Fallback paragraph processing (ENHANCED FOR SPACING)
             let paragraphBlocks = processedContent
                 .split(/(<br>\s*){2,}/gi)
                 .filter(block => block !== undefined && !block.match(/^(<br>\s*)+$/i));
@@ -1205,14 +1223,17 @@ const ChapterContent = React.memo(({
                     let trimmedBlock = block.trim();
                     trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
 
-                    if (trimmedBlock) {
-                        if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
-                            return `<p class="text-default-color">${trimmedBlock}</p>`;
-                        }
-                        return trimmedBlock;
+                    // ENHANCED: Skip truly empty blocks (SPACING FIX)
+                    if (!trimmedBlock || trimmedBlock.match(/^\s*(&nbsp;)?\s*$/)) {
+                        return '';
                     }
-                    return '<p>&nbsp;</p>';
-                });
+
+                    if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+                        return `<p class="text-default-color">${trimmedBlock}</p>`;
+                    }
+                    return trimmedBlock;
+                })
+                .filter(block => block.length > 0); // ENHANCED: Filter empty blocks
 
             let finalContent = paragraphBlocks.join('');
 
@@ -1221,11 +1242,14 @@ const ChapterContent = React.memo(({
                 finalContent = `<p class="text-default-color">${cleanContent}</p>`;
             }
 
+            // ENHANCED: Final cleanup for spacing issues
+            finalContent = finalContent.replace(/<p[^>]*>\s*<\/p>/gi, ''); // Remove any remaining empty paragraphs
+
             return DOMPurify.sanitize(finalContent, {
                 ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
                 ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                 KEEP_CONTENT: false,
-                ALLOW_EMPTY_TAGS: ['p'],
+                ALLOW_EMPTY_TAGS: [], // Don't allow empty tags
             });
         } catch (error) {
             console.error('Content processing error:', error);
@@ -1233,7 +1257,7 @@ const ChapterContent = React.memo(({
         }
     };
 
-    // Helper function to convert colors to hex
+// Helper function to convert colors to hex
     const convertToHex = (color) => {
         if (color.startsWith('#')) {
             return color;
