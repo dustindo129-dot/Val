@@ -41,6 +41,7 @@ const getValidToken = () => {
 // Store for failed requests that need to be retried after token refresh
 let failedQueue = [];
 let isRefreshingToken = false;
+let requestCount = 0;
 
 // Process queued requests after token refresh
 const processQueue = (error, token = null) => {
@@ -58,38 +59,64 @@ const processQueue = (error, token = null) => {
 // Add axios request interceptor to automatically add authorization headers
 axios.interceptors.request.use(
   async (config) => {
+    requestCount++;
+    const requestId = requestCount;
+    
+    // Log every request to see what's causing the issue
+    console.log(`[REQUEST ${requestId}] ${config.method?.toUpperCase()} ${config.url}`);
+    
     // Skip token refresh for auth endpoints to prevent infinite loops
     if (config.url?.includes('/api/auth/')) {
+      console.log(`[REQUEST ${requestId}] Auth endpoint detected, using getValidToken()`);
       const token = getValidToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log(`[REQUEST ${requestId}] Auth header added for auth endpoint`);
+      } else {
+        console.log(`[REQUEST ${requestId}] No valid token for auth endpoint`);
       }
       return config;
     }
 
     // For all other requests, ensure we have a valid token
+    console.log(`[REQUEST ${requestId}] Non-auth endpoint, calling ensureValidToken()`);
     try {
       const token = await ensureValidToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log(`[REQUEST ${requestId}] Auth header added with ${token.substring(0, 20)}...`);
+      } else {
+        console.log(`[REQUEST ${requestId}] No token returned from ensureValidToken()`);
       }
     } catch (error) {
-      console.error('Token refresh failed in request interceptor:', error);
+      console.error(`[REQUEST ${requestId}] Token refresh failed in request interceptor:`, error);
       // Continue with request without token - let response interceptor handle it
     }
     
     return config;
   },
   (error) => {
+    console.error('[REQUEST INTERCEPTOR] Error:', error);
     return Promise.reject(error);
   }
 );
 
 // Add axios response interceptor to handle token validation errors and refresh
 axios.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log successful responses occasionally to verify normal flow
+    if (Math.random() < 0.1) { // Log 10% of successful responses
+      console.log(`[RESPONSE SUCCESS] ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url || 'unknown';
+    const requestMethod = originalRequest?.method?.toUpperCase() || 'unknown';
+    
+    console.log(`[RESPONSE ERROR] ${requestMethod} ${requestUrl} - ${error.response?.status || 'network error'}`);
+    console.log(`[RESPONSE ERROR] Error message: ${error.response?.data?.message || error.message}`);
 
     // Check if error is due to expired/invalid JWT
     if (error.response?.status === 401 && 
@@ -97,21 +124,30 @@ axios.interceptors.response.use(
          error.response?.data?.message?.includes('Invalid or expired token') ||
          error.response?.data?.message?.includes('jwt expired'))) {
       
+      console.log(`[RESPONSE ERROR] 401 error with JWT issue detected`);
+      
       // Check if this is a recent login (within 5 minutes) to be less aggressive
       const loginTime = localStorage.getItem('loginTime');
       const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
       
+      console.log(`[RESPONSE ERROR] Is recent login: ${isRecentLogin}`);
+      
       // Skip refresh for auth endpoints to prevent infinite loops
       if (originalRequest.url?.includes('/api/auth/')) {
+        console.log(`[RESPONSE ERROR] Auth endpoint error, not retrying`);
+        
         // Special handling for logout endpoint - 401 is expected and should be ignored
         if (originalRequest.url?.includes('/api/auth/logout')) {
+          console.log(`[RESPONSE ERROR] Logout endpoint 401 - this is expected`);
           return Promise.reject(error); // Don't clear auth data or show notifications
         }
         
         // For recent logins on auth endpoints, just reject without clearing data
         if (isRecentLogin) {
+          console.log(`[RESPONSE ERROR] Recent login on auth endpoint, not clearing data`);
           return Promise.reject(error);
         }
+        console.log(`[RESPONSE ERROR] Clearing auth data due to auth endpoint error`);
         clearAllAuthData();
         window.dispatchEvent(new CustomEvent('auth-token-invalid'));
         return Promise.reject(error);
@@ -119,37 +155,46 @@ axios.interceptors.response.use(
 
       // Prevent infinite retry loops
       if (originalRequest._retry) {
+        console.log(`[RESPONSE ERROR] Request already retried, not retrying again`);
         if (!isRecentLogin) {
+          console.log(`[RESPONSE ERROR] Clearing auth data after failed retry`);
           clearAllAuthData();
           window.dispatchEvent(new CustomEvent('auth-token-invalid'));
         }
         return Promise.reject(error);
       }
 
+      console.log(`[RESPONSE ERROR] Marking request for retry`);
       originalRequest._retry = true;
 
       if (isRefreshingToken) {
+        console.log(`[RESPONSE ERROR] Already refreshing token, queueing request`);
         // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
+          console.log(`[RESPONSE ERROR] Retrying queued request with new token`);
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return axios(originalRequest);
         });
       }
 
+      console.log(`[RESPONSE ERROR] Starting token refresh for failed request`);
       isRefreshingToken = true;
 
       try {
         const newToken = await refreshToken();
         
         if (newToken) {
+          console.log(`[RESPONSE ERROR] Token refresh successful, retrying original request`);
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           processQueue(null, newToken);
           return axios(originalRequest);
         } else {
+          console.log(`[RESPONSE ERROR] Token refresh failed`);
           // Refresh failed, but be more lenient with recent logins
           if (!isRecentLogin) {
+            console.log(`[RESPONSE ERROR] Clearing auth data after refresh failure`);
             clearAllAuthData();
             window.dispatchEvent(new CustomEvent('auth-token-invalid'));
           }
@@ -157,21 +202,27 @@ axios.interceptors.response.use(
           return Promise.reject(error);
         }
       } catch (refreshError) {
+        console.error(`[RESPONSE ERROR] Token refresh threw error:`, refreshError);
         if (!isRecentLogin) {
+          console.log(`[RESPONSE ERROR] Clearing auth data after refresh exception`);
           clearAllAuthData();
           window.dispatchEvent(new CustomEvent('auth-token-invalid'));
         }
         processQueue(refreshError, null);
         return Promise.reject(error);
       } finally {
+        console.log(`[RESPONSE ERROR] Setting isRefreshingToken to false`);
         isRefreshingToken = false;
       }
     }
 
     // For other types of 401 errors
     if (error.response?.status === 401) {
+      console.log(`[RESPONSE ERROR] Other 401 error (not JWT related)`);
+      
       // Special handling for logout endpoint - 401 is expected and should be ignored
       if (originalRequest.url?.includes('/api/auth/logout')) {
+        console.log(`[RESPONSE ERROR] Logout endpoint 401 - this is expected`);
         return Promise.reject(error); // Don't clear auth data or show notifications
       }
       
@@ -180,11 +231,15 @@ axios.interceptors.response.use(
       const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
       
       if (!isRecentLogin) {
+        console.log(`[RESPONSE ERROR] Clearing auth data for non-recent 401 error`);
         clearAllAuthData();
         window.dispatchEvent(new CustomEvent('auth-token-invalid'));
+      } else {
+        console.log(`[RESPONSE ERROR] Recent login, not clearing auth data for 401`);
       }
     }
 
+    console.log(`[RESPONSE ERROR] Rejecting error: ${error.message}`);
     return Promise.reject(error);
   }
 );
