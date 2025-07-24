@@ -378,6 +378,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const [likeStates, setLikeStates] = useState(new Map()); // commentId -> { isLiked, count, status }
   const likeSystemRef = useRef(null);
 
+  // Delete reason modal state
+  const [showDeleteReasonModal, setShowDeleteReasonModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [deleteReason, setDeleteReason] = useState('');
+
   // Initialize Facebook-style like system
   useEffect(() => {
     const likeSystem = {
@@ -1060,15 +1065,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   };
 
   // Handle comment deletion
-  const handleDelete = async (commentId, isReply = false, parentCommentId = null) => {
+  const handleDelete = async (commentId, isReply = false, parentCommentId = null, reason = '') => {
     if (!isAuthenticated || deleting) return;
     
     if (!user || (!user._id && !user.id)) {
       alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
-      return;
-    }
-    
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bình luận này không?')) {
       return;
     }
     
@@ -1077,7 +1078,10 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     try {
       const response = await axios.delete(
         `${config.backendUrl}/api/comments/${commentId}`,
-        { headers: getAuthHeaders() }
+        { 
+          headers: getAuthHeaders(),
+          data: { reason } // Send reason in request body
+        }
       );
       
       // Invalidate React Query cache to force refetch and show updated data
@@ -1090,6 +1094,48 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     } finally {
       setDeleting(false);
     }
+  };
+
+  // Handle delete with reason modal for admin/moderator
+  const handleDeleteWithReason = (commentId, isReply = false, parentCommentId = null) => {
+    if (!isAuthenticated || deleting) return;
+    
+    if (!user || (!user._id && !user.id)) {
+      alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
+      return;
+    }
+
+    // Check if user is admin or moderator
+    const isModAction = user.role === 'admin' || user.role === 'moderator';
+    
+    if (isModAction) {
+      // Show reason modal for admin/moderator
+      setCommentToDelete({ commentId, isReply, parentCommentId });
+      setShowDeleteReasonModal(true);
+    } else {
+      // Regular user deletion with confirmation
+      if (!window.confirm('Bạn có chắc chắn muốn xóa bình luận này không?')) {
+        return;
+      }
+      handleDelete(commentId, isReply, parentCommentId);
+    }
+  };
+
+  // Handle delete reason modal submit
+  const handleDeleteReasonSubmit = async () => {
+    if (!commentToDelete) return;
+    
+    setShowDeleteReasonModal(false);
+    await handleDelete(
+      commentToDelete.commentId, 
+      commentToDelete.isReply, 
+      commentToDelete.parentCommentId,
+      deleteReason
+    );
+    
+    // Reset modal state
+    setCommentToDelete(null);
+    setDeleteReason('');
   };
   
   // Format date to relative time
@@ -1657,7 +1703,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                       <button
                         className="comment-dropdown-item"
                         onClick={() => {
-                          handleDelete(comment._id, level > 0, comment.parentId);
+                          handleDeleteWithReason(comment._id, level > 0, comment.parentId);
                           setShowDropdown(false);
                         }}
                         disabled={deleting}
@@ -2164,6 +2210,39 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       ) : (
         <div className="no-comments">
           <p>Chưa có bình luận. Hãy là người đầu tiên bình luận!</p>
+        </div>
+      )}
+
+      {/* Delete reason modal */}
+      {showDeleteReasonModal && (
+        <div className="delete-reason-modal">
+          <div className="delete-reason-content">
+            <h3>Xóa bình luận</h3>
+            <p>Bạn có chắc chắn muốn xóa bình luận này không?</p>
+            <div className="delete-reason-input-group">
+              <label htmlFor="delete-reason">Lý do xóa (tùy chọn):</label>
+              <textarea
+                id="delete-reason"
+                className="delete-reason-input"
+                placeholder="Nhập lý do xóa bình luận..."
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="delete-reason-actions">
+              <button onClick={handleDeleteReasonSubmit} className="delete-confirm-btn">
+                Xóa bình luận
+              </button>
+              <button onClick={() => {
+                setShowDeleteReasonModal(false);
+                setCommentToDelete(null);
+                setDeleteReason('');
+              }} className="delete-cancel-btn">
+                Hủy bỏ
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

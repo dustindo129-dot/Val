@@ -826,6 +826,168 @@
   color: #333;
 }
 
+/* Delete reason modal */
+.delete-reason-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-reason-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.delete-reason-content h3 {
+  margin: 0 0 1rem 0;
+  color: #dc3545;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.delete-reason-content p {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.delete-reason-input-group {
+  margin-bottom: 1.5rem;
+}
+
+.delete-reason-input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.delete-reason-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.delete-reason-input::placeholder {
+  color: #6c757d;
+  font-style: normal;
+  font-family: inherit;
+  opacity: 0.8;
+}
+
+.delete-reason-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Dark mode styles for delete reason modal */
+:root.dark-mode .delete-reason-modal {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root.dark-mode .delete-reason-content {
+  background-color: #1a1a1a;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .delete-reason-content h3 {
+  color: #ff6b6b;
+}
+
+:root.dark-mode .delete-reason-content p {
+  color: #e9ecef;
+}
+
+:root.dark-mode .delete-reason-input-group label {
+  color: #e9ecef;
+}
+
+:root.dark-mode .delete-reason-input {
+  background-color: #2a2a2a;
+  border-color: #495057;
+  color: #f8f9fa;
+}
+
+:root.dark-mode .delete-reason-input::placeholder {
+  color: #adb5bd;
+  opacity: 0.6;
+}
+
+:root.dark-mode .delete-reason-input:focus {
+  border-color: #4dabf7;
+  box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
+}
+
+:root.dark-mode .delete-confirm-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+:root.dark-mode .delete-confirm-btn:hover {
+  background-color: #c82333;
+}
+
+:root.dark-mode .delete-cancel-btn {
+  background-color: #2a2a2a;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+:root.dark-mode .delete-cancel-btn:hover {
+  background-color: #343a40;
+  border-color: #6c757d;
+}
+
+.delete-reason-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.delete-reason-actions button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.delete-confirm-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.delete-confirm-btn:hover {
+  background-color: #c82333;
+}
+
+.delete-cancel-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.delete-cancel-btn:hover {
+  background-color: #e2e6ea;
+}
+
 /* Sort controls */
 .sort-controls {
   display: flex;
