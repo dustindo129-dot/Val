@@ -603,7 +603,48 @@ const ChapterContent = React.memo(({
         if (isEditing && chapter) {
             setEditedChapterBalance(chapter.chapterBalance || 0);
         }
-    }, [isEditing, chapter, editedTitle, setEditedTitle]);
+        
+        // Set default staff values when entering edit mode
+        if (isEditing && novelData?.active) {
+            const {active} = novelData;
+            
+            // Set default translator if not already set
+            if (!editedTranslator && setEditedTranslator) {
+                if (!active.translator?.length && novelData.author) {
+                    // Vietnamese novel - use author as default
+                    const authorValue = typeof novelData.author === 'object' ? 
+                        (novelData.author.userNumber || novelData.author._id) : 
+                        novelData.author;
+                    setEditedTranslator(authorValue);
+                } else if (active.translator?.length > 0) {
+                    // Non-Vietnamese novel - use first translator as default
+                    const firstTranslator = active.translator[0];
+                    const translatorValue = typeof firstTranslator === 'object' ? 
+                        (firstTranslator.userNumber || firstTranslator._id) : 
+                        firstTranslator;
+                    setEditedTranslator(translatorValue);
+                }
+            }
+            
+            // Set default editor if not already set
+            if (!editedEditor && setEditedEditor && active.editor?.length > 0) {
+                const firstEditor = active.editor[0];
+                const editorValue = typeof firstEditor === 'object' ? 
+                    (firstEditor.userNumber || firstEditor._id) : 
+                    firstEditor;
+                setEditedEditor(editorValue);
+            }
+            
+            // Set default proofreader if not already set
+            if (!editedProofreader && setEditedProofreader && active.proofreader?.length > 0) {
+                const firstProofreader = active.proofreader[0];
+                const proofreaderValue = typeof firstProofreader === 'object' ? 
+                    (firstProofreader.userNumber || firstProofreader._id) : 
+                    firstProofreader;
+                setEditedProofreader(proofreaderValue);
+            }
+        }
+    }, [isEditing, chapter, editedTitle, setEditedTitle, novelData, editedTranslator, setEditedTranslator, editedEditor, setEditedEditor, editedProofreader, setEditedProofreader]);
 
     // Update editedContent with mode and balance
     useEffect(() => {

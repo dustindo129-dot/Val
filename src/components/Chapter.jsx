@@ -339,6 +339,43 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     enabled: !!chapter?.moduleId
   });
 
+  // Query for staff user data to resolve userNumbers to displayNames
+  const { data: staffUsersData } = useQuery({
+    queryKey: ['staff-users', chapter?.translator, chapter?.editor, chapter?.proofreader],
+    queryFn: async () => {
+      if (!chapter) return {};
+      
+      // Collect all staff userNumbers/IDs that need to be resolved
+      const staffIds = [];
+      if (chapter.translator) staffIds.push(chapter.translator);
+      if (chapter.editor) staffIds.push(chapter.editor);
+      if (chapter.proofreader) staffIds.push(chapter.proofreader);
+      
+      if (staffIds.length === 0) return {};
+      
+      try {
+        const res = await axios.post(`${config.backendUrl}/api/users/by-ids`, {
+          ids: staffIds
+        });
+        
+        // Create a lookup map for easy access
+        const staffLookup = {};
+        res.data.users.forEach(user => {
+          // Map by both userNumber and _id for flexibility
+          if (user.userNumber) staffLookup[user.userNumber] = user;
+          if (user._id) staffLookup[user._id] = user;
+        });
+        
+        return staffLookup;
+      } catch (error) {
+        console.error('Error fetching staff users:', error);
+        return {};
+      }
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    enabled: !!(chapter?.translator || chapter?.editor || chapter?.proofreader)
+  });
+
   // Check if user can access paid content (admin/moderator/pj_user)
   const canAccessPaidContent = user && (
     user.role === 'admin' || 
@@ -1298,6 +1335,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       {/* Toolbar with staff info and chapter stats */}
       <ChapterToolbar
         chapter={chapter}
+        novel={novel}
+        staffUsersData={staffUsersData || {}}
         viewCount={viewCount}
         wordCount={wordCount}
         formatDate={formatDate}

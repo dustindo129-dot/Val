@@ -422,17 +422,37 @@ const ChapterDashboard = () => {
 
                     // For Vietnamese novels, set author as default translator
                     if (!active.translator?.length && dashboardData.novel.author) {
-                        setTranslator(dashboardData.novel.author);
+                        const authorValue = typeof dashboardData.novel.author === 'object' ? 
+                            (dashboardData.novel.author.userNumber || dashboardData.novel.author._id) : 
+                            dashboardData.novel.author;
+                        setTranslator(authorValue);
                     } else {
-                        // Set default translator for non-Vietnamese novels
+                        // Set first translator as default for non-Vietnamese novels
                         if (active.translator?.length > 0) {
-                            setTranslator(active.translator[0]);
+                            const firstTranslator = active.translator[0];
+                            const translatorValue = typeof firstTranslator === 'object' ? 
+                                (firstTranslator.userNumber || firstTranslator._id) : 
+                                firstTranslator;
+                            setTranslator(translatorValue);
                         }
-                        // Set default editor
-                        if (active.editor?.length > 0) {
-                            setEditor(active.editor[0]);
-                        }
-                        // Proofreader defaults to none
+                    }
+                    
+                    // Set first editor as default
+                    if (active.editor?.length > 0) {
+                        const firstEditor = active.editor[0];
+                        const editorValue = typeof firstEditor === 'object' ? 
+                            (firstEditor.userNumber || firstEditor._id) : 
+                            firstEditor;
+                        setEditor(editorValue);
+                    }
+                    
+                    // Set first proofreader as default
+                    if (active.proofreader?.length > 0) {
+                        const firstProofreader = active.proofreader[0];
+                        const proofreaderValue = typeof firstProofreader === 'object' ? 
+                            (firstProofreader.userNumber || firstProofreader._id) : 
+                            firstProofreader;
+                        setProofreader(proofreaderValue);
                     }
                 }
 
@@ -467,9 +487,50 @@ const ChapterDashboard = () => {
                         setChapterTitle(chapterData.title || '');
                         setChapterContent(chapterData.content || '');
                         setMode(chapterData.mode || 'published');
-                        setTranslator(chapterData.translator || '');
-                        setEditor(chapterData.editor || '');
-                        setProofreader(chapterData.proofreader || '');
+                        
+                        // Set staff with defaults if not already assigned
+                        const {active} = dashboardData.novel;
+                        
+                        // Set translator with default
+                        if (chapterData.translator) {
+                            setTranslator(chapterData.translator);
+                        } else if (!active?.translator?.length && dashboardData.novel.author) {
+                            // Vietnamese novel - use author as default
+                            const authorValue = typeof dashboardData.novel.author === 'object' ? 
+                                (dashboardData.novel.author.userNumber || dashboardData.novel.author._id) : 
+                                dashboardData.novel.author;
+                            setTranslator(authorValue);
+                        } else if (active?.translator?.length > 0) {
+                            // Non-Vietnamese novel - use first translator as default
+                            const firstTranslator = active.translator[0];
+                            const translatorValue = typeof firstTranslator === 'object' ? 
+                                (firstTranslator.userNumber || firstTranslator._id) : 
+                                firstTranslator;
+                            setTranslator(translatorValue);
+                        }
+                        
+                        // Set editor with default
+                        if (chapterData.editor) {
+                            setEditor(chapterData.editor);
+                        } else if (active?.editor?.length > 0) {
+                            const firstEditor = active.editor[0];
+                            const editorValue = typeof firstEditor === 'object' ? 
+                                (firstEditor.userNumber || firstEditor._id) : 
+                                firstEditor;
+                            setEditor(editorValue);
+                        }
+                        
+                        // Set proofreader with default
+                        if (chapterData.proofreader) {
+                            setProofreader(chapterData.proofreader);
+                        } else if (active?.proofreader?.length > 0) {
+                            const firstProofreader = active.proofreader[0];
+                            const proofreaderValue = typeof firstProofreader === 'object' ? 
+                                (firstProofreader.userNumber || firstProofreader._id) : 
+                                firstProofreader;
+                            setProofreader(proofreaderValue);
+                        }
+                        
                         setChapterBalance(chapterData.chapterBalance || 0);
 
                         // Use existing footnotes from chapter data if available

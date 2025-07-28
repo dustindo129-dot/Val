@@ -11,27 +11,43 @@ import {
  */
 const ChapterToolbar = ({
   chapter,
+  novel,
+  staffUsersData = {},
   viewCount,
   wordCount,
   formatDate
 }) => {
+  // Helper function to resolve staff member display name
+  const resolveStaffDisplayName = (staffValue) => {
+    if (!staffValue) return null;
+    
+    // First try to find in staffUsersData lookup
+    const staffUser = staffUsersData[staffValue];
+    if (staffUser) {
+      return staffUser.displayName || staffUser.userNumber || staffUser.username;
+    }
+    
+    // Fallback to the original value if not found in lookup
+    return staffValue;
+  };
+
   return (
     <div className="action-toolbar">
       {/* Staff Info */}
       <div className="staff-info">
         {chapter.translator && (
           <span className="staff-member translator">
-            <FontAwesomeIcon icon={faLanguage}/> {chapter.translator}
+            <FontAwesomeIcon icon={faLanguage}/> {resolveStaffDisplayName(chapter.translator)}
           </span>
         )}
         {chapter.editor && (
           <span className="staff-member editor">
-            <FontAwesomeIcon icon={faEdit}/> {chapter.editor}
+            <FontAwesomeIcon icon={faEdit}/> {resolveStaffDisplayName(chapter.editor)}
           </span>
         )}
         {chapter.proofreader && (
           <span className="staff-member proofreader">
-            <FontAwesomeIcon icon={faCheckDouble}/> {chapter.proofreader}
+            <FontAwesomeIcon icon={faCheckDouble}/> {resolveStaffDisplayName(chapter.proofreader)}
           </span>
         )}
         <span className="staff-member author">
