@@ -32,7 +32,7 @@ import {
 import { arrayMove } from '@dnd-kit/sortable';
 import api from '../services/api';
 import { createSlug } from '../utils/slugUtils';
-import './UserProfile.css';
+import '../styles/UserProfile.css';
 import '../components/DraggableModuleList.css';
 
 // Helper function to format numbers nicely
@@ -649,15 +649,21 @@ const UserProfile = () => {
     }
   };
 
-  // Ensure DOM is ready before rendering
+  // Ensure DOM and styles are ready before rendering
   useEffect(() => {
-    // Check if theme classes are applied to document
+    // Check if theme classes and styles are applied to document
     const checkDOMReady = () => {
+      // Check for theme class
       const hasThemeClass = document.documentElement.classList.contains('dark-mode') || 
                            document.documentElement.classList.contains('sepia-mode') ||
                            (!localStorage.getItem('theme') || localStorage.getItem('theme') === 'light');
       
-      if (hasThemeClass) {
+      // Check if critical styles are loaded by testing a unique class from UserProfile.css
+      const profileStylesLoaded = getComputedStyle(document.documentElement)
+        .getPropertyValue('--user-profile-loaded')
+        .trim() === '"true"';
+      
+      if (hasThemeClass && profileStylesLoaded) {
         setDomReady(true);
       } else {
         // Retry after a short delay
