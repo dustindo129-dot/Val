@@ -37,6 +37,27 @@
   z-index: 1000;
 }
 
+.module-item {
+  transition: all 0.2s ease;
+  border: 2px solid transparent !important;
+  background-color: transparent !important;
+  transform: scale(1) !important;
+}
+
+.module-item.drop-target {
+  border: 2px dashed #007bff !important;
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  transform: scale(1.02) !important;
+  transition: all 0.2s ease;
+}
+
+/* Force reset for items that shouldn't have drop-target styling */
+.module-item:not(.drop-target) {
+  border: 2px solid transparent !important;
+  background-color: transparent !important;
+  transform: scale(1) !important;
+}
+
 /* Hover effects for better UX */
 .module-item:hover .drag-handle {
   opacity: 1;

@@ -1060,18 +1060,39 @@ const ChapterDashboard = () => {
         }
     };
 
+    // Helper function to check if user has pj_user access
+    const checkPjUserAccess = (pjUserArray, user) => {
+        if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+        
+        return pjUserArray.some(pjUser => {
+            // Handle case where pjUser is an object (new format)
+            if (typeof pjUser === 'object' && pjUser !== null) {
+                return (
+                    pjUser._id === user.id ||
+                    pjUser._id === user._id ||
+                    pjUser.username === user.username ||
+                    pjUser.displayName === user.displayName ||
+                    pjUser.userNumber === user.userNumber
+                );
+            }
+            // Handle case where pjUser is a primitive value (old format)
+            return (
+                pjUser === user.id ||
+                pjUser === user._id ||
+                pjUser === user.username ||
+                pjUser === user.displayName ||
+                pjUser === user.userNumber
+            );
+        });
+    };
+
     // Check if user has admin privileges
     if (user?.role !== 'admin' && user?.role !== 'moderator' && user?.role !== 'pj_user') {
         return <div className="error">Không có quyền truy cập. Chỉ dành cho admin, moderator và project user.</div>;
     }
 
     // For pj_user, check if they manage this novel - but only after data has loaded
-    if (user?.role === 'pj_user' && !loading && novel && !(
-        novel?.novel?.active?.pj_user?.includes(user.id) ||
-        novel?.novel?.active?.pj_user?.includes(user._id) ||
-        novel?.novel?.active?.pj_user?.includes(user.username) ||
-        novel?.novel?.active?.pj_user?.includes(user.displayName)
-    )) {
+    if (user?.role === 'pj_user' && !loading && novel && !checkPjUserAccess(novel?.novel?.active?.pj_user, user)) {
         return <div className="error">Bạn không có quyền quản lý truyện này.</div>;
     }
 

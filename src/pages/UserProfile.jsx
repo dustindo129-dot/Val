@@ -21,6 +21,19 @@ import cdnConfig from '../config/bunny';
 
 import DraggableModuleList from '../components/DraggableModuleList';
 import InterestTagsManager from '../components/InterestTagsManager';
+// Temporarily disabled to debug hook issue
+// import {
+//   DndContext,
+//   closestCenter,
+//   KeyboardSensor,
+//   PointerSensor,
+//   useSensor,
+//   useSensors,
+// } from '@dnd-kit/core';
+// Temporarily disabled to debug hook issue
+// import { arrayMove } from '@dnd-kit/sortable';
+
+// Re-enable drag-and-drop imports with error handling
 import {
   DndContext,
   closestCenter,
@@ -34,6 +47,196 @@ import api from '../services/api';
 import { createSlug } from '../utils/slugUtils';
 import '../styles/UserProfile.css';
 import '../components/DraggableModuleList.css';
+
+// Custom drag-and-drop wrapper using native HTML5 API
+const CustomDndWrapper = ({ 
+  onDragEnd, 
+  canManageModules, 
+  userStats, 
+  canRefreshModules, 
+  handleRefreshModules,
+  canRemoveModules,
+  handleRemoveOngoingModule,
+  handleReorderOngoingModules,
+  handleRemoveCompletedModule,
+  handleReorderCompletedModules
+}) => {
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [dragOverContainer, setDragOverContainer] = useState(null);
+
+  const handleDragStart = (e, itemId, sourceContainer) => {
+    if (!canManageModules) return;
+    
+    console.log(`[GLOBAL] Drag started: ${itemId.slice(-6)} from ${sourceContainer}`);
+    setDraggedItem({ id: itemId, source: sourceContainer });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemId);
+  };
+
+  const handleDragOver = (e, targetContainer) => {
+    if (!canManageModules || !draggedItem) return;
+    
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverContainer(targetContainer);
+  };
+
+  const handleDragLeave = (e) => {
+    // Only clear if we're leaving the container, not a child element
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverContainer(null);
+    }
+  };
+
+  const handleDrop = (e, targetContainer, mockEvent = null) => {
+    if (!canManageModules || !draggedItem) return;
+    
+    e.preventDefault();
+    setDragOverContainer(null);
+    
+    console.log(`[GLOBAL] Drop handled: ${draggedItem.id.slice(-6)} to ${targetContainer}${mockEvent ? ' (item-to-item)' : ' (container)'}`);
+    
+    // Clear all drop-target states immediately
+    const clearAllDropTargets = () => {
+      const dropTargets = document.querySelectorAll('.module-item.drop-target');
+      console.log(`[GLOBAL] Clearing ${dropTargets.length} drop targets`);
+      dropTargets.forEach(element => {
+        element.classList.remove('drop-target');
+      });
+    };
+    
+    // Clear immediately
+    clearAllDropTargets();
+    
+    let finalEvent;
+    
+    if (mockEvent) {
+      // This is an item-to-item drop (for reordering)
+      finalEvent = mockEvent;
+      console.log(`[GLOBAL] Processing item-to-item drop: ${mockEvent.active.id.slice(-6)} -> ${mockEvent.over.id.slice(-6)}`);
+    } else {
+      // This is a container drop (for cross-section moves)
+      finalEvent = {
+        active: { id: draggedItem.id },
+        over: { 
+          id: targetContainer,
+          data: { current: { containerId: targetContainer } }
+        },
+        draggedFrom: draggedItem.source,
+        draggedTo: targetContainer,
+        dropType: 'container'
+      };
+      console.log(`[GLOBAL] Processing container drop: ${draggedItem.id.slice(-6)} -> ${targetContainer}`);
+    }
+    
+    onDragEnd(finalEvent);
+    setDraggedItem(null);
+    
+    // Ensure cleanup happens after state updates
+    setTimeout(() => {
+      clearAllDropTargets();
+      console.log(`[GLOBAL] Post-operation cleanup completed`);
+    }, 0);
+  };
+
+  const handleDragEnd = () => {
+    console.log(`[GLOBAL] Drag end event fired`);
+    setDraggedItem(null);
+    setDragOverContainer(null);
+    
+    // Clear all drop-target states by forcing a re-render
+    // This ensures any lingering drop-target styles are cleared
+    const clearAllDropTargets = () => {
+      const dropTargets = document.querySelectorAll('.module-item.drop-target');
+      console.log(`[GLOBAL] Drag end cleanup: clearing ${dropTargets.length} drop targets`);
+      dropTargets.forEach(element => {
+        element.classList.remove('drop-target');
+      });
+    };
+    
+    // Clear immediately and after a short delay to catch any late updates
+    clearAllDropTargets();
+    setTimeout(() => {
+      clearAllDropTargets();
+      console.log(`[GLOBAL] Final cleanup completed`);
+    }, 0);
+    setTimeout(() => {
+      clearAllDropTargets();
+      console.log(`[GLOBAL] Extended cleanup completed`);
+    }, 100);
+  };
+
+  // Create drag handlers object to pass down
+  const dragHandlers = {
+    onDragStart: handleDragStart,
+    onDragOver: handleDragOver,
+    onDragLeave: handleDragLeave,
+    onDrop: handleDrop,
+    draggedItem,
+    dragOverContainer,
+    canManageModules
+  };
+
+  return (
+    <div 
+      onDragEnd={handleDragEnd}
+      data-custom-dnd-wrapper="true"
+    >
+      <div className="profile-novels-section-content">
+        {/* Ongoing Modules */}
+        <div className="novels-card ongoing-novels">
+          <div className="card-header">
+            <h3>
+              <span className="section-number">{userStats.ongoingModules.length}</span>
+              Đang tiến hành
+              {canRefreshModules && (
+                <button 
+                  className="refresh-modules-btn"
+                  onClick={handleRefreshModules}
+                  title="Làm mới danh sách tập"
+                >
+                  <i className="fa-solid fa-refresh"></i>
+                </button>
+              )}
+            </h3>
+          </div>
+          <DraggableModuleList
+            modules={userStats.ongoingModules}
+            canManageModules={canManageModules}
+            canRemoveModules={canRemoveModules}
+            onRemove={handleRemoveOngoingModule}
+            onReorder={handleReorderOngoingModules}
+            emptyMessage={canManageModules ? 'Chưa có tập đang tiến hành. Kéo tập từ "Đã hoàn thành" để thêm vào đây.' : 'Không có tập đang tiến hành'}
+            type="ongoing"
+            containerId="ongoing"
+            dragHandlers={dragHandlers}
+          />
+        </div>
+
+        {/* Completed Modules */}
+        <div className="novels-card completed-novels">
+          <div className="card-header">
+            <h3>
+              <span className="section-number">{userStats.completedModules.length}</span>
+              Đã hoàn thành
+            </h3>
+          </div>
+          <DraggableModuleList
+            modules={userStats.completedModules}
+            canManageModules={canManageModules}
+            canRemoveModules={canRemoveModules}
+            onRemove={handleRemoveCompletedModule}
+            onReorder={handleReorderCompletedModules}
+            emptyMessage={canManageModules ? 'Chưa có tập đã hoàn thành. Kéo tập từ "Đang tiến hành" để thêm vào đây.' : 'Không có tập đã hoàn thành'}
+            type="completed"
+            containerId="completed"
+            dragHandlers={dragHandlers}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Helper function to format numbers nicely
 const formatNumber = (num) => {
@@ -116,16 +319,6 @@ const UserProfile = () => {
   // Check if current user is viewing their own profile
   const isOwnProfile = user && profileUser && user.username === profileUser.username;
   
-  // Drag and drop sensors for cross-section dragging
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Require 8px of movement before dragging starts
-      },
-    }),
-    useSensor(KeyboardSensor)
-  );
-  
   // Check if user has permission to manage modules
   // System roles: admin, moderator, pj_user
   // Novel-specific roles: translator, editor, proofreader (checked via novel staff assignments)
@@ -141,8 +334,10 @@ const UserProfile = () => {
   // Separate permission for remove buttons - admin/mod only
   const canRemoveModules = user && ['admin', 'moderator'].includes(user.role);
 
-  // Separate permission for refresh button - admin/mod or own profile
+    // Separate permission for refresh button - admin/mod or own profile
   const canRefreshModules = user && (['admin', 'moderator'].includes(user.role) || isOwnProfile);
+
+
 
   /**
    * Fetch user profile data
@@ -587,9 +782,9 @@ const UserProfile = () => {
     }
   };
 
-  // Handle cross-section dragging (ongoing <-> completed)
+  // Handle both cross-section dragging and within-section reordering
   const handleCrossSectionDrag = (event) => {
-    const { active, over } = event;
+    const { active, over, dropType } = event;
     
     if (!over || !canManageModules) return;
     
@@ -610,7 +805,7 @@ const UserProfile = () => {
     const droppingInOngoing = overIsOngoingContainer || overIsOngoingItem;
     const droppingInCompleted = overIsCompletedContainer || overIsCompletedItem;
     
-    // Cross-section moves
+    // Cross-section moves (between different sections)
     if (activeInOngoing && droppingInCompleted) {
       handleMoveToCompleted(activeId);
       return;
@@ -621,28 +816,44 @@ const UserProfile = () => {
       return;
     }
     
-    // Handle reordering within the same section
-    if (activeId !== overId && over) {
+    // Handle reordering within the same section (only for item drops)
+    if (dropType === 'item' && activeId !== overId) {
       // Reorder within ongoing section
-      if (activeInOngoing && (overIsOngoingItem || overIsOngoingContainer)) {
+      if (activeInOngoing && overIsOngoingItem) {
         const oldIndex = userStats.ongoingModules.findIndex(item => item.moduleId._id === activeId);
         const newIndex = userStats.ongoingModules.findIndex(item => item.moduleId._id === overId);
         
         if (oldIndex !== -1 && newIndex !== -1) {
           const newOrder = arrayMove(userStats.ongoingModules, oldIndex, newIndex);
           handleReorderOngoingModules(newOrder);
+          
+          // Force cleanup after successful within-section reorder
+          setTimeout(() => {
+            const dropTargets = document.querySelectorAll('.module-item.drop-target');
+            dropTargets.forEach(element => {
+              element.classList.remove('drop-target');
+            });
+          }, 100);
         }
         return;
       }
       
       // Reorder within completed section
-      if (activeInCompleted && (overIsCompletedItem || overIsCompletedContainer)) {
+      if (activeInCompleted && overIsCompletedItem) {
         const oldIndex = userStats.completedModules.findIndex(item => item.moduleId._id === activeId);
         const newIndex = userStats.completedModules.findIndex(item => item.moduleId._id === overId);
         
         if (oldIndex !== -1 && newIndex !== -1) {
           const newOrder = arrayMove(userStats.completedModules, oldIndex, newIndex);
           handleReorderCompletedModules(newOrder);
+          
+          // Force cleanup after successful within-section reorder
+          setTimeout(() => {
+            const dropTargets = document.querySelectorAll('.module-item.drop-target');
+            dropTargets.forEach(element => {
+              element.classList.remove('drop-target');
+            });
+          }, 100);
         }
         return;
       }
@@ -872,60 +1083,18 @@ const UserProfile = () => {
 
             {/* Right Column - Modules Sections */}
             <div className="profile-novels-section">
-              <DndContext 
-                sensors={sensors}
-                collisionDetection={closestCenter}
+              <CustomDndWrapper 
                 onDragEnd={handleCrossSectionDrag}
-              >
-                {/* Ongoing Modules */}
-                <div className="novels-card ongoing-novels">
-                  <div className="card-header">
-                    <h3>
-                      <span className="section-number">{userStats.ongoingModules.length}</span>
-                      Đang tiến hành
-                      {canRefreshModules && (
-                        <button 
-                          className="refresh-modules-btn"
-                          onClick={handleRefreshModules}
-                          title="Làm mới danh sách tập"
-                        >
-                          <i className="fa-solid fa-refresh"></i>
-                        </button>
-                      )}
-                    </h3>
-                  </div>
-                  <DraggableModuleList
-                    modules={userStats.ongoingModules}
-                    canManageModules={canManageModules}
-                    canRemoveModules={canRemoveModules}
-                    onRemove={handleRemoveOngoingModule}
-                    onReorder={handleReorderOngoingModules}
-                    emptyMessage={canManageModules ? 'Chưa có tập đang tiến hành. Kéo tập từ "Đã hoàn thành" để thêm vào đây.' : 'Không có tập đang tiến hành'}
-                    type="ongoing"
-                    containerId="ongoing"
-                  />
-                </div>
-
-                {/* Completed Modules */}
-                <div className="novels-card completed-novels">
-                  <div className="card-header">
-                    <h3>
-                      <span className="section-number">{userStats.completedModules.length}</span>
-                      Đã hoàn thành
-                    </h3>
-                  </div>
-                  <DraggableModuleList
-                    modules={userStats.completedModules}
-                    canManageModules={canManageModules}
-                    canRemoveModules={canRemoveModules}
-                    onRemove={handleRemoveCompletedModule}
-                    onReorder={handleReorderCompletedModules}
-                    emptyMessage={canManageModules ? 'Chưa có tập đã hoàn thành. Kéo tập từ "Đang tiến hành" để thêm vào đây.' : 'Không có tập đã hoàn thành'}
-                    type="completed"
-                    containerId="completed"
-                  />
-                </div>
-              </DndContext>
+                canManageModules={canManageModules}
+                userStats={userStats}
+                canRefreshModules={canRefreshModules}
+                handleRefreshModules={handleRefreshModules}
+                canRemoveModules={canRemoveModules}
+                handleRemoveOngoingModule={handleRemoveOngoingModule}
+                handleReorderOngoingModules={handleReorderOngoingModules}
+                handleRemoveCompletedModule={handleRemoveCompletedModule}
+                handleReorderCompletedModules={handleReorderCompletedModules}
+              />
             </div>
           </div>
         </div>
