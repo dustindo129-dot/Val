@@ -1393,18 +1393,6 @@
   background-color: #3c3c3c;
 }
 
-.chapter-controls {
-  display: flex;
-  align-items: center;
-  padding: 10px 15px;
-  background-color: #f0f9ff;
-  border-radius: 6px;
-  border: 1px solid #bae6fd;
-  margin: 0;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-
 .chapter-controls label {
   margin-right: 10px;
   font-weight: bold;

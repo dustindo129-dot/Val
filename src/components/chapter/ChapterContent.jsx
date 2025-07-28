@@ -1532,34 +1532,79 @@ const ChapterContent = React.memo(({
                 </h2>
                 {canEdit && isEditing && (
                     <div className="chapter-controls">
-                        <label>Chế độ chương:</label>
-                        <select
-                            value={editedMode}
-                            onChange={(e) => handleModeChange(e.target.value)}
-                            className="mode-dropdown"
-                            disabled={userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid')}
-                        >
-                            <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất
-                                cả)
-                            </option>
-                            <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
-                            <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng nhập)
-                            </option>
-                            {userRole === 'admin' && (
-                                <option value="paid" disabled={isModulePaid}>
-                                    {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
-                                </option>
-                            )}
-                        </select>
-
-                        {userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid') && (
-                            <div className="mode-info" style={{color: '#666', fontSize: '12px', marginTop: '5px'}}>
-                                Bạn không thể thay đổi chế độ trả phí. Chỉ admin mới có thể thay đổi.
+                        <div className="chapter-controls-grid">
+                            {/* Column 1: Mode Controls */}
+                            <div className="control-column mode-column">
+                                <label className="control-label">Chế độ chương:</label>
+                                <div className="mode-dropdown-container">
+                                    <select
+                                        value={editedMode}
+                                        onChange={(e) => handleModeChange(e.target.value)}
+                                        className="mode-dropdown"
+                                        disabled={userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid')}
+                                        title={userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid') ? 
+                                            'Bạn không thể thay đổi chế độ trả phí. Chỉ admin mới có thể thay đổi.' : ''}
+                                    >
+                                        <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất
+                                            cả)
+                                        </option>
+                                        <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
+                                        <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng nhập)
+                                        </option>
+                                        {(userRole === 'admin' || (userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid'))) && (
+                                            <option value="paid" disabled={isModulePaid || (userRole === 'pj_user')}>
+                                                {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
+                                            </option>
+                                        )}
+                                    </select>
+                                </div>
                             </div>
-                        )}
 
+                            {/* Column 2: Auto-save Status */}
+                            <div className="control-column autosave-column">
+                                {isEditing && (autoSaveStatus || lastSaved) && (
+                                    <div className="auto-save-status">
+                                        {autoSaveStatus && (
+                                            <span className="auto-save-message">{autoSaveStatus}</span>
+                                        )}
+                                        {lastSaved && !autoSaveStatus && (
+                                            <span className="last-saved">
+                                                Lần cuối tự động lưu: {lastSaved.toLocaleTimeString('vi-VN')}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Column 3: Balance Info */}
+                            <div className="control-column balance-column">
+                                {editedMode === 'paid' && (
+                                    <>
+                                        <label className="control-label">Số lúa chương hiện tại:</label>
+                                        {userRole === 'admin' ? (
+                                            <div className="chapter-balance-input">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    value={editedChapterBalance}
+                                                    onChange={(e) => setEditedChapterBalance(e.target.value)}
+                                                    placeholder="Nhập số lúa chương (tối thiểu 1)"
+                                                />
+                                                <span className="balance-unit">🌾</span>
+                                            </div>
+                                        ) : (
+                                            <div className="chapter-balance-display">
+                                                {originalChapterBalance} 🌾 (Chỉ admin mới có thể thay đổi)
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Error Messages - Full Width */}
                         {modeError && (
-                            <div className="mode-error" style={{color: 'red', fontSize: '14px', marginTop: '5px'}}>
+                            <div className="mode-error">
                                 {modeError}
                             </div>
                         )}
@@ -1574,46 +1619,6 @@ const ChapterContent = React.memo(({
                                 >
                                     ×
                                 </button>
-                            </div>
-                        )}
-
-                        {isEditing && (autoSaveStatus || lastSaved) && (
-                            <div className="auto-save-status">
-                                {autoSaveStatus && (
-                                    <span className="auto-save-message">{autoSaveStatus}</span>
-                                )}
-                                {lastSaved && !autoSaveStatus && (
-                                    <span className="last-saved">
-                    Lần cuối tự động lưu: {lastSaved.toLocaleTimeString('vi-VN')}
-                  </span>
-                                )}
-                            </div>
-                        )}
-
-                        {editedMode === 'paid' && userRole === 'admin' && (
-                            <div className="chapter-balance-input">
-                                <label>Số lúa chương (Tối thiểu 1 🌾):</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={editedChapterBalance}
-                                    onChange={(e) => setEditedChapterBalance(e.target.value)}
-                                    placeholder="Nhập số lúa chương (tối thiểu 1)"
-                                />
-                            </div>
-                        )}
-
-                        {editedMode === 'paid' && userRole === 'pj_user' && originalChapterBalance > 0 && (
-                            <div className="chapter-balance-info">
-                                <label>Số lúa chương hiện tại:</label>
-                                <div style={{
-                                    padding: '8px',
-                                    backgroundColor: '#f5f5f5',
-                                    borderRadius: '4px',
-                                    color: '#666'
-                                }}>
-                                    {originalChapterBalance} 🌾 (Chỉ admin mới có thể thay đổi)
-                                </div>
                             </div>
                         )}
                     </div>

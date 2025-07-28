@@ -118,18 +118,15 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
   // Clear drop target state when drag operation ends globally
   useEffect(() => {
     if (!dragHandlers?.draggedItem) {
-      console.log(`[${moduleData.moduleId._id.slice(-6)}] Global drag ended, cleaning up`);
       isCleaningUpRef.current = true;
       setIsDropTarget(false);
       // Also manually remove the class to ensure it's gone
       if (itemRef.current) {
         itemRef.current.classList.remove('drop-target');
-        console.log(`[${moduleData.moduleId._id.slice(-6)}] Manually removed drop-target class from DOM`);
       }
       // Reset cleanup flag after a short delay
       setTimeout(() => {
         isCleaningUpRef.current = false;
-        console.log(`[${moduleData.moduleId._id.slice(-6)}] Cleanup flag reset to false`);
       }, 200);
     }
   }, [dragHandlers?.draggedItem]);
@@ -138,14 +135,12 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
   useEffect(() => {
     if (!isDropTarget && itemRef.current) {
       itemRef.current.classList.remove('drop-target');
-      console.log(`[${moduleData.moduleId._id.slice(-6)}] Force cleanup: removed drop-target class (isDropTarget: ${isDropTarget})`);
     }
   }, [isDropTarget]);
   
   const handleDragStart = (e) => {
     if (!canManageModules || !dragHandlers) return;
     
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] Drag started`);
     isCleaningUpRef.current = false; // Reset cleanup flag when starting new drag
     setIsDragging(true);
     dragHandlers.onDragStart(e, moduleData.moduleId._id, containerType);
@@ -155,13 +150,11 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
   };
 
   const handleDragEnd = (e) => {
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] Drag ended`);
     setIsDragging(false);
     setIsDropTarget(false);
     e.currentTarget.style.opacity = '1';
     // Force remove the class
     e.currentTarget.classList.remove('drop-target');
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] Drag end: removed drop-target class`);
   };
 
   const handleDragOver = (e) => {
@@ -169,7 +162,6 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     
     // Don't set drop target if we're in cleanup phase
     if (isCleaningUpRef.current) {
-      console.log(`[${moduleData.moduleId._id.slice(-6)}] Drag over blocked - in cleanup phase`);
       return;
     }
     
@@ -178,7 +170,6 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     
     e.preventDefault();
     e.stopPropagation(); // Prevent container from handling this
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] Setting as drop target (dragging: ${dragHandlers.draggedItem.id.slice(-6)})`);
     setIsDropTarget(true);
   };
 
@@ -187,7 +178,6 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     
     // Only clear if we're actually leaving this item
     if (!e.currentTarget.contains(e.relatedTarget)) {
-      console.log(`[${moduleData.moduleId._id.slice(-6)}] Drag leave - clearing drop target`);
       setIsDropTarget(false);
     }
   };
@@ -201,15 +191,11 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     e.preventDefault();
     e.stopPropagation(); // Prevent container from handling this
     
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] Drop received from ${dragHandlers.draggedItem.id.slice(-6)}`);
-    
     // Set cleanup flag immediately
     isCleaningUpRef.current = true;
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] Cleanup flag set to true`);
     
     // Clear drop target state immediately
     setIsDropTarget(false);
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] isDropTarget set to false`);
     
     // Force remove the class immediately and reset styles
     const element = e.currentTarget;
@@ -218,7 +204,6 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     element.style.border = '2px solid transparent';
     element.style.backgroundColor = 'transparent';
     element.style.transform = 'scale(1)';
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] Immediately removed drop-target class and reset styles`);
     
     // Create a mock event for item-to-item drop (for reordering)
     const mockEvent = {
@@ -245,14 +230,12 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
         itemRef.current.style.transform = 'scale(1)';
         // Force reflow
         itemRef.current.offsetHeight;
-        console.log(`[${moduleData.moduleId._id.slice(-6)}] Timeout cleanup: removed drop-target class and reset styles`);
       }
     }, 0);
     
     // Keep cleanup flag active for longer to prevent re-adding the class
     setTimeout(() => {
       isCleaningUpRef.current = false;
-      console.log(`[${moduleData.moduleId._id.slice(-6)}] Cleanup flag reset to false after 300ms`);
     }, 300);
   };
 
@@ -274,8 +257,6 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     if (shouldAddDropTarget) {
       classes.push('drop-target');
     }
-    
-    console.log(`[${moduleData.moduleId._id.slice(-6)}] getClassName: isDropTarget=${isDropTarget}, isCleaningUp=${isCleaningUpRef.current}, shouldAdd=${shouldAddDropTarget}, classes=${classes.join(' ')}`);
     
     return classes.join(' ');
   };

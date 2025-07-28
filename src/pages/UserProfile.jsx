@@ -67,7 +67,6 @@ const CustomDndWrapper = ({
   const handleDragStart = (e, itemId, sourceContainer) => {
     if (!canManageModules) return;
     
-    console.log(`[GLOBAL] Drag started: ${itemId.slice(-6)} from ${sourceContainer}`);
     setDraggedItem({ id: itemId, source: sourceContainer });
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', itemId);
@@ -94,12 +93,9 @@ const CustomDndWrapper = ({
     e.preventDefault();
     setDragOverContainer(null);
     
-    console.log(`[GLOBAL] Drop handled: ${draggedItem.id.slice(-6)} to ${targetContainer}${mockEvent ? ' (item-to-item)' : ' (container)'}`);
-    
     // Clear all drop-target states immediately
     const clearAllDropTargets = () => {
       const dropTargets = document.querySelectorAll('.module-item.drop-target');
-      console.log(`[GLOBAL] Clearing ${dropTargets.length} drop targets`);
       dropTargets.forEach(element => {
         element.classList.remove('drop-target');
       });
@@ -113,7 +109,6 @@ const CustomDndWrapper = ({
     if (mockEvent) {
       // This is an item-to-item drop (for reordering)
       finalEvent = mockEvent;
-      console.log(`[GLOBAL] Processing item-to-item drop: ${mockEvent.active.id.slice(-6)} -> ${mockEvent.over.id.slice(-6)}`);
     } else {
       // This is a container drop (for cross-section moves)
       finalEvent = {
@@ -126,7 +121,6 @@ const CustomDndWrapper = ({
         draggedTo: targetContainer,
         dropType: 'container'
       };
-      console.log(`[GLOBAL] Processing container drop: ${draggedItem.id.slice(-6)} -> ${targetContainer}`);
     }
     
     onDragEnd(finalEvent);
@@ -135,12 +129,10 @@ const CustomDndWrapper = ({
     // Ensure cleanup happens after state updates
     setTimeout(() => {
       clearAllDropTargets();
-      console.log(`[GLOBAL] Post-operation cleanup completed`);
     }, 0);
   };
 
   const handleDragEnd = () => {
-    console.log(`[GLOBAL] Drag end event fired`);
     setDraggedItem(null);
     setDragOverContainer(null);
     
@@ -148,7 +140,6 @@ const CustomDndWrapper = ({
     // This ensures any lingering drop-target styles are cleared
     const clearAllDropTargets = () => {
       const dropTargets = document.querySelectorAll('.module-item.drop-target');
-      console.log(`[GLOBAL] Drag end cleanup: clearing ${dropTargets.length} drop targets`);
       dropTargets.forEach(element => {
         element.classList.remove('drop-target');
       });
@@ -158,11 +149,9 @@ const CustomDndWrapper = ({
     clearAllDropTargets();
     setTimeout(() => {
       clearAllDropTargets();
-      console.log(`[GLOBAL] Final cleanup completed`);
     }, 0);
     setTimeout(() => {
       clearAllDropTargets();
-      console.log(`[GLOBAL] Extended cleanup completed`);
     }, 100);
   };
 
