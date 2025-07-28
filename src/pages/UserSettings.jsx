@@ -54,7 +54,7 @@ const UserSettingsSEO = ({ user, username }) => {
       <meta property="og:title" content={`Cài Đặt - ${displayName} | Valvrareteam`} />
       <meta property="og:description" content={`Cài đặt tài khoản của ${displayName} tại Valvrareteam.`} />
       <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${username}/cai-dat`} />
+      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${user?.userNumber || username}/cai-dat`} />
       <meta property="og:type" content="profile" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -74,8 +74,8 @@ const UserSettingsSEO = ({ user, username }) => {
  * Main component for user settings management
  */
 const UserSettings = () => {
-  // Get displayNameSlug from URL parameters
-  const { username: displayNameSlug } = useParams();
+  // Get userNumber from URL parameters
+  const { userNumber } = useParams();
   // Get user context and update function
   const { user, updateUser, signOut } = useAuth();
   
@@ -102,14 +102,14 @@ const UserSettings = () => {
    */
   useEffect(() => {
     const resolveUser = async () => {
-      if (!displayNameSlug) return;
+      if (!userNumber) return;
       
       try {
         setUserResolutionLoading(true);
         
-        // Try to resolve the display name slug to a user
+        // Try to resolve the userNumber to a user
         const response = await axios.get(
-          `${config.backendUrl}/api/users/${displayNameSlug}/public-profile`,
+          `${config.backendUrl}/api/users/number/${userNumber}/public-profile`,
           { params: { skipVisitorTracking: 'true' } }
         );
         
@@ -123,7 +123,7 @@ const UserSettings = () => {
     };
     
     resolveUser();
-  }, [displayNameSlug]);
+  }, [userNumber]);
 
   /**
    * Initialize form data with user information
@@ -177,7 +177,7 @@ const UserSettings = () => {
   const fetchBlockedUsers = async () => {
     try {
       const response = await axios.get(
-        `${config.backendUrl}/api/users/${displayNameSlug}/blocked`,
+        `${config.backendUrl}/api/users/number/${userNumber}/blocked`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setBlockedUsers(response.data);
@@ -201,7 +201,7 @@ const UserSettings = () => {
   const handleUnblock = async (blockedUsername) => {
     try {
       await axios.delete(
-        `${config.backendUrl}/api/users/${displayNameSlug}/block/${blockedUsername}`,
+        `${config.backendUrl}/api/users/number/${userNumber}/block/${blockedUsername}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       setBlockedUsers(prev => prev.filter(user => user.username !== blockedUsername));
@@ -265,7 +265,7 @@ const UserSettings = () => {
 
       // Send avatar URL to backend
       await api.post(
-        `/api/users/${displayNameSlug}/avatar`,
+        `/api/users/number/${userNumber}/avatar`,
         {
           avatar: newAvatarUrl
         }
@@ -328,7 +328,7 @@ const UserSettings = () => {
       });
 
       const response = await api.put(
-        `/api/users/${displayNameSlug}/display-name`,
+        `/api/users/number/${userNumber}/display-name`,
         { displayName: displayName.trim() }
       );
 
@@ -400,7 +400,7 @@ const UserSettings = () => {
       });
 
       const response = await api.put(
-        `/api/users/${displayNameSlug}/email`,
+        `/api/users/number/${userNumber}/email`,
         {
           email: newEmail,
           currentPassword: emailCurrentPassword
@@ -448,7 +448,7 @@ const UserSettings = () => {
     try {
       setIsLoading(true);
       await axios.put(
-        `/api/users/${displayNameSlug}/password`,
+        `/api/users/number/${userNumber}/password`,
         {
           currentPassword: passwordCurrentPassword,
           newPassword
@@ -597,7 +597,7 @@ const UserSettings = () => {
                 required
               />
               <small className="form-text">
-                Tên hiển thị sẽ được hiển thị thay vì tên người dùng trong các bình luận và trang cá nhân (Được phép cập nhật 1 lần mỗi tháng).
+                Tên hiển thị sẽ được hiển thị thay vì tên người dùng trong các bình luận và trang cá nhân. Cho phép chữ cái, số, khoảng trắng và các ký tự Việt Nam. Không được chứa ký tự đặc biệt (được phép cập nhật 1 lần mỗi tháng).
               </small>
               {!canChangeDisplayName && nextDisplayNameChange && (
                 <small className="form-text text-warning">

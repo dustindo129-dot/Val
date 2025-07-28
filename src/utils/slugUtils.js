@@ -129,68 +129,84 @@ export const generateLocalizedChapterUrl = (novel, chapter) => {
 
 /**
  * Generates a user profile URL (Primary)
- * @param {Object} user - User object with displayName and username
+ * @param {Object} user - User object with userNumber (preferred) or displayName/username (fallback)
  * @returns {string} User profile URL
  */
 export const generateUserProfileUrl = (user) => {
   if (!user) return '/';
   
-  // Use displayName, fallback to username
+  // Prefer userNumber if available (new system)
+  if (user.userNumber) {
+    return `/nguoi-dung/${user.userNumber}/trang-ca-nhan`;
+  }
+  
+  // Fallback to old displayName/username slug system for backward compatibility
   const displayName = user.displayName || user.username;
   if (!displayName) return '/';
   
-  // Convert displayName to URL-safe slug
   const urlSafeIdentifier = createSlug(displayName) || displayName;
   return `/nguoi-dung/${urlSafeIdentifier}/trang-ca-nhan`;
 };
 
 /**
  * Generates a user settings URL (Primary)
- * @param {Object} user - User object with displayName and username
+ * @param {Object} user - User object with userNumber (preferred) or displayName/username (fallback)
  * @returns {string} User settings URL
  */
 export const generateUserSettingsUrl = (user) => {
   if (!user) return '/';
   
-  // Use displayName, fallback to username
+  // Prefer userNumber if available (new system)
+  if (user.userNumber) {
+    return `/nguoi-dung/${user.userNumber}/cai-dat`;
+  }
+  
+  // Fallback to old displayName/username slug system for backward compatibility
   const displayName = user.displayName || user.username;
   if (!displayName) return '/';
   
-  // Convert displayName to URL-safe slug
   const urlSafeIdentifier = createSlug(displayName) || displayName;
   return `/nguoi-dung/${urlSafeIdentifier}/cai-dat`;
 };
 
 /**
  * Generates a user bookmarks URL (Primary)
- * @param {Object} user - User object with displayName and username
+ * @param {Object} user - User object with userNumber (preferred) or displayName/username (fallback)
  * @returns {string} User bookmarks URL
  */
 export const generateUserBookmarksUrl = (user) => {
   if (!user) return '/';
   
-  // Use displayName, fallback to username
+  // Prefer userNumber if available (new system)
+  if (user.userNumber) {
+    return `/nguoi-dung/${user.userNumber}/truyen-danh-dau`;
+  }
+  
+  // Fallback to old displayName/username slug system for backward compatibility
   const displayName = user.displayName || user.username;
   if (!displayName) return '/';
   
-  // Convert displayName to URL-safe slug
   const urlSafeIdentifier = createSlug(displayName) || displayName;
   return `/nguoi-dung/${urlSafeIdentifier}/truyen-danh-dau`;
 };
 
 /**
  * Generates a user change password URL (Primary)
- * @param {Object} user - User object with displayName and username
+ * @param {Object} user - User object with userNumber (preferred) or displayName/username (fallback)
  * @returns {string} User change password URL
  */
 export const generateUserChangePasswordUrl = (user) => {
   if (!user) return '/';
   
-  // Use displayName, fallback to username
+  // Prefer userNumber if available (new system)
+  if (user.userNumber) {
+    return `/nguoi-dung/${user.userNumber}/thay-doi-mat-khau`;
+  }
+  
+  // Fallback to old displayName/username slug system for backward compatibility
   const displayName = user.displayName || user.username;
   if (!displayName) return '/';
   
-  // Convert displayName to URL-safe slug
   const urlSafeIdentifier = createSlug(displayName) || displayName;
   return `/nguoi-dung/${urlSafeIdentifier}/thay-doi-mat-khau`;
 };
@@ -198,31 +214,34 @@ export const generateUserChangePasswordUrl = (user) => {
 /**
  * @deprecated Use generateUserProfileUrl instead (now uses Vietnamese paths by default)
  * Generates a localized user profile URL
- * @param {string} username - The username
+ * @param {number} userNumber - The user number
  * @returns {string} Localized user profile URL
  */
-export const generateLocalizedUserProfileUrl = (username) => {
-  return generateUserProfileUrl(username);
+export const generateLocalizedUserProfileUrl = (userNumber) => {
+  if (!userNumber) return '/';
+  return `/nguoi-dung/${userNumber}/trang-ca-nhan`;
 };
 
 /**
  * @deprecated Use generateUserBookmarksUrl instead (now uses Vietnamese paths by default)
  * Generates a localized user bookmarks URL
- * @param {string} username - The username
+ * @param {number} userNumber - The user number
  * @returns {string} Localized user bookmarks URL
  */
-export const generateLocalizedUserBookmarksUrl = (username) => {
-  return generateUserBookmarksUrl(username);
+export const generateLocalizedUserBookmarksUrl = (userNumber) => {
+  if (!userNumber) return '/';
+  return `/nguoi-dung/${userNumber}/truyen-danh-dau`;
 };
 
 /**
  * @deprecated Use generateUserChangePasswordUrl instead (now uses Vietnamese paths by default)
  * Generates a localized change password URL
- * @param {string} username - The username
+ * @param {number} userNumber - The user number
  * @returns {string} Localized change password URL
  */
-export const generateLocalizedChangePasswordUrl = (username) => {
-  return generateUserChangePasswordUrl(username);
+export const generateLocalizedChangePasswordUrl = (userNumber) => {
+  if (!userNumber) return '/';
+  return `/nguoi-dung/${userNumber}/thay-doi-mat-khau`;
 };
 
 /**

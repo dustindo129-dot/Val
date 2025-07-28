@@ -124,8 +124,9 @@ export const generateLocalizedAddChapterUrl = (novel, module, createUniqueSlug) 
 };
 
 /**
+ * @deprecated Use generateUserProfileUrl instead - this function is kept for backward compatibility
  * Generates a localized user profile URL
- * @param {string} username - The username
+ * @param {string} username - The username (deprecated - use user object with userNumber)
  * @returns {string} Localized user profile URL
  */
 export const generateLocalizedUserProfileUrl = (username) => {
@@ -134,8 +135,9 @@ export const generateLocalizedUserProfileUrl = (username) => {
 };
 
 /**
+ * @deprecated Use generateUserSettingsUrl instead - this function is kept for backward compatibility
  * Generates a localized user settings URL
- * @param {string} username - The username
+ * @param {string} username - The username (deprecated - use user object with userNumber)
  * @returns {string} Localized user settings URL
  */
 export const generateLocalizedUserSettingsUrl = (username) => {
@@ -144,8 +146,9 @@ export const generateLocalizedUserSettingsUrl = (username) => {
 };
 
 /**
+ * @deprecated Use generateUserBookmarksUrl instead - this function is kept for backward compatibility
  * Generates a localized user bookmarks URL
- * @param {string} username - The username
+ * @param {string} username - The username (deprecated - use user object with userNumber)
  * @returns {string} Localized user bookmarks URL
  */
 export const generateLocalizedUserBookmarksUrl = (username) => {
@@ -154,8 +157,9 @@ export const generateLocalizedUserBookmarksUrl = (username) => {
 };
 
 /**
+ * @deprecated Use generateUserChangePasswordUrl instead - this function is kept for backward compatibility
  * Generates a localized change password URL
- * @param {string} username - The username
+ * @param {string} username - The username (deprecated - use user object with userNumber)
  * @returns {string} Localized change password URL
  */
 export const generateLocalizedChangePasswordUrl = (username) => {

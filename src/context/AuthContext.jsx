@@ -238,6 +238,30 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Refreshes user data from the server to get updated fields like userNumber
+   */
+  const refreshUserData = async (userData) => {
+    try {
+      const storedToken = localStorage.getItem('token');
+      if (!storedToken || !userData) return null;
+
+      // Try to get updated user data from the profile endpoint
+      const userResponse = await axios.get(`${config.backendUrl}/api/users/${userData.displayName || userData.username}/profile`, {
+        headers: { Authorization: `Bearer ${storedToken}` }
+      });
+
+      const updatedUserData = userResponse.data;
+      setUser(updatedUserData);
+      localStorage.setItem('user', JSON.stringify(updatedUserData));
+      
+      return updatedUserData;
+    } catch (error) {
+      console.log('Could not refresh user data:', error);
+      return null;
+    }
+  };
+
+  /**
    * Initialize authentication state and set up session management
    */
   useEffect(() => {
@@ -278,34 +302,23 @@ export const AuthProvider = ({ children }) => {
           const sessionValid = isRecentLogin || checkSessionValidity();
           
           if (sessionValid) {
-            // Check if displayName is missing and refresh user data if needed
-            if (!userData.displayName && userData.username) {
+            setUser(userData);
+            setIsAuthenticated(true);
+            
+            // Check if userNumber is missing and refresh user data if needed
+            if (!userData.userNumber) {
               try {
-                const response = await axios.get(`${config.backendUrl}/api/users/${userData.displayName || userData.username}/profile`, {
-                  headers: { Authorization: `Bearer ${storedToken}` }
-                });
-                
-                const updatedUserData = {
-                  ...userData,
-                  displayName: response.data.displayName || userData.username
-                };
-                
-                localStorage.setItem('user', JSON.stringify(updatedUserData));
-                setUser(updatedUserData);
-                userData = updatedUserData;
-              } catch (refreshError) {
-                // If we can't refresh user data and it's not a recent login, consider logout
-                if (!isRecentLogin) {
-                  signOut();
-                  return;
+                const refreshedData = await refreshUserData(userData);
+                if (refreshedData && refreshedData.userNumber) {
+                  console.log('User data refreshed with userNumber:', refreshedData.userNumber);
+                  userData = refreshedData; // Update local userData reference
                 }
-                setUser(userData);
+              } catch (refreshError) {
+                console.log('Could not refresh user data for userNumber:', refreshError);
+                // Continue with existing user data even if refresh fails
               }
-            } else {
-              setUser(userData);
             }
             
-            setIsAuthenticated(true);
             // Use the stored remember me preference
             const rememberMe = localStorage.getItem('rememberMe') === 'true';
             updateSessionExpiry(rememberMe, userData);

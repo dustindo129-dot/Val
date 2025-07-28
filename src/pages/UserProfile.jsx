@@ -68,7 +68,7 @@ const UserProfileSEO = ({ profileUser, username }) => {
       <meta property="og:title" content={`${displayName} - Trang Cá Nhân | Valvrareteam`} />
       <meta property="og:description" content={`Trang cá nhân của ${displayName} tại Valvrareteam.`} />
               <meta property="og:image" content={cdnConfig.getAvatarUrl(profileUser?.avatar) || "https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif"} />
-      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${username}/trang-ca-nhan`} />
+      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${profileUser?.userNumber || username}/trang-ca-nhan`} />
       <meta property="og:type" content="profile" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -88,8 +88,8 @@ const UserProfileSEO = ({ profileUser, username }) => {
  * Main component for displaying user profile information
  */
 const UserProfile = () => {
-  // Get username from URL parameters
-  const { username } = useParams();
+  // Get userNumber from URL parameters
+  const { userNumber } = useParams();
   // Get current user context
   const { user } = useAuth();
   // Get theme context
@@ -154,13 +154,13 @@ const UserProfile = () => {
         setError(null);
 
         // Check if profile was visited in the last 4 hours (same cooldown as novel views)
-        const visitKey = `user_${username}_last_visited`;
+        const visitKey = `user_${userNumber}_last_visited`;
         const lastVisited = localStorage.getItem(visitKey);
         const now = Date.now();
         const fourHours = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
         
         // Check if viewing own profile (before making request)
-        const isViewingOwnProfile = user && user.username === username;
+        const isViewingOwnProfile = user && user.userNumber == userNumber; // Compare userNumber
         
         // Only count visit if:
         // 1. Never visited before, or  
@@ -175,7 +175,7 @@ const UserProfile = () => {
           params.append('skipVisitorTracking', 'true');
         }
 
-        const url = `${config.backendUrl}/api/users/${username}/public-profile${params.toString() ? '?' + params.toString() : ''}`;
+        const url = `${config.backendUrl}/api/users/number/${userNumber}/public-profile${params.toString() ? '?' + params.toString() : ''}`;
         const response = await axios.get(url);
 
         // Update last visited timestamp if we counted a visit
@@ -229,10 +229,10 @@ const UserProfile = () => {
       }
     };
 
-    if (username) {
+    if (userNumber) {
       fetchUserProfile();
     }
-  }, [username, user]);
+  }, [userNumber, user]);
 
   /**
    * Check if user has novel-specific roles (translator, editor, proofreader)
@@ -348,10 +348,9 @@ const UserProfile = () => {
     setIsSavingIntro(true);
     try {
       const content = editorRef.current.getContent();
-      const displayNameSlug = profileUser.displayName ? createSlug(profileUser.displayName) : profileUser.username;
       
       const response = await axios.put(
-        `${config.backendUrl}/api/users/${displayNameSlug}/intro`,
+        `${config.backendUrl}/api/users/number/${profileUser.userNumber}/intro`,
         { intro: content },
         {
           headers: {
@@ -703,7 +702,7 @@ const UserProfile = () => {
 
   return (
     <div className="user-profile-page">
-      <UserProfileSEO profileUser={profileUser} username={username} />
+      <UserProfileSEO profileUser={profileUser} username={userNumber} />
       
       {/* Profile Banner */}
       <div className="profile-banner">

@@ -301,34 +301,38 @@ const renderStaffName = (staffMember, index, isActive = false) => {
   if (isActive) {
     // Check if it's a user object (from active staff with user data) or just a string
     if (typeof staffMember === 'object' && staffMember.username) {
-      // It's a user object - make it clickable
-      return (
-        <Link 
-          to={generateUserProfileUrl(staffMember)} 
-          className="rd-staff-name-link" 
-          key={index}
-        >
-          <span className="rd-staff-name rd-staff-name-active">
+      // It's a user object - check if it has userNumber for the new URL system
+      if (staffMember.userNumber) {
+        // Has userNumber - use the new URL system
+        return (
+          <Link 
+            to={generateUserProfileUrl(staffMember)} 
+            className="rd-staff-name-link" 
+            key={index}
+          >
+            <span className="rd-staff-name rd-staff-name-active">
+              {staffMember.displayName || staffMember.username}
+            </span>
+          </Link>
+        );
+      } else {
+        // No userNumber - treat as plain text for now (until backend provides userNumber)
+        return (
+          <span className="rd-staff-name rd-staff-name-active" key={index}>
             {staffMember.displayName || staffMember.username}
           </span>
-        </Link>
-      );
+        );
+      }
     } else if (typeof staffMember === 'string') {
       // It's a text string - check if it looks like a username (no spaces, reasonable length)
       const isLikelyUsername = staffMember.length <= 30 && !staffMember.includes(' ') && staffMember.trim() === staffMember;
       
       if (isLikelyUsername) {
-        // Treat as username and make clickable
+        // Treat as username - but since we don't have userNumber, make it non-clickable for now
         return (
-          <Link 
-            to={generateUserProfileUrl({ username: staffMember })} 
-            className="rd-staff-name-link" 
-            key={index}
-          >
-            <span className="rd-staff-name rd-staff-name-active">
-              {staffMember}
-            </span>
-          </Link>
+          <span className="rd-staff-name rd-staff-name-active" key={index}>
+            {staffMember}
+          </span>
         );
       } else {
         // Treat as display name (not clickable but still active)

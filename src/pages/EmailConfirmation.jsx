@@ -5,6 +5,7 @@ import axios from 'axios';
 import config from '../config/config';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
+import { generateUserSettingsUrl } from '../utils/slugUtils';
 
 /**
  * EmailConfirmation Component
@@ -64,14 +65,14 @@ const EmailConfirmation = () => {
         setTimeout(() => {
           try {
             if (user) {
-              navigate(`/nguoi-dung/${user.displayName || user.username}/cai-dat`, { replace: true });
+              navigate(generateUserSettingsUrl(user), { replace: true });
             } else {
               navigate('/dang-nhap', { replace: true });
             }
           } catch (navError) {
             console.error('Navigation error:', navError);
             // Fallback navigation
-            window.location.href = user ? `/nguoi-dung/${user.displayName || user.username}/cai-dat` : '/dang-nhap';
+            window.location.href = user ? generateUserSettingsUrl(user) : '/dang-nhap';
           }
         }, 2000);
 
@@ -144,7 +145,7 @@ const EmailConfirmation = () => {
                 </button>
                 {user && (
                   <button 
-                    onClick={() => navigate(`/nguoi-dung/${user.displayName || user.username}/cai-dat`)}
+                    onClick={() => navigate(generateUserSettingsUrl(user))}
                     className="btn btn-secondary"
                   >
                     Về trang cài đặt

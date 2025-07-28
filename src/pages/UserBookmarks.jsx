@@ -48,7 +48,7 @@ const UserBookmarksSEO = ({ user, username, totalBookmarks = 0 }) => {
       <meta property="og:title" content={`Truyện Đã Đánh Dấu - ${displayName} | Valvrareteam`} />
       <meta property="og:description" content={`Xem danh sách truyện đã đánh dấu của ${displayName} tại Valvrareteam.`} />
       <meta property="og:image" content="https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif" />
-      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${username}/truyen-danh-dau`} />
+      <meta property="og:url" content={`https://valvrareteam.net/nguoi-dung/${user?.userNumber || username}/truyen-danh-dau`} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Valvrareteam" />
       <meta property="og:locale" content="vi_VN" />
@@ -90,7 +90,7 @@ const ConfirmationModal = ({ isOpen, novelTitle, onConfirm, onCancel }) => {
  * UserBookmarks Component
  */
 const UserBookmarks = () => {
-  const { username } = useParams();
+  const { userNumber } = useParams(); // Changed from username to userNumber
   const { user } = useAuth();
   const { bookmarkedNovels, setBookmarkedNovels, updateBookmarkStatus } = useBookmarks();
 
@@ -117,6 +117,12 @@ const UserBookmarks = () => {
   // Use ref to prevent duplicate API calls (especially in React StrictMode)
   const isLoadingRef = useRef(false);
   const abortControllerRef = useRef(null);
+
+  // Check if user has permission to view these bookmarks
+  // Now we compare userNumber instead of username/displayName
+  const canViewBookmarks = user && (
+    user.userNumber == userNumber // Compare userNumber (use == to handle string/number comparison)
+  );
 
   // Helper function to format update time
   const formatUpdateTime = (dateString) => {
@@ -166,13 +172,6 @@ const UserBookmarks = () => {
   // Memoize fetchBookmarks to prevent unnecessary recreations
   const fetchBookmarks = useCallback(async () => {
     // Check if user can view bookmarks (same logic as main permission check)
-    const canViewBookmarks = user && (
-      user.username === username || 
-      user.displayName === username ||
-      (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/[-\s]+/g, '')) ||
-      (user.username && user.username.toLowerCase() === username.toLowerCase())
-    );
-    
     if (!canViewBookmarks) {
       return;
     }
@@ -240,7 +239,7 @@ const UserBookmarks = () => {
       isLoadingRef.current = false;
       abortControllerRef.current = null;
     }
-  }, [username, user, sortBy]); // Removed sortBookmarks dependency
+  }, [userNumber, user, sortBy, canViewBookmarks]); // Removed sortBookmarks dependency
 
   // Effect for initial load and username/user changes
   useEffect(() => {
@@ -387,19 +386,10 @@ const UserBookmarks = () => {
     // because the chapter will be removed from UI anyway
   };
 
-  // Check if user has permission to view these bookmarks
-  // The URL parameter might be either username or displayName, so check both
-  const canViewBookmarks = user && (
-    user.username === username || 
-    user.displayName === username ||
-    (user.displayName && user.displayName.toLowerCase().replace(/\s+/g, '') === username.toLowerCase().replace(/[-\s]+/g, '')) ||
-    (user.username && user.username.toLowerCase() === username.toLowerCase())
-  );
-  
   if (!canViewBookmarks) {
     return (
         <>
-          <UserBookmarksSEO user={user} username={username} totalBookmarks={0} />
+          <UserBookmarksSEO user={user} username={userNumber} totalBookmarks={0} />
           <div className="ub-bookmarks-container">
             <div className="ub-no-bookmarks">
               <p>Bạn không có quyền xem các truyện đã đánh dấu này.</p>
@@ -413,7 +403,7 @@ const UserBookmarks = () => {
   if (totalBookmarks === 0 && !loading) {
     return (
         <>
-          <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+          <UserBookmarksSEO user={user} username={userNumber} totalBookmarks={totalBookmarks} />
           <div className="ub-bookmarks-container">
             <div className="ub-bookmarks-header">
               <h2>TRUYỆN ĐÃ ĐÁNH DẤU (0)</h2>
@@ -434,7 +424,7 @@ const UserBookmarks = () => {
   if (loading) {
     return (
         <>
-          <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+          <UserBookmarksSEO user={user} username={userNumber} totalBookmarks={totalBookmarks} />
           <div className="ub-bookmarks-container">
             <div className="ub-bookmarks-grid">
               <div className="ub-loading">
@@ -449,7 +439,7 @@ const UserBookmarks = () => {
   if (error) {
     return (
         <>
-          <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+          <UserBookmarksSEO user={user} username={userNumber} totalBookmarks={totalBookmarks} />
           <div className="ub-bookmarks-container">
             <div className="ub-bookmarks-grid">
               <div className="ub-error">
@@ -466,7 +456,7 @@ const UserBookmarks = () => {
 
   return (
       <>
-        <UserBookmarksSEO user={user} username={username} totalBookmarks={totalBookmarks} />
+        <UserBookmarksSEO user={user} username={userNumber} totalBookmarks={totalBookmarks} />
         <div className="ub-bookmarks-container">
           <div className="ub-bookmarks-header">
             <h2>TRUYỆN ĐÃ ĐÁNH DẤU ({totalBookmarks})</h2>
