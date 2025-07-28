@@ -56,7 +56,7 @@ function AppRoutes() {
         {/* Vietnamese User Routes */}
         <Route path="/nguoi-dung/:userNumber/trang-ca-nhan" element={<LazyRoute><UserProfile /></LazyRoute>} />
         <Route path="/nguoi-dung/:userNumber/cai-dat" element={<LazyRoute><UserSettings /></LazyRoute>} />
-        <Route path="/nguoi-dung/:userNumber/truyen-danh-dau" element={<LazyRoute><ProtectedRoute><UserBookmarks /></ProtectedRoute></LazyRoute>} />
+        <Route path="/nguoi-dung/:userNumber/truyen-danh-dau" element={<LazyRoute><UserBookmarks /></LazyRoute>} />
         <Route path="/nguoi-dung/:userNumber/thay-doi-mat-khau" element={<LazyRoute><ProtectedRoute><ChangePassword /></ProtectedRoute></LazyRoute>} />
         
         {/* OLN (Original Light Novel) Routes */}
