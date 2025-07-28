@@ -80,17 +80,40 @@ const ModuleList = memo(({
     moduleToDelete: null
   });
 
+  // Helper function to check if user has pj_user access
+  const checkPjUserAccess = useCallback((pjUserArray, user) => {
+    if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+    
+    return pjUserArray.some(pjUser => {
+      // Handle case where pjUser is an object (new format)
+      if (typeof pjUser === 'object' && pjUser !== null) {
+        return (
+          pjUser._id === user.id ||
+          pjUser._id === user._id ||
+          pjUser.username === user.username ||
+          pjUser.displayName === user.displayName ||
+          pjUser.userNumber === user.userNumber
+        );
+      }
+      // Handle case where pjUser is a primitive value (old format)
+      return (
+        pjUser === user.id ||
+        pjUser === user._id ||
+        pjUser === user.username ||
+        pjUser === user.displayName ||
+        pjUser === user.userNumber
+      );
+    });
+  }, []);
+
   // Check if user can edit (admin, moderator, or pj_user managing this novel)
   const canEdit = user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
-    (user.role === 'pj_user' && (
-      novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user._id) ||
-      novel?.active?.pj_user?.includes(user.username) ||
-      novel?.active?.pj_user?.includes(user.displayName)
-    ))
+    (user.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
   );
+
+
 
 
   
@@ -101,12 +124,7 @@ const ModuleList = memo(({
   const canAccessPaidContent = user && (
     user.role === 'admin' ||
     user.role === 'moderator' ||
-    (user.role === 'pj_user' && (
-      novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user._id) ||
-      novel?.active?.pj_user?.includes(user.username) ||
-      novel?.active?.pj_user?.includes(user.displayName)
-    ))
+    (user.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
   );
 
   // Fetch active rentals for the user
@@ -141,12 +159,7 @@ const ModuleList = memo(({
   const canSeeRentalStats = user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
-    (user.role === 'pj_user' && (
-      novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user._id) ||
-      novel?.active?.pj_user?.includes(user.username) ||
-      novel?.active?.pj_user?.includes(user.displayName)
-    ))
+    (user.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
   );
 
   // Fetch rental counts for modules (admin/moderator/pj_user only)

@@ -25,6 +25,32 @@ const ChapterAccessGuard = ({
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
+  // Helper function to check if user has pj_user access
+  const checkPjUserAccess = useCallback((pjUserArray, user) => {
+    if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+    
+    return pjUserArray.some(pjUser => {
+      // Handle case where pjUser is an object (new format)
+      if (typeof pjUser === 'object' && pjUser !== null) {
+        return (
+          pjUser._id === user.id ||
+          pjUser._id === user._id ||
+          pjUser.username === user.username ||
+          pjUser.displayName === user.displayName ||
+          pjUser.userNumber === user.userNumber
+        );
+      }
+      // Handle case where pjUser is a primitive value (old format)
+      return (
+        pjUser === user.id ||
+        pjUser === user._id ||
+        pjUser === user.username ||
+        pjUser === user.displayName ||
+        pjUser === user.userNumber
+      );
+    });
+  }, []);
+  
   // Rental modal handlers - use parent handlers if provided
   const handleOpenRentalModal = useCallback((module) => {
     if (!isAuthenticated) {
@@ -75,24 +101,14 @@ const ChapterAccessGuard = ({
         return isAuthenticated; // Protected requires user to be logged in
       case 'draft':
         return user?.role === 'admin' || user?.role === 'moderator' ||
-          (user?.role === 'pj_user' && chapter.novel && (
-            chapter.novel.active?.pj_user?.includes(user.id) || 
-            chapter.novel.active?.pj_user?.includes(user._id) ||
-            chapter.novel.active?.pj_user?.includes(user.username) ||
-            chapter.novel.active?.pj_user?.includes(user.displayName)
-          )); // Draft accessible to admin, moderator, and assigned pj_user
+          (user?.role === 'pj_user' && chapter.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user)); // Draft accessible to admin, moderator, and assigned pj_user
       case 'paid':
         // SECURITY FIX: Check user permissions first, not content existence
         // Admin, moderator, and pj_user for their assigned novels have access
         if (user && (
           user.role === 'admin' || 
           user.role === 'moderator' ||
-          (user.role === 'pj_user' && chapter.novel && (
-            chapter.novel.active?.pj_user?.includes(user.id) || 
-            chapter.novel.active?.pj_user?.includes(user._id) ||
-            chapter.novel.active?.pj_user?.includes(user.username) ||
-            chapter.novel.active?.pj_user?.includes(user.displayName)
-          ))
+          (user.role === 'pj_user' && chapter.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user))
         )) {
           return true;
         }
@@ -126,12 +142,7 @@ const ChapterAccessGuard = ({
     if (user && (
       user.role === 'admin' || 
       user.role === 'moderator' ||
-      (user.role === 'pj_user' && moduleData.novel && (
-        moduleData.novel.active?.pj_user?.includes(user.id) || 
-        moduleData.novel.active?.pj_user?.includes(user._id) ||
-        moduleData.novel.active?.pj_user?.includes(user.username) ||
-        moduleData.novel.active?.pj_user?.includes(user.displayName)
-      ))
+      (user.role === 'pj_user' && moduleData.novel && checkPjUserAccess(moduleData.novel.active?.pj_user, user))
     )) {
       return true;
     }
@@ -158,18 +169,8 @@ const ChapterAccessGuard = ({
     user.role === 'admin' || 
     user.role === 'moderator' ||
     (user.role === 'pj_user' && (
-      (chapter?.novel && (
-        chapter.novel.active?.pj_user?.includes(user.id) || 
-        chapter.novel.active?.pj_user?.includes(user._id) ||
-        chapter.novel.active?.pj_user?.includes(user.username) ||
-        chapter.novel.active?.pj_user?.includes(user.displayName)
-      )) ||
-      (moduleData?.novel && (
-        moduleData.novel.active?.pj_user?.includes(user.id) || 
-        moduleData.novel.active?.pj_user?.includes(user._id) ||
-        moduleData.novel.active?.pj_user?.includes(user.username) ||
-        moduleData.novel.active?.pj_user?.includes(user.displayName)
-      ))
+      (chapter?.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user)) ||
+      (moduleData?.novel && checkPjUserAccess(moduleData.novel.active?.pj_user, user))
     ))
   );
   

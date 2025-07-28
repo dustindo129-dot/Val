@@ -64,6 +64,32 @@ const ModuleChapters = memo(({
 }) => {
   const [isReordering, setIsReordering] = useState(false);
   const { isAuthenticated } = useAuth();
+  
+  // Helper function to check if user has pj_user access
+  const checkPjUserAccess = useCallback((pjUserArray, user) => {
+    if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+    
+    return pjUserArray.some(pjUser => {
+      // Handle case where pjUser is an object (new format)
+      if (typeof pjUser === 'object' && pjUser !== null) {
+        return (
+          pjUser._id === user.id ||
+          pjUser._id === user._id ||
+          pjUser.username === user.username ||
+          pjUser.displayName === user.displayName ||
+          pjUser.userNumber === user.userNumber
+        );
+      }
+      // Handle case where pjUser is a primitive value (old format)
+      return (
+        pjUser === user.id ||
+        pjUser === user._id ||
+        pjUser === user.username ||
+        pjUser === user.displayName ||
+        pjUser === user.userNumber
+      );
+    });
+  }, []);
 
   const handleReorderClick = useCallback(async (chapterId, direction) => {
     if (isReordering) return; // Prevent concurrent reordering
@@ -138,12 +164,7 @@ const ModuleChapters = memo(({
   const canAccessChapter = (chapter) => {
     // Admin and moderators can access all chapters, pj_user can access chapters for their novels
     if (user?.role === 'admin' || user?.role === 'moderator' ||
-        (user?.role === 'pj_user' && (
-          novel?.active?.pj_user?.includes(user.id) || 
-          novel?.active?.pj_user?.includes(user._id) ||
-          novel?.active?.pj_user?.includes(user.username) ||
-          novel?.active?.pj_user?.includes(user.displayName)
-        ))) {
+        (user?.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))) {
       return true;
     }
     
@@ -170,12 +191,7 @@ const ModuleChapters = memo(({
   const canEditContent = user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
-    (user?.role === 'pj_user' && (
-      novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user._id) ||
-      novel?.active?.pj_user?.includes(user.username) ||
-      novel?.active?.pj_user?.includes(user.displayName)
-    ))
+    (user?.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
   );
 
 

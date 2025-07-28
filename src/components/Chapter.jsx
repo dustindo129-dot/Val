@@ -438,6 +438,32 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     setWordCount(count);
   }, []);
 
+  // Helper function to check if user has pj_user access
+  const checkPjUserAccess = useCallback((pjUserArray, user) => {
+    if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+    
+    return pjUserArray.some(pjUser => {
+      // Handle case where pjUser is an object (new format)
+      if (typeof pjUser === 'object' && pjUser !== null) {
+        return (
+          pjUser._id === user.id ||
+          pjUser._id === user._id ||
+          pjUser.username === user.username ||
+          pjUser.displayName === user.displayName ||
+          pjUser.userNumber === user.userNumber
+        );
+      }
+      // Handle case where pjUser is a primitive value (old format)
+      return (
+        pjUser === user.id ||
+        pjUser === user._id ||
+        pjUser === user.username ||
+        pjUser === user.displayName ||
+        pjUser === user.userNumber
+      );
+    });
+  }, []);
+
   // Memoize stable props to prevent unnecessary re-renders
   const stableUserRole = useMemo(() => user?.role || 'user', [user?.role]);
   const stableNovelData = useMemo(() => novel, [novel]);
@@ -446,13 +472,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const canEdit = useMemo(() => user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
-    (user?.role === 'pj_user' && (
-      novel?.active?.pj_user?.includes(user.id) || 
-      novel?.active?.pj_user?.includes(user._id) ||
-      novel?.active?.pj_user?.includes(user.username) ||
-      novel?.active?.pj_user?.includes(user.displayName)
-    ))
-  ), [user, novel?.active?.pj_user]);
+    (user?.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
+  ), [user, novel?.active?.pj_user, checkPjUserAccess]);
   
   // Check if user can delete
   const canDelete = useMemo(() => user && (user.role === 'admin' || user.role === 'moderator'), [user]);

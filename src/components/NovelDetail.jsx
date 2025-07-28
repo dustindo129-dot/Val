@@ -616,12 +616,7 @@ const NovelDetail = ({ novelId }) => {
     
     const canReorderModules = user.role === 'admin' || 
                              user.role === 'moderator' || 
-                             (user.role === 'pj_user' && (
-                               currentData?.novel?.active?.pj_user?.includes(user.id) || 
-                               currentData?.novel?.active?.pj_user?.includes(user._id) ||
-                               currentData?.novel?.active?.pj_user?.includes(user.username) ||
-                               currentData?.novel?.active?.pj_user?.includes(user.displayName)
-                             ));
+                             (user.role === 'pj_user' && checkPjUserAccess(currentData?.novel?.active?.pj_user, user));
     
     if (!canReorderModules) return;
     
@@ -880,12 +875,7 @@ const NovelDetail = ({ novelId }) => {
     
     const canReorderChapters = user.role === 'admin' || 
                               user.role === 'moderator' || 
-                              (user.role === 'pj_user' && (
-                                currentData?.novel?.active?.pj_user?.includes(user.id) || 
-                                currentData?.novel?.active?.pj_user?.includes(user._id) ||
-                                currentData?.novel?.active?.pj_user?.includes(user.username) ||
-                                currentData?.novel?.active?.pj_user?.includes(user.displayName)
-                              ));
+                              (user.role === 'pj_user' && checkPjUserAccess(currentData?.novel?.active?.pj_user, user));
     
     if (!canReorderChapters) return;
     
@@ -1182,17 +1172,40 @@ const NovelDetail = ({ novelId }) => {
     }
   }, [moduleForm, editingModule, novelId, queryClient, user]);
 
+  // Helper function to check if user has pj_user access
+  const checkPjUserAccess = (pjUserArray, user) => {
+    if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+    
+    return pjUserArray.some(pjUser => {
+      // Handle case where pjUser is an object (new format)
+      if (typeof pjUser === 'object' && pjUser !== null) {
+        return (
+          pjUser._id === user.id ||
+          pjUser._id === user._id ||
+          pjUser.username === user.username ||
+          pjUser.displayName === user.displayName ||
+          pjUser.userNumber === user.userNumber
+        );
+      }
+      // Handle case where pjUser is a primitive value (old format)
+      return (
+        pjUser === user.id ||
+        pjUser === user._id ||
+        pjUser === user.username ||
+        pjUser === user.displayName ||
+        pjUser === user.userNumber
+      );
+    });
+  };
+
   // Check if user can edit (admin, moderator, or pj_user managing this novel)
   const canEdit = user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
-    (user.role === 'pj_user' && (
-      data?.novel?.active?.pj_user?.includes(user.id) || 
-      data?.novel?.active?.pj_user?.includes(user._id) ||
-      data?.novel?.active?.pj_user?.includes(user.username) ||
-      data?.novel?.active?.pj_user?.includes(user.displayName)
-    ))
+    (user.role === 'pj_user' && checkPjUserAccess(data?.novel?.active?.pj_user, user))
   );
+
+
 
 
 
