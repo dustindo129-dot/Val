@@ -1437,7 +1437,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
       {/* Issue Alert */}
       <div className="issue-alert">
-        Vui lòng báo cáo bất kỳ vấn đề nào (thiếu hình ảnh, chương sai, ...) bằng nút báo cáo.
+        Vui lòng báo cáo bất kỳ vấn đề nào (thiếu hình ảnh, chương sai, bản dịch chất lượng kém,...) bằng nút báo cáo.
       </div>
 
       {/* Comments section */}
