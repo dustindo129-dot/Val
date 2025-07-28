@@ -1594,8 +1594,8 @@ const ChapterContent = React.memo(({
                                         >
                                             <option value="">Không có</option>
                                             {novelData?.author && (
-                                                <option value={novelData.author}>
-                                                    {novelData.author}
+                                                <option value={typeof novelData.author === 'object' ? (novelData.author.userNumber || novelData.author._id) : novelData.author}>
+                                                    {typeof novelData.author === 'object' ? (novelData.author.displayName || novelData.author.userNumber || novelData.author.username) : novelData.author}
                                                 </option>
                                             )}
                                         </select>
@@ -1609,11 +1609,15 @@ const ChapterContent = React.memo(({
                                             onChange={(e) => setEditedEditor && setEditedEditor(e.target.value)}
                                         >
                                             <option value="">Không có</option>
-                                            {novelData?.active?.editor?.map((staff, index) => (
-                                                <option key={`editor-${index}`} value={staff}>
-                                                    {staff}
-                                                </option>
-                                            ))}
+                                            {novelData?.active?.editor?.map((staff, index) => {
+                                                const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                                const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                                return (
+                                                    <option key={`editor-${index}`} value={staffValue}>
+                                                        {staffDisplay}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
 
@@ -1625,11 +1629,15 @@ const ChapterContent = React.memo(({
                                             onChange={(e) => setEditedProofreader && setEditedProofreader(e.target.value)}
                                         >
                                             <option value="">Không có</option>
-                                            {novelData?.active?.proofreader?.map((staff, index) => (
-                                                <option key={`proofreader-${index}`} value={staff}>
-                                                    {staff}
-                                                </option>
-                                            ))}
+                                            {novelData?.active?.proofreader?.map((staff, index) => {
+                                                const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                                const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                                return (
+                                                    <option key={`proofreader-${index}`} value={staffValue}>
+                                                        {staffDisplay}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
                                 </>
@@ -1643,11 +1651,15 @@ const ChapterContent = React.memo(({
                                             onChange={(e) => setEditedTranslator && setEditedTranslator(e.target.value)}
                                         >
                                             <option value="">Không có</option>
-                                            {novelData?.active?.translator?.map((staff, index) => (
-                                                <option key={`translator-${index}`} value={staff}>
-                                                    {staff}
-                                                </option>
-                                            ))}
+                                            {novelData?.active?.translator?.map((staff, index) => {
+                                                const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                                const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                                return (
+                                                    <option key={`translator-${index}`} value={staffValue}>
+                                                        {staffDisplay}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
 
@@ -1659,11 +1671,15 @@ const ChapterContent = React.memo(({
                                             onChange={(e) => setEditedEditor && setEditedEditor(e.target.value)}
                                         >
                                             <option value="">Không có</option>
-                                            {novelData?.active?.editor?.map((staff, index) => (
-                                                <option key={`editor-${index}`} value={staff}>
-                                                    {staff}
-                                                </option>
-                                            ))}
+                                            {novelData?.active?.editor?.map((staff, index) => {
+                                                const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                                const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                                return (
+                                                    <option key={`editor-${index}`} value={staffValue}>
+                                                        {staffDisplay}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
 
@@ -1675,11 +1691,15 @@ const ChapterContent = React.memo(({
                                             onChange={(e) => setEditedProofreader && setEditedProofreader(e.target.value)}
                                         >
                                             <option value="">Không có</option>
-                                            {novelData?.active?.proofreader?.map((staff, index) => (
-                                                <option key={`proofreader-${index}`} value={staff}>
-                                                    {staff}
-                                                </option>
-                                            ))}
+                                            {novelData?.active?.proofreader?.map((staff, index) => {
+                                                const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                                const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                                return (
+                                                    <option key={`proofreader-${index}`} value={staffValue}>
+                                                        {staffDisplay}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                     </div>
                                 </>

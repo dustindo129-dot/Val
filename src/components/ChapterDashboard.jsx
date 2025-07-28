@@ -1132,8 +1132,8 @@ const ChapterDashboard = () => {
                                     >
                                         <option value="">Không có</option>
                                         {novel?.novel?.author && (
-                                            <option value={typeof novel.novel.author === 'object' ? novel.novel.author._id : novel.novel.author}>
-                                                {typeof novel.novel.author === 'object' ? (novel.novel.author.displayName || novel.novel.author.username) : novel.novel.author}
+                                            <option value={typeof novel.novel.author === 'object' ? (novel.novel.author.userNumber || novel.novel.author._id) : novel.novel.author}>
+                                                {typeof novel.novel.author === 'object' ? (novel.novel.author.displayName || novel.novel.author.userNumber || novel.novel.author.username) : novel.novel.author}
                                             </option>
                                         )}
                                     </select>
@@ -1149,8 +1149,8 @@ const ChapterDashboard = () => {
                                     >
                                         <option value="">Không có</option>
                                         {novel?.novel?.active?.editor?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? staff._id : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.username) : staff;
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
                                             return (
                                                 <option key={`editor-${index}`} value={staffValue}>
                                                     {staffDisplay}
@@ -1170,8 +1170,8 @@ const ChapterDashboard = () => {
                                     >
                                         <option value="">Không có</option>
                                         {novel?.novel?.active?.proofreader?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? staff._id : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.username) : staff;
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
                                             return (
                                                 <option key={`proofreader-${index}`} value={staffValue}>
                                                     {staffDisplay}
@@ -1194,8 +1194,8 @@ const ChapterDashboard = () => {
                                     >
                                         <option value="">Không có</option>
                                         {novel?.novel?.active?.translator?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? staff._id : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.username) : staff;
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
                                             return (
                                                 <option key={`translator-${index}`} value={staffValue}>
                                                     {staffDisplay}
@@ -1215,8 +1215,8 @@ const ChapterDashboard = () => {
                                     >
                                         <option value="">Không có</option>
                                         {novel?.novel?.active?.editor?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? staff._id : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.username) : staff;
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
                                             return (
                                                 <option key={`editor-${index}`} value={staffValue}>
                                                     {staffDisplay}
@@ -1236,8 +1236,8 @@ const ChapterDashboard = () => {
                                     >
                                         <option value="">Không có</option>
                                         {novel?.novel?.active?.proofreader?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? staff._id : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.username) : staff;
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
                                             return (
                                                 <option key={`proofreader-${index}`} value={staffValue}>
                                                     {staffDisplay}
