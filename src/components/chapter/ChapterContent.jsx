@@ -1072,6 +1072,13 @@ const ChapterContent = React.memo(({
                         classes.push('text-default-color');
                     }
 
+                    // Handle background-color for spans
+                    const backgroundColorMatch = styleContent.match(/background-color:\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|[a-zA-Z]+)/i);
+                    if (backgroundColorMatch) {
+                        const backgroundColorValue = backgroundColorMatch[1];
+                        preservedStyles += `background-color: ${backgroundColorValue};`;
+                    }
+
                     // Remove ALL problematic auto-generated styles
                     const problematicStyles = [
                         'font-style', 'font-variant-caps', 'font-weight', 'letter-spacing',
@@ -1135,6 +1142,13 @@ const ChapterContent = React.memo(({
                         }
                     } else {
                         classes.push('text-default-color');
+                    }
+
+                    // Handle background-color
+                    const backgroundColorMatch = styleContent.match(/background-color:\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|[a-zA-Z]+)/i);
+                    if (backgroundColorMatch) {
+                        const backgroundColorValue = backgroundColorMatch[1];
+                        preservedStyles += `background-color: ${backgroundColorValue};`;
                     }
 
                     // Remove ALL other problematic styles (ENHANCED FOR SPACING)
