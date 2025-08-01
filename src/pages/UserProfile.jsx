@@ -359,7 +359,8 @@ const UserProfile = () => {
           params.append('skipVisitorTracking', 'true');
         }
 
-        const url = `${config.backendUrl}/api/users/number/${userNumber}/public-profile${params.toString() ? '?' + params.toString() : ''}`;
+        // Use the new optimized endpoint that fetches everything in one call
+        const url = `${config.backendUrl}/api/users/number/${userNumber}/public-profile-complete${params.toString() ? '?' + params.toString() : ''}`;
         const response = await axios.get(url);
 
         // Update last visited timestamp if we counted a visit
@@ -367,43 +368,36 @@ const UserProfile = () => {
           localStorage.setItem(visitKey, now.toString());
         }
         
-        setProfileUser(response.data);
-        setIntroText(response.data.intro || '');
+        // Extract user data and stats from the optimized response
+        const userData = response.data;
+        setProfileUser(userData);
+        setIntroText(userData.intro || '');
         
-        // Always fetch module data for display (visitors can see them)
-        try {
-          // Batch all user stats API calls to minimize database queries
-          const userStatsPromises = [
-            // Fetch user's modules based on their novel roles and existing preferences (WITHOUT auto-adding new modules)
-            axios.get(`${config.backendUrl}/api/users/id/${response.data._id}/role-modules`),
-            // Fetch actual chapter participation count for this user (as translator, editor, or proofreader)
-            axios.get(`${config.backendUrl}/api/chapters/participation/user/${response.data._id}`),
-            // Fetch actual following count for this user
-            axios.get(`${config.backendUrl}/api/usernovelinteractions/following/count/${response.data._id}`),
-            // Fetch actual comment count for this user (including replies)
-            axios.get(`${config.backendUrl}/api/comments/count/user/${response.data._id}`)
-          ];
-
-          // Execute all API calls in parallel
-          const [userModules, chaptersParticipated, followingCount, commentsCount] = await Promise.all(userStatsPromises);
-          
-          setUserStats({
-            chaptersParticipated: chaptersParticipated.data.count || 0,
-            followingCount: followingCount.data.count || 0,
-            commentsCount: commentsCount.data.count || 0,
-            ongoingModules: userModules.data.ongoingModules || [],
-            completedModules: userModules.data.completedModules || []
-          });
-        } catch (moduleError) {
-          console.error('Error fetching user stats:', moduleError);
-          setUserStats({
-            chaptersParticipated: 0,
-            followingCount: 0,
-            commentsCount: 0,
-            ongoingModules: [],
-            completedModules: []
-          });
+        // Prepare user stats from the optimized response
+        const stats = {
+          chaptersParticipated: userData.stats.chaptersParticipated || 0,
+          followingCount: userData.stats.followingCount || 0,
+          commentsCount: userData.stats.commentsCount || 0,
+          ongoingModules: userData.stats.ongoingModules || [],
+          completedModules: userData.stats.completedModules || []
+        };
+        
+        // Warm the novel cache with all modules to avoid individual requests
+        const { warmNovelCache } = await import('../components/DraggableModuleList');
+        const allModules = [...stats.ongoingModules, ...stats.completedModules];
+        if (allModules.length > 0) {
+          // Wait for cache warming to complete before setting user stats
+          // This ensures cache is populated before components render
+          try {
+            await warmNovelCache(allModules);
+          } catch (error) {
+            console.error('Error warming novel cache from UserProfile:', error);
+            // Continue even if cache warming fails
+          }
         }
+        
+        // Set user stats after cache warming is complete
+        setUserStats(stats);
         
       } catch (err) {
         console.error('Error fetching user profile:', err);

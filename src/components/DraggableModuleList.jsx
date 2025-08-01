@@ -34,6 +34,110 @@ const arrayMove = (array, fromIndex, toIndex) => {
 // Simple cache to avoid fetching the same novel genres multiple times
 const genreCache = new Map();
 
+// Batch novel fetching to reduce individual queries
+const novelBatchCache = new Map();
+const batchRequests = new Map();
+
+// Global cache warming function that can be called from UserProfile
+export const warmNovelCache = async (modules) => {
+  if (!modules || modules.length === 0) {
+    return;
+  }
+  
+  // Extract all novel IDs from modules
+  const allNovelIds = modules
+    .map(module => {
+      // Try multiple possible paths for novel ID
+      return module.moduleId?.novelId?._id || 
+             module.moduleId?._id || 
+             module.novelId?._id || 
+             module.novelId ||
+             null;
+    })
+    .filter(id => id);
+  
+  // Deduplicate the IDs
+  const uniqueIds = [...new Set(allNovelIds)];
+  
+  // Only fetch uncached novels
+  const uncachedIds = uniqueIds.filter(id => !genreCache.has(id));
+  
+  if (uncachedIds.length > 0) {
+    try {
+      await fetchNovelsBatch(uncachedIds);
+    } catch (error) {
+      console.error('Error warming cache:', error);
+    }
+  }
+};
+
+const fetchNovelsBatch = async (novelIds) => {
+  // Deduplicate input IDs first
+  const uniqueIds = [...new Set(novelIds)];
+  
+  // Filter out already cached novels
+  const uncachedIds = uniqueIds.filter(id => !genreCache.has(id));
+  
+  if (uncachedIds.length === 0) {
+    return; // All novels already cached
+  }
+  
+  // Check if there's already a pending batch request for these IDs
+  const batchKey = uncachedIds.sort().join(',');
+  
+  if (batchRequests.has(batchKey)) {
+    return batchRequests.get(batchKey);
+  }
+  
+  // Split into chunks of 20 to respect backend limit
+  const BATCH_SIZE = 20;
+  const chunks = [];
+  for (let i = 0; i < uncachedIds.length; i += BATCH_SIZE) {
+    chunks.push(uncachedIds.slice(i, i + BATCH_SIZE));
+  }
+  
+  // Create batch request promise
+  const batchPromise = (async () => {
+    try {
+      const allNovels = [];
+      
+      // Process each chunk
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        
+        const response = await axios.post(`${config.backendUrl}/api/novels/batch`, {
+          novelIds: chunk
+        });
+        
+        allNovels.push(...response.data.novels);
+      }
+      
+      // Cache the results
+      allNovels.forEach(novel => {
+        const type = getNovelType(novel.genres);
+        genreCache.set(novel._id, type);
+      });
+      
+      return allNovels;
+    } catch (error) {
+      console.error('Error fetching novels batch:', error);
+      // Cache default types on error to avoid repeated failed requests
+      uncachedIds.forEach(id => {
+        genreCache.set(id, 'translated');
+      });
+      throw error;
+    } finally {
+      // Remove from pending requests
+      batchRequests.delete(batchKey);
+    }
+  })();
+  
+  // Store the promise to avoid duplicate requests
+  batchRequests.set(batchKey, batchPromise);
+  
+  return batchPromise;
+};
+
 // Helper function to determine novel type based on genres
 const getNovelType = (genres) => {
   if (!genres || !Array.isArray(genres)) return 'translated';
@@ -50,7 +154,7 @@ const getNovelType = (genres) => {
 };
 
 /**
- * Component to fetch and display novel type banner
+ * Component to fetch and display novel type banner (optimized with batch fetching)
  */
 const NovelTypeBanner = ({ novelId }) => {
   const [novelType, setNovelType] = useState('translated'); // Default to translated
@@ -71,21 +175,33 @@ const NovelTypeBanner = ({ novelId }) => {
         return;
       }
 
+      // Wait progressively longer for pre-fetching to complete before making individual request
+      const waitTimes = [50, 100, 200]; // Wait 50ms, then 100ms, then 200ms
+      let found = false;
+      
+      for (const waitTime of waitTimes) {
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        
+        if (genreCache.has(novelId)) {
+          const cachedType = genreCache.get(novelId);
+          setNovelType(cachedType);
+          setLoading(false);
+          found = true;
+          break;
+        }
+      }
+      
+      if (found) return;
+
       try {
-        // Use the dashboard endpoint to get novel data including genres
-        const response = await axios.get(`${config.backendUrl}/api/novels/${novelId}/dashboard`);
+        // Use batch fetching instead of individual requests
+        await fetchNovelsBatch([novelId]);
         
-        // Extract genres from the dashboard response
-        const genres = response.data.novel?.genres;
-        const type = getNovelType(genres);
-        
-        // Cache the result
-        genreCache.set(novelId, type);
+        // Get the cached result
+        const type = genreCache.get(novelId) || 'translated';
         setNovelType(type);
       } catch (error) {
-        console.error('Error fetching novel genres:', error);
-        // Cache the default type on error to avoid repeated failed requests
-        genreCache.set(novelId, 'translated');
+        console.error('Error fetching novel genres for', novelId, ':', error);
         // Keep default 'translated' type on error
       } finally {
         setLoading(false);
@@ -666,6 +782,35 @@ const DraggableModuleList = ({
   containerId,
   dragHandlers
 }) => {
+  // Pre-fetch all novel data in batch when modules change
+  useEffect(() => {
+    if (modules && modules.length > 0) {
+      // Try different possible data structures
+      const allNovelIds = modules
+        .map(module => {
+          // Try multiple possible paths for novel ID
+          return module.moduleId?.novelId?._id || 
+                 module.moduleId?._id || 
+                 module.novelId?._id || 
+                 module.novelId ||
+                 null;
+        })
+        .filter(id => id);
+      
+      // Deduplicate the IDs
+      const uniqueIds = [...new Set(allNovelIds)];
+      
+      const novelIds = uniqueIds.filter(id => !genreCache.has(id));
+      
+      if (novelIds.length > 0) {
+        // Pre-fetch novels in batch to avoid individual queries
+        fetchNovelsBatch(novelIds).catch(error => {
+          console.error('Error pre-fetching novels batch:', error);
+        });
+      }
+    }
+  }, [modules]);
+
   // Add type to each module for display purposes
   const modulesWithType = modules.map(module => ({
     ...module,
