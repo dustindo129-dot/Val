@@ -1002,15 +1002,31 @@ const ChapterContent = React.memo(({
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
             );
 
-            // NEW: Clean up empty paragraphs and spans first (SPACING FIX)
+            // Clean up paragraphs with meaningless styled content (SPACING FIX)
             processedContent = processedContent.replace(
                 /<p[^>]*>\s*<span[^>]*>\s*<\/span>\s*<\/p>/gi,
                 ''
             );
-
-            // NEW: Remove paragraphs that only contain whitespace or &nbsp; (SPACING FIX)
+            
+            // Remove paragraphs containing only styled elements with whitespace/empty content
             processedContent = processedContent.replace(
-                /<p[^>]*>\s*(&nbsp;|\s)*\s*<\/p>/gi,
+                /<p[^>]*>\s*<b[^>]*style="[^"]*font-weight:\s*normal[^"]*"[^>]*>\s*<\/b>\s*<\/p>/gi,
+                ''
+            );
+            
+            // Remove paragraphs containing other meaningless styled elements
+            processedContent = processedContent.replace(
+                /<p[^>]*>\s*<[^>]+[^>]*>\s*<\/[^>]+>\s*<\/p>/gi,
+                (match) => {
+                    // Only remove if the inner content is just whitespace
+                    const innerContent = match.replace(/<[^>]*>/g, '').trim();
+                    return innerContent === '' ? '' : match;
+                }
+            );
+
+            // Remove paragraphs that only contain &nbsp; or whitespace, but keep truly empty <p></p>
+            processedContent = processedContent.replace(
+                /<p[^>]*>\s*(&nbsp;|\u00A0)+\s*<\/p>/gi,
                 ''
             );
 
@@ -1239,11 +1255,19 @@ const ChapterContent = React.memo(({
                     /<p(\s[^>]*)?>\s*<span[^>]*>\s*<\/span>\s*<\/p>/gi,
                     ''
                 );
-                finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '');
                 finalContent = finalContent.replace(
                     /<p(\s[^>]*)?>\s*<span[^>]*>[\s\u00A0]*<\/span>\s*<\/p>/gi,
                     ''
                 );
+                
+                // Remove paragraphs with meaningless styled content but keep truly empty <p></p>
+                finalContent = finalContent.replace(
+                    /<p(\s[^>]*)?>\s*<b[^>]*style="[^"]*font-weight:\s*normal[^"]*"[^>]*>[\s\u00A0]*<\/b>\s*<\/p>/gi,
+                    ''
+                );
+                
+                // Remove paragraphs that only contain &nbsp; but keep truly empty paragraphs
+                finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*(&nbsp;|\u00A0)+\s*<\/p>/gi, '');
 
                 // ENHANCED: Handle Word document margin issues (SPACING FIX)
                 finalContent = finalContent.replace(
@@ -1260,7 +1284,7 @@ const ChapterContent = React.memo(({
                     ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
                     ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                     KEEP_CONTENT: false,
-                    ALLOW_EMPTY_TAGS: [], // CHANGED: Don't allow empty paragraphs
+                    ALLOW_EMPTY_TAGS: ['p'], // Allow empty <p> tags for manual spacing
                 });
             }
 
@@ -1288,7 +1312,10 @@ const ChapterContent = React.memo(({
                     }
                     return trimmedBlock;
                 })
-                .filter(block => block.length > 0); // ENHANCED: Filter empty blocks
+                .filter(block => {
+                    // Keep blocks that have content or are truly empty <p></p> tags
+                    return block.length > 0 || block === '<p class="text-default-color"></p>';
+                });
 
             let finalContent = paragraphBlocks.join('');
 
@@ -1297,14 +1324,14 @@ const ChapterContent = React.memo(({
                 finalContent = `<p class="text-default-color">${cleanContent}</p>`;
             }
 
-            // ENHANCED: Final cleanup for spacing issues
-            finalContent = finalContent.replace(/<p[^>]*>\s*<\/p>/gi, ''); // Remove any remaining empty paragraphs
+            // ENHANCED: Final cleanup for spacing issues - remove paragraphs with only &nbsp; but keep truly empty <p></p>
+            finalContent = finalContent.replace(/<p[^>]*>\s*(&nbsp;|\u00A0)+\s*<\/p>/gi, '');
 
             return DOMPurify.sanitize(finalContent, {
                 ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
                 ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                 KEEP_CONTENT: false,
-                ALLOW_EMPTY_TAGS: [], // Don't allow empty tags
+                ALLOW_EMPTY_TAGS: ['p'], // Allow empty <p> tags for manual spacing
             });
         } catch (error) {
             console.error('Content processing error:', error);
