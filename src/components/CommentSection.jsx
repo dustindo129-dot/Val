@@ -705,6 +705,33 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     return false;
   };
 
+  // Check if current user can view deleted comments (username and content)
+  const canViewDeletedComments = () => {
+    if (!user) return false;
+    
+    // Admin and moderators can always view deleted comments
+    if (user.role === 'admin' || user.role === 'moderator') {
+      return true;
+    }
+    
+    // pj_user can view deleted comments if they're assigned to this novel
+    if (user.role === 'pj_user' && novel) {
+      if (novel.active?.pj_user) {
+        return novel.active.pj_user.some(pjUserId => {
+          // Check by ID, username, or displayName for flexible matching
+          return pjUserId === user._id || 
+                 pjUserId === user.id ||
+                 pjUserId === user.username || 
+                 pjUserId === user.displayName ||
+                 pjUserId.toString() === user._id?.toString() ||
+                 pjUserId.toString() === user.id?.toString();
+        });
+      }
+    }
+    
+    return false;
+  };
+
   // Memoize the privileges check at the component level to prevent infinite loops
   const globalHasRichTextPrivileges = React.useMemo(() => {
     return hasRichTextPrivileges();
@@ -1618,7 +1645,27 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             <div className="comment-user-info">
               <div className="comment-user-line">
                 {comment.isDeleted && !comment.adminDeleted ? (
-                  <span className="comment-username deleted-user">[đã xóa]</span>
+                  canViewDeletedComments() ? (
+                    <Link 
+                      to={generateUserProfileUrl(comment.user)} 
+                      className="comment-username-link"
+                    >
+                      <span className="comment-username deleted-user">
+                        {comment.user.displayName || comment.user.username}
+                        {getAllRoleTags(comment.user.role, comment.user.novelRoles).map((roleTag, index) => (
+                          <span key={index} className={roleTag.className}>
+                            {roleTag.text}
+                          </span>
+                        ))}
+                        {comment.isPinned && (
+                          (contentType === 'novels' && comment.contentType === 'novels') || 
+                          (contentType === 'chapters' && comment.contentType === 'chapters')
+                        ) && <span className="pinned-indicator">📌</span>}
+                      </span>
+                    </Link>
+                  ) : (
+                    <span className="comment-username deleted-user">[đã xóa]</span>
+                  )
                 ) : (
                   <Link 
                     to={generateUserProfileUrl(comment.user)} 
@@ -1734,9 +1781,18 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           {!isEditing ? (
             <div className="comment-text" ref={commentContentRef}>
               {comment.isDeleted && !comment.adminDeleted ? (
-                <div className="deleted-comment-placeholder">
-                  <em>[bình luận đã bị xóa]</em>
-                </div>
+                canViewDeletedComments() ? (
+                  <div 
+                    className={`comment-content-wrapper deleted-comment-placeholder ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
+                    dangerouslySetInnerHTML={{ 
+                      __html: processCommentContent(decodeHTMLEntities(comment.text))
+                    }} 
+                  />
+                ) : (
+                  <div className="deleted-comment-placeholder">
+                    <em>[bình luận đã bị xóa]</em>
+                  </div>
+                )
               ) : (
                 <div 
                   className={`comment-content-wrapper ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
@@ -1745,7 +1801,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   }} 
                 />
               )}
-              {needsTruncation && !comment.isDeleted && (
+              {needsTruncation && !(comment.isDeleted && !canViewDeletedComments()) && (
                 <button 
                   className="see-more-btn"
                   onClick={() => setIsExpanded(!isExpanded)}

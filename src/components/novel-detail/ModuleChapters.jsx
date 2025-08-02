@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faSeedling } from '@fortawesome/free-solid-svg-icons';
@@ -32,16 +32,20 @@ const formatDateUtil = (date) => {
   }
 };
 
-// Helper function to check if chapter is new
-const isChapterNew = (date) => {
+// Helper function to check if chapter is new with real-time checking
+const isChapterNew = (date, currentTime = Date.now()) => {
   if (!date) return false;
   
   try {
     const chapterDate = new Date(date);
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    if (isNaN(chapterDate.getTime())) {
+      return false;
+    }
     
-    return chapterDate > threeDaysAgo;
+    const threeDaysInMs = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+    const timeSinceCreation = currentTime - chapterDate.getTime();
+    
+    return timeSinceCreation < threeDaysInMs;
   } catch (err) {
     console.error('Date comparison error:', err);
     return false;
@@ -63,7 +67,27 @@ const ModuleChapters = memo(({
   novel
 }) => {
   const [isReordering, setIsReordering] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
   const { isAuthenticated } = useAuth();
+
+  // Update current time every minute for real-time "new" tag updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Memoize chapter new status to prevent unnecessary re-calculations and maintain consistency
+  const chaptersWithNewStatus = useMemo(() => {
+    if (!chapters || !Array.isArray(chapters)) return [];
+    
+    return chapters.map(chapter => ({
+      ...chapter,
+      isNew: isChapterNew(chapter.createdAt, currentTime)
+    }));
+  }, [chapters, currentTime]);
   
   // Helper function to check if user has pj_user access
   const checkPjUserAccess = useCallback((pjUserArray, user) => {
@@ -208,9 +232,9 @@ const ModuleChapters = memo(({
 
   return (
     <div className="module-chapters">
-      {chapters && chapters.length > 0 ? (
+      {chaptersWithNewStatus && chaptersWithNewStatus.length > 0 ? (
         <div className="module-chapters-list">
-          {chapters.map((chapter, index) => {
+          {chaptersWithNewStatus.map((chapter, index) => {
             const chapterId = chapter._id || `index-${index}`;
             
             // Skip rendering if chapter should not be visible to current user
@@ -246,7 +270,7 @@ const ModuleChapters = memo(({
                       key={`chapter-link-${chapterId}`}
                     >
                       {chapter.title}
-                      {isChapterNew(chapter.createdAt) && (
+                      {chapter.isNew && (
                         <span className="new-tag" key={`new-tag-${chapterId}`}>MỚI</span>
                       )}
                     </Link>
@@ -256,6 +280,9 @@ const ModuleChapters = memo(({
                         <FontAwesomeIcon icon={faLock} className="chapter-lock-icon" />
                       )}
                       {chapter.title}
+                      {chapter.isNew && (
+                        <span className="new-tag" key={`new-tag-locked-${chapterId}`}>MỚI</span>
+                      )}
                       {chapter.mode === 'protected' && !chapterIsAccessible && (
                         <span className="login-required-text">(Yêu cầu đăng nhập)</span>
                       )}

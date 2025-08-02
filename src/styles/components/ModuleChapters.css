@@ -264,6 +264,8 @@
   font-weight: bold;
   animation: pulse 2s infinite;
   margin-left: 8px;
+  position: relative;
+  z-index: 10; /* Ensure new tag appears above any overlays */
 }
 
 .novel-detail-chapter-date {
