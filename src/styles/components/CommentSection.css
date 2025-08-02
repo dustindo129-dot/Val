@@ -427,6 +427,17 @@
   background-color: rgba(108, 117, 125, 0.1);
 }
 
+.reply-button:disabled {
+  color: #adb5bd;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reply-button:disabled:hover {
+  background-color: transparent;
+  color: #adb5bd;
+}
+
 .no-comments {
   text-align: center;
   padding: 2rem 0;
@@ -627,6 +638,12 @@
   color: #6c757d !important;
   font-style: italic;
   opacity: 0.7;
+}
+
+.deleted-indicator {
+  font-size: 0.85em;
+  font-weight: normal;
+  opacity: 0.8;
 }
 
 /* Replies list styles */
@@ -1445,6 +1462,10 @@
   color: #adb5bd !important;
 }
 
+:root.dark-mode .deleted-indicator {
+  color: #adb5bd;
+}
+
 :root.dark-mode .block-confirm-content {
   background-color: #343a40;
 }
@@ -1469,6 +1490,16 @@
 
 :root.dark-mode .like-count {
   color: #999;
+}
+
+:root.dark-mode .reply-button:disabled {
+  color: #6c757d;
+  opacity: 0.6;
+}
+
+:root.dark-mode .reply-button:disabled:hover {
+  background-color: transparent;
+  color: #6c757d;
 }
 
 :root.dark-mode .comment-dropdown-trigger {

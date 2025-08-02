@@ -1910,15 +1910,23 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           {!isEditing && (
             <div className="comment-actions">
               {comment.isDeleted && !comment.adminDeleted ? (
-                // For deleted comments, only show time and reply button to maintain thread structure
+                // For deleted comments, only show time and disabled reply button to maintain thread structure
                 <>
                   <span className="comment-time action-time">{formatRelativeTime(comment.createdAt)}</span>
                   <button 
                     className="reply-button"
                     onClick={handleReplyClick}
+                    disabled={true}
+                    title="Không thể trả lời bình luận đã xóa"
                   >
                     Trả lời
                   </button>
+                  {canViewDeletedComments() && (
+                    <span className="edited-indicator">(đã xóa)</span>
+                  )}
+                  {comment.isEdited && (
+                    <span className="edited-indicator">(đã chỉnh sửa)</span>
+                  )}
                 </>
               ) : (
                 <>
@@ -1942,7 +1950,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   >
                     Trả lời
                   </button>
-                  {comment.isEdited && !comment.isDeleted && (
+                  {comment.isEdited && (
                     <span className="edited-indicator">(đã chỉnh sửa)</span>
                   )}
                 </>
