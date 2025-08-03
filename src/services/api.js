@@ -368,7 +368,7 @@ const api = {
         }
       );
 
-      if (!response.data || !response.data.chapters) {
+      if (!response.data || (!response.data.chapters && !response.data.swappedChapters)) {
         throw new Error('Invalid response from server');
       }
 

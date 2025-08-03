@@ -162,7 +162,18 @@ const ModuleList = memo(({
     (user.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
   );
 
-  // Fetch rental counts for modules (admin/moderator/pj_user only)
+  // Check if there are any modules in 'rent' mode to optimize the rental counts query
+  const hasRentModeModules = modules && modules.some(module => module.mode === 'rent');
+
+  // Check if there are any active rentals that could potentially expire soon
+  const hasActiveRentalsNearExpiry = activeRentals.some(rental => {
+    if (!rental?.endTime) return false;
+    const timeRemaining = new Date(rental.endTime).getTime() - Date.now();
+    // Only poll if rentals expire within the next 10 minutes
+    return timeRemaining > 0 && timeRemaining <= (10 * 60 * 1000);
+  });
+
+  // Fetch rental counts for modules (admin/moderator/pj_user only) - only when there are rent-mode modules
   const { data: rentalCounts = {} } = useQuery({
     queryKey: ['moduleRentalCounts', novelId, user?.id],
     queryFn: async () => {
@@ -182,9 +193,10 @@ const ModuleList = memo(({
         return {};
       }
     },
-    enabled: !!user && !!novelId && canSeeRentalStats,
+    enabled: !!user && !!novelId && canSeeRentalStats && hasRentModeModules,
     staleTime: 1000 * 60 * 2, // 2 minutes - counts don't change that frequently
-    refetchInterval: 1000 * 60 * 2, // Refetch every 2 minutes instead of every 30 seconds
+    // Only poll if there are active rentals that could expire soon, otherwise just fetch once
+    refetchInterval: hasActiveRentalsNearExpiry ? 1000 * 60 * 2 : false,
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
