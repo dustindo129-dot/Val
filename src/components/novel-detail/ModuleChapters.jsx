@@ -161,10 +161,7 @@ const ModuleChapters = memo(({
   const isChapterVisible = (chapter) => {
     // Admin and moderators see all chapters, pj_user sees all chapters for their novels
     if (user?.role === 'admin' || user?.role === 'moderator' || 
-        (user?.role === 'pj_user' && (
-          novel?.active?.pj_user?.includes(user.id) || 
-          novel?.active?.pj_user?.includes(user.username)
-        ))) {
+        (user?.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))) {
       return true;
     }
     

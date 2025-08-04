@@ -361,6 +361,7 @@ const getAllRoleTags = (globalRole, novelRoles = []) => {
 };
 
 const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null }) => {
+
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1611,19 +1612,39 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     const canPinComments = isAuthenticated && user && (
       user.role === 'admin' || 
       user.role === 'moderator' || 
-      (user.role === 'pj_user' && novel?.active?.pj_user && (
-        novel.active.pj_user.includes(user.id) || 
-        novel.active.pj_user.includes(user._id) ||
-        novel.active.pj_user.includes(user.username) ||
-        novel.active.pj_user.includes(user.displayName)
-      ))
+      (user.role === 'pj_user' && novel?.active?.pj_user && 
+        novel.active.pj_user.some(pjUser => {
+          // Handle case where pjUser is an object (new format)
+          if (typeof pjUser === 'object' && pjUser !== null) {
+            return (
+              pjUser._id === user.id ||
+              pjUser._id === user._id ||
+              pjUser.username === user.username ||
+              pjUser.displayName === user.displayName ||
+              pjUser.userNumber === user.userNumber
+            );
+          }
+          // Handle case where pjUser is a primitive value (old format)
+          return (
+            pjUser === user.id ||
+            pjUser === user._id ||
+            pjUser === user.username ||
+            pjUser === user.displayName ||
+            pjUser === user.userNumber
+          );
+        })
+      )
     );
+
+
 
     // Determine if this specific comment can be pinned based on context
     const canPinThisComment = canPinComments && (
       (contentType === 'novels' && comment.contentType === 'novels') || // Novel page: only novel comments
       (contentType === 'chapters' && comment.contentType === 'chapters') // Chapter page: only chapter comments
     );
+
+
     
     return (
       <div className="comment-item">
