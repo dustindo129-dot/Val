@@ -946,7 +946,7 @@ const ChapterContent = React.memo(({
         }
     }, [userRole, originalMode, isModulePaid]);
 
-    // Process content for display (with backward compatibility and spacing fixes)
+// Process content for display (with backward compatibility and spacing fixes)
     const processContent = (content) => {
         if (!content) return '';
 
@@ -1002,18 +1002,61 @@ const ChapterContent = React.memo(({
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$2]</a></sup>'
             );
 
+            // Process <pre> tags and convert them to styled div containers
+            processedContent = processedContent.replace(
+                /<pre([^>]*)>([\s\S]*?)<\/pre>/gi,
+                (match, attributes, content) => {
+                    // Clean and process the content inside pre tag
+                    let preContent = content;
+
+                    // Remove excessive whitespace but preserve line breaks
+                    preContent = preContent.replace(/\n\s*\n/g, '\n');
+
+                    // Escape any remaining HTML entities properly
+                    preContent = preContent
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'");
+
+                    // Convert line breaks to <br> tags for proper display in div
+                    preContent = preContent.replace(/\n/g, '<br>');
+
+                    // Create styled div with blue border and background
+                    const divStyle = `
+                    border: 3px solid #2196f3;
+                    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                    padding: 15px;
+                    margin: 15px 0;
+                    border-radius: 8px;
+                    font-family: 'Courier New', Consolas, monospace;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    color: #1565c0;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+                `.replace(/\s+/g, ' ').trim();
+
+                    // Return as a styled div instead of pre tag
+                    return `<div style="${divStyle}" class="chapter-pre-content">${preContent}</div>`;
+                }
+            );
+
             // Clean up paragraphs with meaningless styled content (SPACING FIX)
             processedContent = processedContent.replace(
                 /<p[^>]*>\s*<span[^>]*>\s*<\/span>\s*<\/p>/gi,
                 ''
             );
-            
+
             // Remove paragraphs containing only styled elements with whitespace/empty content
             processedContent = processedContent.replace(
                 /<p[^>]*>\s*<b[^>]*style="[^"]*font-weight:\s*normal[^"]*"[^>]*>\s*<\/b>\s*<\/p>/gi,
                 ''
             );
-            
+
             // Remove paragraphs containing other meaningless styled elements
             processedContent = processedContent.replace(
                 /<p[^>]*>\s*<[^>]+[^>]*>\s*<\/[^>]+>\s*<\/p>/gi,
@@ -1259,13 +1302,13 @@ const ChapterContent = React.memo(({
                     /<p(\s[^>]*)?>\s*<span[^>]*>[\s\u00A0]*<\/span>\s*<\/p>/gi,
                     ''
                 );
-                
+
                 // Remove paragraphs with meaningless styled content but keep truly empty <p></p>
                 finalContent = finalContent.replace(
                     /<p(\s[^>]*)?>\s*<b[^>]*style="[^"]*font-weight:\s*normal[^"]*"[^>]*>[\s\u00A0]*<\/b>\s*<\/p>/gi,
                     ''
                 );
-                
+
                 // Remove paragraphs that only contain &nbsp; but keep truly empty paragraphs
                 finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*(&nbsp;|\u00A0)+\s*<\/p>/gi, '');
 
@@ -1281,7 +1324,7 @@ const ChapterContent = React.memo(({
                 );
 
                 return DOMPurify.sanitize(finalContent, {
-                    ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
+                    ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td', 'pre'],
                     ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                     KEEP_CONTENT: false,
                     ALLOW_EMPTY_TAGS: ['p'], // Allow empty <p> tags for manual spacing
@@ -1328,7 +1371,7 @@ const ChapterContent = React.memo(({
             finalContent = finalContent.replace(/<p[^>]*>\s*(&nbsp;|\u00A0)+\s*<\/p>/gi, '');
 
             return DOMPurify.sanitize(finalContent, {
-                ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td'],
+                ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td', 'pre'],
                 ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                 KEEP_CONTENT: false,
                 ALLOW_EMPTY_TAGS: ['p'], // Allow empty <p> tags for manual spacing
