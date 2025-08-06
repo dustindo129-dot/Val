@@ -142,7 +142,7 @@
 
 .request-input {
   width: 100%;
-  min-height: 100px;
+  min-height: 120px;
   padding: 1rem;
   border: 1px solid #ced4da;
   border-radius: 4px;
@@ -150,6 +150,10 @@
   font-family: inherit;
   font-size: 1rem;
   transition: border-color 0.2s;
+}
+
+.contact-info-input {
+  min-height: 150px;
 }
 
 .request-title-input {

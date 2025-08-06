@@ -115,9 +115,8 @@ const MarketRequestForm = ({
               disabled={submitting}
               required
             />
-            <input
-              type="text"
-              className="request-title-input"
+            <textarea
+              className="request-input contact-info-input"
               placeholder="Thông tin liên lạc của bạn (Facebook, Discord, Zalo,...) - Để đảm bảo quyền riêng tư thông tin này chỉ được thấy bởi admin/mod."
               value={requestContactInfo}
               onChange={(e) => setRequestContactInfo(e.target.value)}

@@ -36,12 +36,31 @@
   color: white;
 }
 
-/* Paid module title styling */
-.paid-module-title {
-  color: #9ca3af !important;
+.mode-draft {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Base module title styling */
+.module-title {
   display: flex;
   align-items: center;
   gap: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Paid module title styling */
+.paid-module-title {
+  color: #9ca3af;
+}
+
+/* Draft module title styling */
+.draft-module-title {
+  color: #6c757d;
+  opacity: 0.7;
+  font-style: italic;
 }
 
 .module-balance-required {
@@ -517,4 +536,23 @@
       min-width: 8px;
       flex-shrink: 0;
   }
+}
+
+/* Dark mode support for module styles */
+:root.dark-mode .module-title {
+  color: #e9ecef;
+}
+
+:root.dark-mode .mode-draft {
+  background-color: #495057;
+  color: #e9ecef;
+}
+
+:root.dark-mode .paid-module-title {
+  color: #6c757d !important;
+}
+
+:root.dark-mode .draft-module-title {
+  color: #adb5bd !important;
+  opacity: 0.8;
 }

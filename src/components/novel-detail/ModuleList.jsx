@@ -442,13 +442,18 @@ const ModuleList = memo(({
                       <span className="mode-tag mode-paid">{translateChapterModuleStatus('PAID')}</span>
                     </div>
                   )}
+                  {module.mode === 'draft' && (
+                    <div className="module-mode-tag">
+                      <span className="mode-tag mode-draft">{translateChapterModuleStatus('DRAFT')}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
             <div className="module-details">
               <div className="module-header">
                 <div className="module-title-area">
-                  <h3 className={`module-title ${module.mode === 'paid' ? 'paid-module-title' : ''}`}>
+                  <h3 className={`module-title ${module.mode === 'paid' ? 'paid-module-title' : ''} ${module.mode === 'draft' ? 'draft-module-title' : ''}`}>
                     {module.title || 'Tập không có tên'}
                     {module.mode === 'paid' && module.moduleBalance > 0 && (
                       <div className="module-balance-required">

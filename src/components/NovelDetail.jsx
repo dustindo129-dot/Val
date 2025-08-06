@@ -19,7 +19,7 @@
  * - Navigation breadcrumbs
  */
 
-import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy, memo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -483,6 +483,42 @@ const NovelDetail = ({ novelId }) => {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   
+  // Clear cache when user authentication state changes (for draft module visibility)
+  const previousUserRef = useRef(null);
+  useEffect(() => {
+    // Only clear cache if user actually changed (not on initial load)
+    const currentUserKey = user ? `${user.id}_${user.role}` : null;
+    const previousUserKey = previousUserRef.current ? `${previousUserRef.current.id}_${previousUserRef.current.role}` : null;
+
+    // Clear cache when:
+    // 1. User changes (different user or role)
+    // 2. User logs in (null -> user)
+    // 3. User logs out (user -> null)
+    const shouldClearCache = (
+      // Skip initial load when both are null
+      !(previousUserRef.current === null && currentUserKey === null) &&
+      // Clear when user state actually changes
+      currentUserKey !== previousUserKey
+    );
+
+    if (shouldClearCache) {
+      // Clear all related queries more aggressively
+      queryClient.removeQueries({ queryKey: ['novel', novelId] });
+      queryClient.removeQueries({ queryKey: ['novelStats', novelId] });
+      queryClient.removeQueries({ queryKey: ['userInteraction', previousUserRef.current?.username, novelId] });
+      
+      // Force immediate refetch with invalidation
+      queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      
+      // Also force refetch to ensure immediate update
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+      }, 100); // Small delay to ensure auth state is fully updated
+    }
+
+    previousUserRef.current = user;
+  }, [user?.id, user?.role, queryClient, novelId]);
+  
   const [autoLoadComments, setAutoLoadComments] = useState(false);
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [editingModule, setEditingModule] = useState(null);
@@ -561,6 +597,33 @@ const NovelDetail = ({ novelId }) => {
     
     fetchUserBalance();
     }
+  }, [isAuthenticated, user]);
+
+  // Listen for SSE balance updates
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const handleSSEBalanceUpdate = (data) => {
+      // Only handle balance updates for the current user
+      if (data.userId === user?.id || data.userId === user?._id) {
+        console.log('NovelDetail: Balance updated via SSE');
+        if (data.newBalance !== undefined) {
+          setUserBalance(data.newBalance);
+        }
+      }
+    };
+
+    // Dynamically import and set up SSE listener
+    import('../services/sseService').then(({ default: sseService }) => {
+      sseService.addEventListener('balance_updated', handleSSEBalanceUpdate);
+    });
+
+    return () => {
+      // Clean up SSE listener
+      import('../services/sseService').then(({ default: sseService }) => {
+        sseService.removeEventListener('balance_updated', handleSSEBalanceUpdate);
+      });
+    };
   }, [isAuthenticated, user]);
 
   // Auto-show comments after delay (Option 1: Always show after delay)

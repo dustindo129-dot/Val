@@ -37,7 +37,7 @@ const SecondaryNavbar = () => {
   // Get current location for active link highlighting
   const location = useLocation();
   // Get user authentication state for admin features
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
   // Get theme state and functions from unified theme context
   const { isDarkMode, toggleTheme } = useTheme();
   // State for mobile dropdown menu
@@ -112,8 +112,22 @@ const SecondaryNavbar = () => {
     const handleSSEBalanceUpdate = (data) => {
       // Only handle balance updates for the current user
       if (data.userId === user?.id || data.userId === user?._id) {
-        console.log('Balance updated via SSE, refreshing balance display');
-        fetchUserBalance();
+        console.log('Balance updated via SSE, updating user balance directly');
+        
+        // Update the user object in AuthContext with the new balance
+        if (data.newBalance !== undefined) {
+          const updatedUser = { ...user, balance: data.newBalance };
+          updateUser(updatedUser);
+          
+          // Also update localStorage to persist the change
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          
+          // Update local state as well
+          setUserBalance(data.newBalance);
+        } else {
+          // Fallback: refresh balance if newBalance not provided
+          fetchUserBalance();
+        }
       }
     };
 

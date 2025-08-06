@@ -205,6 +205,10 @@ const ModuleForm = memo(({
               className="module-form-select"
             >
               <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho tất cả)</option>
+              {/* Only show draft option for admin/moderator */}
+              {(user?.role === 'admin' || user?.role === 'moderator') && (
+                <option value="draft">{translateChapterModuleStatus('DRAFT')} (Chỉ admin/mod)</option>
+              )}
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
               {/* Only show rent option if module has paid content */}
               {hasPaidContent && (
@@ -290,6 +294,16 @@ const ModuleForm = memo(({
             <label className="module-form-label">Chế độ tập hiện tại:</label>
             <div className="module-form-info-display">
               MỞ TẠM THỜI - {moduleForm.rentBalance || 0} 🌾/1 tuần (Chỉ quản lý dự án mới có thể thay đổi)
+            </div>
+          </div>
+        )}
+
+        {/* Show module info for users who can't manage module modes when module is draft */}
+        {!canManageModuleModes && user?.role === 'pj_user' && mode === 'draft' && (
+          <div className="module-form-group">
+            <label className="module-form-label">Chế độ tập hiện tại:</label>
+            <div className="module-form-info-display">
+              {translateChapterModuleStatus('DRAFT')} (Chỉ admin/moderator mới có thể thay đổi)
             </div>
           </div>
         )}
