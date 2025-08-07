@@ -350,14 +350,14 @@ const OLN = () => {
                 <Link
                     key="1"
                     to="/oln/trang/1"
-                    className={`pagination-button ${1 === currentPage ? 'active' : ''}`}
+                    className={`novel-pagination-button ${1 === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
                     1
                 </Link>
             );
             if (startPage > 2) {
-                pages.push(<span key="ellipsis1" className="pagination-ellipsis">...</span>);
+                pages.push(<span key="ellipsis1" className="novel-pagination-ellipsis">...</span>);
             }
         }
 
@@ -366,7 +366,7 @@ const OLN = () => {
                 <Link
                     key={i}
                     to={`/oln/trang/${i}`}
-                    className={`pagination-button ${i === currentPage ? 'active' : ''}`}
+                    className={`novel-pagination-button ${i === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
                     {i}
@@ -376,13 +376,13 @@ const OLN = () => {
 
         if (endPage < pagination.totalPages) {
             if (endPage < pagination.totalPages - 1) {
-                pages.push(<span key="ellipsis2" className="pagination-ellipsis">...</span>);
+                pages.push(<span key="ellipsis2" className="novel-pagination-ellipsis">...</span>);
             }
             pages.push(
                 <Link
                     key={pagination.totalPages}
                     to={`/oln/trang/${pagination.totalPages}`}
-                    className={`pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
+                    className={`novel-pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
                     onClick={() => window.scrollTo(0, 0)}
                 >
                     {pagination.totalPages}
@@ -391,14 +391,14 @@ const OLN = () => {
         }
 
         return (
-            <div className="pagination">
+            <div className="novel-pagination">
                 <Link
                     to={currentPage > 1 ? `/oln/trang/${currentPage - 1}` : '#'}
                     onClick={(e) => {
                         if (currentPage === 1) e.preventDefault();
                         else window.scrollTo(0, 0);
                     }}
-                    className={`pagination-button nav ${currentPage === 1 ? 'disabled' : ''}`}
+                    className={`novel-pagination-button nav ${currentPage === 1 ? 'disabled' : ''}`}
                 >
                     ‹
                 </Link>
@@ -409,7 +409,7 @@ const OLN = () => {
                         if (currentPage === pagination.totalPages) e.preventDefault();
                         else window.scrollTo(0, 0);
                     }}
-                    className={`pagination-button nav ${currentPage === pagination.totalPages ? 'disabled' : ''}`}
+                    className={`novel-pagination-button nav ${currentPage === pagination.totalPages ? 'disabled' : ''}`}
                 >
                     ›
                 </Link>
