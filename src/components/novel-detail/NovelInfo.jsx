@@ -1047,7 +1047,56 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                         <div className="rd-info-row">
                                             <div className="rd-info-label">Tác giả:</div>
                                             <div className="rd-info-value">
-                                                <span className="rd-author-name">{novelData.author || 'Không xác định'}</span>
+                                                {(() => {
+                                                    const author = novelData.author;
+                                                    if (!author) {
+                                                        return <span className="rd-author-name">Không xác định</span>;
+                                                    }
+                                                    
+                                                    // Check if this is a Vietnamese novel
+                                                    const isVietnameseNovel = novelData.genres && novelData.genres.some(genre => 
+                                                        typeof genre === 'string' && genre.includes('Vietnamese Novel')
+                                                    );
+                                                    
+                                                    // Check if it's a user object (from active staff with user data) or just a string
+                                                    if (typeof author === 'object' && author.username) {
+                                                        // It's a user object - check if it has userNumber for the new URL system
+                                                        if (author.userNumber && isVietnameseNovel) {
+                                                            // Has userNumber AND is Vietnamese novel - use the new URL system with clickable link
+                                                            const displayText = author.originalText || author.displayName || author.username;
+                                                            return (
+                                                                <Link 
+                                                                    to={generateUserProfileUrl(author)} 
+                                                                    className="rd-author-name rd-novel-author"
+                                                                >
+                                                                    {displayText}
+                                                                </Link>
+                                                            );
+                                                        } else {
+                                                            // No userNumber OR not Vietnamese novel - treat as plain text
+                                                            const displayText = author.originalText || author.displayName || author.username;
+                                                            return (
+                                                                <span className="rd-author-name">
+                                                                    {displayText}
+                                                                </span>
+                                                            );
+                                                        }
+                                                    } else if (typeof author === 'string') {
+                                                        // It's a text string - always display as plain text (no clickable links for string authors)
+                                                        return (
+                                                            <span className="rd-author-name">
+                                                                {author}
+                                                            </span>
+                                                        );
+                                                    } else {
+                                                        // Fallback for any other case
+                                                        return (
+                                                            <span className="rd-author-name">
+                                                                {String(author)}
+                                                            </span>
+                                                        );
+                                                    }
+                                                })()}
                                             </div>
                                         </div>
 

@@ -413,6 +413,16 @@
   font-weight: 600;
 }
 
+/* Specific styles for author (not artist) */
+.rd-novel-author {
+  text-decoration: none;
+}
+
+.rd-novel-author:hover {
+  color: #f57c00; /* Darker shade of #ff9800 */
+  text-decoration: underline;
+}
+
 /* Genres */
 .rd-genres-row {
   display: flex;
