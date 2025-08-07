@@ -1628,6 +1628,24 @@ const ChapterContent = React.memo(({
         images_upload_handler: (blobInfo) => {
             return new Promise((resolve, reject) => {
                 const file = blobInfo.blob();
+                
+                // Check if this might be an existing image being reprocessed
+                const filename = blobInfo.filename();
+                const base64 = blobInfo.base64();
+                
+                // If no filename and no base64, this might be an existing image
+                // Skip upload and return the blob URL for existing images
+                if (!filename && !base64) {
+                    resolve(blobInfo.blobUri());
+                    return;
+                }
+                
+                // Check if file has proper properties for upload
+                if (!file || (file.size === 0 && !file.name && !file.type)) {
+                    console.warn('Skipping upload for invalid file:', file);
+                    resolve(blobInfo.blobUri());
+                    return;
+                }
 
                 bunnyUploadService.uploadFile(file, 'illustrations')
                     .then(url => {

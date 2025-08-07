@@ -20,6 +20,16 @@ const uploadToBunny = async (file, folder = '') => {
     if (!file) {
       throw new Error('No file provided for upload');
     }
+    
+    // Additional validation for file properties
+    if (typeof file !== 'object') {
+      throw new Error('Invalid file object provided');
+    }
+    
+    // Check if file has required properties
+    if (!file.size && file.size !== 0) {
+      console.warn('File missing size property, attempting upload anyway');
+    }
 
     // Define target folder
     let targetFolder = folder;
@@ -31,7 +41,37 @@ const uploadToBunny = async (file, folder = '') => {
 
     // Generate a unique filename to avoid collisions
     const timestamp = new Date().getTime();
-    const uniqueFilename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`;
+    
+    // Handle cases where file.name might be undefined
+    let fileName = 'untitled';
+    let fileExtension = '';
+    
+    if (file.name) {
+      const lastDotIndex = file.name.lastIndexOf('.');
+      if (lastDotIndex > 0) {
+        fileName = file.name.substring(0, lastDotIndex);
+        fileExtension = file.name.substring(lastDotIndex);
+      } else {
+        fileName = file.name;
+      }
+    } else {
+      // Try to determine extension from file type
+      if (file.type) {
+        const typeMap = {
+          'image/jpeg': '.jpg',
+          'image/jpg': '.jpg',
+          'image/png': '.png',
+          'image/gif': '.gif',
+          'image/webp': '.webp',
+          'image/bmp': '.bmp',
+          'image/svg+xml': '.svg'
+        };
+        fileExtension = typeMap[file.type] || '';
+      }
+    }
+    
+    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9]/g, '-');
+    const uniqueFilename = `${timestamp}-${sanitizedFileName}${fileExtension}`;
     
     // Path in the storage zone
     const storagePath = targetFolder ? `/${targetFolder}/${uniqueFilename}` : `/${uniqueFilename}`;
