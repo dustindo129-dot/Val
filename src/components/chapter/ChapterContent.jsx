@@ -60,6 +60,7 @@ const ChapterContent = React.memo(({
     const wordCountTimeoutRef = useRef(null);
     const lastWordCount = useRef(0);
     const lastReactSyncContentRef = useRef('');
+    const isComposingRef = useRef(false);
 
     // Check if the current module is in paid mode
     const isModulePaid = moduleData?.mode === 'paid';
@@ -878,7 +879,7 @@ const ChapterContent = React.memo(({
         }
     }, [localFootnotes, setEditedContent, renumberFootnotes]);
 
-    // Content click handler for footnote navigation
+    // Content click handler for footnote navigation and copy prevention
     useEffect(() => {
         const handleContentClick = (e) => {
             if (e.target.matches('.footnote-ref')) {
@@ -896,10 +897,49 @@ const ChapterContent = React.memo(({
             }
         };
 
-        if (contentRef.current) {
-            contentRef.current.addEventListener('click', handleContentClick);
+        // Prevent copy operations while keeping selection for accessibility
+        const preventCopy = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        };
+
+        const preventContextMenu = (e) => {
+            e.preventDefault();
+            return false;
+        };
+
+        const preventKeyboardCopy = (e) => {
+            // Prevent Ctrl+C, Ctrl+A, Ctrl+V, Ctrl+X
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'a' || e.key === 'v' || e.key === 'x')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Prevent F12 (developer tools)
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        if (contentRef.current && !isEditing) {
+            const contentElement = contentRef.current;
+            
+            // Add event listeners to prevent copying
+            contentElement.addEventListener('copy', preventCopy);
+            contentElement.addEventListener('cut', preventCopy);
+            contentElement.addEventListener('contextmenu', preventContextMenu);
+            contentElement.addEventListener('keydown', preventKeyboardCopy);
+            contentElement.addEventListener('click', handleContentClick);
         }
+
         window.addEventListener('hashchange', handleHashChange);
+        
+        // Also add global keyboard listener to prevent copy shortcuts
+        if (!isEditing) {
+            document.addEventListener('keydown', preventKeyboardCopy);
+        }
 
         if (window.location.hash) {
             setTimeout(() => handleHashChange(), 100);
@@ -907,9 +947,17 @@ const ChapterContent = React.memo(({
 
         return () => {
             if (contentRef.current) {
-                contentRef.current.removeEventListener('click', handleContentClick);
+                const contentElement = contentRef.current;
+                contentElement.removeEventListener('copy', preventCopy);
+                contentElement.removeEventListener('cut', preventCopy);
+                contentElement.removeEventListener('contextmenu', preventContextMenu);
+                contentElement.removeEventListener('keydown', preventKeyboardCopy);
+                contentElement.removeEventListener('click', handleContentClick);
             }
             window.removeEventListener('hashchange', handleHashChange);
+            if (!isEditing) {
+                document.removeEventListener('keydown', preventKeyboardCopy);
+            }
         };
     }, [isEditing]);
 

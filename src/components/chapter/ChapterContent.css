@@ -746,3 +746,22 @@
   color: inherit;
 }
 
+/* Prevent dragging content while maintaining accessibility */
+.chapter-content {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+  -ms-content-zooming: none; /* IE */
+  -ms-user-drag: none; /* IE */
+  -webkit-user-drag: none; /* Safari */
+  -khtml-user-drag: none; /* Konqueror HTML */
+  -moz-user-drag: none; /* Firefox */
+  pointer-events: auto; /* Ensure read-aloud still works */
+}
+
+/* Prevent drag on all child elements */
+.chapter-content * {
+  -webkit-user-drag: none;
+  -moz-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
