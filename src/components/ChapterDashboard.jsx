@@ -134,6 +134,126 @@ const ChapterDashboard = () => {
         return processedContent;
     }, []);
 
+    // Convert CSS classes back to inline styles for TinyMCE editing
+    const convertClassesToInlineStyles = useCallback((content) => {
+        if (!content) return content;
+
+        let processedContent = content;
+
+        // Convert text alignment classes back to inline styles for paragraphs
+        processedContent = processedContent.replace(
+            /<p([^>]*?)class="([^"]*)"([^>]*?)>/gi,
+            (match, beforeClass, classContent, afterClass) => {
+                const classes = classContent.split(' ').filter(c => c.trim());
+                const nonAlignmentClasses = [];
+                let alignmentStyle = '';
+
+                classes.forEach(className => {
+                    if (className === 'text-center') {
+                        alignmentStyle = 'text-align: center;';
+                    } else if (className === 'text-right') {
+                        alignmentStyle = 'text-align: right;';
+                    } else if (className === 'text-left') {
+                        alignmentStyle = 'text-align: left;';
+                    } else if (!className.startsWith('text-default-color') && !className.startsWith('text-color-')) {
+                        nonAlignmentClasses.push(className);
+                    }
+                });
+
+                // Extract existing style attribute
+                const existingStyleMatch = (beforeClass + afterClass).match(/style="([^"]*)"/i);
+                let existingStyle = existingStyleMatch ? existingStyleMatch[1] : '';
+
+                // Remove any existing text-align styles
+                existingStyle = existingStyle.replace(/text-align\s*:\s*[^;]+;?/gi, '').trim();
+
+                // Combine styles
+                let finalStyle = '';
+                if (alignmentStyle) {
+                    finalStyle = alignmentStyle;
+                }
+                if (existingStyle) {
+                    finalStyle += (finalStyle ? ' ' : '') + existingStyle;
+                }
+
+                // Remove style attribute from before/after parts
+                let cleanedBefore = beforeClass.replace(/style="[^"]*"/gi, '').trim();
+                let cleanedAfter = afterClass.replace(/style="[^"]*"/gi, '').trim();
+
+                // Build the final tag
+                let result = '<p';
+                if (cleanedBefore) result += ' ' + cleanedBefore;
+                if (nonAlignmentClasses.length > 0) {
+                    result += ` class="${nonAlignmentClasses.join(' ')}"`;
+                }
+                if (finalStyle) {
+                    result += ` style="${finalStyle}"`;
+                }
+                if (cleanedAfter) result += ' ' + cleanedAfter;
+                result += '>';
+
+                return result;
+            }
+        );
+
+        // Convert text alignment classes back to inline styles for divs
+        processedContent = processedContent.replace(
+            /<div([^>]*?)class="([^"]*)"([^>]*?)>/gi,
+            (match, beforeClass, classContent, afterClass) => {
+                const classes = classContent.split(' ').filter(c => c.trim());
+                const nonAlignmentClasses = [];
+                let alignmentStyle = '';
+
+                classes.forEach(className => {
+                    if (className === 'text-center') {
+                        alignmentStyle = 'text-align: center;';
+                    } else if (className === 'text-right') {
+                        alignmentStyle = 'text-align: right;';
+                    } else if (className === 'text-left') {
+                        alignmentStyle = 'text-align: left;';
+                    } else if (!className.startsWith('text-default-color') && !className.startsWith('text-color-')) {
+                        nonAlignmentClasses.push(className);
+                    }
+                });
+
+                if (!alignmentStyle) {
+                    return match; // No alignment classes found, return original
+                }
+
+                // Extract existing style attribute
+                const existingStyleMatch = (beforeClass + afterClass).match(/style="([^"]*)"/i);
+                let existingStyle = existingStyleMatch ? existingStyleMatch[1] : '';
+
+                // Remove any existing text-align styles
+                existingStyle = existingStyle.replace(/text-align\s*:\s*[^;]+;?/gi, '').trim();
+
+                // Combine styles
+                let finalStyle = alignmentStyle;
+                if (existingStyle) {
+                    finalStyle += ' ' + existingStyle;
+                }
+
+                // Remove style attribute from before/after parts
+                let cleanedBefore = beforeClass.replace(/style="[^"]*"/gi, '').trim();
+                let cleanedAfter = afterClass.replace(/style="[^"]*"/gi, '').trim();
+
+                // Build the final tag
+                let result = '<div';
+                if (cleanedBefore) result += ' ' + cleanedBefore;
+                if (nonAlignmentClasses.length > 0) {
+                    result += ` class="${nonAlignmentClasses.join(' ')}"`;
+                }
+                result += ` style="${finalStyle}"`;
+                if (cleanedAfter) result += ' ' + cleanedAfter;
+                result += '>';
+
+                return result;
+            }
+        );
+
+        return processedContent;
+    }, []);
+
     // Handle mode change with validation
     const handleModeChange = (e) => {
         const newMode = e.target.value;
@@ -1346,6 +1466,9 @@ const ChapterDashboard = () => {
                                     if (isEditMode && chapterContent) {
                                         let editableContent = chapterContent;
 
+                                        // Convert CSS classes back to inline styles for TinyMCE editing
+                                        editableContent = convertClassesToInlineStyles(editableContent);
+
                                         // Convert HTML footnote links back to [valnote_X] format for editing
                                         editableContent = editableContent.replace(
                                             /<sup><a[^>]*href="#note-(\w+)"[^>]*>\[\w+\]<\/a><\/sup>/g,
@@ -1413,7 +1536,14 @@ const ChapterDashboard = () => {
                                         editor.on('init', () => {
                                             // Set content if in edit mode - convert HTML footnotes back to [valnote_X] format for editing
                                             if (isEditMode && chapterContent) {
-                                                let editableContent = convertHTMLToFootnotes(chapterContent);
+                                                let editableContent = chapterContent;
+                                                
+                                                // Convert CSS classes back to inline styles for TinyMCE editing
+                                                editableContent = convertClassesToInlineStyles(editableContent);
+                                                
+                                                // Convert HTML footnotes back to [valnote_X] format for editing
+                                                editableContent = convertHTMLToFootnotes(editableContent);
+                                                
                                                 editor.setContent(editableContent);
                                             }
                                         });
