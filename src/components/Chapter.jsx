@@ -315,6 +315,18 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Extract chapter and novel data early to avoid circular dependencies
   const chapter = chapterData?.chapter;
   const novel = chapter?.novel || {title: "Novel"};
+  
+  // Add logging for access control debugging
+  if (chapter) {
+    console.log('Chapter access control debug:', {
+      chapterId: chapter._id,
+      title: chapter.title,
+      mode: chapter.mode,
+      accessDenied: chapter.accessDenied,
+      hasContent: !!chapter.content,
+      contentLength: chapter.content?.length || 0
+    });
+  }
   // Extract interaction data from the consolidated endpoint
   const interactions = chapterData?.interactions || {
     totalLikes: 0,
