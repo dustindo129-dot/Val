@@ -338,17 +338,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // User interaction data is now included in the main query, no separate fetch needed
   const userInteraction = interactions.userInteraction;
 
-  // Query for module data when we have a moduleId
-  const { data: moduleData } = useQuery({
-    queryKey: ['module', chapter?.moduleId],
-    queryFn: async () => {
-      if (!chapter?.moduleId) return null;
-      const res = await axios.get(`${config.backendUrl}/api/modules/${novelId}/modules/${chapter.moduleId}`);
-      return res.data;
-    },
-    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
-    enabled: !!chapter?.moduleId
-  });
+  // Use module data already included in chapter response (no separate query needed!)
+  const moduleData = chapter?.module || null;
+  const moduleLoading = false; // No loading since it's included in main chapter query
 
   // Query for staff user data to resolve userNumbers to displayNames
   const { data: staffUsersData } = useQuery({
@@ -403,23 +395,24 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Check if this looks like a paid module situation that will likely be denied
   const shouldShowEarlyAccessGuard = useMemo(() => {
     // If we already have chapter data with access denied, let normal flow handle it
-    if (chapterData && chapter?.accessDenied) return false;
+    if (chapterData && chapter?.accessDenied) {
+      return false;
+    }
     
     // If user has privileged access, no need for guard
-    if (canAccessPaidContent) return false;
+    if (canAccessPaidContent) {
+      return false;
+    }
     
     // If user has active rental from chapter data, no need for guard  
-    if (chapter?.rentalInfo?.hasActiveRental) return false;
+    if (chapter?.rentalInfo?.hasActiveRental) {
+      return false;
+    }
     
-    // AGGRESSIVE: Show early guard during loading if we detect likely denial scenarios
-    // 1. Loading state + paid module detected + no auth
-    // 2. Loading state + no privileged user
-    if (isLoading) {
-      const moduleIsPaid = moduleData?.mode === 'paid';
-      const userNotAuthenticated = !user;
-      
-      // Show immediately for paid modules without authentication
-      return moduleIsPaid && userNotAuthenticated;
+    // Show early guard during loading for unauthenticated users
+    // Since module data is now included in chapter response, we can make immediate decisions
+    if (isLoading && !user) {
+      return true; // Show loading access guard for any unauthenticated user during loading
     }
     
     // For non-loading states, check if access is likely denied
@@ -429,7 +422,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       const userNotAuthenticated = !user;
       const userNotPrivileged = !canAccessPaidContent;
       
-      return (moduleIsPaid || chapterIsPaid) && (userNotAuthenticated || userNotPrivileged);
+      const shouldShow = (moduleIsPaid || chapterIsPaid) && (userNotAuthenticated || userNotPrivileged);
+      
+      return shouldShow;
     }
     
     return false;
@@ -1319,15 +1314,20 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // OPTIMIZATION: Enhanced loading with early access guard for better UX
   if (isLoading) {
-    // If we know it's a paid module and user is not authenticated,
-    // show access guard immediately to prevent blank content flash
-    if (moduleData?.mode === 'paid' && !user) {
+    // Show access guard if user is not authenticated (cautious approach)
+    // or if we know it's a paid module and user is not authenticated
+    if (!user && (!moduleData || moduleData?.mode === 'paid')) {
       return (
         <div className="chapter-layout">
           <div className="chapter-container">
             <ChapterHeader
-              chapter={{ title: 'Đang tải...', createdAt: new Date() }}
-              novel={novel}
+              chapter={{ 
+                _id: 'loading', 
+                title: 'Đang tải...', 
+                createdAt: new Date() 
+              }}
+              novel={novel || { _id: novelId, title: 'Đang tải...' }}
+              novelId={novelId}
               user={user}
               onBackToNovel={() => {}}
               onShare={() => {}}
@@ -1351,9 +1351,12 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
               onRentalSuccess={handleRentalSuccess}
               isLoadingAccess={true}
             >
-              <div style={{ minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <LoadingSpinner size="large" text="Đang kiểm tra quyền truy cập..." />
-              </div>
+            <div style={{ minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LoadingSpinner 
+                size="large" 
+                text="Đang kiểm tra quyền truy cập..." 
+              />
+            </div>
             </ChapterAccessGuard>
           </div>
         </div>
@@ -1361,6 +1364,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     }
     
     // Default loading state
+
     return (
       <div className="loading">
         <LoadingSpinner size="large" text="Đang tải chương..." />
@@ -1471,7 +1475,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           isLoadingAccess={true} // Add loading state flag
         >
           <div style={{ minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <LoadingSpinner text="Đang kiểm tra quyền truy cập..." />
+            <LoadingSpinner 
+              text="Đang kiểm tra quyền truy cập..." 
+            />
           </div>
         </ChapterAccessGuard>
       ) : (

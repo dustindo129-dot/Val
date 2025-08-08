@@ -44,7 +44,8 @@ export const createSlug = (title) => {
  */
 export const createUniqueSlug = (title, id) => {
   const baseSlug = createSlug(title);
-  const shortId = id.slice(-8); // Use last 8 characters of ID for uniqueness
+  // Handle cases where id might be undefined or not a string
+  const shortId = id && typeof id === 'string' ? id.slice(-8) : 'loading';
   return baseSlug ? `${baseSlug}-${shortId}` : shortId;
 };
 
