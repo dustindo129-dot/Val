@@ -39,6 +39,8 @@ const ChapterContent = React.memo(({
                                        onNetworkError
                                    }) => {
 
+
+
     const contentRef = useRef(null);
     const [editedMode, setEditedMode] = useState(chapter.mode || 'published');
     const [localFootnotes, setLocalFootnotes] = useState([]);

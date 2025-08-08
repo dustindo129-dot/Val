@@ -379,21 +379,46 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     enabled: !!(chapter?.translator || chapter?.editor || chapter?.proofreader)
   });
 
+  // Helper function to check if user has pj_user access (handles both strings and objects)
+  const checkPjUserAccess = useCallback((pjUserArray, user) => {
+    if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+    
+    return pjUserArray.some(pjUser => {
+      // Handle case where pjUser is an object (new format)
+      if (typeof pjUser === 'object' && pjUser !== null) {
+        return (
+          pjUser._id === user.id ||
+          pjUser._id === user._id ||
+          pjUser.username === user.username ||
+          pjUser.displayName === user.displayName ||
+          pjUser.userNumber === user.userNumber
+        );
+      }
+      // Handle case where pjUser is a primitive value (old format)
+      return (
+        pjUser === user.id ||
+        pjUser === user._id ||
+        pjUser === user.username ||
+        pjUser === user.displayName ||
+        pjUser === user.userNumber
+      );
+    });
+  }, []);
+
   // Check if user can access paid content (admin/moderator/pj_user)
   const canAccessPaidContent = user && (
     user.role === 'admin' || 
     user.role === 'moderator' ||
-    (user.role === 'pj_user' && novel && (
-      novel.active?.pj_user?.includes(user.id) || 
-      novel.active?.pj_user?.includes(user._id) ||
-      novel.active?.pj_user?.includes(user.username) ||
-      novel.active?.pj_user?.includes(user.displayName)
-    ))
+    (user.role === 'pj_user' && novel && checkPjUserAccess(novel.active?.pj_user, user))
   );
+
+
 
   // OPTIMIZATION: Early access control check to show guard immediately
   // Check if this looks like a paid module situation that will likely be denied
   const shouldShowEarlyAccessGuard = useMemo(() => {
+
+    
     // If we already have chapter data with access denied, let normal flow handle it
     if (chapterData && chapter?.accessDenied) {
       return false;
@@ -427,7 +452,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       return shouldShow;
     }
     
-    return false;
+    const result = false;
+    
+
+    
+    return result;
   }, [isLoading, chapterData, chapter, canAccessPaidContent, moduleData, user]);
 
   // Check if this is paid content that might need rental monitoring
@@ -478,32 +507,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Function to update word count from TinyMCE editor
   const updateWordCountFromEditor = useCallback((count) => {
     setWordCount(count);
-  }, []);
-
-  // Helper function to check if user has pj_user access
-  const checkPjUserAccess = useCallback((pjUserArray, user) => {
-    if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
-    
-    return pjUserArray.some(pjUser => {
-      // Handle case where pjUser is an object (new format)
-      if (typeof pjUser === 'object' && pjUser !== null) {
-        return (
-          pjUser._id === user.id ||
-          pjUser._id === user._id ||
-          pjUser.username === user.username ||
-          pjUser.displayName === user.displayName ||
-          pjUser.userNumber === user.userNumber
-        );
-      }
-      // Handle case where pjUser is a primitive value (old format)
-      return (
-        pjUser === user.id ||
-        pjUser === user._id ||
-        pjUser === user.username ||
-        pjUser === user.displayName ||
-        pjUser === user.userNumber
-      );
-    });
   }, []);
 
   // Memoize stable props to prevent unnecessary re-renders
@@ -1457,7 +1460,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       />
 
       {/* Chapter Content with Optimized Access Guard */}
-      {shouldShowEarlyAccessGuard ? (
+      {(() => {
+
+        return shouldShowEarlyAccessGuard;
+      })() ? (
         // OPTIMIZATION: Show access guard immediately for likely denied access
         <ChapterAccessGuard 
           chapter={{
@@ -1482,15 +1488,19 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         </ChapterAccessGuard>
       ) : (
         // Normal access guard flow
-        <ChapterAccessGuard 
-          chapter={chapter} 
-          moduleData={moduleData} 
-          user={user} 
-          novel={novel}
-          onOpenRentalModal={handleOpenRentalModal}
-          onCloseRentalModal={handleCloseRentalModal}
-          onRentalSuccess={handleRentalSuccess}
-        >
+        (() => {
+
+          return (
+            <ChapterAccessGuard 
+              chapter={chapter} 
+              moduleData={moduleData} 
+              user={user} 
+              novel={novel}
+              onOpenRentalModal={handleOpenRentalModal}
+              onCloseRentalModal={handleCloseRentalModal}
+              onRentalSuccess={handleRentalSuccess}
+              bypassAccessCheck={canAccessPaidContent} // Trust parent's access decision
+            >
           <ChapterContent
             key={`chapter-content-${chapterId}`}
             chapter={chapter}
@@ -1517,6 +1527,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
             novelData={stableNovelData}
           />
         </ChapterAccessGuard>
+          );
+        })()
       )}
 
       {/* Chapter Bottom Actions */}

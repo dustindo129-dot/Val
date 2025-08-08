@@ -23,7 +23,9 @@ const ChapterAccessGuard = ({
   onCloseRentalModal,
   onRentalSuccess,
   // Loading state for access checks
-  isLoadingAccess = false
+  isLoadingAccess = false,
+  // Trust parent's access decision to avoid duplicate logic
+  bypassAccessCheck = false
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -198,6 +200,14 @@ const ChapterAccessGuard = ({
     );
   }
   
+
+
+  // If parent component has already verified access, trust that decision
+  if (bypassAccessCheck) {
+
+    return children;
+  }
+
   if (!hasChapterAccess || !hasModuleAccess) {
     return (
       <div className="restricted-content-message">
@@ -292,6 +302,8 @@ const ChapterAccessGuard = ({
       </div>
     );
   }
+
+
 
   return children;
 };
