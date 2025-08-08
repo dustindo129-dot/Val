@@ -292,7 +292,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
       return chapterRes.data;
     },
-    staleTime: 1000 * 60 * 10, // Changed from 5 to 10 minutes to avoid conflicts with token refresh
+    staleTime: (data) => {
+      // OPTIMIZATION: Shorter stale time for access-denied content to improve UX
+      if (data?.chapter?.accessDenied) {
+        return 1000 * 60 * 2; // 2 minutes for denied access (quick checks)
+      }
+      return 1000 * 60 * 10; // 10 minutes for normal content
+    },
     enabled: !!chapterId,
     retry: (failureCount, error) => {
       // Don't retry on auth errors to prevent logout loops
@@ -307,8 +313,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       return failureCount < 2;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    // OPTIMIZATION: Add performance settings for long content
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches for long content
+    // OPTIMIZATION: Add performance settings for access control
+    refetchOnWindowFocus: (query) => {
+      // Refetch access-denied content on focus to check for auth changes
+      return !!query.state.data?.chapter?.accessDenied;
+    },
     gcTime: 1000 * 60 * 15 // Keep in cache longer for long content
   });
 
@@ -316,17 +325,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const chapter = chapterData?.chapter;
   const novel = chapter?.novel || {title: "Novel"};
   
-  // Add logging for access control debugging
-  if (chapter) {
-    console.log('Chapter access control debug:', {
-      chapterId: chapter._id,
-      title: chapter.title,
-      mode: chapter.mode,
-      accessDenied: chapter.accessDenied,
-      hasContent: !!chapter.content,
-      contentLength: chapter.content?.length || 0
-    });
-  }
+
   // Extract interaction data from the consolidated endpoint
   const interactions = chapterData?.interactions || {
     totalLikes: 0,
@@ -399,6 +398,42 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       novel.active?.pj_user?.includes(user.displayName)
     ))
   );
+
+  // OPTIMIZATION: Early access control check to show guard immediately
+  // Check if this looks like a paid module situation that will likely be denied
+  const shouldShowEarlyAccessGuard = useMemo(() => {
+    // If we already have chapter data with access denied, let normal flow handle it
+    if (chapterData && chapter?.accessDenied) return false;
+    
+    // If user has privileged access, no need for guard
+    if (canAccessPaidContent) return false;
+    
+    // If user has active rental from chapter data, no need for guard  
+    if (chapter?.rentalInfo?.hasActiveRental) return false;
+    
+    // AGGRESSIVE: Show early guard during loading if we detect likely denial scenarios
+    // 1. Loading state + paid module detected + no auth
+    // 2. Loading state + no privileged user
+    if (isLoading) {
+      const moduleIsPaid = moduleData?.mode === 'paid';
+      const userNotAuthenticated = !user;
+      
+      // Show immediately for paid modules without authentication
+      return moduleIsPaid && userNotAuthenticated;
+    }
+    
+    // For non-loading states, check if access is likely denied
+    if (chapterData && chapter) {
+      const moduleIsPaid = moduleData?.mode === 'paid';
+      const chapterIsPaid = chapter?.mode === 'paid';
+      const userNotAuthenticated = !user;
+      const userNotPrivileged = !canAccessPaidContent;
+      
+      return (moduleIsPaid || chapterIsPaid) && (userNotAuthenticated || userNotPrivileged);
+    }
+    
+    return false;
+  }, [isLoading, chapterData, chapter, canAccessPaidContent, moduleData, user]);
 
   // Check if this is paid content that might need rental monitoring
   const isPaidContent = (chapter?.mode === 'paid' && chapter?.chapterBalance > 0) || 
@@ -1282,8 +1317,50 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     window.open(shareUrl, 'ShareWindow', 'height=450, width=550, toolbar=0, menubar=0');
   };
 
-  // Show loading state with animation
+  // OPTIMIZATION: Enhanced loading with early access guard for better UX
   if (isLoading) {
+    // If we know it's a paid module and user is not authenticated,
+    // show access guard immediately to prevent blank content flash
+    if (moduleData?.mode === 'paid' && !user) {
+      return (
+        <div className="chapter-layout">
+          <div className="chapter-container">
+            <ChapterHeader
+              chapter={{ title: 'Đang tải...', createdAt: new Date() }}
+              novel={novel}
+              user={user}
+              onBackToNovel={() => {}}
+              onShare={() => {}}
+              isEditing={false}
+              canEdit={false}
+              viewCount={0}
+              wordCount={0}
+              formatDate={formatDate}
+            />
+            <ChapterAccessGuard 
+              chapter={{
+                mode: 'published',
+                accessDenied: true,
+                novel: novel
+              }} 
+              moduleData={moduleData} 
+              user={user} 
+              novel={novel}
+              onOpenRentalModal={handleOpenRentalModal}
+              onCloseRentalModal={handleCloseRentalModal}
+              onRentalSuccess={handleRentalSuccess}
+              isLoadingAccess={true}
+            >
+              <div style={{ minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LoadingSpinner size="large" text="Đang kiểm tra quyền truy cập..." />
+              </div>
+            </ChapterAccessGuard>
+          </div>
+        </div>
+      );
+    }
+    
+    // Default loading state
     return (
       <div className="loading">
         <LoadingSpinner size="large" text="Đang tải chương..." />
@@ -1375,42 +1452,66 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         formatDate={formatDate}
       />
 
-      {/* Chapter Content with Access Guard */}
-      <ChapterAccessGuard 
-        chapter={chapter} 
-        moduleData={moduleData} 
-        user={user} 
-        novel={novel}
-        onOpenRentalModal={handleOpenRentalModal}
-        onCloseRentalModal={handleCloseRentalModal}
-        onRentalSuccess={handleRentalSuccess}
-      >
-        <ChapterContent
-          key={`chapter-content-${chapterId}`}
-          chapter={chapter}
-          isEditing={isEditing}
-          editedContent={editedContent}
-          setEditedContent={setEditedContent}
-          editedTitle={editedTitle}
-          setEditedTitle={setEditedTitle}
-          fontSize={fontSize}
-          fontFamily={fontFamily}
-          lineHeight={lineHeight}
-          editorRef={editorRef}
-          getSafeHtml={getSafeHtml}
-          canEdit={canEdit}
-          userRole={stableUserRole}
-          moduleData={moduleData}
-          onWordCountUpdate={updateWordCountFromEditor}
-          editedTranslator={editedTranslator}
-          setEditedTranslator={setEditedTranslator}
-          editedEditor={editedEditor}
-          setEditedEditor={setEditedEditor}
-          editedProofreader={editedProofreader}
-          setEditedProofreader={setEditedProofreader}
-          novelData={stableNovelData}
-        />
-      </ChapterAccessGuard>
+      {/* Chapter Content with Optimized Access Guard */}
+      {shouldShowEarlyAccessGuard ? (
+        // OPTIMIZATION: Show access guard immediately for likely denied access
+        <ChapterAccessGuard 
+          chapter={{
+            mode: moduleData?.mode === 'paid' ? 'published' : chapter?.mode || 'published',
+            accessDenied: true, // Force show guard immediately
+            novel: novel,
+            rentalInfo: chapter?.rentalInfo || { hasActiveRental: false }
+          }} 
+          moduleData={moduleData} 
+          user={user} 
+          novel={novel}
+          onOpenRentalModal={handleOpenRentalModal}
+          onCloseRentalModal={handleCloseRentalModal}
+          onRentalSuccess={handleRentalSuccess}
+          isLoadingAccess={true} // Add loading state flag
+        >
+          <div style={{ minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <LoadingSpinner text="Đang kiểm tra quyền truy cập..." />
+          </div>
+        </ChapterAccessGuard>
+      ) : (
+        // Normal access guard flow
+        <ChapterAccessGuard 
+          chapter={chapter} 
+          moduleData={moduleData} 
+          user={user} 
+          novel={novel}
+          onOpenRentalModal={handleOpenRentalModal}
+          onCloseRentalModal={handleCloseRentalModal}
+          onRentalSuccess={handleRentalSuccess}
+        >
+          <ChapterContent
+            key={`chapter-content-${chapterId}`}
+            chapter={chapter}
+            isEditing={isEditing}
+            editedContent={editedContent}
+            setEditedContent={setEditedContent}
+            editedTitle={editedTitle}
+            setEditedTitle={setEditedTitle}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+            lineHeight={lineHeight}
+            editorRef={editorRef}
+            getSafeHtml={getSafeHtml}
+            canEdit={canEdit}
+            userRole={stableUserRole}
+            moduleData={moduleData}
+            onWordCountUpdate={updateWordCountFromEditor}
+            editedTranslator={editedTranslator}
+            setEditedTranslator={setEditedTranslator}
+            editedEditor={editedEditor}
+            setEditedEditor={setEditedEditor}
+            editedProofreader={editedProofreader}
+            setEditedProofreader={setEditedProofreader}
+            novelData={stableNovelData}
+          />
+        </ChapterAccessGuard>
+      )}
 
       {/* Chapter Bottom Actions */}
       <div className="chapter-bottom-actions">

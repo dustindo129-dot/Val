@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faCog, faClock } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import { generateNovelUrl } from '../../utils/slugUtils';
+import LoadingSpinner from '../LoadingSpinner';
 import '../../styles/components/ChapterAccessGuard.css';
 
 /**
@@ -20,7 +21,9 @@ const ChapterAccessGuard = ({
   // Modal handlers from parent
   onOpenRentalModal,
   onCloseRentalModal,
-  onRentalSuccess
+  onRentalSuccess,
+  // Loading state for access checks
+  isLoadingAccess = false
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -179,6 +182,21 @@ const ChapterAccessGuard = ({
   
   // Check if this module is in paid mode
   const isPaidModule = moduleData?.mode === 'paid';
+  
+  // Show loading state when checking access
+  if (isLoadingAccess) {
+    return (
+      <div className="restricted-content-message">
+        <div className="chapter-access-guard">
+          <div className="locked-chapter-container">
+            <div className="locked-chapter-content">
+              <LoadingSpinner size="medium" text="Đang kiểm tra quyền truy cập..." />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   if (!hasChapterAccess || !hasModuleAccess) {
     return (
