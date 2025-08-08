@@ -1109,11 +1109,6 @@
   border-left: 4px solid var(--rd-active-color);
 }
 
-.balance-icon {
-  font-size: 1.5rem;
-  color: var(--rd-active-color);
-}
-
 .balance-info {
   display: flex;
   flex-direction: column;

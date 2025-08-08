@@ -457,7 +457,7 @@ const ModuleList = memo(({
                     {module.title || 'Tập không có tên'}
                     {module.mode === 'paid' && module.moduleBalance > 0 && (
                       <div className="module-balance-required">
-                        <FontAwesomeIcon icon={faSeedling} className="module-balance-icon" />
+                        <FontAwesomeIcon icon={faSeedling} className="module-balance-icon balance-icon" />
                         <span>{module.moduleBalance} lúa</span>
                       </div>
                     )}
