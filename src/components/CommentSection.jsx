@@ -1306,7 +1306,21 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         // Basic HTML sanitization while preserving images and formatting
         let processedContent = contentString;
         
-        // Convert line breaks to <br> tags
+        // Convert line breaks to <br> tags while preserving multiple consecutive breaks
+        // First, normalize line endings
+        processedContent = processedContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
+        // Convert multiple consecutive newlines to multiple <br> tags
+        // This preserves the spacing that users create with multiple Enter presses
+        processedContent = processedContent.replace(/\n{3,}/g, (match) => {
+          // Convert 3+ consecutive newlines to that many <br> tags
+          return '<br>'.repeat(match.length);
+        });
+        
+        // Convert double newlines to double <br> (paragraph-like spacing)
+        processedContent = processedContent.replace(/\n{2}/g, '<br><br>');
+        
+        // Convert single newlines to single <br>
         processedContent = processedContent.replace(/\n/g, '<br>');
         
         // Store existing HTML tags to avoid processing their contents
@@ -1388,13 +1402,19 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       }
     };
 
-    // Check if comment content needs truncation (more than 4 lines)
+    // Check if comment content needs truncation (more than 4 lines or has natural break points)
     const checkIfNeedsTruncation = (content) => {
       if (!content) return false;
       
+      const processedContent = processCommentContent(content);
+      
+      // Check for natural break points (3+ consecutive <br> tags which indicate intentional spacing)
+      const hasNaturalBreaks = processedContent.includes('<br><br><br>');
+      if (hasNaturalBreaks) return true;
+      
       // Create a temporary element to measure content height
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = processCommentContent(content);
+      tempDiv.innerHTML = processedContent;
       tempDiv.style.cssText = `
         position: absolute;
         visibility: hidden;
@@ -1412,6 +1432,39 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       document.body.removeChild(tempDiv);
       
       return actualHeight > maxHeight;
+    };
+
+    // Get truncated content for preview
+    const getTruncatedContent = (content) => {
+      if (!content) return '';
+      
+      const processedContent = processCommentContent(content);
+      
+      // If there are natural break points (3+ consecutive <br>), truncate at the first one
+      const naturalBreakIndex = processedContent.indexOf('<br><br><br>');
+      if (naturalBreakIndex !== -1) {
+        return processedContent.substring(0, naturalBreakIndex);
+      }
+      
+      // Otherwise, use height-based truncation
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = processedContent;
+      tempDiv.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        width: 400px;
+        font-size: 14px;
+        line-height: 1.5;
+        font-family: inherit;
+        max-height: 84px;
+        overflow: hidden;
+      `;
+      document.body.appendChild(tempDiv);
+      
+      const truncatedHTML = tempDiv.innerHTML;
+      document.body.removeChild(tempDiv);
+      
+      return truncatedHTML;
     };
 
     const needsTruncation = checkIfNeedsTruncation(comment.text);
@@ -1806,7 +1859,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   <div 
                     className={`comment-content-wrapper deleted-comment-placeholder ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
                     dangerouslySetInnerHTML={{ 
-                      __html: processCommentContent(decodeHTMLEntities(comment.text))
+                      __html: needsTruncation && !isExpanded 
+                        ? getTruncatedContent(decodeHTMLEntities(comment.text))
+                        : processCommentContent(decodeHTMLEntities(comment.text))
                     }} 
                   />
                 ) : (
@@ -1818,7 +1873,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 <div 
                   className={`comment-content-wrapper ${needsTruncation && !isExpanded ? 'truncated' : ''}`}
                   dangerouslySetInnerHTML={{ 
-                    __html: processCommentContent(decodeHTMLEntities(comment.text))
+                    __html: needsTruncation && !isExpanded 
+                      ? getTruncatedContent(decodeHTMLEntities(comment.text))
+                      : processCommentContent(decodeHTMLEntities(comment.text))
                   }} 
                 />
               )}

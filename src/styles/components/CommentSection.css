@@ -1088,6 +1088,30 @@
   overflow-wrap: break-word;
 }
 
+/* Enhanced line break handling */
+.comment-content-wrapper br {
+  line-height: 1.5;
+}
+
+/* Preserve spacing for multiple consecutive line breaks */
+.comment-content-wrapper br + br {
+  margin-bottom: 0.75em;
+}
+
+/* Handle cases with 3+ consecutive breaks for spoiler-like content */
+.comment-content-wrapper br + br + br {
+  margin-bottom: 1em;
+}
+
+/* Ensure proper spacing around paragraph elements */
+.comment-content-wrapper p + br {
+  margin-top: 0.5em;
+}
+
+.comment-content-wrapper br + p {
+  margin-top: 0.5em;
+}
+
 .comment-content-wrapper.truncated {
   max-height: 84px;
   overflow: hidden;
@@ -1605,7 +1629,28 @@
 }
 
 :root.dark-mode .comment-content-wrapper.truncated::after {
-  background: linear-gradient(to right, transparent 0%, #1f2937 70%);
+  background: linear-gradient(to right, transparent 0%, #2a2a2a 70%);
+}
+
+/* Dark mode enhanced line break handling */
+:root.dark-mode .comment-content-wrapper br {
+  line-height: 1.5;
+}
+
+:root.dark-mode .comment-content-wrapper br + br {
+  margin-bottom: 0.75em;
+}
+
+:root.dark-mode .comment-content-wrapper br + br + br {
+  margin-bottom: 1em;
+}
+
+:root.dark-mode .comment-content-wrapper p + br {
+  margin-top: 0.5em;
+}
+
+:root.dark-mode .comment-content-wrapper br + p {
+  margin-top: 0.5em;
 }
 
 :root.dark-mode .see-more-btn {
