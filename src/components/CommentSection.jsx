@@ -683,10 +683,19 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const commentEditorRef = useRef(null);
 
   // Helper function to check if user has rich text editor privileges
+  // Now all authenticated users get TinyMCE access, but image privileges are restricted
   const hasRichTextPrivileges = () => {
     if (!isAuthenticated || !user) return false;
     
-    // Admin and moderator always have privileges
+    // All authenticated users now get TinyMCE editor
+    return true;
+  };
+
+  // Helper function to check if user has image upload/insert privileges
+  const hasImagePrivileges = () => {
+    if (!isAuthenticated || !user) return false;
+    
+    // Admin and moderator always have image privileges
     if (user.role === 'admin' || user.role === 'moderator') return true;
     
     // For novel detail page, check if pj_user is assigned to this novel
@@ -748,86 +757,136 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     novel?.active?.pj_user?.join(',') || ''
   ]);
 
+  // Memoize the image privileges check
+  const globalHasImagePrivileges = React.useMemo(() => {
+    return hasImagePrivileges();
+  }, [
+    isAuthenticated, 
+    user?.role, 
+    user?.id, 
+    user?._id, 
+    user?.username, 
+    user?.displayName, 
+    contentType,
+    // Create a stable reference for pj_user array
+    novel?.active?.pj_user?.join(',') || ''
+  ]);
+
   // TinyMCE configuration for comments
-  const getTinyMCEConfig = () => ({
-    script_src: config.tinymce.scriptPath,
-    license_key: 'gpl',
-    height: 200,
-    menubar: false,
-    remove_empty_elements: false,
-    forced_root_block: 'p',
-    plugins: [
-      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+  const getTinyMCEConfig = () => {
+    // Base plugins that all users get
+    const basePlugins = [
+      'advlist', 'autolink', 'lists', 'link', 'charmap',
       'searchreplace', 'visualblocks', 'code', 'fullscreen',
-      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-    ],
-    toolbar: 'undo redo | formatselect | ' +
+      'insertdatetime', 'table', 'help', 'wordcount'
+    ];
+
+    // Image-related plugins only for privileged users
+    const imagePlugins = globalHasImagePrivileges ? ['image', 'media'] : [];
+
+    // Base toolbar that all users get
+    const baseToolbar = 'undo redo | formatselect | ' +
       'bold italic underline strikethrough | ' +
       'alignleft aligncenter alignright | ' +
-      'bullist numlist | ' +
-      'link image | code | removeformat | help',
-    contextmenu: 'cut copy paste | link image | removeformat',
-    content_style: `
-      body { font-family:Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; }
-      em, i { font-style: italic; }
-      strong, b { font-weight: bold; }
-      s, strike, del { text-decoration: line-through; }
-    `,
-    skin: 'oxide',
-    content_css: 'default',
-    placeholder: 'Viết bình luận...',
-    statusbar: false,
-    resize: false,
-    branding: false,
-    promotion: false,
-    images_upload_handler: async (blobInfo, progress) => {
-      try {
-        // Convert blob to file
-        const file = new File([blobInfo.blob()], blobInfo.filename(), {
-          type: blobInfo.blob().type
+      'bullist numlist | link';
+
+    // Image toolbar items only for privileged users
+    const imageToolbar = globalHasImagePrivileges ? ' | image' : '';
+
+    // Complete toolbar
+    const fullToolbar = baseToolbar + imageToolbar + ' | code | removeformat | help';
+
+    // Context menu
+    const baseContextMenu = 'cut copy paste | link';
+    const imageContextMenu = globalHasImagePrivileges ? ' | image' : '';
+    const fullContextMenu = baseContextMenu + imageContextMenu + ' | removeformat';
+
+    // Base configuration
+    const editorConfig = {
+      script_src: config.tinymce.scriptPath,
+      license_key: 'gpl',
+      height: 200,
+      menubar: false,
+      remove_empty_elements: false,
+      forced_root_block: 'p',
+      plugins: [...basePlugins, ...imagePlugins],
+      toolbar: fullToolbar,
+      contextmenu: fullContextMenu,
+      content_style: `
+        body { font-family:Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; }
+        em, i { font-style: italic; }
+        strong, b { font-weight: bold; }
+        s, strike, del { text-decoration: line-through; }
+      `,
+      skin: 'oxide',
+      content_css: 'default',
+      placeholder: 'Viết bình luận...',
+      statusbar: false,
+      resize: false,
+      branding: false,
+      promotion: false,
+      setup: (editor) => {
+        editor.on('init', () => {
+          // Focus the editor after initialization
+          editor.focus();
         });
-        
-        // Upload to bunny.net comments folder
-        const url = await bunnyUploadService.uploadFile(file, 'comments');
-        
-        // Return URL with comment image class
-        const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
-        
-        return optimizedUrl;
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        throw new Error('Failed to upload image');
       }
-    },
-    automatic_uploads: true,
-    file_picker_types: 'image',
-    file_picker_callback: (callback, value, meta) => {
-      if (meta.filetype === 'image') {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        
-        input.onchange = async function() {
-          const file = this.files[0];
-          if (file) {
-            try {
-              const url = await bunnyUploadService.uploadFile(file, 'comments');
-              
-              // Return URL with comment image class
-              const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
-              
-              callback(optimizedUrl, { alt: file.name });
-            } catch (error) {
-              console.error('Error uploading image:', error);
-              alert('Failed to upload image');
+    };
+
+    // Add image-related configuration only for privileged users
+    if (globalHasImagePrivileges) {
+      editorConfig.images_upload_handler = async (blobInfo, progress) => {
+        try {
+          // Convert blob to file
+          const file = new File([blobInfo.blob()], blobInfo.filename(), {
+            type: blobInfo.blob().type
+          });
+          
+          // Upload to bunny.net comments folder
+          const url = await bunnyUploadService.uploadFile(file, 'comments');
+          
+          // Return URL with comment image class
+          const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
+          
+          return optimizedUrl;
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          throw new Error('Failed to upload image');
+        }
+      };
+
+      editorConfig.automatic_uploads = true;
+      editorConfig.file_picker_types = 'image';
+      editorConfig.file_picker_callback = (callback, value, meta) => {
+        if (meta.filetype === 'image') {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          
+          input.onchange = async function() {
+            const file = this.files[0];
+            if (file) {
+              try {
+                const url = await bunnyUploadService.uploadFile(file, 'comments');
+                
+                // Return URL with comment image class
+                const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
+                
+                callback(optimizedUrl, { alt: file.name });
+              } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Failed to upload image');
+              }
             }
-          }
-        };
-        
-        input.click();
-      }
+          };
+          
+          input.click();
+        }
+      };
     }
-  });
+
+    return editorConfig;
+  };
 
   // Check if user is banned
   useEffect(() => {
@@ -1929,28 +1988,30 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                       // Remove statusbar and menubar for cleaner look
                       statusbar: false,
                       menubar: false,
-                      // Override image upload handler for edit mode
-                      images_upload_handler: async (blobInfo, progress) => {
-                        try {
-                          const file = new File([blobInfo.blob()], blobInfo.filename(), {
-                            type: blobInfo.blob().type
-                          });
-                          
-                          const url = await bunnyUploadService.uploadFile(file, 'comments');
-                          
-                          // Return optimizer-compatible URL
-                          const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
-                            quality: 85,
-                            format: 'auto',
-                            optimizer: true
-                          });
-                          
-                          return optimizedUrl;
-                        } catch (error) {
-                          console.error('Error uploading image:', error);
-                          throw new Error('Failed to upload image');
+                      // Override image upload handler for edit mode (only for privileged users)
+                      ...(globalHasImagePrivileges && {
+                        images_upload_handler: async (blobInfo, progress) => {
+                          try {
+                            const file = new File([blobInfo.blob()], blobInfo.filename(), {
+                              type: blobInfo.blob().type
+                            });
+                            
+                            const url = await bunnyUploadService.uploadFile(file, 'comments');
+                            
+                            // Return optimizer-compatible URL
+                            const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
+                              quality: 85,
+                              format: 'auto',
+                              optimizer: true
+                            });
+                            
+                            return optimizedUrl;
+                          } catch (error) {
+                            console.error('Error uploading image:', error);
+                            throw new Error('Failed to upload image');
+                          }
                         }
-                      }
+                      })
                     }}
                   />
                 </div>
@@ -2048,28 +2109,30 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                         ...getTinyMCEConfig(),
                         height: 150,
                         placeholder: 'Viết trả lời...',
-                        // Override image upload handler for reply mode
-                        images_upload_handler: async (blobInfo, progress) => {
-                          try {
-                            const file = new File([blobInfo.blob()], blobInfo.filename(), {
-                              type: blobInfo.blob().type
-                            });
-                            
-                            const url = await bunnyUploadService.uploadFile(file, 'comments');
-                            
-                            // Return optimizer-compatible URL
-                            const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
-                              quality: 85,
-                              format: 'auto',
-                              optimizer: true
-                            });
-                            
-                            return optimizedUrl;
-                          } catch (error) {
-                            console.error('Error uploading image:', error);
-                            throw new Error('Failed to upload image');
+                        // Override image upload handler for reply mode (only for privileged users)
+                        ...(globalHasImagePrivileges && {
+                          images_upload_handler: async (blobInfo, progress) => {
+                            try {
+                              const file = new File([blobInfo.blob()], blobInfo.filename(), {
+                                type: blobInfo.blob().type
+                              });
+                              
+                              const url = await bunnyUploadService.uploadFile(file, 'comments');
+                              
+                              // Return optimizer-compatible URL
+                              const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), {
+                                quality: 85,
+                                format: 'auto',
+                                optimizer: true
+                              });
+                              
+                              return optimizedUrl;
+                            } catch (error) {
+                              console.error('Error uploading image:', error);
+                              throw new Error('Failed to upload image');
+                            }
                           }
-                        }
+                        })
                       }}
                     />
                   </div>
