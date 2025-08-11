@@ -299,6 +299,37 @@ const ChapterAccessGuard = ({
             </div>
           </div>
         )}
+        {/* Fallback to avoid blank screen when access is denied for other reasons */}
+        {(!isPaidChapter && !isPaidModule && chapter?.accessDenied) && (
+          <div className="chapter-access-guard">
+            <div className="locked-chapter-container">
+              <div className="locked-chapter-content">
+                <FontAwesomeIcon icon={faLock} className="locked-chapter-icon" />
+                <h3>Không thể hiển thị nội dung</h3>
+                <p>Bạn không có quyền truy cập chương này hoặc phiên đăng nhập đã hết hạn.</p>
+                <div className="locked-chapter-actions">
+                  <button
+                    className="go-to-market-btn"
+                    onClick={() => window.location.reload()}
+                  >
+                    Thử tải lại
+                  </button>
+                  {novel && (
+                    <button
+                      className="rent-module-btn"
+                      onClick={() => {
+                        const novelUrl = generateNovelUrl(novel);
+                        navigate(novelUrl);
+                      }}
+                    >
+                      Về trang truyện
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

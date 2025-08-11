@@ -1468,7 +1468,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         // OPTIMIZATION: Show access guard immediately for likely denied access
         <ChapterAccessGuard 
           chapter={{
-            mode: moduleData?.mode === 'paid' ? 'published' : chapter?.mode || 'published',
+            // If module is paid, reflect that here to avoid inconsistent state that could render blank
+            mode: moduleData?.mode === 'paid' ? 'paid' : (chapter?.mode || 'published'),
             accessDenied: true, // Force show guard immediately
             novel: novel,
             rentalInfo: chapter?.rentalInfo || { hasActiveRental: false }
