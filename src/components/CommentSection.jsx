@@ -360,7 +360,8 @@ const getAllRoleTags = (globalRole, novelRoles = []) => {
   return tags;
 };
 
-const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null }) => {
+const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null, autoFocusOnMount = false }) => {
+
 
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -669,6 +670,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const commentsPerPage = 10;
   const maxVisibleReplies = 2;
 
+
+
   // Chapter comments visibility state (only for novel detail pages)
   const [hideChapterComments, setHideChapterComments] = useState(() => {
     if (contentType === 'novels') {
@@ -681,6 +684,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const { data: authUser } = useAuth();
   const queryClient = useQueryClient();
   const commentEditorRef = useRef(null);
+
+
 
   // Helper function to check if user has rich text editor privileges
   // Now all authenticated users get TinyMCE access, but image privileges are restricted
@@ -827,8 +832,10 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       promotion: false,
       setup: (editor) => {
         editor.on('init', () => {
-          // Focus the editor after initialization
-          editor.focus();
+          // Only focus if explicitly allowed
+          if (autoFocusOnMount) {
+            editor.focus();
+          }
         });
       }
     };
@@ -1118,7 +1125,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       });
       
       // Reset to first page when new comment is added
-      setCurrentPage(1);
+      setPageWithoutScroll(1);
       
       // Clear the form
       if (globalHasRichTextPrivileges && commentEditorRef.current) {
@@ -1140,7 +1147,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     setHideChapterComments(newValue);
     localStorage.setItem(`hideChapterComments_${contentId}`, newValue.toString());
     // Reset to first page when toggling visibility
-    setCurrentPage(1);
+    setPageWithoutScroll(1);
   };
 
   // Handle comment deletion
@@ -2217,7 +2224,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   // Add a function to handle sorting
   const handleSortChange = (newSortOrder) => {
     setSortOrder(newSortOrder);
-    setCurrentPage(1); // Reset to first page when sorting changes
+    setPageWithoutScroll(1); // Reset to first page when sorting changes
     // The query will automatically refetch due to the sortOrder dependency
   };
 
@@ -2238,13 +2245,20 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const currentComments = filteredComments.slice(startIndex, endIndex);
 
   // Pagination handlers
-  const handlePageChange = (page) => {
+  const handlePageChange = (page, shouldScroll = true) => {
     setCurrentPage(page);
-    // Scroll to comments section when page changes
-    const commentsSection = document.querySelector('.comments-section');
-    if (commentsSection) {
-      commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Only scroll to comments section when user intentionally changes page
+    if (shouldScroll) {
+      const commentsSection = document.querySelector('.comments-section');
+      if (commentsSection) {
+        commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
+  };
+
+  // Programmatic page change without scrolling
+  const setPageWithoutScroll = (page) => {
+    setCurrentPage(page);
   };
 
   const handlePrevPage = () => {

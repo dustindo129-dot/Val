@@ -13,11 +13,24 @@ const ChapterCommentsSection = ({
   novel
 }) => {
   const [autoLoadComments, setAutoLoadComments] = useState(false);
+  const [preventScroll, setPreventScroll] = useState(true);
+
+  // Prevent automatic scroll to comments section
+  useEffect(() => {
+    if ('scrollRestoration' in history) {
+      const originalScrollRestoration = history.scrollRestoration;
+      history.scrollRestoration = 'manual';
+      return () => {
+        history.scrollRestoration = originalScrollRestoration;
+      };
+    }
+  }, []);
 
   // Auto-show comments after delay (consistent with novel pages)
   useEffect(() => {
     const timer = setTimeout(() => {
       setAutoLoadComments(true);
+      setPreventScroll(false);
     }, 2000); // 2 second delay after page load
     
     return () => clearTimeout(timer);
@@ -32,6 +45,7 @@ const ChapterCommentsSection = ({
           user={user}
           isAuthenticated={!!user}
           novel={novel}
+          autoFocusOnMount={false}
         />
       )}
     </div>

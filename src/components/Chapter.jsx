@@ -592,6 +592,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // Reset navigation state and edited content when chapter changes
   useEffect(() => {
+
     setIsNavigating(false);
     // Reset edited content when chapter changes
     setEditedContent({ content: '', footnotes: [] });
