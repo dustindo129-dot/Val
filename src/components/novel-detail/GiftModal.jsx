@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import config from '../../config/config';
@@ -7,6 +8,7 @@ import '../../styles/components/GiftModal.css';
 
 const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [gifts, setGifts] = useState([]);
   const [selectedGift, setSelectedGift] = useState(null);
   const [userBalance, setUserBalance] = useState(0);
@@ -223,6 +225,14 @@ const GiftModal = ({ isOpen, onClose, novelId, onGiftSuccess }) => {
                       <span className="vt-gift-balance-text">
                     Số dư của bạn: {userBalance.toLocaleString()} 🌾
                   </span>
+                      <button
+                        type="button"
+                        className="topup-button-green"
+                        onClick={() => { handleClose(); navigate('/nap-tien'); }}
+                        aria-label="Nạp thêm lúa"
+                      >
+                        Nạp thêm
+                      </button>
                     </div>
                   </div>
 

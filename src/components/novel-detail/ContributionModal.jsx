@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import config from '../../config/config';
@@ -7,6 +8,7 @@ import '../../styles/components/ContributionModal.css';
 
 const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [amount, setAmount] = useState(10);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,6 +195,14 @@ const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) 
               <span className="balance-info-text">
                 Số dư của bạn: {userBalance.toLocaleString()} 🌾
               </span>
+              <button
+                type="button"
+                className="topup-button-green"
+                onClick={() => { onClose(); navigate('/nap-tien'); }}
+                aria-label="Nạp thêm lúa"
+              >
+                Nạp thêm
+              </button>
             </div>
           </div>
           <form className="contribute-form" onSubmit={handleSubmit}>

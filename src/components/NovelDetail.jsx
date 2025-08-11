@@ -190,6 +190,13 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
             </div>
             
             <div className="faq-question">
+              <strong>Hỏi:</strong> Những ai được hưởng lợi từ việc góp lúa?
+            </div>
+            <div className="faq-answer">
+              <strong>Đáp:</strong> Tất cả mọi người. Nội dung được mở khóa bằng lúa dù người góp hay không góp đều có thể đọc được.
+            </div>
+            
+            <div className="faq-question">
               <strong>Hỏi:</strong> Kho lúa bị dư thì như thế nào?
             </div>
             <div className="faq-answer">
