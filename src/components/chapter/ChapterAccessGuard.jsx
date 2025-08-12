@@ -203,8 +203,8 @@ const ChapterAccessGuard = ({
 
 
   // If parent component has already verified access, trust that decision
-  if (bypassAccessCheck) {
-
+  // BUT never override an explicit server-side access denial
+  if (bypassAccessCheck && !chapter?.accessDenied) {
     return children;
   }
 

@@ -619,7 +619,6 @@ const AdminDashboard = () => {
 
         if (previousUserRef.current !== null && currentUserKey !== previousUserKey) {
             // Clear all novels cache when user actually changes
-            console.log('User changed, clearing novels cache');
             queryClient.removeQueries({queryKey: ['novels']});
             // Also clear any admin-dashboard specific cache
             queryClient.removeQueries({
@@ -636,7 +635,6 @@ const AdminDashboard = () => {
     // SECURITY FIX: Force cache clear for pj_users on component mount to prevent stale permission data
     useEffect(() => {
         if (user?.role === 'pj_user') {
-            console.log('pj_user detected on AdminDashboard mount - clearing cache to ensure fresh permissions');
             queryClient.removeQueries({
                 predicate: (query) => {
                     return query.queryKey[0] === 'novels' && 
