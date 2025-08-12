@@ -843,9 +843,7 @@ const TopUp = () => {
               
               <div className="qr-countdown-container">
                 <div className="qr-expiry-note">
-                  <p>Vui lòng quét mã QR, yêu cầu sẽ hết hạn sau <span className={`qr-countdown-timer ${isCountdownLow(countdown) ? 'low' : ''}`}>{formatCountdown(countdown)}</span></p>
-                  <p>Nếu chuyển khoản trực tiếp vui lòng điền chính xác nội dung và số tiền.</p>
-                  <p>Sau khi thanh toán, vui lòng đăng nhập lại để cập nhật số dư nhanh nhất có thể.</p>
+                  <p className="qr-important"><span className="qr-important-icon">🔔</span>Sau khi thanh toán, vui lòng đăng nhập lại để cập nhật số dư nhanh nhất có thể.</p>
                 </div>
               </div>
               

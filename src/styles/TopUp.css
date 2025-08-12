@@ -1490,6 +1490,35 @@
   font-weight: 500;
 }
 
+/* Enhanced emphasis for important login reminder */
+.qr-expiry-note .qr-important {
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  color: #664d03;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.qr-expiry-note .qr-important .qr-important-icon {
+  display: inline-block;
+  font-size: 1rem;
+}
+
+
+
+
+/* Dark mode styles for enhanced qr-expiry-note */
+:root.dark-mode .qr-expiry-note .qr-important {
+  background: #3a341d;
+  border-color: #8a6d1a;
+  color: #ffe69c;
+}
+
 .qr-modal-actions {
   display: flex;
   justify-content: center;
@@ -1552,46 +1581,9 @@
   color: #8bb9fe;
 }
 
-/* QR Countdown Timer Styles */
+/* QR Container Styles */
 .qr-countdown-container {
   margin-bottom: 0.6rem;
-}
-
-.qr-countdown-timer {
-  font-family: monospace;
-  font-size: 1.2rem;
-  font-weight: bold;
-  background-color: #dc3545;
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  margin: 0 0.3rem;
-  display: inline-block;
-  min-width: 4rem;
-  text-align: center;
-}
-
-/* Pulse animation for the countdown timer */
-@keyframes qr-timer-pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* Apply animation when timer is low (< 60 seconds) */
-.qr-countdown-timer.low {
-  animation: qr-timer-pulse 1s infinite;
-}
-
-/* Dark mode styles for countdown timer */
-:root.dark-mode .qr-countdown-timer {
-  background-color: #dc3545;
 }
 
 /* QR Code Download Button Styles */
