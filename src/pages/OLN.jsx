@@ -336,58 +336,51 @@ const OLN = () => {
     };
 
     const renderPagination = () => {
-        const pages = [];
-        const maxVisiblePages = 5;
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+        const buttons = [];
+        const totalPages = pagination.totalPages;
 
-        if (endPage - startPage + 1 < maxVisiblePages) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
+        const renderLink = (page) => (
+            <Link
+                key={page}
+                to={`/oln/trang/${page}`}
+                className={`novel-pagination-button ${currentPage === page ? 'active' : ''}`}
+                onClick={() => window.scrollTo(0, 0)}
+            >
+                {page}
+            </Link>
+        );
 
-        if (startPage > 1) {
-            pages.push(
-                <Link
-                    key="1"
-                    to="/oln/trang/1"
-                    className={`novel-pagination-button ${1 === currentPage ? 'active' : ''}`}
-                    onClick={() => window.scrollTo(0, 0)}
-                >
-                    1
-                </Link>
-            );
-            if (startPage > 2) {
-                pages.push(<span key="ellipsis1" className="novel-pagination-ellipsis">...</span>);
-            }
-        }
+        const addEllipsis = (key) => (
+            <span key={key} className="novel-pagination-ellipsis">...</span>
+        );
 
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(
-                <Link
-                    key={i}
-                    to={`/oln/trang/${i}`}
-                    className={`novel-pagination-button ${i === currentPage ? 'active' : ''}`}
-                    onClick={() => window.scrollTo(0, 0)}
-                >
-                    {i}
-                </Link>
-            );
-        }
-
-        if (endPage < pagination.totalPages) {
-            if (endPage < pagination.totalPages - 1) {
-                pages.push(<span key="ellipsis2" className="novel-pagination-ellipsis">...</span>);
-            }
-            pages.push(
-                <Link
-                    key={pagination.totalPages}
-                    to={`/oln/trang/${pagination.totalPages}`}
-                    className={`novel-pagination-button ${pagination.totalPages === currentPage ? 'active' : ''}`}
-                    onClick={() => window.scrollTo(0, 0)}
-                >
-                    {pagination.totalPages}
-                </Link>
-            );
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) buttons.push(renderLink(i));
+        } else if (currentPage <= 3) {
+            // 1 2 3 4 ... last
+            buttons.push(renderLink(1));
+            buttons.push(renderLink(2));
+            buttons.push(renderLink(3));
+            buttons.push(renderLink(4));
+            buttons.push(addEllipsis('e-end'));
+            buttons.push(renderLink(totalPages));
+        } else if (currentPage >= totalPages - 2) {
+            // 1 ... last-3 last-2 last-1 last
+            buttons.push(renderLink(1));
+            buttons.push(addEllipsis('e-start'));
+            buttons.push(renderLink(totalPages - 3));
+            buttons.push(renderLink(totalPages - 2));
+            buttons.push(renderLink(totalPages - 1));
+            buttons.push(renderLink(totalPages));
+        } else {
+            // 1 ... prev current next ... last
+            buttons.push(renderLink(1));
+            buttons.push(addEllipsis('e-start'));
+            buttons.push(renderLink(currentPage - 1));
+            buttons.push(renderLink(currentPage));
+            buttons.push(renderLink(currentPage + 1));
+            buttons.push(addEllipsis('e-end'));
+            buttons.push(renderLink(totalPages));
         }
 
         return (
@@ -402,14 +395,14 @@ const OLN = () => {
                 >
                     ‹
                 </Link>
-                {pages}
+                {buttons}
                 <Link
-                    to={currentPage < pagination.totalPages ? `/oln/trang/${currentPage + 1}` : '#'}
+                    to={currentPage < totalPages ? `/oln/trang/${currentPage + 1}` : '#'}
                     onClick={(e) => {
-                        if (currentPage === pagination.totalPages) e.preventDefault();
+                        if (currentPage === totalPages) e.preventDefault();
                         else window.scrollTo(0, 0);
                     }}
-                    className={`novel-pagination-button nav ${currentPage === pagination.totalPages ? 'disabled' : ''}`}
+                    className={`novel-pagination-button nav ${currentPage === totalPages ? 'disabled' : ''}`}
                 >
                     ›
                 </Link>

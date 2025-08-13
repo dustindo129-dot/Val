@@ -1083,3 +1083,92 @@
   background: #1a1a1a;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
+
+/* History pagination controls (header) */
+.history-pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.history-pagination .btn {
+  min-width: 120px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  flex: 0 0 auto; /* override global .btn flex:1 */
+  white-space: nowrap; /* prevent label wrapping */
+}
+
+.history-pagination .btn:disabled {
+  opacity: 0.6;
+}
+
+.history-page-indicator {
+  min-width: 110px;
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Responsive tweaks for header pagination */
+@media (max-width: 768px) {
+  .history-pagination {
+    gap: 8px;
+    flex-direction: column;
+  }
+  .history-pagination .btn {
+    min-width: auto; /* let it shrink to wrap */
+    max-width: 110px; /* constrain to encourage wrap */
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    flex: 0 1 auto; /* allow shrinking */
+    line-height: 1.15;
+    text-align: center;
+  }
+  .history-page-indicator {
+    min-width: 90px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 576px) {
+  .history-pagination {
+    gap: 6px;
+    flex-direction: column;
+  }
+  .history-pagination .btn {
+    min-width: auto;
+    max-width: 96px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    flex: 0 1 auto;
+    line-height: 1.15;
+    text-align: center;
+  }
+  .history-page-indicator {
+    min-width: 80px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+}
+
+/* Dark mode pagination tweaks */
+:root.dark-mode .history-pagination .btn-secondary {
+  background-color: #2b2b2b;
+  border-color: #3a3a3a;
+  color: #e6e6e6;
+}
+
+:root.dark-mode .history-pagination .btn-secondary:hover:not(:disabled) {
+  background-color: #333;
+}
+
+:root.dark-mode .history-page-indicator {
+  color: #d1d5db;
+}

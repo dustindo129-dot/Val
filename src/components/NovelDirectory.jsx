@@ -554,16 +554,7 @@ const NovelDirectory = () => {
 
     // Render pagination controls
     const renderPagination = () => {
-        const pages = [];
         const totalPages = filteredAndPaginatedNovels.totalPages;
-        const maxVisiblePages = 5;
-
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-        if (endPage - startPage + 1 < maxVisiblePages) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
 
         // Prepare query params for pagination links
         const params = [];
@@ -583,46 +574,48 @@ const NovelDirectory = () => {
 
         const queryParams = params.length > 0 ? `?${params.join('&')}` : '';
 
-        if (startPage > 1) {
-            pages.push(
-                <Link
-                    key="1"
-                    to={`/danh-sach-truyen/trang/1${queryParams}`}
-                    className="nd-pagination-button"
-                >
-                    1
-                </Link>
-            );
-            if (startPage > 2) {
-                pages.push(<span key="ellipsis1" className="nd-pagination-ellipsis">...</span>);
-            }
-        }
+        const renderLink = (page) => (
+            <Link
+                key={page}
+                to={`/danh-sach-truyen/trang/${page}${queryParams}`}
+                className={`nd-pagination-button ${page === currentPage ? 'nd-active' : ''}`}
+            >
+                {page}
+            </Link>
+        );
 
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(
-                <Link
-                    key={i}
-                    to={`/danh-sach-truyen/trang/${i}${queryParams}`}
-                    className={`nd-pagination-button ${i === currentPage ? 'nd-active' : ''}`}
-                >
-                    {i}
-                </Link>
-            );
-        }
+        const addEllipsis = (key) => (
+            <span key={key} className="nd-pagination-ellipsis">...</span>
+        );
 
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                pages.push(<span key="ellipsis2" className="nd-pagination-ellipsis">...</span>);
-            }
-            pages.push(
-                <Link
-                    key={totalPages}
-                    to={`/danh-sach-truyen/trang/${totalPages}${queryParams}`}
-                    className="nd-pagination-button"
-                >
-                    {totalPages}
-                </Link>
-            );
+        const buttons = [];
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) buttons.push(renderLink(i));
+        } else if (currentPage <= 3) {
+            // 1 2 3 4 ... last
+            buttons.push(renderLink(1));
+            buttons.push(renderLink(2));
+            buttons.push(renderLink(3));
+            buttons.push(renderLink(4));
+            buttons.push(addEllipsis('e-end'));
+            buttons.push(renderLink(totalPages));
+        } else if (currentPage >= totalPages - 2) {
+            // 1 ... last-3 last-2 last-1 last
+            buttons.push(renderLink(1));
+            buttons.push(addEllipsis('e-start'));
+            buttons.push(renderLink(totalPages - 3));
+            buttons.push(renderLink(totalPages - 2));
+            buttons.push(renderLink(totalPages - 1));
+            buttons.push(renderLink(totalPages));
+        } else {
+            // 1 ... prev current next ... last
+            buttons.push(renderLink(1));
+            buttons.push(addEllipsis('e-start'));
+            buttons.push(renderLink(currentPage - 1));
+            buttons.push(renderLink(currentPage));
+            buttons.push(renderLink(currentPage + 1));
+            buttons.push(addEllipsis('e-end'));
+            buttons.push(renderLink(totalPages));
         }
 
         return (
@@ -633,7 +626,7 @@ const NovelDirectory = () => {
                 >
                     ‹
                 </Link>
-                {pages}
+                {buttons}
                 <Link
                     to={currentPage < totalPages ? `/danh-sach-truyen/trang/${currentPage + 1}${queryParams}` : '#'}
                     className={`nd-pagination-button nav ${currentPage === totalPages ? 'nd-disabled' : ''}`}

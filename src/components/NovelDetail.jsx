@@ -825,6 +825,21 @@ const NovelDetail = ({ novelId }) => {
     });
   }, []);
 
+  // Prefetch comments (newest) so CommentSection renders instantly when shown
+  useEffect(() => {
+    if (!novelId) return;
+    queryClient.prefetchQuery({
+      queryKey: ['comments', `novels-${novelId}`, 'newest'],
+      queryFn: async () => {
+        const response = await axios.get(`${config.backendUrl}/api/comments/novel/${novelId}`, {
+          params: { sort: 'newest' }
+        });
+        return response.data;
+      },
+      staleTime: 1000 * 60 * 10,
+    });
+  }, [novelId, queryClient]);
+
   // Query to get novel stats (likes, ratings, etc.) - optimize to reduce duplicate calls
   const { data: novelStats } = useQuery({
     queryKey: ['novelStats', novelId],

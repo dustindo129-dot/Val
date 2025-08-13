@@ -8,6 +8,9 @@ import '../../styles/components/ContributionModal.css';
 const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
   const [contributions, setContributions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const limit = 50;
+  const [pagination, setPagination] = useState(null);
 
   // Create portal container
   const [portalContainer, setPortalContainer] = useState(null);
@@ -69,6 +72,13 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
     };
   }, [isOpen, portalContainer]);
 
+  // Reset to first page whenever opening or switching novel
+  useEffect(() => {
+    if (isOpen) {
+      setPage(1);
+    }
+  }, [isOpen, novelId]);
+
   // Fetch contribution history when modal opens
   useEffect(() => {
     const fetchContributions = async () => {
@@ -76,12 +86,14 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
         setIsLoading(true);
         try {
           const response = await axios.get(
-              `${config.backendUrl}/api/novels/${novelId}/contribution-history`
+            `${config.backendUrl}/api/novels/${novelId}/contribution-history?page=${page}&limit=${limit}`
           );
           setContributions(response.data.contributions || []);
+          setPagination(response.data.pagination || null);
         } catch (error) {
           console.error('Failed to fetch contribution history:', error);
           setContributions([]);
+          setPagination(null);
         } finally {
           setIsLoading(false);
         }
@@ -89,7 +101,7 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
     };
 
     fetchContributions();
-  }, [isOpen, novelId]);
+  }, [isOpen, novelId, page]);
 
   // Format date to Vietnamese format (DD/MM/YYYY)
   const formatDate = (dateString) => {
@@ -130,6 +142,25 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
         <div className="vt-contribution-history-modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="contribution-history-modal-header">
             <h3 className="modal-title">Lịch sử đóng góp</h3>
+            <div className="history-pagination">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={isLoading || page === 1 || (pagination ? !pagination.hasPrev : false)}
+              >
+                « Trang trước
+              </button>
+              <span className="history-page-indicator">
+                Trang {page}{pagination?.totalPages ? ` / ${pagination.totalPages}` : ''}
+              </span>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={isLoading || (pagination ? !pagination.hasNext : contributions.length < limit)}
+              >
+                Trang sau »
+              </button>
+            </div>
             <button className="close-modal" onClick={onClose}>&times;</button>
           </div>
           <div className="vt-contribution-history-modal-body">
@@ -182,6 +213,7 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
                   <p>Chưa có lịch sử đóng góp nào</p>
                 </div>
             )}
+            {/* Pagination controls moved to header */}
           </div>
         </div>
       </div>

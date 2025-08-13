@@ -2273,6 +2273,56 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     }
   };
 
+  // Render pagination numbers similar to NovelList (always show first & last with ellipses)
+  const renderCommentPageNumbers = () => {
+    if (totalPages <= 1) return null;
+
+    const buttons = [];
+    const addPageBtn = (page) => buttons.push(
+      <button
+        key={page}
+        className={`comment-page-number-btn ${currentPage === page ? 'active' : ''}`}
+        onClick={() => handlePageChange(page)}
+      >
+        {page}
+      </button>
+    );
+    const addEllipsis = (key) => buttons.push(
+      <span key={key} className="comment-pagination-ellipsis">...</span>
+    );
+
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) addPageBtn(i);
+    } else if (currentPage <= 3) {
+      // Start range: 1 2 3 4 ... last
+      addPageBtn(1);
+      addPageBtn(2);
+      addPageBtn(3);
+      addPageBtn(4);
+      addEllipsis('e-end');
+      addPageBtn(totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      // End range: 1 ... last-3 last-2 last-1 last
+      addPageBtn(1);
+      addEllipsis('e-start');
+      addPageBtn(totalPages - 3);
+      addPageBtn(totalPages - 2);
+      addPageBtn(totalPages - 1);
+      addPageBtn(totalPages);
+    } else {
+      // Middle range: 1 ... current-1 current current+1 ... last
+      addPageBtn(1);
+      addEllipsis('e-start');
+      addPageBtn(currentPage - 1);
+      addPageBtn(currentPage);
+      addPageBtn(currentPage + 1);
+      addEllipsis('e-end');
+      addPageBtn(totalPages);
+    }
+
+    return <div className="comment-page-numbers">{buttons}</div>;
+  };
+
   if (commentsLoading) {
     return (
       <div className="comments-loading">
@@ -2383,30 +2433,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
               
               <div className="comment-pagination-buttons">
                 {/* Page numbers */}
-                <div className="comment-page-numbers">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        className={`comment-page-number-btn ${currentPage === pageNum ? 'active' : ''}`}
-                        onClick={() => handlePageChange(pageNum)}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
+                {renderCommentPageNumbers()}
                 
                 {/* Navigation buttons */}
                 <div className="comment-pagination-nav-buttons">

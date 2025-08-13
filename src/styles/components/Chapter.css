@@ -1977,7 +1977,7 @@
 :root.dark-mode .protected-content h3,
 :root.dark-mode .draft-content h3,
 :root.dark-mode .paid-content h3 {
-  color: #000;
+  color: #fff;
 }
 
 :root.dark-mode .protected-content p,
