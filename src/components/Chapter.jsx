@@ -285,8 +285,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     queryKey: ['chapter-optimized', chapterId, user?.id],
     queryFn: async () => {
       const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}/full-optimized`, {
-        headers: user ? { Authorization: `Bearer ${getValidToken()}` } : {},
-        // OPTIMIZATION: Increase timeout for long content chapters
+        // Rely on axios interceptors to attach/refresh tokens automatically
         timeout: 30000 // 30 seconds for very long chapters
       });
 
@@ -930,9 +929,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         await queryClient.prefetchQuery({
           queryKey: ['chapter-optimized', chapter.prevChapter._id, user?.id],
           queryFn: async () => {
-            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.prevChapter._id}/full-optimized`, {
-              headers: user ? { Authorization: `Bearer ${getValidToken()}` } : {}
-            });
+            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.prevChapter._id}/full-optimized`);
             return response.data;
           }
         });
@@ -961,9 +958,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         await queryClient.prefetchQuery({
           queryKey: ['chapter-optimized', chapter.nextChapter._id, user?.id],
           queryFn: async () => {
-            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.nextChapter._id}/full-optimized`, {
-              headers: user ? { Authorization: `Bearer ${getValidToken()}` } : {}
-            });
+            const response = await axios.get(`${config.backendUrl}/api/chapters/${chapter.nextChapter._id}/full-optimized`);
             return response.data;
           }
         });
