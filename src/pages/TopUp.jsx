@@ -752,7 +752,7 @@ const TopUp = () => {
                       <div className="transfer-notes">
                         <div className="note-title">Chú ý</div>
                         <ol className="note-list">
-                          <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản (trong trường hợp không thể quét mã QR).</li>
+                          <li>Để lúa được cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản (trong trường hợp không thể quét mã QR).</li>
                           <li>Số dư sẽ được cập nhật khi bạn ĐĂNG NHẬP LẠI sau khi chuyển khoản thành công.</li>
                           <li>
                             Nếu có thắc mắc về vấn đề chuyển khoản hoặc chưa nhận được 🌾 1h sau khi thanh toán và đã đăng nhập lại, vui lòng inbox fanpage{' '}  
