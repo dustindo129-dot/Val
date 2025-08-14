@@ -843,7 +843,7 @@ const TopUp = () => {
               
               <div className="qr-countdown-container">
                 <div className="qr-expiry-note">
-                  <p className="qr-important"><span className="qr-important-icon">🔔</span>Sau khi thanh toán, vui lòng đăng nhập lại để cập nhật số dư nhanh nhất có thể.</p>
+                  <p className="qr-important">Sau khi thanh toán, vui lòng đăng nhập lại để cập nhật số dư nhanh nhất có thể.</p>
                 </div>
               </div>
               
