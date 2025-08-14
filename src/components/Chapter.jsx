@@ -292,11 +292,18 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       return chapterRes.data;
     },
     staleTime: (data) => {
-      // OPTIMIZATION: Shorter stale time for access-denied content to improve UX
-      if (data?.chapter?.accessDenied) {
-        return 1000 * 60 * 2; // 2 minutes for denied access (quick checks)
+      // Force re-auth for protected chapters: always stale
+      if (data?.chapter?.mode === 'protected') {
+        return 0;
       }
+      // Shorter stale time for access-denied content to improve UX
+      if (data?.chapter?.accessDenied) return 1000 * 60 * 2;
       return 1000 * 60 * 10; // 10 minutes for normal content
+    },
+    // Ensure a fresh auth check on mount for protected chapters
+    refetchOnMount: (query) => {
+      const mode = query.state.data?.chapter?.mode;
+      return mode === 'protected';
     },
     enabled: !!chapterId,
     retry: (failureCount, error) => {
@@ -314,8 +321,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     // OPTIMIZATION: Add performance settings for access control
     refetchOnWindowFocus: (query) => {
-      // Refetch access-denied content on focus to check for auth changes
-      return !!query.state.data?.chapter?.accessDenied;
+      // Refetch protected or access-denied content on focus to check for auth changes
+      const chapter = query.state.data?.chapter;
+      return !!(chapter && (chapter.mode === 'protected' || chapter.accessDenied));
     },
     gcTime: 1000 * 60 * 15 // Keep in cache longer for long content
   });
