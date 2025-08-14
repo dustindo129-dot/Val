@@ -753,9 +753,9 @@ const TopUp = () => {
                         <div className="note-title">Chú ý</div>
                         <ol className="note-list">
                           <li>Để lúa được tự động cập nhật nhanh và chính xác, vui lòng chuyển khoản đúng số tài khoản, đúng số tiền và điền chính xác nội dung chuyển khoản (trong trường hợp không thể quét mã QR).</li>
-                          <li>Số dư sẽ được cập nhật trong vòng tối đa 1h sau khi chuyển khoản thành công.</li>
+                          <li>Số dư sẽ được cập nhật khi bạn ĐĂNG NHẬP LẠI sau khi chuyển khoản thành công.</li>
                           <li>
-                            Nếu có thắc mắc về vấn đề chuyển khoản hoặc chưa nhận được 🌾 1h sau khi thanh toán, vui lòng inbox fanpage{' '}  
+                            Nếu có thắc mắc về vấn đề chuyển khoản hoặc chưa nhận được 🌾 1h sau khi thanh toán và đã đăng nhập lại, vui lòng inbox fanpage{' '}  
                             <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
                               Hội những người yêu thích Light Novel
                             </a>{' '}
