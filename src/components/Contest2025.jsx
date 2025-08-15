@@ -30,6 +30,34 @@ const Contest2025 = () => {
   // Check if user is admin or moderator
   const isAdminOrMod = isAuthenticated && (user?.role === 'admin' || user?.role === 'moderator');
 
+  // For non-admin/moderator users, show only header and announcement
+  if (!isAdminOrMod) {
+    return (
+      <div className="contest-2025-container">
+        <div className="contest-content">
+          {/* Page Header */}
+          <div className="contest-header">
+            <h1 className="contest-title">Val Light Novel Contest 2025</h1>
+            <div className="contest-subtitle">
+              Cuộc thi sáng tác Light Novel 'cây nhà lá vườn' đến từ Valvrareteam 
+            </div>
+          </div>
+
+          {/* Public Announcement Only */}
+          <div className="announcement-content">
+            <div className="announcement-box">
+              <div className="announcement-icon">🎉</div>
+              <div className="announcement-text">
+                <h2>cuộc thi sẽ chính thức ra mắt cuối tháng 8</h2>
+                <p>Thông tin chi tiết, thể lệ và giải thưởng sẽ được công bố vào thời điểm ra mắt.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="contest-2025-container">
       <div className="contest-content">
