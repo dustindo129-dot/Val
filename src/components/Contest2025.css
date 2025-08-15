@@ -562,16 +562,18 @@
 }
 
 .jury-message {
-  color: #718096;
+  color: #1a202c;
   line-height: 1.8;
   margin: 0;
   text-align: left;
   font-size: 0.95rem;
+  font-weight: 450;
   padding: 1.5rem;
   white-space: pre-line;
-  background: #f8fafc;
+  background: #ffffff;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .jury-message-title {
