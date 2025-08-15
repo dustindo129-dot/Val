@@ -214,7 +214,7 @@ const ChapterSEO = ({ novel, chapter }) => {
 const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, preloadedNovelSlug, preloadedChapterSlug }) => {
   // ALL HOOKS MUST BE CALLED FIRST, BEFORE ANY CONDITIONAL RETURNS
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const contentRef = useRef(null);
   const editorRef = useRef(null);
@@ -441,19 +441,30 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       return false;
     }
     
-    // Show early guard during loading for unauthenticated users
-    // Since module data is now included in chapter response, we can make immediate decisions
-    if (isLoading && !user) {
-      return true; // Show loading access guard for any unauthenticated user during loading
+    // CRITICAL FIX: Don't show early guard if authentication is still loading
+    // This prevents blocking authenticated users during the auth loading period
+    if (authLoading) {
+      return false;
     }
     
-    // For non-loading states, check if access is likely denied
+    // CRITICAL FIX: Only show early guard for PAID content, not protected content
+    // Protected chapters should only be blocked by the normal access guard flow
+    if (isLoading && !user) {
+      // Only show for paid content during loading, not protected content
+      const moduleIsPaid = moduleData?.mode === 'paid';
+      const chapterIsPaid = chapter?.mode === 'paid';
+      
+      return moduleIsPaid || chapterIsPaid; // Only show for paid content
+    }
+    
+    // For non-loading states, check if access is likely denied FOR PAID CONTENT ONLY
     if (chapterData && chapter) {
       const moduleIsPaid = moduleData?.mode === 'paid';
       const chapterIsPaid = chapter?.mode === 'paid';
       const userNotAuthenticated = !user;
       const userNotPrivileged = !canAccessPaidContent;
       
+      // Only show for paid content, not protected content
       const shouldShow = (moduleIsPaid || chapterIsPaid) && (userNotAuthenticated || userNotPrivileged);
       
       return shouldShow;
@@ -464,7 +475,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
     
     return result;
-  }, [isLoading, chapterData, chapter, canAccessPaidContent, moduleData, user]);
+  }, [isLoading, chapterData, chapter, canAccessPaidContent, moduleData, user, authLoading]);
 
   // Check if this is paid content that might need rental monitoring
   const isPaidContent = (chapter?.mode === 'paid' && chapter?.chapterBalance > 0) || 
@@ -1321,9 +1332,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // OPTIMIZATION: Enhanced loading with early access guard for better UX
   if (isLoading) {
-    // Show access guard if user is not authenticated (cautious approach)
-    // or if we know it's a paid module and user is not authenticated
-    if (!user && (!moduleData || moduleData?.mode === 'paid')) {
+    // CRITICAL FIX: Only show access guard during loading if:
+    // 1. Authentication is not loading (user state is determined)
+    // 2. User is not authenticated
+    // 3. AND it's specifically paid content (not protected content)
+    if (!authLoading && !user && (moduleData?.mode === 'paid')) {
       return (
         <div className="chapter-layout">
           <div className="chapter-container">
@@ -1346,7 +1359,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
             />
             <ChapterAccessGuard 
               chapter={{
-                mode: 'published',
+                mode: 'paid', // Set to paid since we're only showing this for paid content now
                 accessDenied: true,
                 novel: novel
               }} 
