@@ -239,6 +239,11 @@ const SecondaryNavbar = () => {
                 Bảng quản trị
               </Link>
             )}
+
+            {/* Contest link - visible to everyone */}
+            <Link to="/val-light-novel-contest-2025" className={`nav-link ${isActive('/val-light-novel-contest-2025')}`} onClick={() => setIsMenuOpen(false)}>
+              Val LN Contest 2025
+            </Link>
           </div>
         </div>
         

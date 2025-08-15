@@ -407,10 +407,62 @@ body.vt-modal-open {
 }
 
 .reviews-pagination {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
   padding: 10px 0;
   font-size: 14px;
   color: #666;
+}
+
+.pagination-info {
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+}
+
+.pagination-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #212529;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.pagination-btn.active:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+.pagination-btn-prev,
+.pagination-btn-next {
+  font-weight: bold;
+  font-size: 1.1rem;
 }
 
 /* Reviews loading styles */
@@ -476,6 +528,48 @@ body.vt-modal-open {
 
 :root.dark-mode .vt-rating-modal-overlay .reviews-pagination {
   color: #d1d5db;
+}
+
+/* Dark mode pagination buttons */
+:root.dark-mode .pagination-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+:root.dark-mode .pagination-btn:hover:not(:disabled) {
+  background: #4b5563;
+  border-color: #6b7280;
+  color: #f9fafb;
+}
+
+:root.dark-mode .pagination-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+:root.dark-mode .pagination-btn.active:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+/* Responsive pagination */
+@media (max-width: 480px) {
+  .pagination-controls {
+    gap: 3px;
+  }
+  
+  .pagination-btn {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    min-width: 32px;
+  }
+  
+  .pagination-btn-number {
+    min-width: 28px;
+    padding: 4px 6px;
+  }
 }
 
 /* Media Queries */

@@ -11,6 +11,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
   const [selectedRating, setSelectedRating] = useState(currentRating);
   const [reviewText, setReviewText] = useState('');
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1); // Add page state
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -44,6 +45,13 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
         }
       }
     };
+  }, [isOpen]);
+
+  // Reset page to 1 when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentPage(1);
+    }
   }, [isOpen]);
 
   // Prevent body scroll when modal is open
@@ -82,10 +90,10 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
-  // Get reviews for this novel
+  // Get reviews for this novel with pagination
   const { data: reviewsData, isLoading: isLoadingReviews } = useQuery({
-    queryKey: ['novel-reviews', novelId],
-    queryFn: () => api.getNovelReviews(novelId),
+    queryKey: ['novel-reviews', novelId, currentPage],
+    queryFn: () => api.getNovelReviews(novelId, currentPage),
     enabled: isOpen && !!novelId,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
@@ -96,6 +104,33 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     setReviewText(userInteraction?.review || '');
   }, [currentRating, userInteraction?.review]);
   
+  // Pagination navigation functions
+  const handlePreviousPage = useCallback(() => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  }, [currentPage]);
+
+  const handleNextPage = useCallback(() => {
+    if (reviewsData?.pagination && currentPage < reviewsData.pagination.totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  }, [currentPage, reviewsData?.pagination]);
+
+  const goToFirstPage = useCallback(() => {
+    setCurrentPage(1);
+  }, []);
+
+  const goToLastPage = useCallback(() => {
+    if (reviewsData?.pagination) {
+      setCurrentPage(reviewsData.pagination.totalPages);
+    }
+  }, [reviewsData?.pagination]);
+
+  const handlePageChange = useCallback((newPage) => {
+    setCurrentPage(newPage);
+  }, []);
+
   const rateMutation = useMutation({
     mutationFn: ({ rating, review }) => api.rateNovel(novelId, rating, review),
     onMutate: async ({ rating, review }) => {
@@ -329,7 +364,27 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
                   
                   {reviewsData.pagination.totalPages > 1 && (
                     <div className="reviews-pagination">
-                      <span>Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}</span>
+                      <button
+                        className="pagination-btn pagination-btn-prev"
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                        title="Trang trước"
+                      >
+                        ‹
+                      </button>
+                      
+                      <span className="pagination-info">
+                        Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}
+                      </span>
+                      
+                      <button
+                        className="pagination-btn pagination-btn-next"
+                        onClick={handleNextPage}
+                        disabled={currentPage === reviewsData.pagination.totalPages}
+                        title="Trang sau"
+                      >
+                        ›
+                      </button>
                     </div>
                   )}
                 </>

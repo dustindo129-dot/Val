@@ -22,6 +22,7 @@ const OLN = lazy(() => import('../pages/OLN'));
 const Market = lazy(() => import('../pages/Market'));
 const TopUp = lazy(() => import('../pages/TopUp'));
 const TopUpManagement = lazy(() => import('../pages/TopUpManagement'));
+const Contest2025 = lazy(() => import('../components/Contest2025'));
 const SlugWrapper = lazy(() => import('../components/SlugWrapper'));
 
 // Wrapper component for lazy-loaded routes with Suspense
@@ -49,6 +50,7 @@ function AppRoutes() {
         <Route path="/nap-tien" element={<LazyRoute><TopUp /></LazyRoute>} />
         <Route path="/quan-ly-giao-dich" element={<LazyRoute><ProtectedRoute><TopUpManagement /></ProtectedRoute></LazyRoute>} />
         <Route path="/bang-quan-tri" element={<LazyRoute><ProtectedRoute><AdminDashboard /></ProtectedRoute></LazyRoute>} />
+        <Route path="/val-light-novel-contest-2025" element={<LazyRoute><Contest2025 /></LazyRoute>} />
         <Route path="/truyen-xu-huong" element={<LazyRoute><NovelList filter="trending" /></LazyRoute>} />
         <Route path="/phuc-hoi-mat-khau/:token" element={<LazyRoute><ResetPassword /></LazyRoute>} />
         <Route path="/xac-nhan-email/:token" element={<LazyRoute><EmailConfirmation /></LazyRoute>} />

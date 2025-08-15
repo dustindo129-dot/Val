@@ -1,0 +1,310 @@
+/**
+ * Contest2025.css
+ * 
+ * Styles for the Val Light Novel Contest 2025 component.
+ * Features:
+ * - Role-based content styling
+ * - Responsive design
+ * - Dark theme support
+ * - Modern card layouts
+ * - Consistent spacing
+ */
+
+/* Main container */
+.contest-2025-container {
+  min-height: calc(100vh - 200px);
+  padding: 2rem 1rem;
+  background-color: #f8fafc;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.contest-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Header styles */
+.contest-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+}
+
+.contest-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #ff4545, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.contest-subtitle {
+  font-size: 1.2rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+/* Admin content styles */
+.admin-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.admin-placeholder h2 {
+  color: #2d3748;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.admin-placeholder p {
+  color: #718096;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.admin-section {
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.admin-section h3 {
+  color: #2d3748;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.admin-section p {
+  color: #718096;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Announcement content styles */
+.announcement-content {
+  text-align: center;
+}
+
+.announcement-box {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.announcement-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  pointer-events: none;
+}
+
+.announcement-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.announcement-text {
+  position: relative;
+  z-index: 1;
+}
+
+.announcement-text h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.announcement-text p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  opacity: 0.95;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Info sections */
+.info-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.info-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.info-section h3 {
+  color: #2d3748;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.info-section p {
+  color: #718096;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Dark theme styles */
+:root.dark-mode .contest-2025-container {
+  background-color: #1a1a1a;
+}
+
+:root.dark-mode .contest-title {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .contest-subtitle {
+  color: #a0aec0;
+}
+
+:root.dark-mode .admin-content {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+:root.dark-mode .admin-placeholder h2 {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .admin-placeholder p {
+  color: #a0aec0;
+}
+
+:root.dark-mode .admin-section {
+  background: #343434;
+  border-color: #404040;
+}
+
+:root.dark-mode .admin-section h3 {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .admin-section p {
+  color: #a0aec0;
+}
+
+:root.dark-mode .info-section {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+:root.dark-mode .info-section h3 {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .info-section p {
+  color: #a0aec0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .contest-2025-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .contest-title {
+    font-size: 2rem;
+  }
+
+  .contest-subtitle {
+    font-size: 1rem;
+  }
+
+  .announcement-box {
+    padding: 2rem 1rem;
+  }
+
+  .announcement-text h2 {
+    font-size: 1.5rem;
+  }
+
+  .announcement-text p {
+    font-size: 1rem;
+  }
+
+  .admin-content,
+  .info-section {
+    padding: 1.5rem;
+  }
+
+  .admin-sections,
+  .info-sections {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contest-header {
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+  }
+
+  .contest-title {
+    font-size: 1.8rem;
+  }
+
+  .announcement-icon {
+    font-size: 3rem;
+  }
+
+  .announcement-text h2 {
+    font-size: 1.3rem;
+  }
+
+  .admin-content,
+  .info-section {
+    padding: 1rem;
+  }
+}
