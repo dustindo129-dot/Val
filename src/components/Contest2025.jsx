@@ -92,11 +92,11 @@ const Contest2025 = () => {
                <h3>Phần thưởng riêng đến từ các ban giám khảo</h3>
                <div className="bonus-summary">
                  <p>
-                   <em>Chỉ áp dụng cho tác phẩm đạt giải nhất (bonus, không liên quan đến giải thưởng tiền mặt).</em>
+                   <em>Chỉ áp dụng cho tác phẩm đạt giải nhất (đây là thưởng thêm, không liên quan đến giải thưởng tiền mặt).</em>
                  </p>
                  <p>
                    <strong>Nekko</strong>: Tài trợ full minh họa • <strong>Koru</strong>: Audiobook • <strong>Mr.Tuân</strong>: Biên tập viên hỗ trợ hoàn thành tập 1 của tác phẩm. 
-                   <span className="bonus-disclaimer">Lưu ý: Ban giám khảo có quyền rút lại phần thưởng riêng nếu tác phẩm chưa đạt chất lượng mong muốn.</span>
+                   <span className="bonus-disclaimer">Lưu ý: Ban giám khảo có quyền rút lại phần thưởng riêng nếu tác phẩm chưa đạt chất lượng như mong muốn.</span>
                  </p>
                </div>
              </div>
@@ -171,6 +171,8 @@ const Contest2025 = () => {
                truyenvietcuavalvrareteam@gmail.com 
                </div>
                <p className="panel-note">Vui lòng đọc kỹ luật thi trước khi gửi bài</p>
+               <p>Tiêu đề email dự thi cần ghi rõ:</p>
+               <p>Bài dự thi VAlLN2025 - Tên tác giả - Tên tác phẩm</p>
              </div>
              
              <div className="panel rules-panel">
