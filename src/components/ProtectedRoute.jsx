@@ -32,7 +32,12 @@ import LoadingSpinner from './LoadingSpinner';
  */
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   // Get user authentication state from context
-  const { user, loading } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { user, loading } = authResult || { 
+    user: null, 
+    loading: true 
+  };
   // Get current location for redirect
   const location = useLocation();
   

@@ -450,29 +450,28 @@ export const AuthProvider = ({ children }) => {
         const rememberMe = localStorage.getItem('rememberMe') === 'true';
         updateSessionExpiry(rememberMe, userData);
       } else if (event.type === 'auth-token-invalid') {
-        // MOBILE FIX: Be more lenient with token invalid events on mobile
-        // Mobile networks can cause temporary connection issues
-        if (isMobile) {
-          const loginTime = localStorage.getItem('loginTime');
-          const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (10 * 60 * 1000); // 10 minutes
-          
-          if (isRecentLogin) {
-            console.log('Mobile: Ignoring token invalid event due to recent login and mobile network instability');
-            return; // Don't sign out immediately on mobile for recent logins
-          }
+        // Be more lenient with token invalid events for recent logins (unified approach)
+        // Network instability can affect any device type
+        const loginTime = localStorage.getItem('loginTime');
+        const gracePeriod = 12 * 60 * 1000; // 12 minutes for all devices
+        const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
+        
+        if (isRecentLogin) {
+          console.log('Ignoring token invalid event due to recent login and potential network instability');
+          return; // Don't sign out immediately for recent logins
         }
         // Handle invalid token detected by axios interceptor
         signOut(true);
       } else if (event.type === 'auth-token-refresh-failed') {
-        // MOBILE FIX: Be more lenient with refresh failures on mobile
-        if (isMobile) {
-          const loginTime = localStorage.getItem('loginTime');
-          const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (15 * 60 * 1000); // 15 minutes
-          
-          if (isRecentLogin) {
-            console.log('Mobile: Ignoring token refresh failure due to recent login and mobile network instability');
-            return; // Don't sign out immediately on mobile for recent logins
-          }
+        // Be more lenient with refresh failures for recent logins (unified approach)
+        // Network issues during token refresh can affect any device type
+        const loginTime = localStorage.getItem('loginTime');
+        const gracePeriod = 15 * 60 * 1000; // 15 minutes for refresh failures (slightly longer)
+        const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
+        
+        if (isRecentLogin) {
+          console.log('Ignoring token refresh failure due to recent login and potential network instability');
+          return; // Don't sign out immediately for recent logins
         }
         // Handle token refresh failure
         console.log('Token refresh failed, logging out user');

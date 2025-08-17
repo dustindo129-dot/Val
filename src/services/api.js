@@ -104,9 +104,9 @@ axios.interceptors.response.use(
       // MOBILE FIX: Be more lenient on mobile devices due to network instability
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
-      // Check if this is a recent login (be more generous for mobile)
+      // Check if this is a recent login (unified grace period for better UX)
       const loginTime = localStorage.getItem('loginTime');
-      const gracePeriod = isMobile ? 15 * 60 * 1000 : 5 * 60 * 1000; // 15 minutes for mobile, 5 for desktop
+      const gracePeriod = 12 * 60 * 1000; // 12 minutes for all devices - good balance
       const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
       
       // Skip refresh for auth endpoints to prevent infinite loops
@@ -184,10 +184,10 @@ axios.interceptors.response.use(
         return Promise.reject(error); // Don't clear auth data or show notifications
       }
       
-      // MOBILE FIX: For other 401 errors, be more lenient with recent logins (especially on mobile)
+      // For other 401 errors, be more lenient with recent logins (unified approach)
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const loginTime = localStorage.getItem('loginTime');
-      const gracePeriod = isMobile ? 15 * 60 * 1000 : 5 * 60 * 1000; // 15 minutes for mobile, 5 for desktop
+      const gracePeriod = 12 * 60 * 1000; // 12 minutes for all devices - good balance
       const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
       
       if (!isRecentLogin) {

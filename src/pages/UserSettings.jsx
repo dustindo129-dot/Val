@@ -77,7 +77,13 @@ const UserSettings = () => {
   // Get userNumber from URL parameters
   const { userNumber } = useParams();
   // Get user context and update function
-  const { user, updateUser, signOut } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { user, updateUser, signOut } = authResult || { 
+    user: null, 
+    updateUser: () => {}, 
+    signOut: () => {} 
+  };
   
   // State management for form data
   const [avatar, setAvatar] = useState('');

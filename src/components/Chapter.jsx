@@ -214,7 +214,12 @@ const ChapterSEO = ({ novel, chapter }) => {
 const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, preloadedNovelSlug, preloadedChapterSlug }) => {
   // ALL HOOKS MUST BE CALLED FIRST, BEFORE ANY CONDITIONAL RETURNS
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { user, loading: authLoading } = authResult || { 
+    user: null, 
+    loading: false 
+  };
   const queryClient = useQueryClient();
   const contentRef = useRef(null);
   const editorRef = useRef(null);
@@ -447,10 +452,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     return false;
   }
   
-  // MOBILE FIX: Be more lenient on mobile devices due to network instability
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  if (isMobile && user && !isLoading) {
-    // For mobile users who are logged in, don't show early guard
+  // UX IMPROVEMENT: Be more lenient with early access guards for authenticated users
+  // Let the backend handle the actual access control rather than preemptively blocking
+  if (user && !isLoading) {
+    // For authenticated users, don't show early guard
     // Let the backend handle the actual access control
     return false;
   }

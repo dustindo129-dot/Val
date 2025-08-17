@@ -54,7 +54,12 @@ const Navbar = () => {
   const [showSignUp, setShowSignUp] = useState(false);
   
   // Authentication context and navigation
-  const { user, signOut } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { user, signOut } = authResult || { 
+    user: null, 
+    signOut: () => {} 
+  };
   const { bookmarkedNovels } = useBookmarks();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

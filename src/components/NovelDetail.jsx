@@ -93,7 +93,12 @@ const truncateHTML = (html, maxLength) => {
  * Only shows if the novel has paid modules or chapters, or if there's contribution history
  */
 const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modules, showFAQ, setShowFAQ }) => {
-  const { user, isAuthenticated } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { user, isAuthenticated } = authResult || { 
+    user: null, 
+    isAuthenticated: false 
+  };
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [hasContributionHistory, setHasContributionHistory] = useState(false);
@@ -487,7 +492,12 @@ const MemoizedCommentSection = React.memo(CommentSection);
 const NovelDetail = ({ novelId }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { user, isAuthenticated } = authResult || { 
+    user: null, 
+    isAuthenticated: false 
+  };
   const queryClient = useQueryClient();
   
   // Clear cache when user authentication state changes (for draft module visibility)

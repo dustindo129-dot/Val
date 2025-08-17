@@ -37,7 +37,13 @@ const SecondaryNavbar = () => {
   // Get current location for active link highlighting
   const location = useLocation();
   // Get user authentication state for admin features
-  const { user, isAuthenticated, updateUser } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { user, isAuthenticated, updateUser } = authResult || { 
+    user: null, 
+    isAuthenticated: false, 
+    updateUser: () => {} 
+  };
   // Get theme state and functions from unified theme context
   const { isDarkMode, toggleTheme } = useTheme();
   // State for mobile dropdown menu

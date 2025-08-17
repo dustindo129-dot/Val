@@ -28,7 +28,11 @@ const ChapterAccessGuard = ({
   bypassAccessCheck = false
 }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  // Add null check to prevent destructuring errors during hot reloads
+  const authResult = useAuth();
+  const { isAuthenticated } = authResult || { 
+    isAuthenticated: false 
+  };
   
   // Helper function to check if user has pj_user access
   const checkPjUserAccess = useCallback((pjUserArray, user) => {
@@ -103,7 +107,9 @@ const ChapterAccessGuard = ({
       case 'published':
         return true; // Published is accessible to everyone
       case 'protected':
-        return isAuthenticated; // Protected requires user to be logged in
+        // CRITICAL FIX: For protected content, check both isAuthenticated state AND user object
+        // This handles race conditions where auth state might not be fully synced
+        return isAuthenticated || (user && user._id); // Protected requires user to be logged in
       case 'draft':
         return user?.role === 'admin' || user?.role === 'moderator' ||
           (user?.role === 'pj_user' && chapter.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user)); // Draft accessible to admin, moderator, and assigned pj_user
