@@ -101,9 +101,13 @@ axios.interceptors.response.use(
          error.response?.data?.message?.includes('Invalid or expired token') ||
          error.response?.data?.message?.includes('jwt expired'))) {
       
-      // Check if this is a recent login (within 5 minutes) to be less aggressive
+      // MOBILE FIX: Be more lenient on mobile devices due to network instability
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      // Check if this is a recent login (be more generous for mobile)
       const loginTime = localStorage.getItem('loginTime');
-      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
+      const gracePeriod = isMobile ? 15 * 60 * 1000 : 5 * 60 * 1000; // 15 minutes for mobile, 5 for desktop
+      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
       
       // Skip refresh for auth endpoints to prevent infinite loops
       if (originalRequest.url?.includes('/api/auth/')) {
@@ -180,9 +184,11 @@ axios.interceptors.response.use(
         return Promise.reject(error); // Don't clear auth data or show notifications
       }
       
-      // For other 401 errors, be more lenient with recent logins
+      // MOBILE FIX: For other 401 errors, be more lenient with recent logins (especially on mobile)
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const loginTime = localStorage.getItem('loginTime');
-      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (5 * 60 * 1000);
+      const gracePeriod = isMobile ? 15 * 60 * 1000 : 5 * 60 * 1000; // 15 minutes for mobile, 5 for desktop
+      const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
       
       if (!isRecentLogin) {
         clearAllAuthData();

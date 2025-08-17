@@ -441,11 +441,19 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       return false;
     }
     
-    // CRITICAL FIX: Don't show early guard if authentication is still loading
-    // This prevents blocking authenticated users during the auth loading period
-    if (authLoading) {
-      return false;
-    }
+      // CRITICAL FIX: Don't show early guard if authentication is still loading
+  // This prevents blocking authenticated users during the auth loading period
+  if (authLoading) {
+    return false;
+  }
+  
+  // MOBILE FIX: Be more lenient on mobile devices due to network instability
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (isMobile && user && !isLoading) {
+    // For mobile users who are logged in, don't show early guard
+    // Let the backend handle the actual access control
+    return false;
+  }
     
     // CRITICAL FIX: Only show early guard for PAID content, not protected content
     // Protected chapters should only be blocked by the normal access guard flow

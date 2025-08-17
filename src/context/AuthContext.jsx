@@ -436,6 +436,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const handleCustomEvent = (event) => {
+      // MOBILE FIX: Detect mobile environment for more lenient error handling
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       if (event.type === AUTH_LOGOUT_EVENT) {
         signOut(true); // Pass true to indicate this is a synchronized logout
       } else if (event.type === AUTH_LOGIN_EVENT) {
@@ -447,9 +450,30 @@ export const AuthProvider = ({ children }) => {
         const rememberMe = localStorage.getItem('rememberMe') === 'true';
         updateSessionExpiry(rememberMe, userData);
       } else if (event.type === 'auth-token-invalid') {
+        // MOBILE FIX: Be more lenient with token invalid events on mobile
+        // Mobile networks can cause temporary connection issues
+        if (isMobile) {
+          const loginTime = localStorage.getItem('loginTime');
+          const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (10 * 60 * 1000); // 10 minutes
+          
+          if (isRecentLogin) {
+            console.log('Mobile: Ignoring token invalid event due to recent login and mobile network instability');
+            return; // Don't sign out immediately on mobile for recent logins
+          }
+        }
         // Handle invalid token detected by axios interceptor
         signOut(true);
       } else if (event.type === 'auth-token-refresh-failed') {
+        // MOBILE FIX: Be more lenient with refresh failures on mobile
+        if (isMobile) {
+          const loginTime = localStorage.getItem('loginTime');
+          const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < (15 * 60 * 1000); // 15 minutes
+          
+          if (isRecentLogin) {
+            console.log('Mobile: Ignoring token refresh failure due to recent login and mobile network instability');
+            return; // Don't sign out immediately on mobile for recent logins
+          }
+        }
         // Handle token refresh failure
         console.log('Token refresh failed, logging out user');
         signOut(true);
