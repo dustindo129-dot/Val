@@ -286,8 +286,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
   // OPTIMIZED: Single query for all chapter data including user interactions
-  const { data: chapterData, error: chapterError, isLoading } = useQuery({
-    queryKey: ['chapter-optimized', chapterId, user?.id],
+  const { data: chapterData, error: chapterError, isLoading, refetch } = useQuery({
+    queryKey: ['chapter-optimized', chapterId, user?._id], // Use user._id instead of user.id
     queryFn: async () => {
       const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}/full-optimized`, {
         // Rely on axios interceptors to attach/refresh tokens automatically
@@ -297,18 +297,19 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       return chapterRes.data;
     },
     staleTime: (data) => {
-      // Force re-auth for protected chapters: always stale
+      // CRITICAL: Always refetch protected chapters after login/logout
       if (data?.chapter?.mode === 'protected') {
-        return 0;
+        return 0; // Always stale for protected content
       }
       // Shorter stale time for access-denied content to improve UX
-      if (data?.chapter?.accessDenied) return 1000 * 60 * 2;
-      return 1000 * 60 * 10; // 10 minutes for normal content
+      if (data?.chapter?.accessDenied) return 0; // Always refetch if access was denied
+      return 1000 * 60 * 5; // 5 minutes for normal content (reduced from 10)
     },
     // Ensure a fresh auth check on mount for protected chapters
     refetchOnMount: (query) => {
       const mode = query.state.data?.chapter?.mode;
-      return mode === 'protected';
+      const wasAccessDenied = query.state.data?.chapter?.accessDenied;
+      return mode === 'protected' || wasAccessDenied;
     },
     enabled: !!chapterId,
     retry: (failureCount, error) => {
@@ -326,11 +327,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     // OPTIMIZATION: Add performance settings for access control
     refetchOnWindowFocus: (query) => {
-      // Refetch protected or access-denied content on focus to check for auth changes
+      // Always refetch protected or access-denied content on focus to check for auth changes
       const chapter = query.state.data?.chapter;
       return !!(chapter && (chapter.mode === 'protected' || chapter.accessDenied));
     },
-    gcTime: 1000 * 60 * 15 // Keep in cache longer for long content
+    gcTime: 1000 * 60 * 5 // Reduced cache time for better auth responsiveness
   });
 
   // Extract chapter and novel data early to avoid circular dependencies
@@ -467,7 +468,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       const moduleIsPaid = moduleData?.mode === 'paid';
       const chapterIsPaid = chapter?.mode === 'paid';
       
-      return moduleIsPaid || chapterIsPaid; // Only show for paid content
+      const result = moduleIsPaid || chapterIsPaid; // Only show for paid content
+      return result;
     }
     
     // For non-loading states, check if access is likely denied FOR PAID CONTENT ONLY
@@ -484,7 +486,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     }
     
     const result = false;
-    
 
     
     return result;
@@ -750,6 +751,36 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   useEffect(() => {
     setHasTrackedView(false);
   }, [chapterId]);
+
+  // CRITICAL: Listen for auth changes and refetch protected chapters
+  useEffect(() => {
+    const handleAuthChange = () => {
+      // If this is a protected chapter or was previously access denied, refetch
+      if (chapter?.mode === 'protected' || chapter?.accessDenied) {
+        refetch();
+      }
+    };
+
+    // Listen for auth state changes
+    window.addEventListener('auth-cache-clear', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('auth-cache-clear', handleAuthChange);
+    };
+  }, [chapter?.mode, chapter?.accessDenied, refetch]);
+
+  // Track previous user state for comparison
+  const previousUser = useRef(user);
+  
+  // Force refetch when user authentication status changes
+  useEffect(() => {
+    // If user auth status changed (login/logout) and this is a protected chapter
+    if (previousUser.current !== user && (chapter?.mode === 'protected' || chapter?.accessDenied)) {
+      refetch();
+    }
+    
+    previousUser.current = user;
+  }, [user, chapter?.mode, chapter?.accessDenied, refetch]);
 
   // Effect to calculate word count - prefer stored TinyMCE word count, fallback to calculation
   useEffect(() => {

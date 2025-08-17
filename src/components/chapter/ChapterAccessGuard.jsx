@@ -96,7 +96,10 @@ const ChapterAccessGuard = ({
   
   // Check if user has access to chapter content based on mode
   const canAccessChapterContent = (chapter, user) => {
-    if (!chapter || !chapter.mode) return true; // Default to accessible if no mode specified
+
+    if (!chapter || !chapter.mode) {
+      return true; // Default to accessible if no mode specified
+    }
     
     // CRITICAL: Check server's access decision first
     if (chapter.accessDenied) {
@@ -109,11 +112,16 @@ const ChapterAccessGuard = ({
       case 'protected':
         // CRITICAL FIX: For protected content, check both isAuthenticated state AND user object
         // This handles race conditions where auth state might not be fully synced
-        return isAuthenticated || (user && user._id); // Protected requires user to be logged in
+        const hasAccess = isAuthenticated || (user && user._id);
+        return hasAccess; // Protected requires user to be logged in
       case 'draft':
-        return user?.role === 'admin' || user?.role === 'moderator' ||
-          (user?.role === 'pj_user' && chapter.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user)); // Draft accessible to admin, moderator, and assigned pj_user
+        const canAccessDraft = user?.role === 'admin' || user?.role === 'moderator' ||
+          (user?.role === 'pj_user' && chapter.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user));
+
+        return canAccessDraft; // Draft accessible to admin, moderator, and assigned pj_user
       case 'paid':
+
+        
         // SECURITY FIX: Check user permissions first, not content existence
         // Admin, moderator, and pj_user for their assigned novels have access
         if (user && (
@@ -121,17 +129,20 @@ const ChapterAccessGuard = ({
           user.role === 'moderator' ||
           (user.role === 'pj_user' && chapter.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user))
         )) {
+
           return true;
         }
         
         // Check if user has active rental for this module
         if (chapter?.rentalInfo?.hasActiveRental) {
+
           return true;
         }
         
         // Check if backend has explicitly granted access (e.g., user purchased the chapter)
         // This should be set by the backend when the user has legitimate access
         if (chapter.hasUserAccess === true) {
+
           return true;
         }
         
@@ -211,8 +222,11 @@ const ChapterAccessGuard = ({
   // If parent component has already verified access, trust that decision
   // BUT never override an explicit server-side access denial
   if (bypassAccessCheck && !chapter?.accessDenied) {
+
     return children;
   }
+
+
 
   if (!hasChapterAccess || !hasModuleAccess) {
     return (

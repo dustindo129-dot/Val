@@ -274,6 +274,7 @@ export const AuthProvider = ({ children }) => {
         
         // Check if this is a recent login for grace period
         const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < GRACE_PERIOD;
+        
         if (isRecentLogin) {
           setJustLoggedIn(true);
           setTimeout(() => setJustLoggedIn(false), GRACE_PERIOD - (Date.now() - parseInt(loginTime, 10)));
@@ -302,6 +303,24 @@ export const AuthProvider = ({ children }) => {
           const sessionValid = isRecentLogin || checkSessionValidity();
           
           if (sessionValid) {
+            
+                  // Check if user ID is missing and refresh if needed
+      if (!userData._id) {
+        try {
+          const refreshedData = await refreshUserData(userData);
+          if (refreshedData && refreshedData._id) {
+            userData = refreshedData;
+            localStorage.setItem('user', JSON.stringify(refreshedData));
+          } else {
+            signOut();
+            return;
+          }
+        } catch (refreshError) {
+          signOut();
+          return;
+        }
+      }
+            
             setUser(userData);
             setIsAuthenticated(true);
             
@@ -333,7 +352,10 @@ export const AuthProvider = ({ children }) => {
           }
         } else if (storedUser || storedToken) {
           // Partial data found, clear everything for clean state
+          console.log('⚠️ Partial auth data found, clearing for clean state');
           signOut();
+        } else {
+          console.log('ℹ️ No stored auth data found');
         }
       } catch (error) {
         // Don't set error during initialization to avoid confusing users
@@ -533,6 +555,12 @@ export const AuthProvider = ({ children }) => {
       const userData = response.data.user;
       const loginTime = Date.now();
       
+      // Ensure user data has _id field
+      if (!userData._id) {
+        console.error('Login response missing user._id field:', userData);
+        throw new Error('Incomplete user data received from server');
+      }
+      
       setUser(userData);
       setIsAuthenticated(true);
       setJustLoggedIn(true);
@@ -557,6 +585,31 @@ export const AuthProvider = ({ children }) => {
       
       // Clear the just logged in flag after grace period
       setTimeout(() => setJustLoggedIn(false), GRACE_PERIOD);
+      
+      // Clear cached chapter access denials after login
+      setTimeout(async () => {
+        try {
+          // Clear React Query cache to force fresh data fetches
+          if (window.queryClient) {
+            window.queryClient.clear();
+          }
+          
+          // Dispatch event to clear any component-level caches
+          window.dispatchEvent(new CustomEvent('auth-cache-clear', { detail: { userId: userData._id } }));
+          
+          // Clear server-side caches for this user
+          try {
+            await axios.post(`${config.backendUrl}/api/chapters/clear-user-cache/${userData._id}`, {}, {
+              headers: { Authorization: `Bearer ${response.data.token}` }
+            });
+          } catch (serverCacheError) {
+            // Silently ignore server cache clear failures
+          }
+          
+        } catch (cacheError) {
+          // Silently ignore cache clear failures
+        }
+      }, 200);
       
       return response.data;
     } catch (error) {
