@@ -256,7 +256,7 @@ export const AuthProvider = ({ children }) => {
       
       return updatedUserData;
     } catch (error) {
-      console.log('Could not refresh user data:', error);
+      console.error('Could not refresh user data:', error);
       return null;
     }
   };
@@ -329,11 +329,9 @@ export const AuthProvider = ({ children }) => {
               try {
                 const refreshedData = await refreshUserData(userData);
                 if (refreshedData && refreshedData.userNumber) {
-                  console.log('User data refreshed with userNumber:', refreshedData.userNumber);
                   userData = refreshedData; // Update local userData reference
                 }
               } catch (refreshError) {
-                console.log('Could not refresh user data for userNumber:', refreshError);
                 // Continue with existing user data even if refresh fails
               }
             }
@@ -352,10 +350,7 @@ export const AuthProvider = ({ children }) => {
           }
         } else if (storedUser || storedToken) {
           // Partial data found, clear everything for clean state
-          console.log('⚠️ Partial auth data found, clearing for clean state');
           signOut();
-        } else {
-          console.log('ℹ️ No stored auth data found');
         }
       } catch (error) {
         // Don't set error during initialization to avoid confusing users
@@ -479,7 +474,6 @@ export const AuthProvider = ({ children }) => {
         const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
         
         if (isRecentLogin) {
-          console.log('Ignoring token invalid event due to recent login and potential network instability');
           return; // Don't sign out immediately for recent logins
         }
         // Handle invalid token detected by axios interceptor
@@ -492,11 +486,9 @@ export const AuthProvider = ({ children }) => {
         const isRecentLogin = loginTime && (Date.now() - parseInt(loginTime, 10)) < gracePeriod;
         
         if (isRecentLogin) {
-          console.log('Ignoring token refresh failure due to recent login and potential network instability');
           return; // Don't sign out immediately for recent logins
         }
         // Handle token refresh failure
-        console.log('Token refresh failed, logging out user');
         signOut(true);
       } else if (event.type === 'auth-token-refreshed') {
         // Handle successful token refresh
@@ -505,7 +497,6 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
           localStorage.setItem('user', JSON.stringify(userData));
         }
-        console.log('Token refreshed successfully');
       }
     };
 

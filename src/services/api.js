@@ -62,20 +62,11 @@ axios.interceptors.request.use(
     requestCount++;
     const requestId = requestCount;
     
-    console.log(`🌐 API Request #${requestId}:`, { 
-      url: config.url, 
-      method: config.method?.toUpperCase(),
-      hasAuth: !!config.headers.Authorization 
-    });
-    
-    // Skip token refresh for auth endpoints to prevent infinite loops
+// Skip token refresh for auth endpoints to prevent infinite loops
     if (config.url?.includes('/api/auth/')) {
       const token = getValidToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log(`🔑 Auth endpoint: Token attached (length: ${token.length})`);
-      } else {
-        console.log(`⚠️ Auth endpoint: No token available`);
       }
       return config;
     }
@@ -85,19 +76,15 @@ axios.interceptors.request.use(
       const token = await ensureValidToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log(`🔑 API Request #${requestId}: Token attached (length: ${token.length})`);
-      } else {
-        console.log(`⚠️ API Request #${requestId}: No token available`);
       }
     } catch (error) {
-      console.error(`❌ API Request #${requestId}: Token refresh failed in request interceptor:`, error);
       // Continue with request without token - let response interceptor handle it
     }
     
     return config;
   },
   (error) => {
-    console.error('❌ Request interceptor error:', error);
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -393,7 +380,6 @@ const api = {
 
       return response.data;
     } catch (error) {
-      console.error('Chapter reordering error:', error);
       throw error;
     }
   },
