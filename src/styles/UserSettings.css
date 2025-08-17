@@ -314,8 +314,6 @@
   background-color: #f8f9fa;
   border-radius: 8px;
   padding: 16px;
-  max-height: 300px;
-  overflow-y: auto;
   border: 1px solid #e9ecef;
 }
 
