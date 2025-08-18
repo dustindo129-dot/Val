@@ -1207,6 +1207,24 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         }
       });
 
+      // CRITICAL FIX: Force refetch to ensure we get the latest data from server
+      // This ensures any server-side processing or caching changes are reflected immediately
+      await refetch();
+      
+      // Also invalidate related queries to ensure consistency across the application
+      queryClient.invalidateQueries({
+        queryKey: ['chapter-optimized', chapterId],
+        exact: false // This will invalidate all chapter queries for this chapter ID regardless of user
+      });
+      
+      // Invalidate novel queries that might include this chapter's data
+      if (chapter?.novelId) {
+        queryClient.invalidateQueries({
+          queryKey: ['novel', chapter.novelId],
+          exact: false
+        });
+      }
+
     } catch (err) {
       console.error('Không thể cập nhật chương:', err);
       
