@@ -27,11 +27,37 @@ import LoadingSpinner from './LoadingSpinner';
 import { generateNovelUrl } from '../utils/slugUtils';
 import { translateStatus, getStatusForDataAttr } from '../utils/statusTranslation';
 
+// Helper function to get the appropriate display date for a chapter
+// Use updatedAt if it's meaningfully different from createdAt (indicating the chapter was published later)
+// Otherwise use createdAt for chapters that were created and published immediately
+const getChapterDisplayDate = (chapter) => {
+    if (!chapter) return null;
+    
+    const createdAt = new Date(chapter.createdAt);
+    const updatedAt = new Date(chapter.updatedAt);
+    
+    // If either date is invalid, fall back to the valid one or null
+    if (isNaN(createdAt.getTime()) && isNaN(updatedAt.getTime())) return null;
+    if (isNaN(createdAt.getTime())) return chapter.updatedAt;
+    if (isNaN(updatedAt.getTime())) return chapter.createdAt;
+    
+    // If updatedAt is more than 1 minute after createdAt, it's likely a meaningful update
+    // This handles cases where chapters are switched from draft to published
+    const timeDifference = updatedAt.getTime() - createdAt.getTime();
+    const oneMinute = 60 * 1000;
+    
+    return timeDifference > oneMinute ? chapter.updatedAt : chapter.createdAt;
+};
+
 // Memoized novel card component for better performance
 const NovelCard = memo(({ novel }) => {
-    // Get latest chapter by sorting
+    // Get latest chapter by sorting using smart display date logic
     const latestChapter = novel.chapters && novel.chapters.length > 0
-        ? novel.chapters.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+        ? novel.chapters.sort((a, b) => {
+            const dateA = new Date(getChapterDisplayDate(a));
+            const dateB = new Date(getChapterDisplayDate(b));
+            return dateB - dateA;
+        })[0]
         : null;
 
     return (

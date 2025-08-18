@@ -496,6 +496,28 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
         }));
     };
 
+    // Helper function to get the appropriate display date for a chapter
+    // Use updatedAt if it's meaningfully different from createdAt (indicating the chapter was published later)
+    // Otherwise use createdAt for chapters that were created and published immediately
+    const getChapterDisplayDate = (chapter) => {
+        if (!chapter) return null;
+        
+        const createdAt = new Date(chapter.createdAt);
+        const updatedAt = new Date(chapter.updatedAt);
+        
+        // If either date is invalid, fall back to the valid one or null
+        if (isNaN(createdAt.getTime()) && isNaN(updatedAt.getTime())) return null;
+        if (isNaN(createdAt.getTime())) return chapter.updatedAt;
+        if (isNaN(updatedAt.getTime())) return chapter.createdAt;
+        
+        // If updatedAt is more than 1 minute after createdAt, it's likely a meaningful update
+        // This handles cases where chapters are switched from draft to published
+        const timeDifference = updatedAt.getTime() - createdAt.getTime();
+        const oneMinute = 60 * 1000;
+        
+        return timeDifference > oneMinute ? chapter.updatedAt : chapter.createdAt;
+    };
+
     const getTimeAgo = (dateString) => {
         const now = new Date();
         const date = new Date(dateString);
@@ -656,9 +678,13 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                         {/* Novel grid */}
                         <div className="novel-grid">
                             {novels.map(novel => {
-                                // Sort chapters by newest first and get the first three
+                                // Sort chapters by newest display date first and get the first three
                                 const sortedChapters = (novel.chapters || [])
-                                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                    .sort((a, b) => {
+                                        const dateA = new Date(getChapterDisplayDate(a));
+                                        const dateB = new Date(getChapterDisplayDate(b));
+                                        return dateB - dateA;
+                                    })
                                     .slice(0, 3);
 
                                 // Get genres for this novel
@@ -764,9 +790,9 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                                                             >
                                                                 {chapter.title}
                                                             </Link>
-                                                            {/* Updated: Show relative time instead of formatted date */}
+                                                            {/* Updated: Show relative time using smart display date logic */}
                                                             <span className="novel-list-chapter-date">
-                                                                {getTimeAgo(chapter.createdAt)}
+                                                                {getTimeAgo(getChapterDisplayDate(chapter))}
                                                             </span>
                                                         </div>
                                                     ))}

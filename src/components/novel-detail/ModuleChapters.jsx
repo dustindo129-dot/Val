@@ -32,8 +32,32 @@ const formatDateUtil = (date) => {
   }
 };
 
+// Helper function to get the appropriate display date for a chapter
+// Use updatedAt if it's meaningfully different from createdAt (indicating the chapter was published later)
+// Otherwise use createdAt for chapters that were created and published immediately
+const getChapterDisplayDate = (chapter) => {
+  if (!chapter) return null;
+  
+  const createdAt = new Date(chapter.createdAt);
+  const updatedAt = new Date(chapter.updatedAt);
+  
+  // If either date is invalid, fall back to the valid one or null
+  if (isNaN(createdAt.getTime()) && isNaN(updatedAt.getTime())) return null;
+  if (isNaN(createdAt.getTime())) return chapter.updatedAt;
+  if (isNaN(updatedAt.getTime())) return chapter.createdAt;
+  
+  // If updatedAt is more than 1 minute after createdAt, it's likely a meaningful update
+  // This handles cases where chapters are switched from draft to published
+  const timeDifference = updatedAt.getTime() - createdAt.getTime();
+  const oneMinute = 60 * 1000;
+  
+  return timeDifference > oneMinute ? chapter.updatedAt : chapter.createdAt;
+};
+
 // Helper function to check if chapter is new with real-time checking
-const isChapterNew = (date, currentTime = Date.now()) => {
+const isChapterNew = (chapter, currentTime = Date.now()) => {
+  // Use the appropriate display date for the "new" calculation
+  const date = getChapterDisplayDate(chapter);
   if (!date) return false;
   
   try {
@@ -85,7 +109,7 @@ const ModuleChapters = memo(({
     
     return chapters.map(chapter => ({
       ...chapter,
-      isNew: isChapterNew(chapter.createdAt, currentTime)
+      isNew: isChapterNew(chapter, currentTime)
     }));
   }, [chapters, currentTime]);
   
@@ -356,7 +380,7 @@ const ModuleChapters = memo(({
                   </div>
                 )}
                 <span className="novel-detail-chapter-date">
-                  {formatDateUtil(chapter.createdAt)}
+                  {formatDateUtil(getChapterDisplayDate(chapter))}
                 </span>
               </div>
             );
