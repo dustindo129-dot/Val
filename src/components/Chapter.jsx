@@ -1200,9 +1200,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
       // Update with server data for consistency
       queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], {
-        ...previousChapterData,
+        ...(previousChapterData || chapterData),
         chapter: {
-          ...previousChapterData.chapter,
+          ...(previousChapterData?.chapter || chapterData?.chapter || {}),
           ...data
         }
       });
