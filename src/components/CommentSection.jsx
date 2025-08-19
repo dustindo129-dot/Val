@@ -1000,22 +1000,18 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         });
         return response.data;
       } else {
-        // For other content types (chapters, feedback), use the regular endpoint
-        const response = await axios.get(`${config.backendUrl}/api/comments`, {
-          params: { contentType, contentId, sort: sortOrder }
-        });
-        // Wrap in pagination format for consistency
-        return {
-          comments: response.data,
-          pagination: {
-            currentPage: 1,
-            totalPages: 1,
-            totalComments: response.data.length,
-            hasNext: false,
-            hasPrev: false,
-            limit: response.data.length
-          }
+        // For other content types (chapters, feedback), use the regular endpoint with pagination
+        const params = {
+          contentType,
+          contentId,
+          sort: sortOrder,
+          page: currentPage,
+          limit: commentsPerPage
         };
+        const response = await axios.get(`${config.backendUrl}/api/comments`, {
+          params
+        });
+        return response.data; // Backend now returns paginated format with organized replies
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes - reduced since we're loading less data per page
@@ -1076,6 +1072,20 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   // Extract comments and pagination from response
   const commentsData = commentsResponse?.comments || [];
   const paginationData = commentsResponse?.pagination || null;
+  
+  // DEBUG: Log what we're receiving from the backend
+  const totalRepliesReceived = commentsData.reduce((sum, c) => sum + countNestedReplies(c), 0);
+  console.log(`[DEBUG] Frontend received: ${commentsData.length} root comments with ${totalRepliesReceived} total nested replies (expected 5 replies)`);
+  
+  // Helper to count nested replies recursively
+  function countNestedReplies(comment) {
+    if (!comment.replies) return 0;
+    let count = comment.replies.length;
+    comment.replies.forEach(reply => {
+      count += countNestedReplies(reply);
+    });
+    return count;
+  }
 
   useEffect(() => {
     // Backend now returns organized comments with replies attached, so no need to organize
@@ -1360,6 +1370,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
   // Create a recursive component for rendering comments and their replies
   const RenderComment = ({ comment, level = 0 }) => {
+    // Root comment with nested replies rendering
+    
     // Move reply state inside this component
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
@@ -2197,6 +2209,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         {/* Nested replies - outside of pinned comment wrapper */}
         {comment.replies && comment.replies.length > 0 && (
           <div className="replies-list">
+            {/* Rendering replies with collapsing feature */}
             {/* Show first maxVisibleReplies replies */}
             {comment.replies.slice(0, expandedReplies.has(comment._id) ? comment.replies.length : maxVisibleReplies).map((reply) => (
               <RenderComment 
@@ -2247,6 +2260,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const totalComments = paginationData?.totalComments || comments.length;
   const totalPages = paginationData?.totalPages || Math.ceil(totalComments / commentsPerPage);
   const currentComments = comments; // Server already returns the correct filtered and paginated results
+  
+  // No pagination needed since we only have 4 comments (1 page)
 
   // Pagination handlers
   const handlePageChange = (page, shouldScroll = true) => {
