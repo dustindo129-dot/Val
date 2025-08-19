@@ -13,7 +13,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
   const [selectedRating, setSelectedRating] = useState(currentRating);
   const [reviewText, setReviewText] = useState('');
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1); // Add page state
+
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const reviewEditorRef = useRef(null);
@@ -26,7 +26,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     return {
       script_src: config.tinymce.scriptPath,
       license_key: 'gpl',
-      height: 200,
+      height: 300,
       menubar: false,
       remove_empty_elements: false,
       forced_root_block: 'p',
@@ -164,12 +164,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     };
   }, [isOpen]);
 
-  // Reset page to 1 when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentPage(1);
-    }
-  }, [isOpen]);
+
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -207,13 +202,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
-  // Get reviews for this novel with pagination
-  const { data: reviewsData, isLoading: isLoadingReviews } = useQuery({
-    queryKey: ['novel-reviews', novelId, currentPage],
-    queryFn: () => api.getNovelReviews(novelId, currentPage),
-    enabled: isOpen && !!novelId,
-    staleTime: 1000 * 60 * 5 // 5 minutes
-  });
+
 
   // Update selected rating and review when they change
   useEffect(() => {
@@ -231,33 +220,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
       }, 100);
     }
   }, [currentRating, userInteraction?.review, isOpen]);
-  
-  // Pagination navigation functions
-  const handlePreviousPage = useCallback(() => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  }, [currentPage]);
 
-  const handleNextPage = useCallback(() => {
-    if (reviewsData?.pagination && currentPage < reviewsData.pagination.totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  }, [currentPage, reviewsData?.pagination]);
-
-  const goToFirstPage = useCallback(() => {
-    setCurrentPage(1);
-  }, []);
-
-  const goToLastPage = useCallback(() => {
-    if (reviewsData?.pagination) {
-      setCurrentPage(reviewsData.pagination.totalPages);
-    }
-  }, [reviewsData?.pagination]);
-
-  const handlePageChange = useCallback((newPage) => {
-    setCurrentPage(newPage);
-  }, []);
 
   const rateMutation = useMutation({
     mutationFn: ({ rating, review }) => api.rateNovel(novelId, rating, review),
@@ -265,12 +228,10 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
       // Cancel any outgoing refetches
       await queryClient.cancelQueries(['novel-stats', novelId]);
       await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
-      await queryClient.cancelQueries(['novel-reviews', novelId]);
 
       // Snapshot the previous values
       const previousStats = queryClient.getQueryData(['novel-stats', novelId]);
       const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
-      const previousReviews = queryClient.getQueryData(['novel-reviews', novelId, currentPage]);
 
       // Calculate new average rating
       const oldRating = previousInteraction?.rating || 0;
@@ -303,49 +264,9 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
         review
       }));
 
-      // Optimistically update reviews list
-      if (previousReviews && review && review.trim()) {
-        const now = new Date().toISOString();
-        const newReview = {
-          id: `temp-${Date.now()}`, // Temporary ID for optimistic update
-          user: {
-            displayName: user.displayName || user.username,
-            username: user.username
-          },
-          rating,
-          review: review.trim(),
-          date: now,
-          createdAt: now,
-          updatedAt: now
-        };
 
-        // Check if user already has a review in the current page
-        const existingReviewIndex = previousReviews.reviews.findIndex(
-          r => r.user.username === user.username
-        );
 
-        let updatedReviews;
-        if (existingReviewIndex >= 0) {
-          // Update existing review - preserve original createdAt but update updatedAt
-          const existingReview = previousReviews.reviews[existingReviewIndex];
-          updatedReviews = [...previousReviews.reviews];
-          updatedReviews[existingReviewIndex] = {
-            ...newReview,
-            createdAt: existingReview.createdAt || now, // Keep original creation date
-            updatedAt: now // Set new update time
-          };
-        } else {
-          // Add new review at the beginning
-          updatedReviews = [newReview, ...previousReviews.reviews];
-        }
-
-        queryClient.setQueryData(['novel-reviews', novelId, currentPage], {
-          ...previousReviews,
-          reviews: updatedReviews
-        });
-      }
-
-      return { previousStats, previousInteraction, previousReviews };
+      return { previousStats, previousInteraction };
     },
     onError: (err, variables, context) => {
       // Reset to previous values on error
@@ -355,9 +276,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
       if (context?.previousInteraction) {
         queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
       }
-      if (context?.previousReviews) {
-        queryClient.setQueryData(['novel-reviews', novelId, currentPage], context.previousReviews);
-      }
+
       setError('Không thể cập nhật đánh giá. Vui lòng thử lại.');
     },
     onSuccess: (response) => {
@@ -380,9 +299,15 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
         exact: true
       });
       
+      // Invalidate reviews preview and modal queries to refresh them
       queryClient.invalidateQueries({
-        queryKey: ['novel-reviews', novelId],
-        exact: false // This will invalidate all pages
+        queryKey: ['novel-reviews-preview', novelId],
+        exact: true
+      });
+      
+      queryClient.invalidateQueries({
+        queryKey: ['novel-reviews-modal', novelId],
+        exact: false
       });
 
       if (onRatingSuccess) {
@@ -530,75 +455,7 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
             </button>
           </div>
 
-          {/* Reviews section */}
-          {(isLoadingReviews || reviewsData?.reviews?.length > 0) && (
-            <div className="reviews-section">
-              <h3>Đánh giá từ độc giả</h3>
-              
-              {isLoadingReviews ? (
-                <div className="reviews-loading">
-                  <span>Đang tải đánh giá<span className="loading-dots">...</span></span>
-                </div>
-              ) : (
-                <>
-                  <div className="reviews-list">
-                    {reviewsData.reviews.map(review => (
-                      <div key={review.id} className="review-item">
-                        <div className="review-header">
-                          <span className="review-user">{review.user.displayName || review.user.username}</span>
-                          <div className="review-rating">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>
-                                {i < review.rating ? '★' : '☆'}
-                              </span>
-                            ))}
-                          </div>
-                          <div className="review-date-wrapper">
-                            <span className="review-date">{formatDate(review.updatedAt || review.date)}</span>
-                            {isReviewEdited(review) && (
-                              <span className="review-edited-indicator">(Đã chỉnh sửa)</span>
-                            )}
-                          </div>
-                        </div>
-                        <div 
-                          className="review-content"
-                          dangerouslySetInnerHTML={{ 
-                            __html: processReviewContent(review.review)
-                          }} 
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {reviewsData.pagination.totalPages > 1 && (
-                    <div className="reviews-pagination">
-                      <button
-                        className="pagination-btn pagination-btn-prev"
-                        onClick={handlePreviousPage}
-                        disabled={currentPage === 1}
-                        title="Trang trước"
-                      >
-                        ‹
-                      </button>
-                      
-                      <span className="pagination-info">
-                        Trang {reviewsData.pagination.currentPage} / {reviewsData.pagination.totalPages}
-                      </span>
-                      
-                      <button
-                        className="pagination-btn pagination-btn-next"
-                        onClick={handleNextPage}
-                        disabled={currentPage === reviewsData.pagination.totalPages}
-                        title="Trang sau"
-                      >
-                        ›
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+
         </div>
       </div>
     </div>

@@ -7,6 +7,8 @@ import {BookmarkIcon, BookmarkActiveIcon, HeartIcon, HeartFilledIcon, ViewsIcon,
 import api from '../../services/api';
 import RatingModal from '../../components/RatingModal';
 import {useBookmarks} from '../../context/BookmarkContext';
+import ReviewsPreviewSection from './ReviewsPreviewSection';
+import ReviewsModal from './ReviewsModal';
 import GiftRow from './GiftRow';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
@@ -368,6 +370,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
     const {user} = useAuth();
     const {updateBookmarkStatus} = useBookmarks();
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+    const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isNoteExpanded, setIsNoteExpanded] = useState(false);
     const [lastLikeTime, setLastLikeTime] = useState(0);
@@ -741,9 +744,15 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
         // Use username presence instead of isAuthenticated flag
         if (!user?.username) {
             alert('Vui lòng đăng nhập để đánh giá truyện');
+            window.dispatchEvent(new CustomEvent('openLoginModal'));
             return;
         }
         setIsRatingModalOpen(true);
+    };
+
+    // Handle opening reviews modal
+    const handleViewAllReviews = () => {
+        setIsReviewsModalOpen(true);
     };
 
     // Toggle description expand/collapse
@@ -1309,6 +1318,13 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                 {isDescriptionExpanded ? 'Hiển thị ít hơn' : 'Hiển thị thêm'}
                             </a>
                         </div>
+
+                        {/* Reviews Preview Section */}
+                        <ReviewsPreviewSection 
+                            novelId={novelId}
+                            onViewAllReviews={handleViewAllReviews}
+                            onRateNow={handleRatingClick}
+                        />
                     </div>
 
                     <div className="rd-novel-sidebar">
@@ -1539,6 +1555,13 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                 onClose={() => setIsRatingModalOpen(false)}
                 currentRating={safeUserInteraction.rating || 0}
                 onRatingSuccess={handleRatingSuccess}
+            />
+
+            {/* Reviews Modal */}
+            <ReviewsModal
+                novelId={novelId}
+                isOpen={isReviewsModalOpen}
+                onClose={() => setIsReviewsModalOpen(false)}
             />
         </>
     );
