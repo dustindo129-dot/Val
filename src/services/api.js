@@ -3,7 +3,7 @@ import config from '../config/config';
 import { queryClient } from '../lib/react-query';
 import bunnyUploadService from './bunnyUploadService';
 import { ensureValidToken, refreshToken } from './tokenRefresh';
-import { clearAllAuthData } from '../utils/auth';
+import { clearAllAuthData, getAuthHeaders } from '../utils/auth';
 
 // Helper function to validate JWT token format
 const isValidJWT = (token) => {
@@ -819,6 +819,21 @@ const api = {
     } catch (error) {
       console.error("Error fetching novel reviews:", error);
       return { reviews: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0 } };
+    }
+  },
+
+  // Like/unlike a review
+  likeReview: async (reviewId) => {
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/usernovelinteractions/reviews/${reviewId}/like`,
+        {},
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error liking review:", error);
+      throw error;
     }
   },
 

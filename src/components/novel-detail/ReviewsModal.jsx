@@ -1,14 +1,138 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import DOMPurify from 'dompurify';
+import { useAuth } from '../../context/AuthContext';
+import { getAuthHeaders } from '../../utils/auth';
 
 const ReviewsModal = ({ novelId, isOpen, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   
   // Create portal container
   const [portalContainer, setPortalContainer] = useState(null);
+  
+  // Like state management
+  const [reviewLikes, setReviewLikes] = useState(new Map()); // reviewId -> { isLiked, count, isLoading, isUpdating }
+  
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Rate limiting for likes (similar to comment system)
+  const [likeCooldowns, setLikeCooldowns] = useState(new Map()); // reviewId -> timestamp
+
+  // Like mutation
+  const likeMutation = useMutation({
+    mutationFn: (reviewId) => api.likeReview(reviewId),
+    onMutate: async (reviewId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(['novel-reviews-modal', novelId]);
+      
+      // Snapshot the previous value
+      const previousLikeState = reviewLikes.get(reviewId) || { isLiked: false, count: 0, isLoading: false };
+      
+      // Optimistic update
+      setReviewLikes(prev => {
+        const current = prev.get(reviewId) || { isLiked: false, count: 0, isLoading: false };
+        const newMap = new Map(prev);
+        const willBeLiked = !current.isLiked;
+        newMap.set(reviewId, {
+          isLiked: willBeLiked,
+          count: willBeLiked ? current.count + 1 : current.count - 1,
+          isLoading: true,
+          isUpdating: true
+        });
+        return newMap;
+      });
+
+      // Return context for potential rollback
+      return { previousLikeState };
+    },
+    onSuccess: (data, reviewId) => {
+      // Update with server response (this is the authoritative state)
+      setReviewLikes(prev => {
+        const newMap = new Map(prev);
+        newMap.set(reviewId, {
+          isLiked: data.liked,
+          count: data.likesCount,
+          isLoading: false,
+          isUpdating: false
+        });
+        return newMap;
+      });
+
+      // Remove updating class after animation
+      setTimeout(() => {
+        setReviewLikes(prev => {
+          const current = prev.get(reviewId);
+          if (current) {
+            const newMap = new Map(prev);
+            newMap.set(reviewId, {
+              ...current,
+              isUpdating: false
+            });
+            return newMap;
+          }
+          return prev;
+        });
+      }, 400);
+    },
+    onError: (error, reviewId, context) => {
+      console.error('Error liking review:', error);
+      // Rollback to previous state
+      if (context?.previousLikeState) {
+        setReviewLikes(prev => {
+          const newMap = new Map(prev);
+          newMap.set(reviewId, {
+            ...context.previousLikeState,
+            isLoading: false
+          });
+          return newMap;
+        });
+      }
+    }
+  });
+
+  // Handle like button click (Facebook-style with rate limiting)
+  const handleLike = useCallback(async (reviewId) => {
+    if (!user) {
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
+      return;
+    }
+
+    // Check rate limiting (prevent spam clicking)
+    const now = Date.now();
+    const lastClick = likeCooldowns.get(reviewId);
+    const cooldownPeriod = 1000; // 1 second cooldown
+    
+    if (lastClick && (now - lastClick) < cooldownPeriod) {
+      return;
+    }
+
+    // Prevent multiple rapid clicks
+    const currentState = reviewLikes.get(reviewId);
+    if (currentState?.isLoading) {
+      return;
+    }
+
+    // Set cooldown
+    setLikeCooldowns(prev => {
+      const newMap = new Map(prev);
+      newMap.set(reviewId, now);
+      return newMap;
+    });
+
+    // Clean up old cooldowns (keep map size manageable)
+    setTimeout(() => {
+      setLikeCooldowns(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(reviewId);
+        return newMap;
+      });
+    }, cooldownPeriod * 2);
+
+    likeMutation.mutate(reviewId);
+  }, [user, likeMutation, reviewLikes, likeCooldowns]);
 
   useEffect(() => {
     // Create or get portal container
@@ -81,6 +205,32 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
     enabled: isOpen && !!novelId,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
+
+  // Initialize like states when reviews data is loaded
+  useEffect(() => {
+    if (reviewsData?.reviews) {
+      setReviewLikes(prev => {
+        const newMap = new Map();
+        reviewsData.reviews.forEach(review => {
+          // Check if we have a pending state for this review (from optimistic updates)
+          const existingState = prev.get(review.id);
+          if (existingState?.isLoading) {
+            // Keep the optimistic state if there's a pending request
+            newMap.set(review.id, existingState);
+          } else {
+            // Use server data
+            newMap.set(review.id, {
+              isLiked: review.isLikedByCurrentUser || false,
+              count: review.likesCount || 0,
+              isLoading: false,
+              isUpdating: false
+            });
+          }
+        });
+        return newMap;
+      });
+    }
+  }, [reviewsData]);
 
   // Process review content similar to RatingModal
   const processReviewContent = useCallback((content) => {
@@ -218,6 +368,7 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
                   <div key={review.id} className="review-item">
                     <div className="review-header">
                       <span className="review-user">{review.user.displayName || review.user.username}</span>
+                      
                       <div className="review-rating">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <span key={i} className={`review-star ${i < review.rating ? 'filled' : ''}`}>
@@ -225,11 +376,28 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
                           </span>
                         ))}
                       </div>
-                      <div className="review-date-wrapper">
-                        <span className="review-date">{formatDate(review.updatedAt || review.date)}</span>
-                        {isReviewEdited(review) && (
-                          <span className="review-edited-indicator">(Đã chỉnh sửa)</span>
-                        )}
+                      
+                      <span className="review-date">{formatDate(review.updatedAt || review.date)}</span>
+                      
+                      {isReviewEdited(review) && (
+                        <span className="review-edited-indicator">(Đã chỉnh sửa)</span>
+                      )}
+                      
+                      <div className="review-actions-inline">
+                        <button 
+                          className={`like-button ${(reviewLikes.get(review.id) || {}).isLiked ? 'liked' : ''}`}
+                          onClick={() => handleLike(review.id)}
+                          disabled={(reviewLikes.get(review.id) || {}).isLoading}
+                          title={user ? 'Thích đánh giá này' : 'Vui lòng đăng nhập để thích đánh giá'}
+                        >
+                          <span className="like-icon">
+                            {(reviewLikes.get(review.id) || {}).isLoading ? '⏳' : 
+                             <i className={`fa-solid fa-thumbs-up ${(reviewLikes.get(review.id) || {}).isLiked ? 'liked' : ''}`}></i>}
+                          </span>
+                          <span className={`like-count ${(reviewLikes.get(review.id) || {}).isUpdating ? 'updating' : ''}`}>
+                            {(reviewLikes.get(review.id) || {}).count || 0}
+                          </span>
+                        </button>
                       </div>
                     </div>
                     <div 
@@ -283,3 +451,4 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
 };
 
 export default ReviewsModal;
+
