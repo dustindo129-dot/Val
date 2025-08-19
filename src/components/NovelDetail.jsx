@@ -108,10 +108,15 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
   useEffect(() => {
     const checkContributionHistory = async () => {
       try {
+        // Only get the count to check if history exists (more efficient)
         const response = await axios.get(
-          `${config.backendUrl}/api/novels/${novelId}/contribution-history`
+          `${config.backendUrl}/api/novels/${novelId}/contribution-history`,
+          { params: { page: 1, limit: 1 } } // Only get 1 item to check existence
         );
-        setHasContributionHistory(response.data.contributions && response.data.contributions.length > 0);
+        setHasContributionHistory(
+          response.data.pagination?.totalItems > 0 || 
+          (response.data.contributions && response.data.contributions.length > 0)
+        );
       } catch (error) {
         console.error('Failed to check contribution history:', error);
         setHasContributionHistory(false);

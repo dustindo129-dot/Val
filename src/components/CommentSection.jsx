@@ -983,14 +983,20 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     }
   }, []);
 
-  // Fetch comments (optimized to reduce refetches)
-  const { data: commentsData = [], isLoading: commentsLoading, error: commentsError, refetch } = useQuery({
-    queryKey: ['comments', `${contentType}-${contentId}`, sortOrder],
+  // Fetch comments (optimized with pagination to reduce initial load)
+  const { data: commentsResponse, isLoading: commentsLoading, error: commentsError, refetch } = useQuery({
+    queryKey: ['comments', `${contentType}-${contentId}`, sortOrder, currentPage, hideChapterComments],
     queryFn: async () => {
-      // If we're on a novel detail page, fetch all comments for the novel (including chapter comments)
+      // If we're on a novel detail page, fetch paginated comments for the novel (including chapter comments)
       if (contentType === 'novels') {
+        const params = { 
+          sort: sortOrder, 
+          page: currentPage, 
+          limit: commentsPerPage,
+          hideChapterComments: hideChapterComments.toString()
+        };
         const response = await axios.get(`${config.backendUrl}/api/comments/novel/${contentId}`, {
-          params: { sort: sortOrder }
+          params
         });
         return response.data;
       } else {
@@ -998,10 +1004,21 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         const response = await axios.get(`${config.backendUrl}/api/comments`, {
           params: { contentType, contentId, sort: sortOrder }
         });
-        return response.data;
+        // Wrap in pagination format for consistency
+        return {
+          comments: response.data,
+          pagination: {
+            currentPage: 1,
+            totalPages: 1,
+            totalComments: response.data.length,
+            hasNext: false,
+            hasPrev: false,
+            limit: response.data.length
+          }
+        };
       }
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes - comments don't change frequently 
+    staleTime: 1000 * 60 * 5, // 5 minutes - reduced since we're loading less data per page
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't refetch on component mount if data exists
@@ -1048,25 +1065,22 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       return comment;
     };
 
-    // Sort root comments: pinned comments first, then by date
-    rootComments.sort((a, b) => {
-      // First, check if either comment is pinned
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      
-      // If both are pinned or both are not pinned, sort by date (newest first)
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
+    // Backend now handles pinned comment sorting, so just maintain the server order
+    // No additional sorting needed here since server returns properly sorted comments
     
     rootComments.forEach(comment => sortReplies(comment));
 
     return rootComments;
   }, []);
 
+  // Extract comments and pagination from response
+  const commentsData = commentsResponse?.comments || [];
+  const paginationData = commentsResponse?.pagination || null;
+
   useEffect(() => {
+    // Backend now returns organized comments with replies attached, so no need to organize
     if (commentsData.length > 0) {
-      const organizedComments = organizeCommentsCallback(commentsData);
-      setComments(organizedComments);
+      setComments(commentsData);
     } else {
       setComments(prevComments => {
         if (prevComments.length === 0) {
@@ -1083,7 +1097,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       }
       return new Set();
     });
-  }, [commentsData]); // Remove organizeCommentsCallback dependency since it should be stable
+  }, [commentsData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1121,11 +1135,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       
       // Invalidate React Query cache to force refetch and show new comment
       await queryClient.invalidateQueries({
-        queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+        queryKey: ['comments', `${contentType}-${contentId}`]
       });
       
       // Reset to first page when new comment is added
-      setPageWithoutScroll(1);
+      setCurrentPage(1);
       
       // Clear the form
       if (globalHasRichTextPrivileges && commentEditorRef.current) {
@@ -1147,7 +1161,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     setHideChapterComments(newValue);
     localStorage.setItem(`hideChapterComments_${contentId}`, newValue.toString());
     // Reset to first page when toggling visibility
-    setPageWithoutScroll(1);
+    setCurrentPage(1);
   };
 
   // Handle comment deletion
@@ -1172,7 +1186,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       
       // Invalidate React Query cache to force refetch and show updated data
       await queryClient.invalidateQueries({
-        queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+        queryKey: ['comments', `${contentType}-${contentId}`]
       });
     } catch (err) {
       console.error('Error deleting comment:', err);
@@ -1329,7 +1343,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
       // Invalidate React Query cache to force refetch and show updated data
       await queryClient.invalidateQueries({
-        queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+        queryKey: ['comments', `${contentType}-${contentId}`]
       });
     } catch (err) {
       console.error('Error pinning comment:', err);
@@ -1639,7 +1653,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         
         // Invalidate React Query cache to force refetch and show updated data
         await queryClient.invalidateQueries({
-          queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+          queryKey: ['comments', `${contentType}-${contentId}`]
         });
         
         // Clear the reply form
@@ -1703,7 +1717,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         
         // Invalidate React Query cache to force refetch and show updated data
         await queryClient.invalidateQueries({
-          queryKey: ['comments', `${contentType}-${contentId}`, sortOrder]
+          queryKey: ['comments', `${contentType}-${contentId}`]
         });
         
         // Clear the edit form
@@ -2224,25 +2238,15 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   // Add a function to handle sorting
   const handleSortChange = (newSortOrder) => {
     setSortOrder(newSortOrder);
-    setPageWithoutScroll(1); // Reset to first page when sorting changes
+    setCurrentPage(1); // Reset to first page when sorting changes
     // The query will automatically refetch due to the sortOrder dependency
   };
 
-  // Filter comments based on chapter visibility setting
-  const filteredComments = useMemo(() => {
-    if (contentType === 'novels' && hideChapterComments) {
-      // Only show comments that are not from chapters (i.e., novel-level comments)
-      return comments.filter(comment => comment.contentType !== 'chapters');
-    }
-    return comments;
-  }, [comments, contentType, hideChapterComments]);
-
-  // Pagination calculations using filtered comments
-  const totalComments = filteredComments.length;
-  const totalPages = Math.ceil(totalComments / commentsPerPage);
-  const startIndex = (currentPage - 1) * commentsPerPage;
-  const endIndex = startIndex + commentsPerPage;
-  const currentComments = filteredComments.slice(startIndex, endIndex);
+  // Server-side filtering handles chapter visibility, so no client-side filtering needed
+  // Use server-side pagination data
+  const totalComments = paginationData?.totalComments || comments.length;
+  const totalPages = paginationData?.totalPages || Math.ceil(totalComments / commentsPerPage);
+  const currentComments = comments; // Server already returns the correct filtered and paginated results
 
   // Pagination handlers
   const handlePageChange = (page, shouldScroll = true) => {
@@ -2256,19 +2260,21 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     }
   };
 
-  // Programmatic page change without scrolling
-  const setPageWithoutScroll = (page) => {
-    setCurrentPage(page);
-  };
+  // Update current page based on server pagination
+  useEffect(() => {
+    if (paginationData && paginationData.currentPage !== currentPage) {
+      setCurrentPage(paginationData.currentPage);
+    }
+  }, [paginationData?.currentPage]);
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
+    if (paginationData?.hasPrev) {
       handlePageChange(currentPage - 1);
     }
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
+    if (paginationData?.hasNext) {
       handlePageChange(currentPage + 1);
     }
   };
@@ -2440,7 +2446,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   <button 
                     className="comment-pagination-btn prev-btn"
                     onClick={handlePrevPage}
-                    disabled={currentPage === 1}
+                    disabled={!paginationData?.hasPrev}
                   >
                     ← Trước
                   </button>
@@ -2448,7 +2454,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   <button 
                     className="comment-pagination-btn next-btn"
                     onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
+                    disabled={!paginationData?.hasNext}
                   >
                     Sau →
                   </button>
