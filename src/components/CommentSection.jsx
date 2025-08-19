@@ -1075,7 +1075,6 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   
   // DEBUG: Log what we're receiving from the backend
   const totalRepliesReceived = commentsData.reduce((sum, c) => sum + countNestedReplies(c), 0);
-  console.log(`[DEBUG] Frontend received: ${commentsData.length} root comments with ${totalRepliesReceived} total nested replies (expected 5 replies)`);
   
   // Helper to count nested replies recursively
   function countNestedReplies(comment) {
