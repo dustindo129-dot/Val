@@ -139,21 +139,31 @@ const Contest2025 = () => {
                 <div className="jury-info">
                   <h3 className="jury-name">Rabi</h3>
                   <div className="jury-message">
-                    <div className="jury-message-title">Thông điệp từ Rabi</div>
-                    <p>Nội dung thông điệp sẽ được thêm vào đây...</p>
+                    <div className="jury-message-title">Con đường ngắn nhất để đến trái tim xuất phát từ chính trái tim!</div>
+                    Mình là moderator của Truyện Việt trên website Valvrare Team. Với kinh nghiệm làm nerd 23 năm và đã tiếp xúc với rất nhiều các câu chuyện được trình bày theo nhiều hình thức khác nhau từ phim ảnh, truyện tranh, truyện viết… tôi có tự tin về mắt nhìn và lựa chọn cốt truyện hay của mình.<br/><br/>
+
+                    Đến với cuộc thi này, tôi muốn tìm kiếm một số tác phẩm tốt có tiềm năng phát triển để đăng tải trên website cũng như tìm ra các tác giả tiềm năng có thể gắn bó lâu dài với website của chúng tôi.<br/><br/>
+
+                    Đối với bản thân tôi, một câu chuyện hay là một câu chuyện mà tác giả biết được mình viết nó ra vì mục đích gì. Để kết nối với người đọc thông qua những trải nghiệm cá nhân, để cảnh báo về một vấn đề xã hội, để tạo ra một thế giới nơi trí tưởng tượng được bay nhảy trong một không gian không giới hạn…. Dù bạn viết vì bất kỳ lý do gì, tôi chỉ hy vọng bạn thật sự thích những gì bạn đã viết ra. Hãy để cuộc thi này là bước đệm tạo ra sự tự tin đối với tác phẩm của bạn.<br/><br/>
+
+                    Mong rằng chúng ta sẽ đồng hành cùng nhau.
                   </div>
                 </div>
              </div>
              
              <div className="jury-card">
                                <div className="jury-avatar">
-                  <div className="avatar-placeholder male">T</div>
+                  <img src="https://valvrareteam.b-cdn.net/avatars/1755388276818-IMG-5430.jpeg" alt="Tuân" />
                 </div>
                 <div className="jury-info">
                   <h3 className="jury-name">Tuân</h3>
                   <div className="jury-message">
-                    <div className="jury-message-title">Thông điệp từ Tuân</div>
-                    <p>Nội dung thông điệp sẽ được thêm vào đây...</p>
+                    <div className="jury-message-title">Sáng tác sẽ trở nên đơn giản hơn rất nhiều nếu bạn thực sự hiểu mình muốn gì!</div>
+                    Đây là lời khuyên đầu tiên và quan trọng nhất tôi luôn dành cho những tay viết mới, những người đang loay hoay tìm một chỗ đứng trong cộng đồng nghệ thuật này. Khi nói đến việc hiểu bản thân mình muốn gì khi sáng tác, điều tôi muốn nhấn mạnh chính là khả năng hình dung một cách rõ ràng và cụ thể về những gì bạn mong muốn.<br/><br/>
+
+                    Văn chương, về cơ bản cũng giống như hội họa. Khi bạn vẽ ra một bức tranh, bạn phải tưởng tượng được những bố cục, đường nét và màu sắc cảm xúc của nó sẽ như thế nào. Tương tự như vậy, những gì bên trong tâm trí bạn trở thành bản phác thảo đầu tiên. Vì thế đừng vội vàng, hãy dành một khoảng lặng để kết nối với suy nghĩ của bản thân. Bạn hãy tự hỏi rằng vì sao mình bắt đầu câu chuyện này? Mình mong đợi gì ở sự kết thúc của nó? Và hơn hết, hãy thực tế về mục tiêu của mình, tránh sa đà vào những điều mông lung. Chỉ khi đó bạn sẽ biết được mình cần làm gì và làm nó thế nào.<br/><br/>
+
+                    Với tư cách một giám khảo, tôi sẽ đồng hành cùng các bạn trong con đường sáng tác. Chúc các bạn thành công.
                   </div>
                 </div>
              </div>
