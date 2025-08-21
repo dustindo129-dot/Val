@@ -329,13 +329,9 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
     });
   }, []);
 
-  // Check if a review was edited
+  // Check if a review was edited - now based on server-provided field
   const isReviewEdited = useCallback((review) => {
-    if (!review.createdAt || !review.updatedAt) return false;
-    const created = new Date(review.createdAt).getTime();
-    const updated = new Date(review.updatedAt).getTime();
-    // Consider it edited if the difference is more than 1 minute (to account for server processing time)
-    return Math.abs(updated - created) > 60000;
+    return review.reviewIsEdited === true;
   }, []);
 
   // Handle click on overlay to close modal

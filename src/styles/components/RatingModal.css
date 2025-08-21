@@ -1072,12 +1072,12 @@ body.vt-modal-open {
 }
 
 .reviews-preview-list {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .review-preview-item {
-  margin-bottom: 15px;
-  padding-bottom: 15px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
 
