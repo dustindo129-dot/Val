@@ -10,6 +10,7 @@ import { SEOProvider } from './context/SEOContext';
 import { initGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
+import AvatarAnnouncementStrip from './components/AvatarAnnouncementStrip';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import StructuredData from './components/StructuredData';
@@ -51,6 +52,7 @@ const App = () => {
                   />
                   <Navbar />
                   <SecondaryNavbar />
+                  <AvatarAnnouncementStrip />
                   <main className="main-content">
                     <RouteTracker />
                     <AppRoutes />
