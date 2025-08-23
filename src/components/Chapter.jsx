@@ -340,6 +340,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   
 
   // Extract interaction data from the consolidated endpoint
+  // Ensure interactions data is always available, even for non-authenticated users
   const interactions = chapterData?.interactions || {
     totalLikes: 0,
     userInteraction: {
@@ -347,6 +348,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       bookmarked: false
     }
   };
+  
+  // Ensure totalLikes is always a number, even if backend doesn't provide it
+  if (typeof interactions.totalLikes !== 'number') {
+    interactions.totalLikes = 0;
+  }
 
   // User interaction data is now included in the main query, no separate fetch needed
   const userInteraction = interactions.userInteraction;
@@ -706,14 +712,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // Effect to update interaction stats from chapter data
   useEffect(() => {
-    if (interactions) {
-      setLikeCount(interactions.totalLikes || 0);
-      setViewCount(chapter?.views || 0);
-    } else {
-      // Default to 0 if no interaction data is available
-      setLikeCount(0);
-      setViewCount(chapter?.views || 0);
-    }
+    // Since we now ensure interactions always exists, we can directly use it
+    setLikeCount(interactions.totalLikes || 0);
+    setViewCount(chapter?.views || 0);
   }, [interactions, chapter]);
 
   // Effect to handle chapter view tracking with proper cooldown

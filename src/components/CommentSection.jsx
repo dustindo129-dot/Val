@@ -522,14 +522,14 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
   // Initialize like states from comments
   useEffect(() => {
-    if (comments.length > 0 && user) {
-      const userId = user.id || user._id;
+    if (comments.length > 0) {
+      const userId = user?.id || user?._id;
       
       comments.forEach(comment => {
         // Initialize root comment
         if (!likeStates.has(comment._id)) {
           updateLikeState(comment._id, {
-            isLiked: comment.likes?.includes(userId) || false,
+            isLiked: userId ? (comment.likes?.includes(userId) || false) : false,
             count: comment.likes?.length || 0,
             status: 'idle'
           });
@@ -540,7 +540,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           comment.replies.forEach(reply => {
             if (!likeStates.has(reply._id)) {
               updateLikeState(reply._id, {
-                isLiked: reply.likes?.includes(userId) || false,
+                isLiked: userId ? (reply.likes?.includes(userId) || false) : false,
                 count: reply.likes?.length || 0,
                 status: 'idle'
               });
