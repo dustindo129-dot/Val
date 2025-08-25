@@ -1029,14 +1029,16 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           params
         });
         
-        // Transform response to match expected format
+        // Transform response to match expected format (now returns organized comments with nested replies)
         const transformedResponse = {
           comments: response.data.comments || [],
           pagination: {
             currentPage: response.data.page || currentPage,
             totalPages: Math.ceil((response.data.total || 0) / commentsPerPage),
             totalComments: response.data.total || 0,
-            hasMore: response.data.hasMore || false
+            hasNext: response.data.hasMore || false,
+            hasPrev: (response.data.page || currentPage) > 1,
+            limit: commentsPerPage
           }
         };
         
