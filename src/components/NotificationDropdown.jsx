@@ -51,7 +51,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
 
   // Separate notifications by category
   const generalNotifications = allNotifications.filter(notification => 
-    ['report_feedback', 'comment_reply', 'new_chapter', 'liked_comment'].includes(notification.type)
+    ['report_feedback', 'comment_reply', 'new_chapter', 'liked_comment', 'liked_chapter', 'comment_deleted'].includes(notification.type)
   );
   
   const followedNotifications = allNotifications.filter(notification => 
@@ -622,6 +622,23 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
           return `/truyen/${novelSlug}#comment-${notification.data.commentId}`;
         }
         return '#';
+      case 'liked_chapter':
+        if (notification.data?.chapterId && notification.data?.novelId) {
+          const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}/chuong/${chapterSlug}`;
+        }
+        return '#';
+      case 'comment_deleted':
+        if (notification.data?.chapterId && notification.data?.novelId) {
+          const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}/chuong/${chapterSlug}`;
+        } else if (notification.data?.novelId) {
+          const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
+          return `/truyen/${novelSlug}`;
+        }
+        return '#';
       default:
         return '#';
     }
@@ -735,6 +752,8 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
                         {notification.type === 'follow_comment' && <i className="fa-solid fa-users"></i>}
                         {notification.type === 'liked_comment' && <i className="fa-solid fa-thumbs-up"></i>}
+                        {notification.type === 'liked_chapter' && <i className="fa-solid fa-heart"></i>}
+                        {notification.type === 'comment_deleted' && <i className="fa-solid fa-trash"></i>}
                       </div>
                       <div className="notification-text">
                         <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
@@ -760,6 +779,8 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       {notification.type === 'new_chapter' && <i className="fa-solid fa-book-open"></i>}
                       {notification.type === 'follow_comment' && <i className="fa-solid fa-users"></i>}
                       {notification.type === 'liked_comment' && <i className="fa-solid fa-thumbs-up"></i>}
+                      {notification.type === 'liked_chapter' && <i className="fa-solid fa-heart"></i>}
+                      {notification.type === 'comment_deleted' && <i className="fa-solid fa-trash"></i>}
                     </div>
                     <div className="notification-text">
                       <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
