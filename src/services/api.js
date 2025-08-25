@@ -685,6 +685,31 @@ const api = {
     }
   },
 
+  // OPTIMIZED: Get complete novel data in a single request
+  fetchCompleteNovelData: async (novelId, forceRefresh = false, countView = false) => {
+    try {
+      const params = new URLSearchParams();
+      if (forceRefresh) {
+        params.append('_t', Date.now());
+      }
+      if (!countView) {
+        params.append('skipViewTracking', 'true');
+      }
+      
+      const url = `${config.backendUrl}/api/novels/${novelId}/complete${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await axios.get(url);
+      
+      if (!response.data) {
+        throw new Error('No data received');
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching complete novel data:", error);
+      throw error;
+    }
+  },
+
   // Report related API calls
   submitReport: async (contentType, contentId, reportType, details, contentTitle, novelId) => {
     try {

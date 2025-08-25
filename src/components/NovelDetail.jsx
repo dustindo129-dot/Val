@@ -840,55 +840,11 @@ const NovelDetail = ({ novelId }) => {
     });
   }, []);
 
-  // Prefetch comments (newest) so CommentSection renders instantly when shown
-  useEffect(() => {
-    if (!novelId) return;
-    queryClient.prefetchQuery({
-      queryKey: ['comments', `novels-${novelId}`, 'newest'],
-      queryFn: async () => {
-        const response = await axios.get(`${config.backendUrl}/api/comments/novel/${novelId}`, {
-          params: { sort: 'newest' }
-        });
-        return response.data;
-      },
-      staleTime: 1000 * 60 * 10,
-    });
-  }, [novelId, queryClient]);
+  // REMOVED: Comments prefetching - CommentSection now uses lazy loading when tab is opened
 
-  // Query to get novel stats (likes, ratings, etc.) - optimize to reduce duplicate calls
-  const { data: novelStats } = useQuery({
-    queryKey: ['novelStats', novelId],
-    queryFn: () => api.getNovelStats(novelId),
-    enabled: !!novelId,
-    staleTime: 1000 * 60 * 5, // 5 minutes - stats don't change frequently
-    cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: false, // Don't refetch on component mount if data exists
-    refetchOnReconnect: false, // Don't refetch on reconnect
-    // Enable query deduplication for this specific query
-    queryDeduplication: true
-  });
-  
-  // Query to get user interaction data (likes, ratings) - optimize to reduce duplicate calls  
-  const { data: userInteraction } = useQuery({
-    queryKey: ['userInteraction', user?.username, novelId],
-    queryFn: () => {
-      if (!user?.username || !novelId) return { liked: false, rating: null };
-      return api.getUserNovelInteraction(novelId);
-    },
-    enabled: !!user?.username && !!novelId,
-    staleTime: 1000 * 60 * 10, // 10 minutes - user interactions don't change often
-    cacheTime: 1000 * 60 * 20, // 20 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnReconnect: false, // Don't refetch when reconnecting
-    refetchOnMount: false, // Don't refetch on component mount if data exists
-    // Enable query deduplication for this specific query
-    queryDeduplication: true
-  });
-  
-  // Query for fetching novel data
+  // OPTIMIZED: Single query to get all novel data (novel, stats, interactions, modules, etc.)
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['novel', novelId],
+    queryKey: ['completeNovel', novelId],
     queryFn: async () => {
       // Check if we need to force a fresh fetch from the server
       const needsFreshData = location.state?.from === 'addChapter' && location.state?.shouldRefetch;
@@ -903,11 +859,11 @@ const NovelDetail = ({ novelId }) => {
       // 1. Never viewed before, or
       // 2. Last viewed more than 4 hours ago
       const shouldCountView = !needsFreshData && 
-        !queryClient.getQueryData(['novel', novelId]) && 
+        !queryClient.getQueryData(['completeNovel', novelId]) && 
         (!lastViewed || (now - parseInt(lastViewed, 10)) > fourHours);
       
-      // Use forceRefresh when coming from chapter creation
-      const response = await api.fetchNovelWithModules(novelId, needsFreshData, shouldCountView);
+      // Use the optimized complete endpoint that gets all data in one request
+      const response = await api.fetchCompleteNovelData(novelId, needsFreshData, shouldCountView);
       
       // Update last viewed timestamp if we counted a view
       if (shouldCountView) {
@@ -920,6 +876,10 @@ const NovelDetail = ({ novelId }) => {
     cacheTime: 1000 * 60 * 30, // 30 minutes
     refetchOnWindowFocus: false // Prevent refetch on window focus
   });
+
+  // Extract data from the complete response
+  const novelStats = data?.interactions;
+  const userInteraction = data?.interactions?.userInteraction;
   
   // Check if we're coming from chapter creation and need to refetch
   useEffect(() => {
@@ -1331,6 +1291,7 @@ const NovelDetail = ({ novelId }) => {
             user={user}
             userInteraction={userInteraction}
             novelStats={novelStats}
+            gifts={data.gifts || []}
             handleLike={handleLike}
             handleRating={handleRating}
             handleBookmark={handleBookmark}

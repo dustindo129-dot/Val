@@ -5,27 +5,10 @@ import config from '../../config/config';
 import GiftModal from './GiftModal';
 import '../../styles/components/GiftRow.css';
 
-const GiftRow = ({ novelId, onGiftSuccess }) => {
+const GiftRow = ({ novelId, onGiftSuccess, gifts = [] }) => {
   const { isAuthenticated } = useAuth();
-  const [gifts, setGifts] = useState([]);
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchGifts();
-  }, [novelId]);
-
-  const fetchGifts = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${config.backendUrl}/api/gifts/novel/${novelId}`);
-      setGifts(response.data);
-    } catch (error) {
-      console.error('Error fetching gifts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = false; // No longer loading since gifts are provided by parent
 
   const handleGiftClick = (gift) => {
     if (!isAuthenticated) {
@@ -37,9 +20,7 @@ const GiftRow = ({ novelId, onGiftSuccess }) => {
   };
 
   const handleGiftSuccess = () => {
-    // Refresh gift counts
-    fetchGifts();
-    // Call parent callback to refresh novel data
+    // Call parent callback to refresh novel data (parent will refetch complete data including gifts)
     if (onGiftSuccess) {
       onGiftSuccess();
     }

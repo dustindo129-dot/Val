@@ -365,7 +365,7 @@ const renderStaffName = (staffMember, index, isActive = false) => {
   }
 };
 
-const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar}) => {
+const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, truncateHTML, sidebar, novelStats = {totalLikes: 0, totalRatings: 0, totalBookmarks: 0, averageRating: '0.0'}, gifts = []}) => {
     const queryClient = useQueryClient();
     const {user} = useAuth();
     const {updateBookmarkStatus} = useBookmarks();
@@ -393,16 +393,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
     const novelTitle = novelData?.title;
     const novelId = novelData?._id;  // Get the ID directly
 
-    // Query for novel stats
-    const {data: novelStats = {totalLikes: 0, totalRatings: 0, totalBookmarks: 0, averageRating: '0.0'}} = useQuery({
-        queryKey: ['novel-stats', novelId],
-        queryFn: () => api.getNovelStats(novelId),
-        enabled: !!novelId,
-        staleTime: 1000 * 60 * 3, // 3 minutes - don't refetch if data is less than 3 minutes old
-        cacheTime: 1000 * 60 * 15, // 15 minutes - keep in cache for 15 minutes
-        refetchOnWindowFocus: false, // Don't refetch when window regains focus
-        refetchOnReconnect: false // Don't refetch when reconnecting
-    });
+    // REMOVED: Novel stats are now provided by parent component to avoid duplicate queries
 
     // Query for bookmarked chapter
     const {data: bookmarkData} = useQuery({
@@ -1167,9 +1158,10 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                         <div className="rd-gift-container">
                                             <GiftRow
                                                 novelId={novelId}
+                                                gifts={gifts}
                                                 onGiftSuccess={() => {
                                                     // Refresh novel data when gifts are sent
-                                                    queryClient.invalidateQueries(['novel', novelId]);
+                                                    queryClient.invalidateQueries(['completeNovel', novelId]);
                                                 }}
                                             />
                                         </div>
