@@ -107,7 +107,7 @@ const ModuleRentalModal = ({
       
       // CRITICAL: Invalidate all chapter queries so they refetch with new rental access
       queryClient.invalidateQueries({ queryKey: ['chapter'] });
-      queryClient.invalidateQueries({ queryKey: ['user-chapter-interaction'] });
+      // Note: user-chapter-interaction is now part of the main chapter query, no separate invalidation needed
       
       // Notify SecondaryNavbar to refresh balance display
       window.dispatchEvent(new Event('balanceUpdated'));

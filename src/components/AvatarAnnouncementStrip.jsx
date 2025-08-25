@@ -9,8 +9,6 @@ const AvatarAnnouncementStrip = () => {
     const lastShown = localStorage.getItem('avatarAnnouncementLastShown');
     const today = new Date().toDateString();
     
-    console.log('Avatar announcement check:', { lastShown, today });
-    
     // For testing: always show the announcement (remove this condition later)
     // if (!lastShown || lastShown !== today) {
       setIsVisible(true);

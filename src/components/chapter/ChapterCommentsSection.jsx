@@ -13,7 +13,6 @@ const ChapterCommentsSection = ({
   novel
 }) => {
   const [autoLoadComments, setAutoLoadComments] = useState(false);
-  const [preventScroll, setPreventScroll] = useState(true);
 
   // Prevent automatic scroll to comments section
   useEffect(() => {
@@ -30,23 +29,28 @@ const ChapterCommentsSection = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setAutoLoadComments(true);
-      setPreventScroll(false);
     }, 2000); // 2 second delay after page load
     
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, []); // Run once when component mounts
 
   return (
     <div className="novel-comments-section">
-      {autoLoadComments && (
-        <CommentSection
-          contentId={`${novelId}-${chapterId}`}
-          contentType="chapters"
-          user={user}
-          isAuthenticated={!!user}
-          novel={novel}
-          autoFocusOnMount={false}
-        />
+      <CommentSection
+        contentId={`${novelId}-${chapterId}`}
+        contentType="chapters"
+        user={user}
+        isAuthenticated={!!user}
+        novel={novel}
+        autoFocusOnMount={false}
+        enabled={autoLoadComments}
+      />
+      {!autoLoadComments && (
+        <div className="comments-loading-placeholder">
+          <p>Bình luận sẽ được tải sau 2 giây...</p>
+        </div>
       )}
     </div>
   );

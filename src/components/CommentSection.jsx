@@ -360,7 +360,7 @@ const getAllRoleTags = (globalRole, novelRoles = []) => {
   return tags;
 };
 
-const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null, autoFocusOnMount = false }) => {
+const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null, autoFocusOnMount = false, enabled = true }) => {
 
 
   const [comments, setComments] = useState([]);
@@ -999,8 +999,50 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
           params
         });
         return response.data;
+      } else if (contentType === 'chapters') {
+        // For chapter comments, use the optimized cached endpoint
+        // Extract chapterId and novelId from contentId (format is "novelId-chapterId")
+        let chapterId, novelIdParam;
+        if (contentId.includes('-')) {
+          const parts = contentId.split('-');
+          if (parts.length === 2) {
+            novelIdParam = parts[0];
+            chapterId = parts[1];
+          } else {
+            chapterId = contentId;
+          }
+        } else {
+          chapterId = contentId;
+        }
+        
+        const params = {
+          page: currentPage,
+          limit: commentsPerPage
+        };
+        
+        // Pass novelId as query parameter to avoid database lookup
+        if (novelIdParam) {
+          params.novelId = novelIdParam;
+        }
+        
+        const response = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}/comments`, {
+          params
+        });
+        
+        // Transform response to match expected format
+        const transformedResponse = {
+          comments: response.data.comments || [],
+          pagination: {
+            currentPage: response.data.page || currentPage,
+            totalPages: Math.ceil((response.data.total || 0) / commentsPerPage),
+            totalComments: response.data.total || 0,
+            hasMore: response.data.hasMore || false
+          }
+        };
+        
+        return transformedResponse;
       } else {
-        // For other content types (chapters, feedback), use the regular endpoint with pagination
+        // For other content types (feedback), use the regular endpoint with pagination
         const params = {
           contentType,
           contentId,
@@ -1014,13 +1056,14 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         return response.data; // Backend now returns paginated format with organized replies
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes - reduced since we're loading less data per page
-    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
+    staleTime: 1000 * 60 * 2, // 2 minutes - reduced for chapter comments to match server cache
+    cacheTime: 1000 * 60 * 10, // 10 minutes - reduced for better cache responsiveness
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't refetch on component mount if data exists
     refetchOnReconnect: false, // Don't refetch on reconnect
     refetchInterval: false, // Disable automatic refetching
-    refetchIntervalInBackground: false // Disable background refetching
+    refetchIntervalInBackground: false, // Disable background refetching
+    enabled: enabled // Control whether the query should run
   });
 
   // Memoize the organizeComments function to prevent recreation on every render
@@ -1146,6 +1189,14 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       await queryClient.invalidateQueries({
         queryKey: ['comments', `${contentType}-${contentId}`]
       });
+      
+      // For chapter comments, also invalidate the cached chapter comments
+      if (contentType === 'chapters') {
+        const chapterId = contentId.includes('-') ? contentId.split('-')[1] : contentId;
+        await queryClient.invalidateQueries({
+          queryKey: ['chapter-comments', chapterId]
+        });
+      }
       
       // Reset to first page when new comment is added
       setCurrentPage(1);

@@ -36,8 +36,58 @@ const ChapterNavigationControls = ({
     const chapterListRef = useRef(null);
     const activeChapterRef = useRef(null);
 
-    // Show all chapters in dropdown - ChapterAccessGuard will handle access control
-    const filteredChapters = moduleChapters;
+    // Helper function to check if user has pj_user access (same logic as in Chapter.jsx)
+    const checkPjUserAccess = (pjUserArray, user) => {
+        if (!pjUserArray || !Array.isArray(pjUserArray) || !user) return false;
+        
+        return pjUserArray.some(pjUser => {
+            // Handle case where pjUser is an object (new format)
+            if (typeof pjUser === 'object' && pjUser !== null) {
+                return (
+                    pjUser._id === user.id ||
+                    pjUser._id === user._id ||
+                    pjUser.username === user.username ||
+                    pjUser.displayName === user.displayName ||
+                    pjUser.userNumber === user.userNumber
+                );
+            }
+            // Handle case where pjUser is a primitive value (old format)
+            return (
+                pjUser === user.id ||
+                pjUser === user._id ||
+                pjUser === user.username ||
+                pjUser === user.displayName ||
+                pjUser === user.userNumber
+            );
+        });
+    };
+
+    // Function to determine if a chapter should be visible based on its mode and user permissions
+    const isChapterVisible = (chapterItem) => {
+        // Admin and moderators see all chapters, pj_user sees all chapters for their novels
+        if (user?.role === 'admin' || user?.role === 'moderator' || 
+            (user?.role === 'pj_user' && chapter?.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user))) {
+            return true;
+        }
+        
+        if (!chapterItem.mode || chapterItem.mode === 'published') {
+            return true; // Free content is visible to everyone
+        }
+        
+        if (chapterItem.mode === 'protected' || chapterItem.mode === 'paid') {
+            // Protected and paid content is visible but locked for regular users
+            return true;
+        }
+        
+        if (chapterItem.mode === 'draft') {
+            return false; // Draft is only visible to admin/moderator/assigned pj_user (handled above)
+        }
+        
+        return false; // Not visible for other modes
+    };
+
+    // Filter chapters based on user permissions - hide draft chapters from unauthorized users
+    const filteredChapters = moduleChapters ? moduleChapters.filter(isChapterVisible) : [];
 
     // Auto-scroll to current chapter when dropdown opens
     useEffect(() => {

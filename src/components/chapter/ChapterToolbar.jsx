@@ -12,22 +12,16 @@ import {
 const ChapterToolbar = ({
   chapter,
   novel,
-  staffUsersData = {},
   viewCount,
   wordCount,
   formatDate
 }) => {
   // Helper function to resolve staff member display name
+  // Staff names are now pre-populated by populateStaffNames in the backend
   const resolveStaffDisplayName = (staffValue) => {
     if (!staffValue) return null;
     
-    // First try to find in staffUsersData lookup
-    const staffUser = staffUsersData[staffValue];
-    if (staffUser) {
-      return staffUser.displayName || staffUser.userNumber || staffUser.username;
-    }
-    
-    // Fallback to the original value if not found in lookup
+    // Staff value is already the display name thanks to populateStaffNames
     return staffValue;
   };
 

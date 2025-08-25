@@ -361,42 +361,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const moduleData = chapter?.module || null;
   const moduleLoading = false; // No loading since it's included in main chapter query
 
-  // Query for staff user data to resolve userNumbers to displayNames
-  const { data: staffUsersData } = useQuery({
-    queryKey: ['staff-users', chapter?.translator, chapter?.editor, chapter?.proofreader],
-    queryFn: async () => {
-      if (!chapter) return {};
-      
-      // Collect all staff userNumbers/IDs that need to be resolved
-      const staffIds = [];
-      if (chapter.translator) staffIds.push(chapter.translator);
-      if (chapter.editor) staffIds.push(chapter.editor);
-      if (chapter.proofreader) staffIds.push(chapter.proofreader);
-      
-      if (staffIds.length === 0) return {};
-      
-      try {
-        const res = await axios.post(`${config.backendUrl}/api/users/by-ids`, {
-          ids: staffIds
-        });
-        
-        // Create a lookup map for easy access
-        const staffLookup = {};
-        res.data.users.forEach(user => {
-          // Map by both userNumber and _id for flexibility
-          if (user.userNumber) staffLookup[user.userNumber] = user;
-          if (user._id) staffLookup[user._id] = user;
-        });
-        
-        return staffLookup;
-      } catch (error) {
-        console.error('Error fetching staff users:', error);
-        return {};
-      }
-    },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    enabled: !!(chapter?.translator || chapter?.editor || chapter?.proofreader)
-  });
+  // Staff data is now included in the main chapter query via populateStaffNames
+  // No separate query needed - this eliminates a duplicate database call
 
   // Helper function to check if user has pj_user access (handles both strings and objects)
   const checkPjUserAccess = useCallback((pjUserArray, user) => {
@@ -817,6 +783,52 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         });
     }
   }, [chapter, isEditing]);
+
+  // Real-time SSE listener for chapter like updates
+  useEffect(() => {
+    if (!chapterId) return;
+
+    const handleChapterLikeUpdate = (data) => {
+      // Only update if this is for the current chapter
+      if (data.chapterId === chapterId) {
+        // Update like count
+        setLikeCount(data.likeCount);
+        
+        // Update user's like status if they were the one who liked
+        if (user && data.likedBy === user._id) {
+          setIsLiked(data.isLiked);
+        }
+
+        // Update cache to keep it in sync
+        queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            interactions: {
+              ...oldData.interactions,
+              totalLikes: data.likeCount,
+              userInteraction: {
+                ...oldData.interactions.userInteraction,
+                liked: user && data.likedBy === user._id ? data.isLiked : oldData.interactions.userInteraction?.liked
+              }
+            }
+          };
+        });
+      }
+    };
+
+    // Dynamically import and set up SSE listener for chapter likes
+    import('../services/sseService').then(({ default: sseService }) => {
+      sseService.addEventListener('chapter_like_update', handleChapterLikeUpdate);
+    });
+
+    return () => {
+      // Clean up SSE listener
+      import('../services/sseService').then(({ default: sseService }) => {
+        sseService.removeEventListener('chapter_like_update', handleChapterLikeUpdate);
+      });
+    };
+  }, [chapterId, user, queryClient]);
 
   // Effect to handle edit mode initialization
   useEffect(() => {
@@ -1244,24 +1256,51 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   };
 
   /**
-   * Handles liking/unliking a chapter
+   * Handles liking/unliking a chapter (Facebook-style with metadata and real-time updates)
    */
   const handleLike = async () => {
     if (!user) {
-      setShowLoginModal(true);
+      alert('Vui lòng đăng nhập để thích chương');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
+
+    // Check cooldown to prevent spam clicking
+    const currentTime = Date.now();
+    if (currentTime - lastLikeTime < LIKE_COOLDOWN) {
+      return;
+    }
+    setLastLikeTime(currentTime);
+
+    // Optimistic UI update
+    const previousLiked = isLiked;
+    const previousCount = likeCount;
+    
+    setIsLiked(!isLiked);
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
 
     try {
       const headers = getAuthHeaders();
       if (!headers.Authorization) {
-        setShowLoginModal(true);
+        alert('Vui lòng đăng nhập để thích chương');
+        window.dispatchEvent(new CustomEvent('openLoginModal'));
         return;
       }
       
+      // Generate device ID for tracking (simple approach)
+      let deviceId = localStorage.getItem('deviceId');
+      if (!deviceId) {
+        deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('deviceId', deviceId);
+      }
+
       const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/like`,
-        { chapterId },
+        { 
+          chapterId,
+          timestamp: new Date().toISOString(),
+          deviceId: deviceId
+        },
         {
           headers: {
             'Authorization': `Bearer ${getValidToken()}`
@@ -1269,11 +1308,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         }
       );
 
-      // Update the user interaction cache as well
-      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
-        ...(old || {}),
-        liked: response.data.liked
-      }));
+      // Update the user interaction in the main chapter cache
+      // No separate user-chapter-interaction query needed since it's included in the main query
 
       // Update the local cache with the new like status
       queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
@@ -1290,11 +1326,21 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
           }
         };
       });
+
+      // Update state with server response to ensure consistency
+      setIsLiked(response.data.liked);
+      setLikeCount(response.data.totalLikes);
+
     } catch (err) {
       console.error('Failed to like/unlike chapter:', err);
+      
       // Revert optimistic update on error
       setIsLiked(previousLiked);
-      setLikeCount(likeCount);
+      setLikeCount(previousCount);
+      
+      // Show user-friendly error message
+      alert('Có lỗi xảy ra khi thích chương. Vui lòng thử lại.');
+      
       // Refetch to ensure consistency
       queryClient.invalidateQueries(['chapter-optimized', chapterId, user?.id]);
     }
@@ -1341,19 +1387,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         };
       });
       
-      // Update user interaction cache as well
-      queryClient.setQueryData(['user-chapter-interaction', chapterId, user?.id], old => ({
-        ...(old || {}),
-        bookmarked: response.data.bookmarked
-      }));
+      // Update user interaction in the main chapter cache
+      // No separate user-chapter-interaction query needed since it's included in the main query
       
       // Also invalidate the bookmarked chapter query
       queryClient.invalidateQueries({
         queryKey: ['bookmarked-chapter', novelId, user?.id]
       });
-      
-      // Invalidate user interaction query
-      queryClient.invalidateQueries(['user-chapter-interaction', chapterId, user?.id]);
     } catch (err) {
       console.error('Không thể đánh dấu/bỏ đánh dấu chương:', err);
       // Revert optimistic update on error
@@ -1533,7 +1573,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       <ChapterToolbar
         chapter={chapter}
         novel={novel}
-        staffUsersData={staffUsersData || {}}
         viewCount={viewCount}
         wordCount={wordCount}
         formatDate={formatDate}
