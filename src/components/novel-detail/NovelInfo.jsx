@@ -1108,6 +1108,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
     const handleFollowToggle = () => {
         if (!user?.username) {
             alert('Vui lòng đăng nhập để theo dõi truyện');
+            window.dispatchEvent(new CustomEvent('openLoginModal'));
             return;
         }
 
@@ -1151,6 +1152,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
         // Use username presence instead of isAuthenticated flag
         if (!user?.username) {
             alert('Vui lòng đăng nhập để thích truyện');
+            window.dispatchEvent(new CustomEvent('openLoginModal'));
             return;
         }
 
@@ -1184,6 +1186,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
         // Use username presence instead of isAuthenticated flag
         if (!user?.username) {
             alert('Vui lòng đăng nhập để đánh dấu truyện');
+            window.dispatchEvent(new CustomEvent('openLoginModal'));
             return;
         }
 
