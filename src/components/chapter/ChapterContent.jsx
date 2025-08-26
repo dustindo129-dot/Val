@@ -730,13 +730,67 @@ const ChapterContent = React.memo(({
             setEditedChapterBalance(chapter.chapterBalance || 0);
         }
         
-        // Set default staff values when entering edit mode
+        // Set staff values when entering edit mode - prioritize existing chapter staff over novel defaults
         if (isEditing && novelData?.active) {
             const {active} = novelData;
             
-            // Set default translator if not already set
+            // Helper function to find matching staff value in novel's active staff
+            const findMatchingStaffValue = (chapterStaff, activeStaffArray) => {
+                if (!chapterStaff || !activeStaffArray?.length) return null;
+                
+                const chapterStaffId = typeof chapterStaff === 'object' ? 
+                    (chapterStaff._id || chapterStaff.userNumber || chapterStaff) : 
+                    chapterStaff;
+                
+                // Find matching staff member in active array
+                const matchingStaff = activeStaffArray.find(staff => {
+                    if (typeof staff === 'object') {
+                        const staffId = staff._id;
+                        const staffUserNumber = staff.userNumber;
+                        const staffDisplayName = staff.displayName;
+                        const staffUsername = staff.username;
+                        
+                        // Check all possible matching fields
+                        return chapterStaffId === staffId || 
+                               chapterStaffId === staffUserNumber || 
+                               chapterStaffId === staffDisplayName ||
+                               chapterStaffId === staffUsername ||
+                               chapterStaffId.toString() === staffId?.toString() ||
+                               chapterStaffId.toString() === staffUserNumber?.toString() ||
+                               chapterStaffId.toString() === staffDisplayName?.toString() ||
+                               chapterStaffId.toString() === staffUsername?.toString();
+                    } else {
+                        // Handle primitive values
+                        return chapterStaffId === staff || chapterStaffId.toString() === staff?.toString();
+                    }
+                });
+                
+                if (matchingStaff) {
+                    const value = typeof matchingStaff === 'object' ? 
+                        (matchingStaff.userNumber || matchingStaff._id) : 
+                        matchingStaff;
+                    return value.toString();
+                }
+                
+                return null;
+            };
+            
+            // Set translator - first check chapter's existing value, then novel defaults
             if (!editedTranslator && setEditedTranslator) {
-                if (!active.translator?.length && novelData.author) {
+                if (chapter.translator) {
+                    // Try to find matching value in active staff
+                    const matchingValue = findMatchingStaffValue(chapter.translator, active.translator);
+                    if (matchingValue) {
+                        const stringValue = matchingValue.toString();
+                        setEditedTranslator(stringValue);
+                    } else {
+                        // Use raw chapter value if no match found
+                        const translatorValue = typeof chapter.translator === 'object' ? 
+                            (chapter.translator.userNumber || chapter.translator._id) : 
+                            chapter.translator;
+                        setEditedTranslator(translatorValue);
+                    }
+                } else if (!active.translator?.length && novelData.author) {
                     // Vietnamese novel - use author as default
                     const authorValue = typeof novelData.author === 'object' ? 
                         (novelData.author.userNumber || novelData.author._id) : 
@@ -752,25 +806,55 @@ const ChapterContent = React.memo(({
                 }
             }
             
-            // Set default editor if not already set
-            if (!editedEditor && setEditedEditor && active.editor?.length > 0) {
-                const firstEditor = active.editor[0];
-                const editorValue = typeof firstEditor === 'object' ? 
-                    (firstEditor.userNumber || firstEditor._id) : 
-                    firstEditor;
-                setEditedEditor(editorValue);
+            // Set editor - first check chapter's existing value, then novel defaults
+            if (!editedEditor && setEditedEditor) {
+                if (chapter.editor) {
+                    // Try to find matching value in active staff
+                    const matchingValue = findMatchingStaffValue(chapter.editor, active.editor);
+                    if (matchingValue) {
+                        setEditedEditor(matchingValue);
+                    } else {
+                        // Use raw chapter value if no match found
+                        const editorValue = typeof chapter.editor === 'object' ? 
+                            (chapter.editor.userNumber || chapter.editor._id) : 
+                            chapter.editor;
+                        setEditedEditor(editorValue);
+                    }
+                } else if (active.editor?.length > 0) {
+                    // Use novel's default editor
+                    const firstEditor = active.editor[0];
+                    const editorValue = typeof firstEditor === 'object' ? 
+                        (firstEditor.userNumber || firstEditor._id) : 
+                        firstEditor;
+                    setEditedEditor(editorValue);
+                }
             }
             
-            // Set default proofreader if not already set
-            if (!editedProofreader && setEditedProofreader && active.proofreader?.length > 0) {
-                const firstProofreader = active.proofreader[0];
-                const proofreaderValue = typeof firstProofreader === 'object' ? 
-                    (firstProofreader.userNumber || firstProofreader._id) : 
-                    firstProofreader;
-                setEditedProofreader(proofreaderValue);
+            // Set proofreader - first check chapter's existing value, then novel defaults
+            if (!editedProofreader && setEditedProofreader) {
+                if (chapter.proofreader) {
+                    // Try to find matching value in active staff
+                    const matchingValue = findMatchingStaffValue(chapter.proofreader, active.proofreader);
+                    if (matchingValue) {
+                        setEditedProofreader(matchingValue);
+                    } else {
+                        // Use raw chapter value if no match found
+                        const proofreaderValue = typeof chapter.proofreader === 'object' ? 
+                            (chapter.proofreader.userNumber || chapter.proofreader._id) : 
+                            chapter.proofreader;
+                        setEditedProofreader(proofreaderValue);
+                    }
+                } else if (active.proofreader?.length > 0) {
+                    // Use novel's default proofreader
+                    const firstProofreader = active.proofreader[0];
+                    const proofreaderValue = typeof firstProofreader === 'object' ? 
+                        (firstProofreader.userNumber || firstProofreader._id) : 
+                        firstProofreader;
+                    setEditedProofreader(proofreaderValue);
+                }
             }
         }
-    }, [isEditing, chapter, editedTitle, setEditedTitle, novelData, editedTranslator, setEditedTranslator, editedEditor, setEditedEditor, editedProofreader, setEditedProofreader]);
+    }, [isEditing, chapter, novelData]);
 
     // Update editedContent with mode and balance
     useEffect(() => {
@@ -1975,7 +2059,7 @@ const ChapterContent = React.memo(({
                                         >
                                             <option value="">Không có</option>
                                             {novelData?.active?.translator?.map((staff, index) => {
-                                                const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                                const staffValue = (typeof staff === 'object' ? (staff.userNumber || staff._id) : staff).toString();
                                                 const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
                                                 return (
                                                     <option key={`translator-${index}`} value={staffValue}>

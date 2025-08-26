@@ -1161,12 +1161,16 @@ const ChapterDashboard = () => {
                     setSaving(false);
                 });
             } else {
-                // For new chapter, navigate back without aggressive refetch state
+                // For new chapter, manually invalidate cache and navigate back
+                // This ensures the novel page shows the new chapter immediately
+                queryClient.invalidateQueries(['novel', novelId]);
+                
+                // Give a shorter delay to allow the success message to be seen
                 setTimeout(() => {
                     navigate(generateNovelUrl({_id: novelId, title: novel?.novel?.title || ''}), {
                         replace: true
                     });
-                }, 1500);
+                }, 800); // Reduced timeout since we manually invalidated cache
             }
         } catch (err) {
             console.error('Error details:', err);

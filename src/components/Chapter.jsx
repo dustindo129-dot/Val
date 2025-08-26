@@ -576,23 +576,60 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     if (!staffValue) return '';
     
     // If it's an ObjectId (24 hex characters), reset to empty to avoid mismatch
-    // The dropdown options are display names, so ObjectIds won't match
     if (/^[0-9a-fA-F]{24}$/.test(staffValue)) {
       return ''; // Show "Không có" and let user re-select
     }
     
-    // If it's already a display name, return as is
-    return staffValue;
-  };
-
-  // Initialize staff state when entering edit mode (after chapterData is available)
-  useEffect(() => {
-    if (isEditing && chapter) {
-      setEditedTranslator(normalizeStaffValue(chapter.translator));
-      setEditedEditor(normalizeStaffValue(chapter.editor));
-      setEditedProofreader(normalizeStaffValue(chapter.proofreader));
+    // If it's a displayName, try to find matching userNumber/ID from novel's active staff
+    if (chapterData?.novel) {
+      const novelData = chapterData.novel;
+      
+      // Check translator
+      const matchingTranslator = novelData.active?.translator?.find(staff => {
+        if (typeof staff === 'object') {
+          return staff.displayName === staffValue || 
+                 staff.username === staffValue || 
+                 staff.userNumber === staffValue ||
+                 staff._id === staffValue;
+        }
+        return staff === staffValue;
+      });
+      if (matchingTranslator && typeof matchingTranslator === 'object') {
+        return (matchingTranslator.userNumber || matchingTranslator._id).toString();
+      }
+      
+      // Check editor
+      const matchingEditor = novelData.active?.editor?.find(staff => {
+        if (typeof staff === 'object') {
+          return staff.displayName === staffValue || 
+                 staff.username === staffValue || 
+                 staff.userNumber === staffValue ||
+                 staff._id === staffValue;
+        }
+        return staff === staffValue;
+      });
+      if (matchingEditor && typeof matchingEditor === 'object') {
+        return (matchingEditor.userNumber || matchingEditor._id).toString();
+      }
+      
+      // Check proofreader
+      const matchingProofreader = novelData.active?.proofreader?.find(staff => {
+        if (typeof staff === 'object') {
+          return staff.displayName === staffValue || 
+                 staff.username === staffValue || 
+                 staff.userNumber === staffValue ||
+                 staff._id === staffValue;
+        }
+        return staff === staffValue;
+      });
+      if (matchingProofreader && typeof matchingProofreader === 'object') {
+        return (matchingProofreader.userNumber || matchingProofreader._id).toString();
+      }
     }
-  }, [isEditing, chapter]);
+    
+    // If no match found or it's already an ID, return as is (could be userNumber)
+    return staffValue.toString();
+  };
 
   // Reset navigation state and edited content when chapter changes
   useEffect(() => {
