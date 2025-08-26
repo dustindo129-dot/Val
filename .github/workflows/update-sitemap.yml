@@ -6,16 +6,19 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # needed for pushing back to the same repo
+  contents: write         # push branch with changes
+  pull-requests: write    # open PR
 
 jobs:
   update-sitemap:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0           # safer for pull --rebase later
+          token: ${{ github.token }}
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -43,22 +46,38 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit updated sitemap
+      - name: Commit changes to a branch
         if: steps.verify-changed-files.outputs.changed == 'true'
         run: |
+          BRANCH="bot/sitemap-${GITHUB_RUN_ID}"
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
+          git switch -c "$BRANCH"
           git add public/sitemap.xml
           git commit -m "🤖 Auto-update sitemap - $(date -u +'%Y-%m-%d %H:%M UTC')"
-          git pull --rebase origin master
-          git push
+          git push origin "$BRANCH"
+
+      - name: Create PR
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          title: "🤖 Auto-update sitemap"
+          body: |
+            Automated sitemap update.
+            - Run: ${{ github.run_id }}
+            - Trigger: ${{ github.event_name }}
+          branch: "bot/sitemap-${{ github.run_id }}"
+          base: master
+          labels: |
+            automated
+            sitemap
+          draft: false
 
       - name: Log completion
         run: |
           if [ "${{ steps.verify-changed-files.outputs.changed }}" == "true" ]; then
-            echo "✅ Sitemap updated and committed successfully!"
-            echo "ℹ️ Sitemap available at: https://valvrareteam.net/sitemap.xml"
-            echo "📝 Note: Submit sitemap manually to Google Search Console and Bing Webmaster Tools"
+            echo "✅ Changes were committed to a branch and a PR was opened (see PRs tab)."
           else
             echo "ℹ️ No changes detected in sitemap"
           fi
