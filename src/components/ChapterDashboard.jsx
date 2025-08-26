@@ -1059,15 +1059,16 @@ const ChapterDashboard = () => {
 
             // Simplified cache invalidation - avoid overlapping operations
             if (isEditMode) {
-                // For edit mode, just invalidate the specific novel query
+                // For edit mode, invalidate both query keys to ensure consistency
+                queryClient.invalidateQueries({queryKey: ['completeNovel', novelId]});
                 queryClient.invalidateQueries({queryKey: ['novel', novelId]});
             } else {
-                // For new chapter, invalidate multiple cache keys to ensure fresh data
+                // For new chapter, invalidate the correct query keys
                 await Promise.all([
+                    queryClient.invalidateQueries({queryKey: ['completeNovel', novelId]}),
+                    queryClient.invalidateQueries({queryKey: ['completeNovel', resolvedNovelId || novelId]}),
                     queryClient.invalidateQueries({queryKey: ['novel', novelId]}),
-                    queryClient.invalidateQueries({queryKey: ['novel', resolvedNovelId || novelId]}),
-                    queryClient.invalidateQueries({queryKey: ['modules', novelId]}),
-                    queryClient.invalidateQueries({queryKey: ['modules', resolvedNovelId || novelId]})
+                    queryClient.invalidateQueries({queryKey: ['novel', resolvedNovelId || novelId]})
                 ]);
             }
 
@@ -1163,6 +1164,7 @@ const ChapterDashboard = () => {
             } else {
                 // For new chapter, manually invalidate cache and navigate back
                 // This ensures the novel page shows the new chapter immediately
+                queryClient.invalidateQueries(['completeNovel', novelId]);
                 queryClient.invalidateQueries(['novel', novelId]);
                 
                 // Give a shorter delay to allow the success message to be seen

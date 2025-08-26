@@ -277,34 +277,21 @@ const RatingModal = ({ novelId, isOpen, onClose, currentRating = 0, onRatingSucc
         queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
       }
 
+      // On error, refetch to ensure consistency
+      queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
+
       setError('Không thể cập nhật đánh giá. Vui lòng thử lại.');
     },
-    onSuccess: (response) => {
-      // Update with actual server data
-      queryClient.setQueryData(['novel-stats', novelId], old => ({
-        ...old,
-        totalRatings: response.ratingsCount || old?.totalRatings || 0,
-        averageRating: response.averageRating
-      }));
+        onSuccess: async (response) => {
+      // Force immediate refetch to ensure rating updates instantly
+      await queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
 
-      queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
-        ...old,
-        rating: response.rating,
-        review: response.review
-      }));
-
-      // Invalidate queries to ensure consistency and fetch fresh data
-      queryClient.invalidateQueries({
-        queryKey: ['novel-stats', novelId],
-        exact: true
-      });
-      
-      // Invalidate reviews preview and modal queries to refresh them
+      // Also invalidate review-related queries to ensure fresh reviews
       queryClient.invalidateQueries({
         queryKey: ['novel-reviews-preview', novelId],
         exact: true
       });
-      
+
       queryClient.invalidateQueries({
         queryKey: ['novel-reviews-modal', novelId],
         exact: false

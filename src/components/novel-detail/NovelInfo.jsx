@@ -664,6 +664,12 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
         bookmarked: userInteraction?.bookmarked || false,
         followed: userInteraction?.followed || false
     };
+    
+    // Determine interaction states early (needed for mutation dependencies)
+    const isFollowed = safeUserInteraction.followed || false;
+    const isLiked = safeUserInteraction.liked || false;
+    
+
 
     // Check if we have a nested novel object
     const novelData = novel?.novel || novel;
@@ -792,74 +798,13 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                     }
                     return prev;
                 });
-            }, 3000); // 3 seconds of protection against race conditions
+            }, 3000);
 
-            // Update bookmark count with server-provided count (if available)
-            if (typeof response.totalBookmarks === 'number') {
-                queryClient.setQueryData(['novel-stats', novelId], old => ({
-                    ...old,
-                    totalBookmarks: response.totalBookmarks
-                }));
-
-                // Also update the complete novel data
-                queryClient.setQueryData(['completeNovel', novelId], old => {
-                    if (!old?.interactions) return old;
-                    return {
-                        ...old,
-                        interactions: {
-                            ...old.interactions,
-                            totalBookmarks: response.totalBookmarks
-                        }
-                    };
-                });
-            }
-
-            // Update the novel data in the cache
-            queryClient.setQueryData(['novel', novelId], (oldData) => {
-                if (!oldData) return oldData;
-
-                // Create a deep copy to avoid mutating the cache directly
-                const newData = JSON.parse(JSON.stringify(oldData));
-
-                // Update the isBookmarked status based on the response
-                if (newData.novel) {
-                    newData.novel.isBookmarked = response.bookmarked;
-                } else if (newData._id) {
-                    newData.isBookmarked = response.bookmarked;
-                }
-
-                return newData;
-            });
-
-            // Update the userInteraction data in the cache
-            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
-                ...old,
-                bookmarked: response.bookmarked
-            }));
-
-            // CRITICAL: Update the complete novel data userInteraction as well
-            queryClient.setQueryData(['completeNovel', novelId], old => {
-                if (!old?.interactions?.userInteraction) return old;
-                return {
-                    ...old,
-                    interactions: {
-                        ...old.interactions,
-                        userInteraction: {
-                            ...old.interactions.userInteraction,
-                            bookmarked: response.bookmarked
-                        }
-                    }
-                };
-            });
+            // Force immediate refetch to ensure bookmark status updates instantly
+            await queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
 
             // Update the bookmark context
             updateBookmarkStatus(novelId, response.bookmarked);
-
-            // Invalidate queries to ensure fresh data on next fetch
-            queryClient.invalidateQueries({
-                queryKey: ['novel', novelId],
-                refetchType: 'none'
-            });
 
             // Also invalidate the user's bookmarks list
             if (user?.username) {
@@ -868,15 +813,6 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                     refetchType: 'none'
                 });
             }
-
-            // Minimal cache invalidation to prevent race conditions
-            // Only invalidate for future requests, don't force immediate refetches
-            setTimeout(() => {
-                queryClient.invalidateQueries({
-                    queryKey: ['novel-stats', novelId],
-                    refetchType: 'none' // Don't force refetch to avoid race conditions
-                });
-            }, 1000); // Longer delay to allow frontend state to stabilize
 
             // Remove from error recovery if it was there
             await bookmarkSystemRef.current.errorRecovery.removePendingAction(novelId);
@@ -909,25 +845,10 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                         }
                         return prev;
                     });
-                }, 5000); // Clear error after 5 seconds
+                }, 5000);
 
-                // Revert bookmark count optimistic update
-                queryClient.setQueryData(['novel-stats', novelId], old => ({
-                    ...old,
-                    totalBookmarks: originalBookmarkStatus ? ((old?.totalBookmarks || 0) + 1) : ((old?.totalBookmarks || 0) - 1)
-                }));
-
-                // Also revert the complete novel data optimistic update
-                queryClient.setQueryData(['completeNovel', novelId], old => {
-                    if (!old?.interactions) return old;
-                    return {
-                        ...old,
-                        interactions: {
-                            ...old.interactions,
-                            totalBookmarks: originalBookmarkStatus ? ((old.interactions.totalBookmarks || 0) + 1) : ((old.interactions.totalBookmarks || 0) - 1)
-                        }
-                    };
-                });
+                // On error, refetch to ensure consistency
+                queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
             }
 
             throw error;
@@ -1013,7 +934,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
             const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
 
             // Optimistically update the like status and count
-            const willBeLiked = !(previousInteraction?.liked);
+            const willBeLiked = !isLiked;
 
             queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
                 ...old,
@@ -1036,76 +957,74 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
             if (context?.previousInteraction) {
                 queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
             }
+            // On error, refetch to ensure consistency
+            queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
         },
-        onSuccess: (response) => {
-            // Update both caches with the actual response data
-            queryClient.setQueryData(['novel-stats', novelId], old => ({
-                ...old,
-                totalLikes: response.totalLikes
-            }));
-
-            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
-                ...old,
-                liked: response.liked
-            }));
-
-            // Invalidate related queries to ensure consistency
-            queryClient.invalidateQueries({
-                queryKey: ['novel', novelId],
-                refetchType: 'none'
-            });
-
-            queryClient.invalidateQueries({
-                queryKey: ['novel-stats', novelId],
-                refetchType: 'none'
-            });
+        onSuccess: async (response) => {
+            // Force immediate refetch to ensure like status updates instantly
+            await queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
         }
     });
 
-    // Follow mutation
+    // Follow mutation with optimistic updates
     const followMutation = useMutation({
-        mutationFn: () => api.followNovel(user.username, novelId),
+        mutationFn: async () => {
+            const result = await api.followNovel(user.username, novelId);
+            return result;
+        },
         onMutate: async () => {
-            // Cancel any outgoing refetches
-            await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: ['completeNovel', novelId] });
 
             // Snapshot the previous value
-            const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
+            const previousData = queryClient.getQueryData(['completeNovel', novelId]);
 
-            // Optimistically update the follow status
-            const willBeFollowed = !(previousInteraction?.followed);
-
-            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
-                ...old,
-                followed: willBeFollowed
-            }));
+            // Optimistically update to the new value
+            const newFollowedState = !isFollowed;
+            
+            queryClient.setQueryData(['completeNovel', novelId], old => {
+                if (!old?.interactions?.userInteraction) return old;
+                return {
+                    ...old,
+                    interactions: {
+                        ...old.interactions,
+                        userInteraction: {
+                            ...old.interactions.userInteraction,
+                            followed: newFollowedState
+                        }
+                    }
+                };
+            });
 
             // Return a context object with the snapshotted value
-            return {previousInteraction};
+            return { previousData };
         },
         onError: (err, variables, context) => {
-            // If the mutation fails, use the context we saved to roll back
-            if (context?.previousInteraction) {
-                queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousData) {
+                queryClient.setQueryData(['completeNovel', novelId], context.previousData);
             }
         },
-        onSuccess: (response) => {
-            // Update the cache with the actual response data
-            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
-                ...old,
-                followed: response.isFollowed
-            }));
-
-            // Invalidate related queries to ensure consistency
-            queryClient.invalidateQueries({
-                queryKey: ['userInteraction', user?.username, novelId],
-                refetchType: 'none'
+        onSuccess: async (response, variables, context) => {
+            // Update the cache with the actual server response to ensure consistency
+            queryClient.setQueryData(['completeNovel', novelId], old => {
+                if (!old?.interactions?.userInteraction) return old;
+                return {
+                    ...old,
+                    interactions: {
+                        ...old.interactions,
+                        userInteraction: {
+                            ...old.interactions.userInteraction,
+                            followed: response.isFollowed
+                        }
+                    }
+                };
             });
         }
     });
 
-    // Handle follow toggling
-    const handleFollowToggle = () => {
+    // Handle follow toggling with debouncing and optimistic updates
+    const handleFollowToggle = useCallback(() => {
         if (!user?.username) {
             alert('Vui lòng đăng nhập để theo dõi truyện');
             window.dispatchEvent(new CustomEvent('openLoginModal'));
@@ -1127,8 +1046,13 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
             return;
         }
 
+        // Prevent rapid clicking - check if already processing
+        if (followMutation.isPending) {
+            return;
+        }
+
         followMutation.mutate();
-    };
+    }, [user?.username, novelId, followMutation, isFollowed]);
 
     // Handle module navigation
     const handleModuleNavToggle = () => {
@@ -1504,10 +1428,6 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
 
     // Determine if the novel is bookmarked - use new bookmark system state
     const isBookmarked = bookmarkState.isBookmarked;
-    // Determine if the novel is liked
-    const isLiked = safeUserInteraction.liked || false;
-    // Determine if the novel is followed
-    const isFollowed = safeUserInteraction.followed || false;
     // Current user rating
     const currentRating = safeUserInteraction.rating || 0;
     // Novel type banner
@@ -1524,9 +1444,9 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                         <h1 className="rd-novel-title">
                             {novelTitle || 'Đang tải...'}
                             <button
-                                className={`rd-follow-btn ${isFollowed ? 'following' : ''}`}
+                                className={`rd-follow-btn ${isFollowed ? 'following' : ''} ${followMutation.isPending ? 'pending' : ''}`}
                                 onClick={handleFollowToggle}
-                                title={isFollowed ? 'Bỏ theo dõi' : 'Theo dõi'}
+                                title={followMutation.isPending ? 'Đang xử lý...' : (isFollowed ? 'Bỏ theo dõi' : 'Theo dõi')}
                                 disabled={followMutation.isPending}
                             >
                                 {followMutation.isPending ? '...' : (isFollowed ? '✓' : '+')}

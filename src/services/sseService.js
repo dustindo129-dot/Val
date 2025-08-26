@@ -12,6 +12,8 @@ class SSEService {
     this.baseReconnectDelay = 1000; // Back to original 1 second
     this.maxReconnectDelay = 30000; // Back to original 30 seconds
     this.isManuallyDisconnected = false;
+    this.lastConnectionAttempt = 0; // Add connection throttling
+    this.minConnectionInterval = 2000; // Minimum 2 seconds between connection attempts
     
     // Circuit breaker for rapid reconnections
     this.recentConnections = [];
@@ -111,8 +113,6 @@ class SSEService {
   becomeLeader() {
     this.isLeaderTab = true;
     
-
-    
     // Announce leadership
     this.broadcastChannel.postMessage({
       type: 'LEADER_ANNOUNCEMENT',
@@ -126,7 +126,6 @@ class SSEService {
     
     // Connect to SSE if we have listeners
     if (this.listeners.size > 0) {
-
       this.connect();
     }
   }
@@ -380,17 +379,30 @@ class SSEService {
       return;
     }
     
-    if (this.isManuallyDisconnected || this.eventSource) {
+    if (this.isManuallyDisconnected) {
       return;
     }
-
-    if (this.eventSource && this.eventSource.readyState === EventSource.CONNECTING) {
-      return;
+    
+    // CRITICAL: Prevent duplicate connections - close existing EventSource first
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+      this.isConnected = false;
     }
 
     if (this.checkCircuitBreaker()) {
       return;
     }
+
+    // Connection throttling to prevent rapid successive attempts
+    const now = Date.now();
+    const timeSinceLastAttempt = now - this.lastConnectionAttempt;
+    if (timeSinceLastAttempt < this.minConnectionInterval) {
+      const waitTime = this.minConnectionInterval - timeSinceLastAttempt;
+      setTimeout(() => this.connect(), waitTime);
+      return;
+    }
+    this.lastConnectionAttempt = now;
 
     // Get authentication token for SSE connection
     const token = localStorage.getItem('token');
@@ -426,21 +438,29 @@ class SSEService {
       sseUrl.searchParams.set('tabId', this.tabId);
       sseUrl.searchParams.set('token', token);
       
-
-      
       this.eventSource = new EventSource(sseUrl.toString());
       
+      // Set a timeout to detect stuck connections
+      const connectionTimeout = setTimeout(() => {
+        if (this.eventSource && this.eventSource.readyState === EventSource.CONNECTING) {
+          // Force close and retry
+          this.eventSource.close();
+          this.eventSource = null;
+          this.isConnected = false;
+          this.scheduleReconnect();
+        }
+      }, 5000);
+      
       this.eventSource.onopen = () => {
+        clearTimeout(connectionTimeout);
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.clearReconnectTimeout();
-
       };
 
       this.eventSource.onerror = (error) => {
+        clearTimeout(connectionTimeout);
         this.isConnected = false;
-        
-
         
         if (this.eventSource?.readyState === EventSource.CLOSED) {
           this.scheduleReconnect();
@@ -465,7 +485,7 @@ class SSEService {
       };
 
       // Set up default event listeners
-      const events = ['update', 'novel_status_changed', 'novel_deleted', 'refresh', 'new_novel', 'new_chapter', 'new_notification', 'notification_read', 'notifications_cleared', 'balance_updated'];
+      const events = ['update', 'novel_status_changed', 'novel_deleted', 'refresh', 'new_novel', 'new_chapter', 'new_module', 'module_mode_changed', 'new_notification', 'notification_read', 'notifications_cleared', 'balance_updated'];
       events.forEach(eventName => {
         this.eventSource.addEventListener(eventName, (event) => {
           try {
@@ -499,7 +519,15 @@ class SSEService {
           this.reconnectAttempts = 0;
           this.isCircuitBreakerOpen = true;
           
-          const delayTime = 20000;
+          // Close the current connection immediately
+          if (this.eventSource) {
+            this.eventSource.close();
+            this.eventSource = null;
+            this.isConnected = false;
+          }
+          
+          // Shorter delay since server is working fine - just need to avoid rapid reconnection
+          const delayTime = 5000;
           
           setTimeout(() => {
             this.isManuallyDisconnected = false;
@@ -511,7 +539,7 @@ class SSEService {
                 if (!this.eventSource && !this.isManuallyDisconnected) {
                   this.connect();
                 }
-              }, 3000);
+              }, 1000);
             }
           }, delayTime);
         } catch (error) {
@@ -519,7 +547,6 @@ class SSEService {
         }
       });
     } catch (error) {
-      console.error(`Error setting up SSE connection:`, error);
       this.isConnected = false;
       this.scheduleReconnect();
     }

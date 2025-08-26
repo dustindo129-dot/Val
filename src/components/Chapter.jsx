@@ -968,6 +968,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     // Refresh chapter data and user balance after successful rental
     queryClient.invalidateQueries(['chapter-optimized']);
     queryClient.invalidateQueries(['user']);
+    queryClient.invalidateQueries(['completeNovel']);
     queryClient.invalidateQueries(['novel']);
     queryClient.invalidateQueries(['module-rental-status']);
     
@@ -1269,6 +1270,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       
       // Invalidate novel queries that might include this chapter's data
       if (chapter?.novelId) {
+        queryClient.invalidateQueries({
+          queryKey: ['completeNovel', chapter.novelId],
+          exact: false
+        });
         queryClient.invalidateQueries({
           queryKey: ['novel', chapter.novelId],
           exact: false

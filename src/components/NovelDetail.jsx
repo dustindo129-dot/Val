@@ -39,7 +39,6 @@ import LoadingSpinner from './LoadingSpinner';
 import NovelInfo from './novel-detail/NovelInfo';
 import ScrollToTop from './ScrollToTop';
 import api from '../services/api';
-import sseService from '../services/sseService';
 import GiftModal from './novel-detail/GiftModal';
 import RatingModal from './RatingModal';
 import ModuleRentalModal from './rental/ModuleRentalModal';
@@ -524,17 +523,18 @@ const NovelDetail = ({ novelId }) => {
     );
 
     if (shouldClearCache) {
-      // Clear all related queries more aggressively
-      queryClient.removeQueries({ queryKey: ['novel', novelId] });
-      queryClient.removeQueries({ queryKey: ['novelStats', novelId] });
+      // Clear all related queries more aggressively using correct query keys
+      queryClient.removeQueries({ queryKey: ['completeNovel', novelId] });
+      queryClient.removeQueries({ queryKey: ['novel', novelId] }); // Legacy key for other components
+      queryClient.removeQueries({ queryKey: ['novel-stats', novelId] });
       queryClient.removeQueries({ queryKey: ['userInteraction', previousUserRef.current?.username, novelId] });
       
-      // Force immediate refetch with invalidation
-      queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
+      // Force immediate refetch with invalidation using correct query key
+      queryClient.invalidateQueries({ queryKey: ['completeNovel', novelId] });
       
       // Also force refetch to ensure immediate update
       setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+        queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
       }, 100); // Small delay to ensure auth state is fully updated
     }
 
@@ -565,7 +565,7 @@ const NovelDetail = ({ novelId }) => {
   // Handler for contribution success
   const handleContributionSuccess = useCallback(() => {
     // Refresh the novel data to update the budget
-    queryClient.invalidateQueries(['novel', novelId]);
+    queryClient.invalidateQueries(['completeNovel', novelId]);
   }, [queryClient, novelId]);
 
   // Rental modal handlers
@@ -586,7 +586,7 @@ const NovelDetail = ({ novelId }) => {
 
   const handleRentalSuccess = useCallback((data) => {
     // Refresh novel data and user balance after successful rental
-    queryClient.invalidateQueries(['novel', novelId]);
+    queryClient.invalidateQueries(['completeNovel', novelId]);
     queryClient.invalidateQueries(['user']);
     setUserBalance(data.userBalance);
     
@@ -683,7 +683,7 @@ const NovelDetail = ({ novelId }) => {
       try {
         await api.deleteModule(novelId, moduleId);
         // Refresh the data
-        queryClient.invalidateQueries(['novel', novelId]);
+        queryClient.invalidateQueries(['completeNovel', novelId]);
       } catch (error) {
         console.error('Không thể xóa tập:', error);
         alert('Không thể xóa module. Vui lòng thử lại.');
@@ -729,7 +729,7 @@ const NovelDetail = ({ novelId }) => {
           }
 
           // Cancel any pending queries for this novel
-          await queryClient.cancelQueries({ queryKey: ['novel', novelId] });
+          await queryClient.cancelQueries({ queryKey: ['completeNovel', novelId] });
           
           // Get the modules that will be swapped
           const sourceModuleId = currentData.modules[moduleIndex]._id;
@@ -990,7 +990,7 @@ const NovelDetail = ({ novelId }) => {
     } catch (error) {
       console.error('Chapter reorder error:', error);
       // Force a refetch to ensure we're in sync with server
-      queryClient.invalidateQueries(['novel', novelId]);
+      queryClient.invalidateQueries(['completeNovel', novelId]);
     }
   }, [user, novelId, queryClient]);
   
@@ -1002,7 +1002,7 @@ const NovelDetail = ({ novelId }) => {
       try {
         await api.deleteChapter(chapterId);
         // Refresh the data
-        queryClient.invalidateQueries(['novel', novelId]);
+        queryClient.invalidateQueries(['completeNovel', novelId]);
       } catch (error) {
         console.error('Không thể xóa chương:', error);
       }
@@ -1047,55 +1047,66 @@ const NovelDetail = ({ novelId }) => {
     }
   }, []);
 
-  // Set up SSE connection for real-time updates
+  // Set up SSE connection for real-time updates  
   useEffect(() => {
+    let isSetup = false;
+    
     const handleUpdate = () => {
-      // Simple invalidation without forced refetch
-      queryClient.invalidateQueries(['novel', novelId]);
+      queryClient.invalidateQueries(['completeNovel', novelId]);
     };
 
     const handleStatusChange = (data) => {
       if (data.id === novelId) {
-        queryClient.invalidateQueries(['novel', novelId]);
+        queryClient.invalidateQueries(['completeNovel', novelId]);
       }
     };
 
     const handleNovelDelete = (data) => {
       if (data.id === novelId) {
-        // Navigate away if the current novel is deleted
         navigate('/');
       }
     };
 
     const handleNewChapter = (data) => {
-      // Only invalidate if it's for this novel
       if (data.novelId === novelId) {
-        queryClient.invalidateQueries(['novel', novelId]);
+        queryClient.invalidateQueries(['completeNovel', novelId]);
       }
     };
 
     const handleModuleModeChanged = (data) => {
-      // Only invalidate if it's for this novel
       if (data.novelId === novelId) {
-        console.log(`Module mode changed: ${data.moduleTitle} from ${data.oldMode} to ${data.newMode}`);
-        queryClient.invalidateQueries(['novel', novelId]);
+        queryClient.invalidateQueries(['completeNovel', novelId]);
       }
     };
 
-    // Add event listeners
-    sseService.addEventListener('update', handleUpdate);
-    sseService.addEventListener('novel_status_changed', handleStatusChange);
-    sseService.addEventListener('novel_deleted', handleNovelDelete);
-    sseService.addEventListener('new_chapter', handleNewChapter);
-    sseService.addEventListener('module_mode_changed', handleModuleModeChanged);
+    const handleNewModule = (data) => {
+      if (data.novelId === novelId) {
+        queryClient.invalidateQueries(['completeNovel', novelId]);
+      }
+    };
 
-    // Clean up on unmount
+    // Use dynamic import pattern like Chapter component
+    import('../services/sseService').then(({ default: sseService }) => {
+      if (isSetup) return;
+      isSetup = true;
+      
+      sseService.addEventListener('update', handleUpdate);
+      sseService.addEventListener('novel_status_changed', handleStatusChange);
+      sseService.addEventListener('novel_deleted', handleNovelDelete);
+      sseService.addEventListener('new_chapter', handleNewChapter);
+      sseService.addEventListener('module_mode_changed', handleModuleModeChanged);
+      sseService.addEventListener('new_module', handleNewModule);
+    });
+
     return () => {
-      sseService.removeEventListener('update', handleUpdate);
-      sseService.removeEventListener('novel_status_changed', handleStatusChange);
-      sseService.removeEventListener('novel_deleted', handleNovelDelete);
-      sseService.removeEventListener('new_chapter', handleNewChapter);
-      sseService.removeEventListener('module_mode_changed', handleModuleModeChanged);
+      import('../services/sseService').then(({ default: sseService }) => {
+        sseService.removeEventListener('update', handleUpdate);
+        sseService.removeEventListener('novel_status_changed', handleStatusChange);
+        sseService.removeEventListener('novel_deleted', handleNovelDelete);
+        sseService.removeEventListener('new_chapter', handleNewChapter);
+        sseService.removeEventListener('module_mode_changed', handleModuleModeChanged);
+        sseService.removeEventListener('new_module', handleNewModule);
+      });
     };
   }, [novelId, queryClient, navigate]);
 
@@ -1104,22 +1115,15 @@ const NovelDetail = ({ novelId }) => {
     if (!user) return;
     
     try {
-      const response = await api.likeNovel(novelId);
+      await api.likeNovel(novelId);
       
-      // Update user interaction cache
-      queryClient.setQueryData(['userInteraction', user.username, novelId], (old) => ({
-        ...old,
-        liked: response.liked
-      }));
-      
-      // Update novel stats cache
-      queryClient.setQueryData(['novelStats', novelId], (old) => ({
-        ...old,
-        totalLikes: response.totalLikes
-      }));
+      // Force immediate refetch to ensure like status updates instantly
+      await queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
       
     } catch (error) {
       console.error('Error liking novel:', error);
+      // On error, refetch to ensure consistency
+      queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
     }
   }, [user, novelId, queryClient]);
 
@@ -1127,24 +1131,15 @@ const NovelDetail = ({ novelId }) => {
     if (!user) return;
     
     try {
-      const response = await api.rateNovel(novelId, rating, review);
+      await api.rateNovel(novelId, rating, review);
       
-      // Update user interaction cache
-      queryClient.setQueryData(['userInteraction', user.username, novelId], (old) => ({
-        ...old,
-        rating: response.rating,
-        review: response.review
-      }));
-      
-      // Update novel stats cache
-      queryClient.setQueryData(['novelStats', novelId], (old) => ({
-        ...old,
-        totalRatings: response.totalRatings,
-        averageRating: response.averageRating
-      }));
+      // Force immediate refetch to ensure rating updates instantly
+      await queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
       
     } catch (error) {
       console.error('Error rating novel:', error);
+      // On error, refetch to ensure consistency
+      queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
     }
   }, [user, novelId, queryClient]);
 
@@ -1152,16 +1147,15 @@ const NovelDetail = ({ novelId }) => {
     if (!user) return;
     
     try {
-      const response = await api.toggleBookmark(novelId);
+      await api.toggleBookmark(novelId);
       
-      // Update user interaction cache
-      queryClient.setQueryData(['userInteraction', user.username, novelId], (old) => ({
-        ...old,
-        bookmarked: response.bookmarked
-      }));
+      // Force immediate refetch to ensure bookmark status updates instantly
+      await queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
       
     } catch (error) {
       console.error('Error bookmarking novel:', error);
+      // On error, refetch to ensure consistency
+      queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
     }
   }, [user, novelId, queryClient]);
 
@@ -1203,8 +1197,10 @@ const NovelDetail = ({ novelId }) => {
         rentBalance: 0
       });
       
-      // OPTIMIZED: Only invalidate specific queries that actually need updates
-      // Always invalidate the main novel query since module data changed
+      // Force immediate refetch to ensure new module appears instantly
+      await queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
+      
+      // Also invalidate the old query key in case other components use it
       await queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
       
       // Only invalidate rental-related queries if the module mode changed to/from 'rent'
@@ -1227,8 +1223,8 @@ const NovelDetail = ({ novelId }) => {
         error: error.response?.data?.message || 'Đã xảy ra lỗi' 
       }));
       
-      // On error, only refetch the main novel query to ensure consistency
-      queryClient.refetchQueries({ queryKey: ['novel', novelId] });
+      // On error, refetch the correct query key to ensure consistency
+      queryClient.refetchQueries({ queryKey: ['completeNovel', novelId] });
     }
   }, [moduleForm, editingModule, novelId, queryClient, user]);
 
