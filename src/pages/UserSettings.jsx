@@ -15,7 +15,7 @@
  * - Success notifications
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
@@ -102,54 +102,112 @@ const UserSettings = () => {
   const [nextDisplayNameChange, setNextDisplayNameChange] = useState(null);
   const [resolvedUser, setResolvedUser] = useState(null);
   const [userResolutionLoading, setUserResolutionLoading] = useState(true);
+  const [pendingReports, setPendingReports] = useState([]);
+  
+  // Use ref to prevent duplicate API calls
+  const fetchedRef = useRef(false);
+  const currentUserNumberRef = useRef(null);
+  const currentRequestId = useRef(0);
 
   /**
-   * Resolve user by display name slug from URL
+   * Fetch consolidated settings data
    */
   useEffect(() => {
-    const resolveUser = async () => {
+    
+    // If userNumber changed, reset the fetch flag
+    if (currentUserNumberRef.current !== userNumber) {
+      fetchedRef.current = false;
+      currentUserNumberRef.current = null;
+    }
+    
+    // Check if we've already fetched for this userNumber
+    if (fetchedRef.current && currentUserNumberRef.current === userNumber) {
+      return;
+    }
+    
+    // Mark as fetching IMMEDIATELY to prevent race conditions
+    fetchedRef.current = true;
+    currentUserNumberRef.current = userNumber;
+    
+    // Create a unique request ID for this fetch
+    const requestId = ++currentRequestId.current;
+    
+    const fetchSettingsData = async () => {
       if (!userNumber) return;
       
       try {
         setUserResolutionLoading(true);
         
-        // Try to resolve the userNumber to a user
+        // Fetch all settings data in one request
         const response = await axios.get(
-          `${config.backendUrl}/api/users/number/${userNumber}/public-profile`,
-          { params: { skipVisitorTracking: 'true' } }
+          `${config.backendUrl}/api/users/number/${userNumber}/settings-data`,
+          { 
+            headers: { 
+              'Authorization': `Bearer ${localStorage.getItem('token')}` 
+            }
+          }
         );
         
-        setResolvedUser(response.data);
+        
+        // Check if this is still the latest request
+        if (requestId !== currentRequestId.current) {
+          return;
+        }
+        
+        const data = response.data;
+        setResolvedUser(data);
+        
+        // Set other state based on the response
+        if (data.displayNameLastChanged) {
+          setCanChangeDisplayName(false);
+          const nextChange = new Date(data.displayNameLastChanged);
+          nextChange.setMonth(nextChange.getMonth() + 1);
+          setNextDisplayNameChange(nextChange);
+        } else {
+          setCanChangeDisplayName(true);
+          setNextDisplayNameChange(null);
+        }
+        
+        // Set initial form values
+        setCurrentEmail(data.email || '');
+        setAvatar(data.avatar || '');
+        setDisplayName(data.displayName || data.username || '');
+        
+        // Set banned users list if admin
+        if (data.bannedUsers) {
+          setBannedUsers(data.bannedUsers);
+        }
+        
+        // Set blocked users list if available
+        if (data.blockedUsers) {
+          setBlockedUsers(data.blockedUsers);
+        }
+        
+        // Set pending reports if admin/moderator
+        if (data.pendingReports) {
+          setPendingReports(data.pendingReports);
+        }
+        
+        
       } catch (error) {
-        console.error('Error resolving user:', error);
-        setResolvedUser(null);
+        // Only update state if this is still the latest request
+        if (requestId === currentRequestId.current) {
+          setResolvedUser(null);
+          // Reset fetch flag on error so we can retry
+          fetchedRef.current = false;
+          currentUserNumberRef.current = null;
+        }
       } finally {
-        setUserResolutionLoading(false);
+        // Only set loading to false if this is still the latest request
+        if (requestId === currentRequestId.current) {
+          setUserResolutionLoading(false);
+        } else {
+        }
       }
     };
     
-    resolveUser();
+    fetchSettingsData();
   }, [userNumber]);
-
-  /**
-   * Initialize form data with user information
-   */
-  useEffect(() => {
-    if (user && resolvedUser) {
-      setCurrentEmail(user.email || '');
-      setAvatar(user.avatar || '');
-      setDisplayName(user.displayName || user.username || '');
-      
-      // Check if user can change display name
-      checkDisplayNameChangeEligibility();
-      
-      if (user.role === 'admin') {
-        fetchBannedUsers();
-      } else {
-        fetchBlockedUsers();
-      }
-    }
-  }, [user, resolvedUser]);
 
   /**
    * Update currentEmail when user email changes
@@ -161,48 +219,9 @@ const UserSettings = () => {
     }
   }, [user?.email]);
 
-  const checkDisplayNameChangeEligibility = async () => {
-    if (!user) return;
-    
-    try {
-      const response = await axios.get(
-        `${config.backendUrl}/api/users/${user.displayName || user.username}/display-name-eligibility`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      setCanChangeDisplayName(response.data.canChangeDisplayName);
-      setNextDisplayNameChange(response.data.nextDisplayNameChange ? new Date(response.data.nextDisplayNameChange) : null);
-    } catch (error) {
-      console.error('Error checking display name eligibility:', error);
-      // Fallback to allowing display name change if the check fails
-      setCanChangeDisplayName(true);
-      setNextDisplayNameChange(null);
-    }
-  };
+  // Remove this function since we now get this data from the consolidated endpoint
 
-  const fetchBlockedUsers = async () => {
-    try {
-      const response = await axios.get(
-        `${config.backendUrl}/api/users/number/${userNumber}/blocked`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setBlockedUsers(response.data);
-    } catch (error) {
-      console.error('Không thể tải người dùng bị chặn:', error);
-    }
-  };
-
-  const fetchBannedUsers = async () => {
-    try {
-      const response = await axios.get(
-        `${config.backendUrl}/api/users/banned`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setBannedUsers(response.data);
-    } catch (error) {
-      console.error('Không thể tải người dùng bị chặn:', error);
-    }
-  };
+  // Remove this function since we now get blocked users from the consolidated endpoint
 
   const handleUnblock = async (blockedUsername) => {
     try {
@@ -719,7 +738,7 @@ const UserSettings = () => {
         {/* Reports Section - Only visible for admins and moderators */}
         {(user?.role === 'admin' || user?.role === 'moderator') && (
           <div className="reports-section">
-            <ReportPanel user={user} />
+            <ReportPanel user={user} reports={pendingReports} />
           </div>
         )}
       </div>

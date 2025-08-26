@@ -6,7 +6,7 @@ import '../styles/ReportPanel.css';
 import { createUniqueSlug } from '../utils/slugUtils';
 import LoadingSpinner from './LoadingSpinner';
 
-const ReportPanel = ({ user }) => {
+const ReportPanel = ({ user, reports: propReports }) => {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(true);
   const [responseMessages, setResponseMessages] = useState({});
@@ -40,12 +40,16 @@ const ReportPanel = ({ user }) => {
     return translations[contentType?.toLowerCase()] || contentType || 'Nội dung';
   };
 
-  // Fetch reports
-  const { data: reports = [], isLoading, error } = useQuery({
+  // Use reports from props if available, otherwise fetch them
+  const { data: fetchedReports = [], isLoading, error } = useQuery({
     queryKey: ['reports', 'pending'],
     queryFn: () => api.getReports('pending'),
     refetchInterval: 60000, // Refetch every minute
+    enabled: !propReports, // Only fetch if reports are not provided as props
   });
+  
+  // Use prop reports or fetched reports
+  const reports = propReports || fetchedReports;
 
   // Resolve report mutation
   const resolveMutation = useMutation({
@@ -116,7 +120,7 @@ const ReportPanel = ({ user }) => {
       
       {isExpanded && (
         <div className="report-panel-content">
-          {isLoading ? (
+          {(isLoading && !propReports) ? (
             <div className="report-loading">
               <LoadingSpinner size="small" text="Đang tải báo cáo..." />
             </div>
