@@ -40,6 +40,279 @@ import {createUniqueSlug, generateChapterUrl, generateUserProfileUrl} from '../.
 import {translateStatus, getStatusForCSS} from '../../utils/statusTranslation';
 import DOMPurify from 'dompurify';
 
+// Facebook-style Bookmark System Components
+class BookmarkQueue {
+  constructor(sendToServer) {
+    this.queue = new Map(); // novelId -> { targetState, timestamp, retryCount }
+    this.processing = new Set();
+    this.sendToServer = sendToServer;
+    this.deviceId = this.generateDeviceId();
+  }
+
+  generateDeviceId() {
+    return localStorage.getItem('deviceId') || 
+           (() => {
+             const id = 'device_' + Math.random().toString(36).substr(2, 9);
+             localStorage.setItem('deviceId', id);
+             return id;
+           })();
+  }
+
+  async addToQueue(novelId, currentState, userId) {
+    const timestamp = Date.now();
+    const targetState = !currentState;
+    
+    // Store intended final state with metadata
+    this.queue.set(novelId, {
+      targetState,
+      timestamp,
+      userId,
+      deviceId: this.deviceId,
+      retryCount: 0
+    });
+
+    // Process if not already processing
+    if (!this.processing.has(novelId)) {
+      await this.processQueue(novelId);
+    }
+  }
+
+  async processQueue(novelId) {
+    this.processing.add(novelId);
+
+    try {
+      while (this.queue.has(novelId)) {
+        const queueItem = this.queue.get(novelId);
+        this.queue.delete(novelId);
+
+        try {
+          // Make API call
+          await this.sendToServer(novelId, queueItem);
+        } catch (error) {
+          // Handle retry logic
+          if (queueItem.retryCount < 3 && this.isRetryableError(error)) {
+            queueItem.retryCount++;
+            this.queue.set(novelId, queueItem);
+            
+            // Exponential backoff
+            await this.delay(Math.pow(2, queueItem.retryCount) * 1000);
+          } else {
+            throw error; // Let error recovery handle it
+          }
+        }
+      }
+    } finally {
+      this.processing.delete(novelId);
+    }
+  }
+
+  isRetryableError(error) {
+    return error.code === 'NETWORK_ERROR' || 
+           error.response?.status >= 500 ||
+           error.code === 'TIMEOUT';
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  clear() {
+    this.queue.clear();
+    this.processing.clear();
+  }
+}
+
+class BookmarkBatcher {
+  constructor(flushCallback) {
+    this.batch = new Map();
+    this.timeout = null;
+    this.flushCallback = flushCallback;
+    this.batchSize = 10;
+    this.batchDelay = 50; // 50ms
+  }
+
+  addToBatch(novelId, data) {
+    this.batch.set(novelId, data);
+    
+    // Flush if batch is full
+    if (this.batch.size >= this.batchSize) {
+      this.flush();
+      return;
+    }
+
+    // Set timeout if not already set
+    if (!this.timeout) {
+      this.timeout = setTimeout(() => this.flush(), this.batchDelay);
+    }
+  }
+
+  async flush() {
+    if (this.batch.size === 0) return;
+
+    const actions = Array.from(this.batch.entries());
+    this.batch.clear();
+    
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+
+    // Send batch to callback
+    await this.flushCallback(actions);
+  }
+
+  clear() {
+    this.batch.clear();
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+  }
+}
+
+class BookmarkRateLimiter {
+  constructor() {
+    this.actionCount = new Map();
+    this.windowStart = new Map();
+    this.maxActionsPerMinute = 10;
+    this.windowDuration = 60000; // 1 minute
+  }
+
+  canBookmark(novelId) {
+    const now = Date.now();
+    const windowStart = this.windowStart.get(novelId) || 0;
+    const count = this.actionCount.get(novelId) || 0;
+
+    // Reset window if needed
+    if (now - windowStart > this.windowDuration) {
+      this.actionCount.set(novelId, 0);
+      this.windowStart.set(novelId, now);
+      return true;
+    }
+
+    return count < this.maxActionsPerMinute;
+  }
+
+  recordAction(novelId) {
+    const count = this.actionCount.get(novelId) || 0;
+    this.actionCount.set(novelId, count + 1);
+  }
+
+  clear() {
+    this.actionCount.clear();
+    this.windowStart.clear();
+  }
+}
+
+class BookmarkErrorRecovery {
+  constructor(updateCallback) {
+    this.pendingActions = new Map();
+    this.updateCallback = updateCallback;
+    this.dbName = 'NovelBookmarks';
+    this.storeName = 'pendingBookmarks';
+    this.initDB();
+  }
+
+  async initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName, { keyPath: 'novelId' });
+        }
+      };
+    });
+  }
+
+  async storePendingAction(novelId, action) {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readwrite');
+    const store = transaction.objectStore(this.storeName);
+    
+    await new Promise((resolve, reject) => {
+      const request = store.put({ novelId, ...action, timestamp: Date.now() });
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    this.pendingActions.set(novelId, action);
+    this.updateCallback(novelId, 'pending');
+  }
+
+  async removePendingAction(novelId) {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readwrite');
+    const store = transaction.objectStore(this.storeName);
+    
+    await new Promise((resolve, reject) => {
+      const request = store.delete(novelId);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    this.pendingActions.delete(novelId);
+  }
+
+  async retryPendingActions() {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readonly');
+    const store = transaction.objectStore(this.storeName);
+    
+    const pendingActions = await new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    for (const action of pendingActions) {
+      try {
+        // Retry the action
+        await this.retryAction(action);
+        await this.removePendingAction(action.novelId);
+      } catch (error) {
+        console.error('Failed to retry bookmark action:', error);
+      }
+    }
+  }
+
+  async retryAction(action) {
+    // This will be implemented by the component
+    throw new Error('retryAction must be implemented');
+  }
+}
+
+class BookmarkConflictResolver {
+  constructor() {
+    this.lastActionTimestamp = new Map();
+  }
+
+  recordAction(novelId, timestamp) {
+    this.lastActionTimestamp.set(novelId, timestamp);
+  }
+
+  shouldAcceptUpdate(novelId, serverTimestamp) {
+    const lastAction = this.lastActionTimestamp.get(novelId);
+    
+    // Accept if we haven't acted on this novel or server is newer
+    return !lastAction || serverTimestamp > lastAction;
+  }
+
+  clear() {
+    this.lastActionTimestamp.clear();
+  }
+}
+
 // Helper function to convert colors to hex
 const convertToHex = (color) => {
     if (color.startsWith('#')) {
@@ -379,6 +652,10 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
     const [needsGenreToggle, setNeedsGenreToggle] = useState(false);
     const genreTagsRef = useRef(null);
     const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
+    
+    // Facebook-style bookmark system state
+    const [bookmarkState, setBookmarkState] = useState({ isBookmarked: false, status: 'idle' });
+    const bookmarkSystemRef = useRef(null);
 
     // Create a safe local copy of userInteraction with defaults
     const safeUserInteraction = {
@@ -416,68 +693,127 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
         }
     }, [novelId]);
 
-    // Check if genre list needs a toggle button
+    // Initialize Facebook-style bookmark system
     useEffect(() => {
-        if (novelData?.genres && novelData.genres.length > 8) {
-            const timer = setTimeout(() => {
-                const maxVisibleTags = 5;
+        const bookmarkSystem = {
+            queue: new BookmarkQueue(async (novelId, queueItem) => {
+                return await sendBookmarkToServer(novelId, queueItem);
+            }),
+            
+            batcher: new BookmarkBatcher(async (actions) => {
+                await processBatchedBookmarks(actions);
+            }),
+            
+            rateLimiter: new BookmarkRateLimiter(),
+            
+            errorRecovery: new BookmarkErrorRecovery((novelId, status) => {
+                updateBookmarkState({ status });
+            }),
+            
+            conflictResolver: new BookmarkConflictResolver()
+        };
 
-                if (novelData.genres.length > maxVisibleTags) {
-                    setNeedsGenreToggle(true);
-                } else {
-                    setNeedsGenreToggle(false);
-                }
-            }, 100);
+        // Implement retry action for error recovery
+        bookmarkSystem.errorRecovery.retryAction = async (action) => {
+            await bookmarkSystem.queue.addToQueue(action.novelId, !action.targetState, action.userId);
+        };
 
-            return () => clearTimeout(timer);
+        bookmarkSystemRef.current = bookmarkSystem;
+
+        // Setup online/offline handlers
+        const handleOnline = () => {
+            bookmarkSystem.errorRecovery.retryPendingActions();
+        };
+
+        const handleOffline = () => {
+            console.log('Offline - bookmarks will be queued');
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        // Retry pending actions on component mount
+        if (navigator.onLine) {
+            bookmarkSystem.errorRecovery.retryPendingActions();
         }
-    }, [novelData?.genres]);
 
-    // Mutations for bookmark and like toggling
-    const bookmarkMutation = useMutation({
-        mutationFn: () => {
-            if (!novelId) {
-                throw new Error("Không thể đánh dấu: ID truyện không tồn tại");
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+            
+            // Cleanup
+            bookmarkSystem.queue.clear();
+            bookmarkSystem.batcher.clear();
+            bookmarkSystem.rateLimiter.clear();
+            bookmarkSystem.conflictResolver.clear();
+        };
+    }, []);
+
+    // Update bookmark state helper
+    const updateBookmarkState = useCallback((updates) => {
+        setBookmarkState(prev => ({ ...prev, ...updates }));
+    }, []);
+
+    // Initialize bookmark state from userInteraction
+    useEffect(() => {
+        if (userInteraction !== undefined) {
+            // Only update if we're not currently processing a bookmark action
+            // Prevent overriding during active bookmark operations to avoid race conditions
+            if (bookmarkState.status === 'idle' || bookmarkState.status === 'error') {
+                updateBookmarkState({
+                    isBookmarked: userInteraction?.bookmarked || false,
+                    status: 'idle'
+                });
             }
-            return api.toggleBookmark(novelId);
-        },
-        onMutate: async () => {
-            // Cancel any outgoing refetches
-            await queryClient.cancelQueries(['novel-stats', novelId]);
-            await queryClient.cancelQueries(['userInteraction', user?.username, novelId]);
+            // If we're in loading/success state, don't override with potentially stale server data
+        }
+    }, [userInteraction, updateBookmarkState, bookmarkState.status]);
 
-            // Snapshot the previous values
-            const previousStats = queryClient.getQueryData(['novel-stats', novelId]);
-            const previousInteraction = queryClient.getQueryData(['userInteraction', user?.username, novelId]);
+    // Handle server refetch race condition protection
+    // Prevents server data from overriding user actions in progress
 
-            // Optimistically update the bookmark status and count
-            const willBeBookmarked = !(previousInteraction?.bookmarked);
+    // Send bookmark to server
+    const sendBookmarkToServer = async (novelId, queueItem) => {
+        try {
+            const response = await api.toggleBookmark(novelId);
 
-            queryClient.setQueryData(['userInteraction', user?.username, novelId], old => ({
-                ...old,
-                bookmarked: willBeBookmarked
-            }));
+            // Update state with server response
+            updateBookmarkState({
+                isBookmarked: response.bookmarked,
+                status: 'success',
+                serverTimestamp: Date.now()
+            });
 
-            queryClient.setQueryData(['novel-stats', novelId], old => ({
-                ...old,
-                totalBookmarks: willBeBookmarked ? (old.totalBookmarks + 1) : (old.totalBookmarks - 1)
-            }));
+            // Keep success state for a brief period to prevent race condition overrides
+            setTimeout(() => {
+                updateBookmarkState(prev => {
+                    if (prev.status === 'success') {
+                        return { ...prev, status: 'idle' };
+                    }
+                    return prev;
+                });
+            }, 3000); // 3 seconds of protection against race conditions
 
-            // Return a context object with the snapshotted values
-            return {previousStats, previousInteraction};
-        },
-        onError: (err, variables, context) => {
-            // If the mutation fails, use the context we saved to roll back
-            if (context?.previousStats) {
-                queryClient.setQueryData(['novel-stats', novelId], context.previousStats);
+            // Update bookmark count with server-provided count (if available)
+            if (typeof response.totalBookmarks === 'number') {
+                queryClient.setQueryData(['novel-stats', novelId], old => ({
+                    ...old,
+                    totalBookmarks: response.totalBookmarks
+                }));
+
+                // Also update the complete novel data
+                queryClient.setQueryData(['completeNovel', novelId], old => {
+                    if (!old?.interactions) return old;
+                    return {
+                        ...old,
+                        interactions: {
+                            ...old.interactions,
+                            totalBookmarks: response.totalBookmarks
+                        }
+                    };
+                });
             }
-            if (context?.previousInteraction) {
-                queryClient.setQueryData(['userInteraction', user?.username, novelId], context.previousInteraction);
-            }
-            console.error("Lỗi đánh dấu:", err);
-            alert("Không thể đánh dấu: Vui lòng thử lại.");
-        },
-        onSuccess: (response) => {
+
             // Update the novel data in the cache
             queryClient.setQueryData(['novel', novelId], (oldData) => {
                 if (!oldData) return oldData;
@@ -501,6 +837,21 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                 bookmarked: response.bookmarked
             }));
 
+            // CRITICAL: Update the complete novel data userInteraction as well
+            queryClient.setQueryData(['completeNovel', novelId], old => {
+                if (!old?.interactions?.userInteraction) return old;
+                return {
+                    ...old,
+                    interactions: {
+                        ...old.interactions,
+                        userInteraction: {
+                            ...old.interactions.userInteraction,
+                            bookmarked: response.bookmarked
+                        }
+                    }
+                };
+            });
+
             // Update the bookmark context
             updateBookmarkStatus(novelId, response.bookmarked);
 
@@ -518,13 +869,137 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                 });
             }
 
-            // Invalidate novel stats to ensure fresh data on next fetch
-            queryClient.invalidateQueries({
-                queryKey: ['novel-stats', novelId],
-                refetchType: 'none'
-            });
+            // Minimal cache invalidation to prevent race conditions
+            // Only invalidate for future requests, don't force immediate refetches
+            setTimeout(() => {
+                queryClient.invalidateQueries({
+                    queryKey: ['novel-stats', novelId],
+                    refetchType: 'none' // Don't force refetch to avoid race conditions
+                });
+            }, 1000); // Longer delay to allow frontend state to stabilize
+
+            // Remove from error recovery if it was there
+            await bookmarkSystemRef.current.errorRecovery.removePendingAction(novelId);
+
+            return response;
+        } catch (error) {
+            // Handle different types of errors
+            if (error.code === 'ECONNABORTED') {
+                error.code = 'TIMEOUT';
+            } else if (!navigator.onLine) {
+                error.code = 'NETWORK_ERROR';
+            }
+
+            // Store for retry if it's a recoverable error
+            if (bookmarkSystemRef.current.queue.isRetryableError(error)) {
+                await bookmarkSystemRef.current.errorRecovery.storePendingAction(novelId, queueItem);
+            } else {
+                // Revert optimistic updates for non-recoverable errors
+                const originalBookmarkStatus = safeUserInteraction.bookmarked || false;
+                updateBookmarkState({
+                    isBookmarked: originalBookmarkStatus,
+                    status: 'error'
+                });
+
+                // Clear error state after a delay to allow user to retry
+                setTimeout(() => {
+                    updateBookmarkState(prev => {
+                        if (prev.status === 'error') {
+                            return { ...prev, status: 'idle' };
+                        }
+                        return prev;
+                    });
+                }, 5000); // Clear error after 5 seconds
+
+                // Revert bookmark count optimistic update
+                queryClient.setQueryData(['novel-stats', novelId], old => ({
+                    ...old,
+                    totalBookmarks: originalBookmarkStatus ? ((old?.totalBookmarks || 0) + 1) : ((old?.totalBookmarks || 0) - 1)
+                }));
+
+                // Also revert the complete novel data optimistic update
+                queryClient.setQueryData(['completeNovel', novelId], old => {
+                    if (!old?.interactions) return old;
+                    return {
+                        ...old,
+                        interactions: {
+                            ...old.interactions,
+                            totalBookmarks: originalBookmarkStatus ? ((old.interactions.totalBookmarks || 0) + 1) : ((old.interactions.totalBookmarks || 0) - 1)
+                        }
+                    };
+                });
+            }
+
+            throw error;
         }
-    });
+    };
+
+    // Process batched bookmarks
+    const processBatchedBookmarks = async (actions) => {
+        // For now, process individually - could be optimized with a batch endpoint
+        for (const [novelId, queueItem] of actions) {
+            try {
+                await bookmarkSystemRef.current.queue.addToQueue(novelId, !queueItem.targetState, queueItem.userId);
+            } catch (error) {
+                console.error('Failed to process batched bookmark:', error);
+            }
+        }
+    };
+
+    // Handle real-time updates via SSE for bookmarks
+    useEffect(() => {
+        const handleRealtimeUpdate = (event) => {
+            const data = event.detail;
+            
+            if (data.type === 'novel_bookmark_update') {
+                const { novelId: updateNovelId, bookmarkCount, bookmarkedBy, timestamp } = data;
+                const bookmarkSystem = bookmarkSystemRef.current;
+                
+                // Only process updates for this novel
+                if (updateNovelId === novelId) {
+                    // Check if we should accept this update (conflict resolution)
+                    if (bookmarkSystem.conflictResolver.shouldAcceptUpdate(novelId, timestamp)) {
+                        const userId = user?.id || user?._id;
+                        
+                        // Only update if we're not currently processing a bookmark action
+                        if (bookmarkState.status === 'idle' || bookmarkState.status === 'success') {
+                            updateBookmarkState({
+                                isBookmarked: bookmarkedBy.includes(userId),
+                                status: 'success',
+                                serverTimestamp: timestamp
+                            });
+                        }
+                    }
+                }
+            }
+        };
+
+        // Listen for real-time updates
+        window.addEventListener('realtime_update', handleRealtimeUpdate);
+        
+        return () => {
+            window.removeEventListener('realtime_update', handleRealtimeUpdate);
+        };
+    }, [user, novelId, updateBookmarkState, bookmarkState.status]);
+
+    // Check if genre list needs a toggle button
+    useEffect(() => {
+        if (novelData?.genres && novelData.genres.length > 8) {
+            const timer = setTimeout(() => {
+                const maxVisibleTags = 5;
+
+                if (novelData.genres.length > maxVisibleTags) {
+                    setNeedsGenreToggle(true);
+                } else {
+                    setNeedsGenreToggle(false);
+                }
+            }, 100);
+
+            return () => clearTimeout(timer);
+        }
+    }, [novelData?.genres]);
+
+    // Mutations for like toggling (bookmark is now handled by Facebook-style system)
 
     const likeMutation = useMutation({
         mutationFn: () => api.likeNovel(novelId),
@@ -547,7 +1022,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
 
             queryClient.setQueryData(['novel-stats', novelId], old => ({
                 ...old,
-                totalLikes: willBeLiked ? (old.totalLikes + 1) : (old.totalLikes - 1)
+                totalLikes: willBeLiked ? ((old?.totalLikes || 0) + 1) : ((old?.totalLikes || 0) - 1)
             }));
 
             // Return a context object with the snapshotted values
@@ -704,19 +1179,16 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
         likeMutation.mutate();
     };
 
-    // Handle bookmark toggling
-    const toggleBookmark = () => {
+    // Handle bookmark toggling - Facebook style
+    const toggleBookmark = useCallback(async () => {
         // Use username presence instead of isAuthenticated flag
         if (!user?.username) {
             alert('Vui lòng đăng nhập để đánh dấu truyện');
             return;
         }
 
-        // Validate token presence
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.error("Token không tồn tại khi đánh dấu truyện");
-            alert("Lỗi xác thực. Vui lòng đăng xuất và đăng nhập lại.");
+        if (!user || (!user._id && !user.id)) {
+            alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
             return;
         }
 
@@ -727,8 +1199,89 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
             return;
         }
 
-        bookmarkMutation.mutate();
-    };
+        // Prevent rapid clicking - check if already processing
+        if (bookmarkState.status === 'loading') {
+            return;
+        }
+
+        const userId = user.id || user._id;
+        const bookmarkSystem = bookmarkSystemRef.current;
+
+        // Check rate limit
+        if (!bookmarkSystem.rateLimiter.canBookmark(novelId)) {
+            alert('Bạn đang đánh dấu quá nhanh. Vui lòng chờ một chút.');
+            return;
+        }
+
+        // Get current state
+        const currentState = bookmarkState.isBookmarked;
+        
+        // Record action for conflict resolution
+        const timestamp = Date.now();
+        bookmarkSystem.conflictResolver.recordAction(novelId, timestamp);
+        
+        // Record rate limit action
+        bookmarkSystem.rateLimiter.recordAction(novelId);
+
+        // Cancel any outgoing refetches to prevent race conditions
+        await queryClient.cancelQueries(['novel-stats', novelId]);
+        await queryClient.cancelQueries(['completeNovel', novelId]);
+
+        // Optimistic update for bookmark state
+        updateBookmarkState({
+            isBookmarked: !currentState,
+            status: 'loading'
+        });
+
+        // Optimistic update for bookmark count in novel stats
+        queryClient.setQueryData(['novel-stats', novelId], old => ({
+            ...old,
+            totalBookmarks: !currentState ? ((old?.totalBookmarks || 0) + 1) : ((old?.totalBookmarks || 0) - 1)
+        }));
+
+        // Also update the complete novel data if it exists
+        queryClient.setQueryData(['completeNovel', novelId], old => {
+            if (!old?.interactions) return old;
+            return {
+                ...old,
+                interactions: {
+                    ...old.interactions,
+                    totalBookmarks: !currentState ? ((old.interactions.totalBookmarks || 0) + 1) : ((old.interactions.totalBookmarks || 0) - 1)
+                }
+            };
+        });
+
+        // Add to queue
+        try {
+            await bookmarkSystem.queue.addToQueue(novelId, currentState, userId);
+        } catch (error) {
+            console.error('Failed to add bookmark to queue:', error);
+            
+            // Revert optimistic updates
+            updateBookmarkState({
+                isBookmarked: currentState,
+                status: 'error'
+            });
+
+            // Revert bookmark count optimistic update
+            queryClient.setQueryData(['novel-stats', novelId], old => ({
+                ...old,
+                totalBookmarks: currentState ? ((old?.totalBookmarks || 0) + 1) : ((old?.totalBookmarks || 0) - 1)
+            }));
+
+            // Also revert the complete novel data optimistic update
+            queryClient.setQueryData(['completeNovel', novelId], old => {
+                if (!old?.interactions) return old;
+                return {
+                    ...old,
+                    interactions: {
+                        ...old.interactions,
+                        totalBookmarks: currentState ? ((old.interactions.totalBookmarks || 0) + 1) : ((old.interactions.totalBookmarks || 0) - 1)
+                    }
+                };
+            });
+        }
+    }, [user, novelId, bookmarkState.isBookmarked, updateBookmarkState, queryClient, safeUserInteraction.bookmarked]);
 
     // Handle rating click
     const handleRatingClick = () => {
@@ -946,8 +1499,8 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
         return <div className="novel-info-section error">Truyện không tồn tại</div>;
     }
 
-    // Determine if the novel is bookmarked
-    const isBookmarked = safeUserInteraction.bookmarked || false;
+    // Determine if the novel is bookmarked - use new bookmark system state
+    const isBookmarked = bookmarkState.isBookmarked;
     // Determine if the novel is liked
     const isLiked = safeUserInteraction.liked || false;
     // Determine if the novel is followed
@@ -1286,11 +1839,21 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                                     )}
 
                                     <button
-                                        className={`rd-btn rd-btn-bookmark ${isBookmarked ? 'active' : ''}`}
+                                        className={`rd-btn rd-btn-bookmark ${isBookmarked ? 'active' : ''} ${bookmarkState.status === 'pending' ? 'pending' : ''} ${bookmarkState.status === 'error' ? 'error' : ''}`}
                                         onClick={toggleBookmark}
+                                        disabled={bookmarkState.status === 'loading'}
+                                        title={bookmarkState.status === 'pending' ? 'Đang xử lý...' : bookmarkState.status === 'error' ? 'Có lỗi xảy ra' : (isBookmarked ? 'Bỏ đánh dấu' : 'Đánh dấu')}
                                     >
-                                        <FontAwesomeIcon icon={isBookmarked ? faBookmarkSolid : faBookmark}/>
-                                        {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu'} ({novelStats.totalBookmarks?.toLocaleString() || '0'})
+                                        <FontAwesomeIcon icon={
+                                            bookmarkState.status === 'loading' ? faBookmark : 
+                                            bookmarkState.status === 'pending' ? faBookmark :
+                                            bookmarkState.status === 'error' ? faBookmark :
+                                            isBookmarked ? faBookmarkSolid : faBookmark
+                                        }/>
+                                        {bookmarkState.status === 'loading' ? 'Đang xử lý...' : 
+                                         bookmarkState.status === 'pending' ? 'Chờ xử lý...' :
+                                         bookmarkState.status === 'error' ? 'Thử lại' :
+                                         isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu'} ({novelStats.totalBookmarks?.toLocaleString() || '0'})
                                     </button>
                                 </div>
                             </div>
