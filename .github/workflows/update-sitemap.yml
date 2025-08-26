@@ -2,45 +2,38 @@ name: Auto Update Sitemap
 
 on:
   schedule:
-    # Run daily at 2 AM UTC (adjust timezone as needed)
     - cron: '0 2 * * *'
-  
-  # Allow manual triggering from GitHub Actions tab
   workflow_dispatch:
+
+permissions:
+  contents: write   # needed for pushing back to the same repo
 
 jobs:
   update-sitemap:
     runs-on: ubuntu-latest
-    
     steps:
-      # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_TOKEN }}
-      
-      # Setup Node.js
+          fetch-depth: 0           # safer for pull --rebase later
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
-      # Install dependencies
+
       - name: Install dependencies
         run: npm install
-      
-      # Generate new sitemap with Vietnamese URLs
+
       - name: Generate sitemap
         run: node scripts/generateSitemap.js
         env:
-          # Use environment variables for backend URL
           SITEMAP_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
           VITE_BUNNY_CDN_URL: ${{ secrets.VITE_BUNNY_CDN_URL }}
           FRONTEND_URL: 'https://valvrareteam.net'
-      
-      # Check if sitemap was actually updated
+
       - name: Check for changes
         id: verify-changed-files
         run: |
@@ -49,20 +42,17 @@ jobs:
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
-      
-      # Commit and push changes if sitemap was updated
+
       - name: Commit updated sitemap
         if: steps.verify-changed-files.outputs.changed == 'true'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
           git add public/sitemap.xml
-          git commit -m "🤖 Auto-update sitemap - $(date +'%Y-%m-%d %H:%M UTC')"
-          # Pull latest changes and rebase our commit on top
+          git commit -m "🤖 Auto-update sitemap - $(date -u +'%Y-%m-%d %H:%M UTC')"
           git pull --rebase origin master
           git push
-      
-      # Log completion
+
       - name: Log completion
         run: |
           if [ "${{ steps.verify-changed-files.outputs.changed }}" == "true" ]; then
@@ -71,4 +61,4 @@ jobs:
             echo "📝 Note: Submit sitemap manually to Google Search Console and Bing Webmaster Tools"
           else
             echo "ℹ️ No changes detected in sitemap"
-          fi 
+          fi
