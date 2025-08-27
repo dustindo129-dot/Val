@@ -1787,6 +1787,10 @@
   font-size: 0.85rem;
   color: #495057;
   border: 1px solid rgba(0, 123, 255, 0.1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  overflow: hidden;
 }
 
 .request-contact-info strong {
