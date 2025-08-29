@@ -61,10 +61,10 @@ const Contest2025 = () => {
                <h3>Phần thưởng riêng đến từ các ban giám khảo</h3>
                <div className="bonus-summary">
                  <p>
-                   <em>Chỉ áp dụng cho tác phẩm đạt giải nhất (đây là thưởng thêm, không liên quan đến giải thưởng tiền mặt).</em>
+                   <em>Chỉ áp dụng cho tác phẩm đạt giải nhất (đây là thưởng thêm, không liên quan đến giải thưởng tiền mặt, phần thưởng áp dụng cho 3 chương dự thi).</em>
                  </p>
                  <p>
-                   <strong>Nekko</strong>: Tài trợ full minh họa • <strong>Koru</strong>: Audiobook • <strong>Mr.Tuân</strong>: Biên tập viên hỗ trợ hoàn thành tập 1 của tác phẩm. 
+                   <strong>Nekko</strong>: Tài trợ full minh họa • <strong>Koru</strong>: Audiobook • <strong>Mr.Tuân</strong>: Biên tập viên hỗ trợ hoàn thành tác phẩm. 
                    <span className="bonus-disclaimer">Lưu ý: Ban giám khảo có quyền rút lại phần thưởng riêng nếu tác phẩm chưa đạt chất lượng như mong muốn.</span>
                  </p>
                </div>
