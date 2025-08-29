@@ -2,18 +2,18 @@
  * Contest2025 Component
  * 
  * Component for the Val Light Novel Contest 2025 page
- * Shows different content based on user role:
- * - Admin/Moderator: Full contest management interface (to be implemented later)
- * - Everyone else: Announcement about official launch
+ * Shows full contest information to all users:
+ * - Contest details (prizes, jury messages, submission)
+ * - Contest works display with round filtering (vòng 1, vòng 2, vòng 3)
  * 
  * Features:
- * - Role-based content display
+ * - Complete contest information for all users
+ * - Round-based filtering for contest works
  * - Responsive design
  * - Dark theme support
  */
 
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
 import './Contest2025.css';
 
 /**
@@ -24,39 +24,8 @@ import './Contest2025.css';
  * @param {Object} props - No props required
  */
 const Contest2025 = () => {
-  // Get user authentication state and role
-  const { user, isAuthenticated } = useAuth();
-  
-  // Check if user is admin or moderator
-  const isAdminOrMod = isAuthenticated && (user?.role === 'admin' || user?.role === 'moderator');
-
-  // For non-admin/moderator users, show only header and announcement
-  if (!isAdminOrMod) {
-    return (
-      <div className="contest-2025-container">
-        <div className="contest-content">
-          {/* Page Header */}
-          <div className="contest-header">
-            <h1 className="contest-title">Val Light Novel Contest 2025</h1>
-            <div className="contest-subtitle">
-              Cuộc thi sáng tác Light Novel 'cây nhà lá vườn' đến từ Valvrareteam 
-            </div>
-          </div>
-
-          {/* Public Announcement Only */}
-          <div className="announcement-content">
-            <div className="announcement-box">
-              <div className="announcement-icon">🎉</div>
-              <div className="announcement-text">
-                <h2>Cuộc thi sẽ chính thức ra mắt cuối tháng 8</h2>
-                <p>Thông tin chi tiết, thể lệ và giải thưởng sẽ được công bố vào thời điểm ra mắt.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // State for managing selected round in contest works section
+  const [selectedRound, setSelectedRound] = useState('vòng 1');
 
   return (
     <div className="contest-2025-container">
@@ -76,15 +45,15 @@ const Contest2025 = () => {
              <div className="main-prizes">
                <div className="prize-card first-place">
                  <div className="prize-rank">01 GIẢI NHẤT</div>
-                 <div className="prize-amount">1.000.000 VND + Banner</div>
+                 <div className="prize-amount">1.000.000 VND</div>
                </div>
                <div className="prize-card second-place">
                  <div className="prize-rank">01 GIẢI NHÌ</div>
-                 <div className="prize-amount">500.000 VND + Banner</div>
+                 <div className="prize-amount">500.000 VND</div>
                </div>
                <div className="prize-card peoples-choice">
                  <div className="prize-rank">01 GIẢI NGHỆ SĨ NHÂN DÂN</div>
-                 <div className="prize-amount">Banner</div>
+                 <div className="prize-amount">100.000 VND</div>
                </div>
              </div>
              
@@ -182,7 +151,7 @@ const Contest2025 = () => {
                </div>
                <p className="panel-note">Vui lòng đọc kỹ luật thi trước khi gửi bài</p>
                <p>Tiêu đề email dự thi cần ghi rõ:</p>
-               <p>Bài dự thi VAlLN2025 - Tên tác giả - Tên tác phẩm</p>
+               <p>Bài dự thi ValOLN2025_[tên tác phẩm]_[tên tác giả]</p>
              </div>
              
              <div className="panel rules-panel">
@@ -202,29 +171,42 @@ const Contest2025 = () => {
            </div>
          </div>
 
-         {/* Admin Content - Only visible to admins */}
-         {isAdminOrMod && (
-           <div className="admin-content">
-             <div className="admin-placeholder">
-               <h2>Bảng quản lý cuộc thi</h2>
-               <p>Nội dung quản lý cuộc thi sẽ được thêm vào đây...</p>
-               <div className="admin-sections">
-                 <div className="admin-section">
-                   <h3>Quản lý bài dự thi</h3>
-                   <p>Danh sách và quản lý các bài dự thi</p>
-                 </div>
-                 <div className="admin-section">
-                   <h3>Quản lý thí sinh</h3>
-                   <p>Thông tin và quản lý thí sinh tham gia</p>
-                 </div>
-                 <div className="admin-section">
-                   <h3>Cài đặt cuộc thi</h3>
-                   <p>Cấu hình thời gian, quy định cuộc thi</p>
+         {/* Contest Works Section - Visible to all users */}
+         <div className="contest-works-content">
+           <div className="contest-works-section">
+             <h2>Các tác phẩm dự thi</h2>
+             
+             {/* Round Filter Buttons */}
+             <div className="round-filters">
+               {['vòng 1', 'vòng 2', 'vòng 3'].map((round) => (
+                 <button
+                   key={round}
+                   className={`round-filter-btn ${selectedRound === round ? 'active' : ''}`}
+                   onClick={() => setSelectedRound(round)}
+                 >
+                   {round.charAt(0).toUpperCase() + round.slice(1)}
+                 </button>
+               ))}
+             </div>
+
+             {/* Works Display Area */}
+             <div className="works-container">
+               <div className="works-header">
+                 <h3>Tác phẩm {selectedRound}</h3>
+                 <span className="works-count">(0 tác phẩm)</span>
+               </div>
+               
+               <div className="works-list">
+                 {/* Placeholder for empty state */}
+                 <div className="empty-state">
+                   <div className="empty-icon">📚</div>
+                   <p>Chưa có tác phẩm nào trong {selectedRound}</p>
+                   <span className="empty-note">Các tác phẩm sẽ được hiển thị ở đây khi có dữ liệu</span>
                  </div>
                </div>
              </div>
            </div>
-         )}
+         </div>
       </div>
     </div>
   );

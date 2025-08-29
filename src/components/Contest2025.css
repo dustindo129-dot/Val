@@ -53,8 +53,8 @@
   font-weight: 500;
 }
 
-/* Admin content styles */
-.admin-content {
+/* Contest works content styles */
+.contest-works-content {
   background: white;
   border-radius: 12px;
   padding: 2rem;
@@ -62,50 +62,113 @@
   border: 1px solid #e2e8f0;
 }
 
-.admin-placeholder h2 {
+.contest-works-section h2 {
   color: #2d3748;
   font-size: 1.8rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
-
-.admin-placeholder p {
-  color: #718096;
-  font-size: 1.1rem;
   margin-bottom: 2rem;
-}
-
-.admin-sections {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.admin-section {
-  background: #f7fafc;
-  border-radius: 8px;
-  padding: 1.5rem;
-  border: 1px solid #e2e8f0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.admin-section:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.admin-section h3 {
-  color: #2d3748;
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
   font-weight: 600;
+  text-align: center;
 }
 
-.admin-section p {
-  color: #718096;
-  font-size: 0.95rem;
+/* Round filter buttons */
+.round-filters {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.round-filter-btn {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: capitalize;
+}
+
+.round-filter-btn:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.round-filter-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Works container */
+.works-container {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.works-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.works-header h3 {
+  color: #2d3748;
+  font-size: 1.4rem;
+  font-weight: 600;
   margin: 0;
+}
+
+.works-count {
+  color: #718096;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: #e2e8f0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+/* Works list */
+.works-list {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  color: #718096;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.empty-note {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  font-style: italic;
 }
 
 /* Announcement content styles */
@@ -211,30 +274,56 @@
   color: #a0aec0;
 }
 
-:root.dark-mode .admin-content {
+:root.dark-mode .contest-works-content {
   background: #2d2d2d;
   border-color: #404040;
 }
 
-:root.dark-mode .admin-placeholder h2 {
+:root.dark-mode .contest-works-section h2 {
   color: #e2e8f0;
 }
 
-:root.dark-mode .admin-placeholder p {
+:root.dark-mode .round-filter-btn {
+  background: #404040;
   color: #a0aec0;
+  border-color: #555;
 }
 
-:root.dark-mode .admin-section {
+:root.dark-mode .round-filter-btn:hover {
+  background: #4a5568;
+  border-color: #718096;
+}
+
+:root.dark-mode .round-filter-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+:root.dark-mode .works-container {
   background: #343434;
   border-color: #404040;
 }
 
-:root.dark-mode .admin-section h3 {
+:root.dark-mode .works-header {
+  border-bottom-color: #555;
+}
+
+:root.dark-mode .works-header h3 {
   color: #e2e8f0;
 }
 
-:root.dark-mode .admin-section p {
+:root.dark-mode .works-count {
+  background: #555;
   color: #a0aec0;
+}
+
+:root.dark-mode .empty-state p {
+  color: #cbd5e0;
+}
+
+:root.dark-mode .empty-note {
+  color: #718096;
 }
 
 :root.dark-mode .info-section {
@@ -276,15 +365,30 @@
     font-size: 1rem;
   }
 
-  .admin-content,
+  .contest-works-content,
   .info-section {
     padding: 1.5rem;
   }
 
-  .admin-sections,
-  .info-sections {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .round-filters {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .round-filter-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .works-container {
+    padding: 1.5rem;
+  }
+
+  .works-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
   }
 }
 
@@ -306,9 +410,22 @@
     font-size: 1.3rem;
   }
 
-  .admin-content,
+  .contest-works-content,
   .info-section {
     padding: 1rem;
+  }
+
+  .round-filter-btn {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .works-container {
+    padding: 1rem;
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
   }
 }
 
