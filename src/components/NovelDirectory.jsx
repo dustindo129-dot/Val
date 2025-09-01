@@ -2,7 +2,7 @@
  * NovelDirectory Component
  *
  * Displays a paginated grid of novels with:
- * - Filter sidebar with genre categories and status filters
+ * - Filter sidebar with genre categories and status filters (auto-filtering)
  * - Novel cards arranged in a 2-column grid (horizontal layout)
  * - Client-side filtering and pagination
  */
@@ -98,10 +98,10 @@ const truncateHTML = (html, maxLength) => {
  *
  * Provides SEO optimization for the novel directory page
  */
-const NovelDirectorySEO = ({ currentPage = 1, appliedGenres = {}, appliedStatus = {}, totalItems = 0 }) => {
+const NovelDirectorySEO = ({ currentPage = 1, selectedGenres = {}, selectedStatus = {}, totalItems = 0 }) => {
     const generateSEOTitle = () => {
-        const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
-        const activeStatuses = Object.keys(appliedStatus).filter(status => appliedStatus[status]);
+        const activeGenres = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
+        const activeStatuses = Object.keys(selectedStatus).filter(status => selectedStatus[status]);
 
         let baseTitle = 'Danh Sách Light Novel Vietsub - Thư Viện Truyện Đầy Đủ | Valvrareteam';
 
@@ -119,8 +119,8 @@ const NovelDirectorySEO = ({ currentPage = 1, appliedGenres = {}, appliedStatus 
     };
 
     const generateSEODescription = () => {
-        const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
-        const activeStatuses = Object.keys(appliedStatus).filter(status => appliedStatus[status]);
+        const activeGenres = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
+        const activeStatuses = Object.keys(selectedStatus).filter(status => selectedStatus[status]);
 
         if (activeGenres.length > 0 || activeStatuses.length > 0) {
             const filters = [...activeGenres.slice(0, 2), ...activeStatuses.slice(0, 1)];
@@ -143,7 +143,7 @@ const NovelDirectorySEO = ({ currentPage = 1, appliedGenres = {}, appliedStatus 
             'valvrareteam'
         ];
 
-        const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
+        const activeGenres = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
         if (activeGenres.length > 0) {
             activeGenres.forEach(genre => {
                 baseKeywords.push(`light novel ${genre.toLowerCase()}`, `${genre.toLowerCase()} vietsub`);
@@ -247,8 +247,6 @@ const NovelDirectory = () => {
     const [expandedGenres, setExpandedGenres] = useState({});
     const [selectedGenres, setSelectedGenres] = useState({});
     const [selectedStatus, setSelectedStatus] = useState({});
-    const [appliedGenres, setAppliedGenres] = useState({});
-    const [appliedStatus, setAppliedStatus] = useState({});
     const [sortBy, setSortBy] = useState('title-asc');
     const [needsGenreToggle, setNeedsGenreToggle] = useState({});
 
@@ -268,7 +266,6 @@ const NovelDirectory = () => {
                 genreObject[genre] = true;
             });
             setSelectedGenres(genreObject);
-            setAppliedGenres(genreObject);
         }
 
         if (status) {
@@ -278,7 +275,6 @@ const NovelDirectory = () => {
                 statusObject[s] = true;
             });
             setSelectedStatus(statusObject);
-            setAppliedStatus(statusObject);
         }
 
         if (sort && sortOptions.find(option => option.value === sort)) {
@@ -291,7 +287,7 @@ const NovelDirectory = () => {
         queryKey: ['novels-directory', 'large-list'],
         queryFn: async () => {
             const response = await axios.get(`${config.backendUrl}/api/novels?page=1&limit=1000`);
-            
+
             // Don't pre-sort here - let the frontend sorting handle it based on user selection
             const novels = response.data.novels || [];
 
@@ -340,6 +336,31 @@ const NovelDirectory = () => {
         }
     }, [data]);
 
+    // Auto update filters and navigate when filters change
+    const updateFiltersAndNavigate = useCallback((newGenres, newStatus) => {
+        const genreFilters = Object.keys(newGenres).filter(genre => newGenres[genre]);
+        const statusFilters = Object.keys(newStatus).filter(status => newStatus[status]);
+
+        let queryString = '';
+        const params = [];
+
+        if (sortBy !== 'title-asc') {
+            params.push(`sort=${sortBy}`);
+        }
+        if (genreFilters.length > 0) {
+            params.push(`genres=${genreFilters.join(',')}`);
+        }
+        if (statusFilters.length > 0) {
+            params.push(`status=${statusFilters.join(',')}`);
+        }
+
+        if (params.length > 0) {
+            queryString = '?' + params.join('&');
+        }
+
+        navigate(`/danh-sach-truyen/trang/1${queryString}`);
+    }, [sortBy, navigate]);
+
     // Filter, sort and paginate novels client-side
     const filteredAndPaginatedNovels = useMemo(() => {
         if (!data?.novels) return { novels: [], totalPages: 1, totalItems: 0 };
@@ -347,7 +368,7 @@ const NovelDirectory = () => {
         let filtered = [...data.novels];
 
         // Filter by genres
-        const activeGenres = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
+        const activeGenres = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
         if (activeGenres.length > 0) {
             filtered = filtered.filter(novel =>
                 novel.genres && activeGenres.every(genre => novel.genres.includes(genre))
@@ -355,7 +376,7 @@ const NovelDirectory = () => {
         }
 
         // Filter by status
-        const activeStatuses = Object.keys(appliedStatus).filter(status => appliedStatus[status]);
+        const activeStatuses = Object.keys(selectedStatus).filter(status => selectedStatus[status]);
         if (activeStatuses.length > 0) {
             filtered = filtered.filter(novel =>
                 novel.status && activeStatuses.includes(novel.status)
@@ -390,28 +411,36 @@ const NovelDirectory = () => {
             totalPages,
             totalItems: filtered.length
         };
-    }, [data, currentPage, appliedGenres, appliedStatus, sortBy]);
+    }, [data, currentPage, selectedGenres, selectedStatus, sortBy]);
 
     // Scroll to top when page changes
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [currentPage]);
 
-    // Handle genre checkbox changes
+    // Handle genre checkbox changes with auto-filtering
     const handleGenreChange = useCallback((genre) => {
-        setSelectedGenres(prev => ({
-            ...prev,
-            [genre]: !prev[genre]
-        }));
-    }, []);
+        const newGenres = {
+            ...selectedGenres,
+            [genre]: !selectedGenres[genre]
+        };
+        setSelectedGenres(newGenres);
 
-    // Handle status checkbox changes
+        // Auto update URL and navigate
+        updateFiltersAndNavigate(newGenres, selectedStatus);
+    }, [selectedGenres, selectedStatus, updateFiltersAndNavigate]);
+
+    // Handle status checkbox changes with auto-filtering
     const handleStatusChange = useCallback((status) => {
-        setSelectedStatus(prev => ({
-            ...prev,
-            [status]: !prev[status]
-        }));
-    }, []);
+        const newStatus = {
+            ...selectedStatus,
+            [status]: !selectedStatus[status]
+        };
+        setSelectedStatus(newStatus);
+
+        // Auto update URL and navigate
+        updateFiltersAndNavigate(selectedGenres, newStatus);
+    }, [selectedGenres, selectedStatus, updateFiltersAndNavigate]);
 
     // Handle sort change
     const handleSortChange = useCallback((newSortBy) => {
@@ -420,8 +449,8 @@ const NovelDirectory = () => {
         const searchParams = new URLSearchParams(location.search);
         searchParams.set('sort', newSortBy);
 
-        const genreFilters = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
-        const statusFilters = Object.keys(appliedStatus).filter(status => appliedStatus[status]);
+        const genreFilters = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
+        const statusFilters = Object.keys(selectedStatus).filter(status => selectedStatus[status]);
 
         let queryString = `?sort=${newSortBy}`;
         if (genreFilters.length > 0) {
@@ -432,42 +461,12 @@ const NovelDirectory = () => {
         }
 
         navigate(`/danh-sach-truyen/trang/1${queryString}`);
-    }, [appliedGenres, appliedStatus, navigate, location.search]);
-
-    // Apply filters
-    const applyFilters = useCallback(() => {
-        setAppliedGenres(selectedGenres);
-        setAppliedStatus(selectedStatus);
-
-        const genreFilters = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
-        const statusFilters = Object.keys(selectedStatus).filter(status => selectedStatus[status]);
-
-        let queryString = '';
-        const params = [];
-
-        if (sortBy !== 'title-asc') {
-            params.push(`sort=${sortBy}`);
-        }
-        if (genreFilters.length > 0) {
-            params.push(`genres=${genreFilters.join(',')}`);
-        }
-        if (statusFilters.length > 0) {
-            params.push(`status=${statusFilters.join(',')}`);
-        }
-
-        if (params.length > 0) {
-            queryString = '?' + params.join('&');
-        }
-
-        navigate(`/danh-sach-truyen/trang/1${queryString}`);
-    }, [selectedGenres, selectedStatus, sortBy, navigate]);
+    }, [selectedGenres, selectedStatus, navigate, location.search]);
 
     // Reset filters
     const resetFilters = useCallback(() => {
         setSelectedGenres({});
         setSelectedStatus({});
-        setAppliedGenres({});
-        setAppliedStatus({});
         setSortBy('title-asc');
         navigate('/danh-sach-truyen/trang/1');
     }, [navigate]);
@@ -541,14 +540,14 @@ const NovelDirectory = () => {
 
     // Format view count
     const formatViewCount = (viewCount) => {
-        if (viewCount === undefined || viewCount === null || viewCount === 0) return '0 lượt xem';
+        if (viewCount === undefined || viewCount === null || viewCount === 0) return '0 lượt';
 
         if (viewCount >= 1000000) {
-            return `${(viewCount / 1000000).toFixed(1)}M lượt xem`;
+            return `${(viewCount / 1000000).toFixed(1)}M lượt`;
         } else if (viewCount >= 1000) {
-            return `${(viewCount / 1000).toFixed(1)}K lượt xem`;
+            return `${(viewCount / 1000).toFixed(1)}K lượt`;
         } else {
-            return `${viewCount} lượt xem`;
+            return `${viewCount} lượt`;
         }
     };
 
@@ -562,8 +561,8 @@ const NovelDirectory = () => {
             params.push(`sort=${sortBy}`);
         }
 
-        const genreFilters = Object.keys(appliedGenres).filter(genre => appliedGenres[genre]);
-        const statusFilters = Object.keys(appliedStatus).filter(status => appliedStatus[status]);
+        const genreFilters = Object.keys(selectedGenres).filter(genre => selectedGenres[genre]);
+        const statusFilters = Object.keys(selectedStatus).filter(status => selectedStatus[status]);
 
         if (genreFilters.length > 0) {
             params.push(`genres=${genreFilters.join(',')}`);
@@ -647,8 +646,8 @@ const NovelDirectory = () => {
             <>
                 <NovelDirectorySEO
                     currentPage={currentPage}
-                    appliedGenres={appliedGenres}
-                    appliedStatus={appliedStatus}
+                    selectedGenres={selectedGenres}
+                    selectedStatus={selectedStatus}
                     totalItems={totalItems}
                 />
 
@@ -709,9 +708,6 @@ const NovelDirectory = () => {
                                 ))}
 
                                 <div className="nd-filter-actions">
-                                    <button className="nd-filter-button nd-apply-filters" onClick={applyFilters}>
-                                        Áp dụng bộ lọc
-                                    </button>
                                     <button className="nd-filter-button nd-reset-filters" onClick={resetFilters}>
                                         Xóa bộ lọc
                                     </button>
@@ -728,8 +724,8 @@ const NovelDirectory = () => {
         <>
             <NovelDirectorySEO
                 currentPage={currentPage}
-                appliedGenres={appliedGenres}
-                appliedStatus={appliedStatus}
+                selectedGenres={selectedGenres}
+                selectedStatus={selectedStatus}
                 totalItems={totalItems}
             />
 
@@ -909,9 +905,6 @@ const NovelDirectory = () => {
 
                             {/* Filter actions */}
                             <div className="nd-filter-actions">
-                                <button className="nd-filter-button nd-apply-filters" onClick={applyFilters}>
-                                    Áp dụng bộ lọc
-                                </button>
                                 <button className="nd-filter-button nd-reset-filters" onClick={resetFilters}>
                                     Xóa bộ lọc
                                 </button>
