@@ -931,7 +931,7 @@ const NovelDetail = ({ novelId }) => {
     if (!user) return;
     
     // Get current data for permission check and optimistic update
-    const currentData = queryClient.getQueryData(['novel', novelId]);
+    const currentData = queryClient.getQueryData(['completeNovel', novelId]);
     
     const canReorderChapters = user.role === 'admin' || 
                               user.role === 'moderator' || 
@@ -957,13 +957,13 @@ const NovelDetail = ({ novelId }) => {
           }
 
           // Cancel any pending queries for this novel
-          await queryClient.cancelQueries(['novel', novelId]);
+          await queryClient.cancelQueries(['completeNovel', novelId]);
           
           // Swap chapters for optimistic update
           [chapters[currentIndex], chapters[targetIndex]] = [chapters[targetIndex], chapters[currentIndex]];
           
           // Update cache immediately
-          queryClient.setQueryData(['novel', novelId], {
+          queryClient.setQueryData(['completeNovel', novelId], {
             ...currentData,
             modules: currentData.modules.map((m, i) => 
               i === moduleIndex ? { ...m, chapters } : m
@@ -981,7 +981,7 @@ const NovelDetail = ({ novelId }) => {
           } catch (error) {
             // On error, revert to previous state
             if (previousData) {
-              queryClient.setQueryData(['novel', novelId], previousData);
+              queryClient.setQueryData(['completeNovel', novelId], previousData);
             }
             throw error;
           }
