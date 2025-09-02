@@ -267,8 +267,11 @@ const ModuleList = memo(({
     // Must first qualify for showing rental price
     if (!shouldShowRentalPrice(module)) return false;
     
+    // For unauthenticated users, show the button (they'll be prompted to log in when clicked)
+    if (!user) return true;
+    
     // Don't show for staff members who already have access
-    if (user && canAccessPaidContent) return false;
+    if (canAccessPaidContent) return false;
     
     // Don't show if user already has an active rental for this module
     const activeRental = getActiveRental(module._id);
