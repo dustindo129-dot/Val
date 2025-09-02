@@ -697,7 +697,7 @@ const NovelDetail = ({ novelId }) => {
     if (!user) return;
     
     // Get current data for permission check and optimistic update
-    const currentData = queryClient.getQueryData(['novel', novelId]);
+    const currentData = queryClient.getQueryData(['completeNovel', novelId]);
     
     const canReorderModules = user.role === 'admin' || 
                              user.role === 'moderator' || 
@@ -764,7 +764,7 @@ const NovelDetail = ({ novelId }) => {
           });
           
           // Update cache immediately with the updated modules
-          queryClient.setQueryData(['novel', novelId], {
+          queryClient.setQueryData(['completeNovel', novelId], {
             ...currentData,
             modules: updatedModules
           });
@@ -801,7 +801,7 @@ const NovelDetail = ({ novelId }) => {
               finalModules.sort((a, b) => a.order - b.order);
               
               // Update the cache with the final, sorted modules
-              queryClient.setQueryData(['novel', novelId], {
+              queryClient.setQueryData(['completeNovel', novelId], {
                 ...currentData,
                 modules: finalModules,
                 updatedAt: new Date().toISOString()
@@ -809,7 +809,7 @@ const NovelDetail = ({ novelId }) => {
             }
           } catch (serverError) {
             // If server fails, revert to previous state
-            queryClient.setQueryData(['novel', novelId], previousData);
+            queryClient.setQueryData(['completeNovel', novelId], previousData);
             console.error('Module reorder failed on server:', serverError);
             throw serverError;
           }
@@ -1167,7 +1167,7 @@ const NovelDetail = ({ novelId }) => {
     const dataToSubmit = formData || moduleForm;
     
     // Get current data for mode change detection
-    const currentNovelData = queryClient.getQueryData(['novel', novelId]);
+    const currentNovelData = queryClient.getQueryData(['completeNovel', novelId]);
     
     setModuleForm(prev => ({ ...prev, loading: true, error: '' }));
     

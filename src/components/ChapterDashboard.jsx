@@ -1073,7 +1073,7 @@ const ChapterDashboard = () => {
             }
 
             // Get current novel data for optimistic update
-            const currentNovelData = queryClient.getQueryData(['novel', novelId]);
+            const currentNovelData = queryClient.getQueryData(['completeNovel', novelId]);
 
             if (isEditMode) {
                 // Update existing chapter
@@ -1129,7 +1129,7 @@ const ChapterDashboard = () => {
                             optimisticNovel.updatedAt = timestamp;
 
                             // Set the optimistic data in cache
-                            queryClient.setQueryData(['novel', novelId], optimisticNovel);
+                            queryClient.setQueryData(['completeNovel', novelId], optimisticNovel);
                         }
                     }
                 }

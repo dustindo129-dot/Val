@@ -1313,7 +1313,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
     // Handle successful rating update
     const handleRatingSuccess = (response) => {
         // Update the novel data in the cache
-        queryClient.setQueryData(['novel', novelId], (oldData) => {
+        queryClient.setQueryData(['completeNovel', novelId], (oldData) => {
             if (!oldData) return oldData;
 
             // Create a deep copy to avoid mutating the cache directly
