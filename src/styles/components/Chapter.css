@@ -376,7 +376,7 @@
 .chapter-navigation {
   display: flex;
   justify-content: space-between;
-  margin: 20px 0;
+  margin: 15px 0;
   gap: 15px;
   max-width: 1200px;
   margin-left: auto;
@@ -430,7 +430,7 @@
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   position: relative;
   flex-wrap: wrap;
   gap: 10px;
@@ -765,7 +765,6 @@
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   padding: 10px 15px;
-  margin-bottom: 15px;
   position: relative;
   gap: 15px;
 }

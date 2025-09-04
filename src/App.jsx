@@ -55,8 +55,8 @@ const App = () => {
                       backgroundImage: `var(--app-background)`
                     }}
                   />
-                  {!isChapterPage && <Navbar />}
-                  {!isChapterPage && <SecondaryNavbar />}
+                  <Navbar />
+                  <SecondaryNavbar />
                   <AvatarAnnouncementStrip />
                   <main className={`main-content ${isChapterPage ? 'chapter-page' : ''}`}>
                     <RouteTracker />
