@@ -219,6 +219,8 @@
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  align-items: flex-start;
+  flex-shrink: 0;
 }
 
 .edit-chapter-btn,
@@ -760,21 +762,6 @@
   box-shadow: var(--box-shadow);
   padding: 10px 15px;
   position: relative;
-  gap: 10px;
-}
-
-.header-actions {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-items: flex-end;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-color);
-}
-
-/* Add dark mode support for the new border */
-:root.dark-mode .header-actions {
-  border-top-color: #444;
 }
 
 /* Existing footer nav container styles */
@@ -798,8 +785,17 @@
 }
 
 .breadcrumb-info {
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   width: 100%;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-text {
+  flex: 1;
+  min-width: 200px;
 }
 
 .breadcrumb-nav a {
@@ -1822,7 +1818,26 @@
   .header-nav-container {
     padding: 10px;
   }
+}
 
+/* Mobile responsive for chapter header layout */
+@media (max-width: 768px) {
+  .breadcrumb-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .breadcrumb-text {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .admin-controls {
+    align-self: flex-end;
+    width: auto;
+  }
+  
   .chapter-bottom-actions {
     flex-direction: row;
     justify-content: space-between;
@@ -1861,20 +1876,6 @@
   .btn-bookmark {
     padding: 5px 10px;
     font-size: 0.8rem;
-  }
-
-
-  .admin-controls {
-    width: 100%;
-  }
-
-  .edit-chapter-btn,
-  .delete-chapter-btn,
-  .save-changes-btn,
-  .cancel-edit-btn {
-    width: 100%;
-    margin-bottom: 5px;
-    text-align: center;
   }
 
   /* Position toggle button below scroll-to-top button */
