@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import '../styles/components/AvatarAnnouncementStrip.css';
 
 const AvatarAnnouncementStrip = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
+    // Only show on homepage
+    const isHomepage = location.pathname === '/';
+    
+    if (!isHomepage) {
+      setIsVisible(false);
+      return;
+    }
+
     // Check if we should show the announcement
     const lastShown = localStorage.getItem('avatarAnnouncementLastShown');
     const today = new Date().toDateString();
     
-    // For testing: always show the announcement (remove this condition later)
-    // if (!lastShown || lastShown !== today) {
+    if (!lastShown || lastShown !== today) {
       setIsVisible(true);
       localStorage.setItem('avatarAnnouncementLastShown', today);
-    // }
-  }, []);
+    }
+  }, [location.pathname]);
 
   const handleClose = () => {
     setIsVisible(false);
