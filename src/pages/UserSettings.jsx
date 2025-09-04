@@ -159,10 +159,14 @@ const UserSettings = () => {
         
         // Set other state based on the response
         if (data.displayNameLastChanged) {
-          setCanChangeDisplayName(false);
           const nextChange = new Date(data.displayNameLastChanged);
           nextChange.setMonth(nextChange.getMonth() + 1);
           setNextDisplayNameChange(nextChange);
+          
+          // Check if enough time has passed (current date is past the next change date)
+          const now = new Date();
+          const canChange = now >= nextChange;
+          setCanChangeDisplayName(canChange);
         } else {
           setCanChangeDisplayName(true);
           setNextDisplayNameChange(null);
@@ -364,7 +368,7 @@ const UserSettings = () => {
 
       setMessage({ type: 'success', text: 'Tên hiển thị đã được cập nhật thành công' });
       
-      // Update eligibility status
+      // Update eligibility status - user just changed their display name, so they can't change it again for 1 month
       setCanChangeDisplayName(false);
       const nextChange = new Date();
       nextChange.setMonth(nextChange.getMonth() + 1);
