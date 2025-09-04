@@ -929,16 +929,18 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [chapter, isNavigating, isEditing, showSettingsModal, showReportModal]);
 
+  // Add refs to persist state across re-renders
+  const touchDeviceRef = useRef(false);
+  const lastInteractionTimeRef = useRef(0);
+
   // Effect to show buttons on user interaction (click/tap)
   useEffect(() => {
     let hideTimeout;
     let touchStartPos = null;
     let touchMoved = false;
-    let lastInteractionTime = 0;
-    let touchDevice = false;
 
     const handleTouchStart = (event) => {
-      touchDevice = true; // Mark as touch device
+      touchDeviceRef.current = true; // Mark as touch device
       touchStartPos = {
         x: event.touches[0].clientX,
         y: event.touches[0].clientY
@@ -973,8 +975,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     };
 
     const handleClick = (event) => {
+      const timeSinceLastInteraction = Date.now() - lastInteractionTimeRef.current;
+      
       // If this is a touch device and we just handled a touch event, ignore the click
-      if (touchDevice && (Date.now() - lastInteractionTime) < 500) {
+      if (touchDeviceRef.current && timeSinceLastInteraction < 500) {
         return;
       }
       
@@ -984,10 +988,12 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     const showButtonsOnInteraction = (event, eventType) => {
       // Prevent rapid double-triggering
       const now = Date.now();
-      if (now - lastInteractionTime < 300) {
+      const timeSinceLastInteraction = now - lastInteractionTimeRef.current;
+      
+      if (timeSinceLastInteraction < 300) {
         return;
       }
-      lastInteractionTime = now;
+      lastInteractionTimeRef.current = now;
 
       // Don't trigger if any modal is open
       if (showSettingsModal || showReportModal || showRentalExpirationModal || showRentalModal) {
