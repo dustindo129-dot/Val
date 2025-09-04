@@ -36,7 +36,7 @@ const App = () => {
     initGA('G-4L5EBS6ZQT');
   }, []);
 
-  // Check if we're on a chapter page to hide global ScrollToTop
+  // Check if we're on a chapter page to hide navigation elements for clean reading experience
   const isChapterPage = location.pathname.includes('/truyen/') && location.pathname.includes('/chuong/');
 
   return (
@@ -55,15 +55,15 @@ const App = () => {
                       backgroundImage: `var(--app-background)`
                     }}
                   />
-                  <Navbar />
-                  <SecondaryNavbar />
+                  {!isChapterPage && <Navbar />}
+                  {!isChapterPage && <SecondaryNavbar />}
                   <AvatarAnnouncementStrip />
-                  <main className="main-content">
+                  <main className={`main-content ${isChapterPage ? 'chapter-page' : ''}`}>
                     <RouteTracker />
                     <AppRoutes />
                   </main>
-                  <Footer />
-                  {/* Global ScrollToTop button that appears on all pages except chapter pages */}
+                  {!isChapterPage && <Footer />}
+                  {/* Global ScrollToTop button - hidden on chapter pages for clean reading experience */}
                   {!isChapterPage && <ScrollToTop threshold={300} />}
                 </div>
                 </BookmarkProvider>

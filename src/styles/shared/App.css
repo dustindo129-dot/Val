@@ -121,6 +121,11 @@ html {
   width: 100%;
 }
 
+/* Remove padding on chapter pages for clean reading experience */
+.main-content.chapter-page {
+  padding: 0;
+}
+
 /* App container layout */
 .app-container {
   display: flex;
@@ -138,5 +143,10 @@ body {
   /* Adjust main content padding for mobile */
   .main-content {
     padding: 2rem 0;
+  }
+  
+  /* Remove padding on chapter pages for clean reading experience */
+  .main-content.chapter-page {
+    padding: 0;
   }
 } 

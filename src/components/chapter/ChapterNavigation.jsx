@@ -79,9 +79,9 @@ const ChapterNavigation = ({
 
   const getNextButtonText = () => {
     if (isNavigating) return 'Đang tải...';
-    if (!chapter?.nextChapter) return 'Không có chương tiếp theo';
-    if (!canAccessNextChapter) return 'Không có chương tiếp theo';
-    return 'Chương tiếp theo';
+    if (!chapter?.nextChapter) return 'Không có chương tiếp';
+    if (!canAccessNextChapter) return 'Không có chương tiếp' ;
+    return 'Chương tiếp';
   };
 
   const getPrevButtonTitle = () => {
@@ -91,9 +91,9 @@ const ChapterNavigation = ({
   };
 
   const getNextButtonTitle = () => {
-    if (!chapter?.nextChapter) return 'Không có chương tiếp theo';
-    if (!canAccessNextChapter) return 'Không có chương tiếp theo có thể truy cập';
-    return `Chương tiếp theo: ${chapter.nextChapter.title}`;
+    if (!chapter?.nextChapter) return 'Không có chương tiếp';
+    if (!canAccessNextChapter) return 'Không có chương tiếp có thể truy cập';
+    return `Chương tiếp: ${chapter.nextChapter.title}`;
   };
 
   return (
