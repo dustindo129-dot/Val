@@ -934,8 +934,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     let hideTimeout;
     let touchStartPos = null;
     let touchMoved = false;
+    let lastInteractionTime = 0;
+    let touchDevice = false;
 
     const handleTouchStart = (event) => {
+      touchDevice = true; // Mark as touch device
       touchStartPos = {
         x: event.touches[0].clientX,
         y: event.touches[0].clientY
@@ -964,12 +967,28 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         return;
       }
       
-      showButtonsOnInteraction(event);
+      showButtonsOnInteraction(event, 'touch');
       touchStartPos = null;
       touchMoved = false;
     };
 
-    const showButtonsOnInteraction = (event) => {
+    const handleClick = (event) => {
+      // If this is a touch device and we just handled a touch event, ignore the click
+      if (touchDevice && (Date.now() - lastInteractionTime) < 500) {
+        return;
+      }
+      
+      showButtonsOnInteraction(event, 'click');
+    };
+
+    const showButtonsOnInteraction = (event, eventType) => {
+      // Prevent rapid double-triggering
+      const now = Date.now();
+      if (now - lastInteractionTime < 300) {
+        return;
+      }
+      lastInteractionTime = now;
+
       // Don't trigger if any modal is open
       if (showSettingsModal || showReportModal || showRentalExpirationModal || showRentalModal) {
         return;
@@ -1023,13 +1042,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     };
 
     // Add event listeners for user interaction
-    document.addEventListener('click', showButtonsOnInteraction);
+    document.addEventListener('click', handleClick);
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
     document.addEventListener('touchmove', handleTouchMove, { passive: true });
     document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-      document.removeEventListener('click', showButtonsOnInteraction);
+      document.removeEventListener('click', handleClick);
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
