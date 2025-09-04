@@ -7,7 +7,7 @@ import '../styles/components/ScrollToTop.css';
  * A reusable button that appears when the user scrolls down
  * and scrolls back to the top of the page when clicked.
  */
-const ScrollToTop = ({ threshold = 300 }) => {
+const ScrollToTop = ({ threshold = 300, forceVisible = null }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   // Show button when user scrolls down
@@ -35,9 +35,17 @@ const ScrollToTop = ({ threshold = 300 }) => {
     });
   };
 
+  // Determine if button should be shown
+  // If forceVisible is provided (not null), use it along with scroll position
+  // If forceVisible is null, use original behavior (only scroll position)
+  const shouldShow = forceVisible !== null 
+    ? (forceVisible && isVisible) // Show only if both forceVisible is true AND scrolled past threshold
+    : isVisible; // Original behavior - show based on scroll position only
+
+
   return (
     <>
-      {isVisible && (
+      {shouldShow && (
         <button 
           className="scroll-top-btn"
           onClick={scrollToTop} 

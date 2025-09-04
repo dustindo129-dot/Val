@@ -9,16 +9,19 @@ export const useReadingSettings = () => {
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState("'Roboto', sans-serif");
   const [lineHeight, setLineHeight] = useState('1.8');
+  const [marginSpacing, setMarginSpacing] = useState('20');
 
   // Load settings from localStorage on init
   useEffect(() => {
     const savedFontSize = localStorage.getItem('readerFontSize');
     const savedFontFamily = localStorage.getItem('readerFontFamily');
     const savedLineHeight = localStorage.getItem('readerLineHeight');
+    const savedMarginSpacing = localStorage.getItem('readerMarginSpacing');
 
     if (savedFontSize) setFontSize(parseInt(savedFontSize));
     if (savedFontFamily) setFontFamily(savedFontFamily);
     if (savedLineHeight) setLineHeight(savedLineHeight);
+    if (savedMarginSpacing) setMarginSpacing(savedMarginSpacing);
   }, []);
 
   const increaseFontSize = () => {
@@ -33,12 +36,30 @@ export const useReadingSettings = () => {
     localStorage.setItem('readerFontSize', newSize.toString());
   };
 
+  // Create wrapper functions to save to localStorage
+  const setFontFamilyWithSave = (value) => {
+    setFontFamily(value);
+    localStorage.setItem('readerFontFamily', value);
+  };
+
+  const setLineHeightWithSave = (value) => {
+    setLineHeight(value);
+    localStorage.setItem('readerLineHeight', value);
+  };
+
+  const setMarginSpacingWithSave = (value) => {
+    setMarginSpacing(value);
+    localStorage.setItem('readerMarginSpacing', value);
+  };
+
   return {
     fontSize,
     fontFamily,
     lineHeight,
-    setFontFamily,
-    setLineHeight,
+    marginSpacing,
+    setFontFamily: setFontFamilyWithSave,
+    setLineHeight: setLineHeightWithSave,
+    setMarginSpacing: setMarginSpacingWithSave,
     increaseFontSize,
     decreaseFontSize
   };

@@ -16,6 +16,8 @@ export const SettingsModal = ({
   increaseFontSize,
   lineHeight,
   setLineHeight,
+  marginSpacing,
+  setMarginSpacing,
   theme,
   applyTheme
 }) => {
@@ -59,6 +61,9 @@ export const SettingsModal = ({
                 <option value="'Noto Serif', serif">Noto Serif</option>
                 <option value="Verdana, sans-serif">Verdana</option>
                 <option value="Courier New, monospace">Courier New</option>
+                <option value="'Literata', serif">Literata</option>
+                <option value="'Andika', sans-serif">Andika</option>
+                <option value="'Merriweather', serif">Merriweather</option>
               </select>
             </div>
           </div>
@@ -79,6 +84,22 @@ export const SettingsModal = ({
               >
                 A+
               </button>
+            </div>
+          </div>
+          
+          <div className="settings-section">
+            <h4>Khoảng cách lề</h4>
+            <div className="margin-spacing-control">
+              <input
+                type="range"
+                min="0"
+                max="80"
+                step="10"
+                value={marginSpacing}
+                onChange={e => setMarginSpacing(e.target.value)}
+                className="margin-spacing-slider"
+              />
+              <span className="current-margin-spacing">{marginSpacing}px</span>
             </div>
           </div>
           

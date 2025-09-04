@@ -29,10 +29,15 @@ const RouteTracker = () => {
 };
 
 const App = () => {
+  const location = useLocation();
+  
   useEffect(() => {
     // Replace 'G-XXXXXXXXXX' with your actual GA4 measurement ID
     initGA('G-4L5EBS6ZQT');
   }, []);
+
+  // Check if we're on a chapter page to hide global ScrollToTop
+  const isChapterPage = location.pathname.includes('/truyen/') && location.pathname.includes('/chuong/');
 
   return (
     <HelmetProvider>
@@ -58,8 +63,8 @@ const App = () => {
                     <AppRoutes />
                   </main>
                   <Footer />
-                  {/* Global ScrollToTop button that appears on all pages */}
-                  <ScrollToTop threshold={300} />
+                  {/* Global ScrollToTop button that appears on all pages except chapter pages */}
+                  {!isChapterPage && <ScrollToTop threshold={300} />}
                 </div>
                 </BookmarkProvider>
               </NovelStatusProvider>

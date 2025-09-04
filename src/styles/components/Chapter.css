@@ -14,6 +14,9 @@
  * - Social sharing and interactions
  */
 
+/* Import Google Fonts for reading options */
+@import url('https://fonts.googleapis.com/css2?family=Literata:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Andika:wght@400;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
+
  :root {
   --primary-color: #3498db;
   --secondary-color: #2c3e50;
@@ -1752,6 +1755,51 @@
   color: var(--text-color);
 }
 
+.margin-spacing-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.margin-spacing-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #e0e0e0;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.margin-spacing-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.margin-spacing-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.current-margin-spacing {
+  font-weight: 600;
+  min-width: 50px;
+  text-align: center;
+  color: var(--text-color);
+}
+
 .line-height-control {
   display: flex;
   align-items: center;
@@ -2151,6 +2199,31 @@
   src: local("Noto Sans Italic"), url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,450;1,400;1,450&display=swap");
   font-style: italic;
   font-weight: normal;
+  font-display: swap;
+}
+
+/* Additional reading fonts for better Vietnamese support */
+@font-face {
+  font-family: "Literata";
+  src: local("Literata"), url("https://fonts.googleapis.com/css2?family=Literata:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Andika";
+  src: local("Andika"), url("https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Merriweather";
+  src: local("Merriweather"), url("https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap");
+  font-style: normal;
+  font-weight: 400;
   font-display: swap;
 }
 

@@ -226,10 +226,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // Get reading settings from custom hook
   const {
-    fontSize, fontFamily, lineHeight,
-    setFontFamily, setLineHeight, 
+    fontSize, fontFamily, lineHeight, marginSpacing,
+    setFontFamily, setLineHeight, setMarginSpacing,
     increaseFontSize, decreaseFontSize
   } = useReadingSettings();
+
 
   // Get theme from unified theme context
   const { theme, applyTheme } = useTheme();
@@ -248,6 +249,10 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   const [showChapterList, setShowChapterList] = useState(false);
   const [showNavControls, setShowNavControls] = useState(false);
+  
+  // Button visibility state for chapter page - buttons hidden by default, show on user interaction
+  const [buttonsVisible, setButtonsVisible] = useState(false);
+  
 
   // Modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -923,6 +928,56 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [chapter, isNavigating, isEditing, showSettingsModal, showReportModal]);
+
+  // Effect to show buttons on user interaction (click/tap)
+  useEffect(() => {
+    let hideTimeout;
+
+    const showButtonsOnInteraction = (event) => {
+      // Check if the click is on the toggle button or its children - if so, don't interfere
+      const clickedElement = event.target;
+      const isToggleButtonClick = clickedElement.closest('.toggle-btn') || 
+                                  clickedElement.closest('.nav-controls-container') ||
+                                  clickedElement.closest('.scroll-top-btn');
+      
+      if (isToggleButtonClick) {
+        return;
+      }
+      
+      // Toggle visibility: if buttons are visible, hide them; if hidden, show them
+      if (buttonsVisible) {
+        setButtonsVisible(false);
+        // Clear existing timeout since we're manually hiding
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+        }
+      } else {
+        setButtonsVisible(true);
+        
+        // Clear existing timeout
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+        }
+        
+        // Hide buttons after 5 seconds of inactivity
+        hideTimeout = setTimeout(() => {
+          setButtonsVisible(false);
+        }, 5000);
+      }
+    };
+
+    // Add event listeners for user interaction (click/tap only)
+    document.addEventListener('click', showButtonsOnInteraction);
+    document.addEventListener('touchstart', showButtonsOnInteraction);
+
+    return () => {
+      document.removeEventListener('click', showButtonsOnInteraction);
+      document.removeEventListener('touchstart', showButtonsOnInteraction);
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+    };
+  }, [buttonsVisible]); // Include buttonsVisible in dependencies since we're reading it
 
   // Effect to handle click outside of the chapter dropdown
   useEffect(() => {
@@ -1674,6 +1729,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
             fontSize={fontSize}
             fontFamily={fontFamily}
             lineHeight={lineHeight}
+            marginSpacing={marginSpacing}
             editorRef={editorRef}
             getSafeHtml={getSafeHtml}
             canEdit={canEdit}
@@ -1742,7 +1798,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       />
 
       {/* Add the ScrollToTop component */}
-      <ScrollToTop threshold={300} />
+      <ScrollToTop threshold={300} forceVisible={buttonsVisible} />
 
       {/* Navigation Controls */}
       <ChapterNavigationControls
@@ -1762,6 +1818,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         moduleChapters={moduleChapters}
         isModuleChaptersLoading={isModuleChaptersLoading}
         user={user}
+        buttonsVisible={buttonsVisible}
       />
 
       {/* Modals */}
@@ -1775,6 +1832,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         increaseFontSize={increaseFontSize}
         lineHeight={lineHeight}
         setLineHeight={setLineHeight}
+        marginSpacing={marginSpacing}
+        setMarginSpacing={setMarginSpacing}
         theme={theme}
         applyTheme={applyTheme}
       />

@@ -30,7 +30,8 @@ const ChapterNavigationControls = ({
                                        isEditing,
                                        moduleChapters,
                                        isModuleChaptersLoading,
-                                       user
+                                       user,
+                                       buttonsVisible = true
                                    }) => {
     // Ref for the chapter list container to handle scrolling
     const chapterListRef = useRef(null);
@@ -130,16 +131,19 @@ const ChapterNavigationControls = ({
 
     const novelSlug = createUniqueSlug(novelTitle, novelId);
 
+
     return (
         <>
-            {/* Toggle Button */}
-            <button
-                className="toggle-btn"
-                onClick={() => setShowNavControls(!showNavControls)}
-                title="Bật/Tắt bảng điều khiển điều hướng"
-            >
-                <FontAwesomeIcon icon={showNavControls ? faTimes : faEllipsisV}/>
-            </button>
+            {/* Toggle Button - only show when buttonsVisible is true */}
+            {buttonsVisible && (
+                <button
+                    className="toggle-btn"
+                    onClick={() => setShowNavControls(!showNavControls)}
+                    title="Bật/Tắt bảng điều khiển điều hướng"
+                >
+                    <FontAwesomeIcon icon={showNavControls ? faTimes : faEllipsisV}/>
+                </button>
+            )}
 
             {/* Fixed Navigation Controls */}
             <div className={`nav-controls-container ${showNavControls ? 'visible' : ''}`}>

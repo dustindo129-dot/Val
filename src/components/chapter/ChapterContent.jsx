@@ -22,6 +22,7 @@ const ChapterContent = React.memo(({
                                        fontSize = 16,
                                        fontFamily = 'Arial, sans-serif',
                                        lineHeight = '1.6',
+                                       marginSpacing = '20',
                                        editorRef,
                                        onModeChange,
                                        canEdit = false,
@@ -57,6 +58,7 @@ const ChapterContent = React.memo(({
     const autoSaveTimeoutRef = useRef(null);
     const restoredContentRef = useRef(null);
     const isLoadingRestoredContent = useRef(false);
+
 
     // throttledWordCountUpdate with timeout refs
     const wordCountTimeoutRef = useRef(null);
@@ -2233,10 +2235,11 @@ const ChapterContent = React.memo(({
                             '--content-font-size': `${fontSize}px`,
                             '--content-font-family': fontFamily,
                             '--content-line-height': lineHeight,
+                            '--content-margin-spacing': `${marginSpacing}px`,
                             fontSize: `${fontSize}px`,
                             fontFamily: fontFamily,
                             lineHeight: lineHeight,
-                            padding: '15px 10px'
+                            padding: `15px ${marginSpacing}px`
                         }}
                         dangerouslySetInnerHTML={{__html: processContent(chapter.content || '')}}
                     />
@@ -2258,7 +2261,8 @@ const ChapterContent = React.memo(({
         prevProps.userRole !== nextProps.userRole ||
         prevProps.fontSize !== nextProps.fontSize ||
         prevProps.fontFamily !== nextProps.fontFamily ||
-        prevProps.lineHeight !== nextProps.lineHeight) {
+        prevProps.lineHeight !== nextProps.lineHeight ||
+        prevProps.marginSpacing !== nextProps.marginSpacing) {
         return false;
     }
 
@@ -2323,6 +2327,7 @@ ChapterContent.propTypes = {
     fontSize: PropTypes.number,
     fontFamily: PropTypes.string,
     lineHeight: PropTypes.string,
+    marginSpacing: PropTypes.string,
     editorRef: PropTypes.object,
     onModeChange: PropTypes.func,
     canEdit: PropTypes.bool,
