@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faCog, faSave, faHome, faBookmark } from '@fortawesome/free-solid-svg-icons';
-import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
+import { faEdit, faSave, faHome } from '@fortawesome/free-solid-svg-icons';
 import { createUniqueSlug, generateNovelUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 
@@ -19,14 +18,9 @@ const ChapterHeader = ({
   isSaving,
   setIsEditing,
   formatDate,
-  decreaseFontSize,
-  increaseFontSize,
-  setShowSettingsModal,
   user,
   canEdit,
-  canDelete,
-  isBookmarked,
-  handleBookmark
+  canDelete
 }) => {
   const novelSlug = createUniqueSlug(novel?.title, novelId);
   const localizedNovelUrl = generateNovelUrl(novel || { _id: novelId, title: '' });
@@ -49,41 +43,8 @@ const ChapterHeader = ({
         </div>
       </div>
       
-      <div className="header-actions">
-        <div className="reader-controls">
-          <button
-            className="font-size-btn decrease"
-            onClick={decreaseFontSize}
-            title="Decrease font size"
-          >
-            A-
-          </button>
-          <button
-            className="font-size-btn increase"
-            onClick={increaseFontSize}
-            title="Increase font size"
-          >
-            A+
-          </button>
-          <button
-            className="settings-btn"
-            onClick={() => setShowSettingsModal(true)}
-            title="Reading settings"
-          >
-            ⚙️
-          </button>
-          {handleBookmark && (
-            <button
-              className={`btn-bookmark ${isBookmarked ? 'active' : ''}`}
-              onClick={handleBookmark}
-            >
-              <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
-              {isBookmarked ? 'Đã đánh dấu' : 'Đánh dấu chương'}
-            </button>
-          )}
-        </div>
-        
-        {canEdit && (
+      {canEdit && (
+        <div className="header-actions">
           <div className="admin-controls">
             {isEditing ? (
               <>
@@ -128,8 +89,8 @@ const ChapterHeader = ({
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -42,6 +42,25 @@
   visibility: visible;
 }
 
+/* Vertical Navigation Controls */
+.vertical-nav-controls-container {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.vertical-nav-controls-container.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
 .control-btn {
   width: 45px;
   height: 45px;
@@ -61,10 +80,20 @@
   transform: scale(1.1);
 }
 
+/* Special styling for bookmark button */
+.bookmark-btn.active {
+  background-color: #28a745;
+}
+
+/* Home button link styling */
+.home-btn {
+  text-decoration: none;
+}
+
 /* Chapter dropdown */
 .chapter-dropdown {
   position: fixed;
-  bottom: 80px;
+  bottom: 190px;
   right: 20px;
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
   border-radius: 16px;
@@ -425,13 +454,18 @@
     right: 65px;
   }
 
+  .vertical-nav-controls-container {
+    bottom: 65px;
+    right: 15px;
+  }
+
   .control-btn {
     width: 40px;
     height: 40px;
   }
 
   .chapter-dropdown {
-    bottom: 65px;
+    bottom: 155px;
     right: 15px;
     width: calc(100vw - 30px);
     max-width: 320px;

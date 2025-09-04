@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faTimes, faEllipsisV, faList, faCog,
-    faChevronLeft, faChevronRight, faBars, faLock
+    faChevronLeft, faChevronRight, faBars, faLock, faBookmark, faHouse
 } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
 import '../../styles/components/ChapterNavigationControls.css';
 import { createUniqueSlug, generateChapterUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
@@ -31,7 +32,9 @@ const ChapterNavigationControls = ({
                                        moduleChapters,
                                        isModuleChaptersLoading,
                                        user,
-                                       buttonsVisible = true
+                                       buttonsVisible = true,
+                                       isBookmarked,
+                                       handleBookmark
                                    }) => {
     // Ref for the chapter list container to handle scrolling
     const chapterListRef = useRef(null);
@@ -145,8 +148,26 @@ const ChapterNavigationControls = ({
                 </button>
             )}
 
+            {/* Vertical Navigation Controls */}
+            {buttonsVisible && (
+                <div className={`vertical-nav-controls-container ${showNavControls ? 'visible' : ''}`}>
+                    <button
+                        className={`control-btn bookmark-btn ${isBookmarked ? 'active' : ''}`}
+                        onClick={handleBookmark}
+                        title={isBookmarked ? "Bỏ đánh dấu chương" : "Đánh dấu chương"}
+                    >
+                        <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
+                    </button>
+
+                    <Link to="/" className="control-btn home-btn" title="Trang chủ">
+                        <FontAwesomeIcon icon={faHouse}/>
+                    </Link>
+                </div>
+            )}
+
             {/* Fixed Navigation Controls */}
-            <div className={`nav-controls-container ${showNavControls ? 'visible' : ''}`}>
+            {buttonsVisible && (
+                <div className={`nav-controls-container ${showNavControls ? 'visible' : ''}`}>
                 <button
                     className="control-btn"
                     onClick={() => setShowChapterList(!showChapterList)}
@@ -164,8 +185,10 @@ const ChapterNavigationControls = ({
                     <FontAwesomeIcon icon={faCog}/>
                 </button>
             </div>
+            )}
 
             {/* Chapter List Dropdown */}
+            {buttonsVisible && (
             <div className={`chapter-dropdown ${showChapterList ? 'active' : ''}`} id="chapterDropdown">
                 <div className="chapter-dropdown-header">
                     <h3>Danh sách chương</h3>
@@ -224,6 +247,7 @@ const ChapterNavigationControls = ({
                     </div>
                 )}
             </div>
+            )}
         </>
     );
 };

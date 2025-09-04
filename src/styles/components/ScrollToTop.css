@@ -20,6 +20,11 @@
   opacity: 0.8;
 }
 
+/* Move scroll button higher when navigation controls are visible */
+.scroll-top-btn.navigation-visible {
+  bottom: 190px;
+}
+
 .scroll-top-btn:hover {
   transform: scale(1.1);
   opacity: 1;
@@ -62,5 +67,10 @@ svg:not(:host).svg-inline--fa {
     right: 15px;
     width: 40px;
     height: 40px;
+  }
+  
+  /* Mobile positioning when navigation is visible */
+  .scroll-top-btn.navigation-visible {
+    bottom: 165px;
   }
 } 

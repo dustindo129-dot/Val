@@ -1533,16 +1533,24 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
    */
   const handleBookmark = async () => {
     if (!user) {
-      setShowLoginModal(true);
+      alert('Vui lòng đăng nhập để đánh dấu chương');
+      window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
 
+    // Store current state for potential rollback
+    const previousBookmarked = isBookmarked;
+    
     try {
       const headers = getAuthHeaders();
       if (!headers.Authorization) {
-        setShowLoginModal(true);
+        alert('Vui lòng đăng nhập để đánh dấu chương');
+        window.dispatchEvent(new CustomEvent('openLoginModal'));
         return;
       }
+      
+      // Optimistically update the UI immediately
+      setIsBookmarked(!isBookmarked);
       
       const response = await axios.post(
         `${config.backendUrl}/api/userchapterinteractions/bookmark`,
@@ -1569,8 +1577,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         };
       });
       
-      // Update user interaction in the main chapter cache
-      // No separate user-chapter-interaction query needed since it's included in the main query
+      // Ensure local state matches server response
+      setIsBookmarked(response.data.bookmarked);
       
       // Also invalidate the bookmarked chapter query
       queryClient.invalidateQueries({
@@ -1731,14 +1739,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         isSaving={isSaving}
         setIsEditing={setIsEditing}
         formatDate={formatDate}
-        decreaseFontSize={decreaseFontSize}
-        increaseFontSize={increaseFontSize}
-        setShowSettingsModal={setShowSettingsModal}
         user={user}
         canEdit={canEdit}
         canDelete={canDelete}
-        isBookmarked={isBookmarked}
-        handleBookmark={handleBookmark}
       />
 
       {/* Navigation */}
@@ -1883,7 +1886,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       />
 
       {/* Add the ScrollToTop component */}
-      <ScrollToTop threshold={300} forceVisible={buttonsVisible} />
+      <ScrollToTop threshold={300} forceVisible={buttonsVisible} navigationVisible={showNavControls} />
 
       {/* Navigation Controls */}
       <ChapterNavigationControls
@@ -1904,6 +1907,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         isModuleChaptersLoading={isModuleChaptersLoading}
         user={user}
         buttonsVisible={buttonsVisible}
+        isBookmarked={isBookmarked}
+        handleBookmark={handleBookmark}
       />
 
       {/* Modals */}

@@ -7,7 +7,7 @@ import '../styles/components/ScrollToTop.css';
  * A reusable button that appears when the user scrolls down
  * and scrolls back to the top of the page when clicked.
  */
-const ScrollToTop = ({ threshold = 300, forceVisible = null }) => {
+const ScrollToTop = ({ threshold = 300, forceVisible = null, navigationVisible = false }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   // Show button when user scrolls down
@@ -47,7 +47,7 @@ const ScrollToTop = ({ threshold = 300, forceVisible = null }) => {
     <>
       {shouldShow && (
         <button 
-          className="scroll-top-btn"
+          className={`scroll-top-btn ${navigationVisible ? 'navigation-visible' : ''}`}
           onClick={scrollToTop} 
           aria-label="Scroll to top of page"
         >

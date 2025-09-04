@@ -185,7 +185,7 @@
 
 /* Chapter header styles */
 .chapter-header {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   background: white;
   padding: 10px 15px;
   border-radius: 8px;
@@ -214,16 +214,10 @@
   font-size: 14px;
 }
 
-.reader-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
 
 .admin-controls {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
   justify-content: flex-end;
 }
 
@@ -766,7 +760,7 @@
   box-shadow: var(--box-shadow);
   padding: 10px 15px;
   position: relative;
-  gap: 15px;
+  gap: 10px;
 }
 
 .header-actions {
@@ -1343,57 +1337,7 @@
   color: #3498db;
 }
 
-.font-size-btn {
-  padding: 6px 12px;
-  border: 1px solid var(--border-color);
-  background-color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--text-color);
-  transition: all 0.2s;
-  font-weight: 600;
-}
 
-.font-size-btn:hover {
-  background-color: #f3f4f6;
-  transform: translateY(-1px);
-}
-
-.font-size-btn.decrease {
-  border-radius: 6px;
-}
-
-.font-size-btn.increase {
-  border-radius: 6px;
-}
-
-.settings-btn {
-  padding: 6px 12px;
-  border: 1px solid var(--border-color);
-  background-color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--text-color);
-  transition: all 0.2s;
-}
-
-.settings-btn:hover {
-  background-color: #f3f4f6;
-  transform: translateY(-1px);
-}
-
-/* Dark mode support */
-:root.dark-mode .font-size-btn,
-:root.dark-mode .settings-btn {
-  background-color: #2c2c2c;
-  border-color: #444;
-  color: #f0f0f0;
-}
-
-:root.dark-mode .font-size-btn:hover,
-:root.dark-mode .settings-btn:hover {
-  background-color: #3c3c3c;
-}
 
 .chapter-controls label {
   margin-right: 10px;
@@ -1651,31 +1595,6 @@
   color: #ff6b6b;
 }
 
-/* Add styles for the bookmark button in header */
-.header-bookmark {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.header-bookmark:hover {
-  background-color: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.header-bookmark.active {
-  background-color: var(--bookmark-active);
-}
 
 /* Settings Modal Styles */
 .settings-modal {
@@ -1944,18 +1863,6 @@
     font-size: 0.8rem;
   }
 
-  .header-bookmark {
-    align-self: flex-end;
-  }
-
-  .header-actions {
-    gap: 10px;
-  }
-
-  .reader-controls {
-    width: 100%;
-    justify-content: flex-end;
-  }
 
   .admin-controls {
     width: 100%;

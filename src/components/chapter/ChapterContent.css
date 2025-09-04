@@ -2,7 +2,7 @@
   position: relative;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .chapter-content {
@@ -422,13 +422,6 @@
 
 .auto-save-recovery strong {
   font-weight: 600;
-}
-
-.chapter-content-container {
-  position: relative;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 1rem;
 }
 
 .chapter-content {
