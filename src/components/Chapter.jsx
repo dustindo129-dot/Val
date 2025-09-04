@@ -932,15 +932,71 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Effect to show buttons on user interaction (click/tap)
   useEffect(() => {
     let hideTimeout;
+    let touchStartPos = null;
+    let touchMoved = false;
+
+    const handleTouchStart = (event) => {
+      touchStartPos = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY
+      };
+      touchMoved = false;
+    };
+
+    const handleTouchMove = (event) => {
+      if (!touchStartPos) return;
+      
+      const touch = event.touches[0];
+      const deltaX = Math.abs(touch.clientX - touchStartPos.x);
+      const deltaY = Math.abs(touch.clientY - touchStartPos.y);
+      
+      // Consider it a drag if moved more than 10px in any direction
+      if (deltaX > 10 || deltaY > 10) {
+        touchMoved = true;
+      }
+    };
+
+    const handleTouchEnd = (event) => {
+      // Only proceed if it's a tap (not a drag)
+      if (touchMoved || !touchStartPos) {
+        touchStartPos = null;
+        touchMoved = false;
+        return;
+      }
+      
+      showButtonsOnInteraction(event);
+      touchStartPos = null;
+      touchMoved = false;
+    };
 
     const showButtonsOnInteraction = (event) => {
-      // Check if the click is on the toggle button or its children - if so, don't interfere
+      // Don't trigger if any modal is open
+      if (showSettingsModal || showReportModal || showRentalExpirationModal || showRentalModal) {
+        return;
+      }
+
+      // Don't trigger if editing mode is active
+      if (isEditing) {
+        return;
+      }
+
+      // Check if the click is on excluded elements
       const clickedElement = event.target;
-      const isToggleButtonClick = clickedElement.closest('.toggle-btn') || 
-                                  clickedElement.closest('.nav-controls-container') ||
-                                  clickedElement.closest('.scroll-top-btn');
+      const isExcludedClick = clickedElement.closest('.toggle-btn') || 
+                             clickedElement.closest('.nav-controls-container') ||
+                             clickedElement.closest('.scroll-top-btn') ||
+                             clickedElement.closest('.settings-modal') ||
+                             clickedElement.closest('.report-modal') ||
+                             clickedElement.closest('.rental-modal') ||
+                             clickedElement.closest('.modal-overlay') ||
+                             clickedElement.closest('.chapter-dropdown') ||
+                             clickedElement.closest('button') ||
+                             clickedElement.closest('a') ||
+                             clickedElement.closest('input') ||
+                             clickedElement.closest('textarea') ||
+                             clickedElement.closest('select');
       
-      if (isToggleButtonClick) {
+      if (isExcludedClick) {
         return;
       }
       
@@ -966,18 +1022,22 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       }
     };
 
-    // Add event listeners for user interaction (click/tap only)
+    // Add event listeners for user interaction
     document.addEventListener('click', showButtonsOnInteraction);
-    document.addEventListener('touchstart', showButtonsOnInteraction);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       document.removeEventListener('click', showButtonsOnInteraction);
-      document.removeEventListener('touchstart', showButtonsOnInteraction);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
       if (hideTimeout) {
         clearTimeout(hideTimeout);
       }
     };
-  }, [buttonsVisible]); // Include buttonsVisible in dependencies since we're reading it
+  }, [buttonsVisible, showSettingsModal, showReportModal, showRentalExpirationModal, showRentalModal, isEditing]); // Include modal states in dependencies
 
   // Effect to handle click outside of the chapter dropdown
   useEffect(() => {

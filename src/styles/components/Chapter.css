@@ -1685,15 +1685,27 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10001;
   padding: 1rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  /* Prevent text selection during modal interaction */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .settings-modal.active {
@@ -1704,19 +1716,31 @@
 .settings-container {
   background: #ffffff;
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 100%;
   max-width: 450px;
-  position: relative;
-  animation: modalFadeIn 0.3s ease-out;
-  z-index: 10002;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transform: scale(0.9);
+  animation: settingsModalAppear 0.3s ease-out forwards;
+  z-index: 10002;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+@keyframes settingsModalAppear {
+  to {
+    transform: scale(1);
+  }
 }
 
 .settings-modal-body {
   margin-top: 1rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .settings-section {
