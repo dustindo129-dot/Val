@@ -57,10 +57,8 @@ export const SettingsModal = ({
                 className="font-family-select"
               >
                 <option value="Arial, sans-serif">Arial</option>
-                <option value="Times New Roman, serif">Times New Roman</option>
                 <option value="'Noto Serif', serif">Noto Serif</option>
                 <option value="Verdana, sans-serif">Verdana</option>
-                <option value="Courier New, monospace">Courier New</option>
                 <option value="'Literata', serif">Literata</option>
                 <option value="'Andika', sans-serif">Andika</option>
                 <option value="'Merriweather', serif">Merriweather</option>
