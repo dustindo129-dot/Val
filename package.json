@@ -41,7 +41,6 @@
     "compression": "1.8.0",
     "cookie-parser": "1.4.7",
     "cors": "2.8.5",
-    "crypto": "^1.0.1",
     "dompurify": "^3.2.5",
     "dotenv": "^16.5.0",
     "esbuild": "0.25.0",
