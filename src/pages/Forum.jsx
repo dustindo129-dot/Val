@@ -1,0 +1,508 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useAuth } from '../context/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import '../styles/pages/Forum.css';
+import { Editor } from '@tinymce/tinymce-react';
+import config from '../config/config';
+import cdnConfig from '../config/bunny';
+import bunnyUploadService from '../services/bunnyUploadService';
+import DOMPurify from 'dompurify';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { getAuthHeaders } from '../utils/auth';
+import { generateUserProfileUrl } from '../utils/slugUtils';
+import axios from 'axios';
+
+const Forum = () => {
+  const { user, isAuthenticated } = useAuth();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [postTitle, setPostTitle] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const editorRef = useRef(null);
+  const queryClient = useQueryClient();
+  const postsPerPage = 10;
+
+  // Portal container for modal
+  const [portalContainer, setPortalContainer] = useState(null);
+
+  // Check if user can create posts (admin/moderator only)
+  const canCreatePosts = () => {
+    return isAuthenticated && user && (user.role === 'admin' || user.role === 'moderator');
+  };
+
+  // Fetch forum posts
+  const { data: postsResponse, isLoading: postsLoading, error: postsError } = useQuery({
+    queryKey: ['forumPosts', currentPage],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/forum/posts`, {
+        params: {
+          page: currentPage,
+          limit: postsPerPage
+        }
+      });
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false
+  });
+
+  // Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: async (postData) => {
+      const response = await axios.post(
+        `${config.backendUrl}/api/forum/posts`,
+        postData,
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch posts
+      queryClient.invalidateQueries({ queryKey: ['forumPosts'] });
+      // Reset form and close modal
+      setPostTitle('');
+      if (editorRef.current) {
+        editorRef.current.setContent('');
+      }
+      setShowCreateModal(false);
+      // Reset to first page to see the new post
+      setCurrentPage(1);
+    },
+    onError: (error) => {
+      console.error('Error creating post:', error);
+      alert(error.response?.data?.message || 'Không thể tạo bài đăng. Vui lòng thử lại.');
+    }
+  });
+
+  const posts = postsResponse?.posts || [];
+  const paginationData = postsResponse?.pagination || null;
+
+  // Create portal container for modal
+  useEffect(() => {
+    let container = document.getElementById('forum-modal-portal');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'forum-modal-portal';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.zIndex = '10000';
+      container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+    }
+    setPortalContainer(container);
+
+    return () => {
+      if (container && container.parentNode && !showCreateModal) {
+        const existingModals = container.children.length;
+        if (existingModals === 0) {
+          container.parentNode.removeChild(container);
+        }
+      }
+    };
+  }, [showCreateModal]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showCreateModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('forum-modal-open');
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'auto';
+      }
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('forum-modal-open');
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.classList.remove('forum-modal-open');
+      if (portalContainer) {
+        portalContainer.style.pointerEvents = 'none';
+      }
+    };
+  }, [showCreateModal, portalContainer]);
+
+  // Check if user has rich text editor privileges (same as comment system)
+  const hasRichTextPrivileges = () => {
+    if (!isAuthenticated || !user) return false;
+    return true; // All authenticated users get TinyMCE access
+  };
+
+  // Check if user has image upload privileges
+  const hasImagePrivileges = () => {
+    if (!isAuthenticated || !user) return false;
+    return user.role === 'admin' || user.role === 'moderator';
+  };
+
+  // TinyMCE configuration (similar to comment system)
+  const getTinyMCEConfig = () => {
+    const basePlugins = [
+      'advlist', 'autolink', 'lists', 'link', 'charmap',
+      'searchreplace', 'visualblocks', 'code', 'fullscreen',
+      'insertdatetime', 'table', 'help', 'wordcount'
+    ];
+
+    const imagePlugins = hasImagePrivileges() ? ['image', 'media'] : [];
+
+    const baseToolbar = 'undo redo | formatselect | ' +
+      'bold italic underline strikethrough | ' +
+      'alignleft aligncenter alignright | ' +
+      'bullist numlist | link';
+
+    const imageToolbar = hasImagePrivileges() ? ' | image' : '';
+    const fullToolbar = baseToolbar + imageToolbar + ' | code | removeformat | help';
+
+    const editorConfig = {
+      script_src: config.tinymce.scriptPath,
+      license_key: 'gpl',
+      height: 400,
+      menubar: false,
+      remove_empty_elements: false,
+      forced_root_block: 'p',
+      plugins: [...basePlugins, ...imagePlugins],
+      toolbar: fullToolbar,
+      content_style: `
+        body { font-family:Helvetica,Arial,sans-serif; font-size:14px; line-height:1.6; }
+        em, i { font-style: italic; }
+        strong, b { font-weight: bold; }
+        s, strike, del { text-decoration: line-through; }
+      `,
+      skin: 'oxide',
+      content_css: 'default',
+      placeholder: 'Viết nội dung bài đăng...',
+      statusbar: false,
+      resize: false,
+      branding: false,
+      promotion: false
+    };
+
+    // Add image-related configuration for privileged users
+    if (hasImagePrivileges()) {
+      editorConfig.images_upload_handler = async (blobInfo, progress) => {
+        try {
+          const file = new File([blobInfo.blob()], blobInfo.filename(), {
+            type: blobInfo.blob().type
+          });
+          
+          const url = await bunnyUploadService.uploadFile(file, 'forum');
+          const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
+          
+          return optimizedUrl;
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          throw new Error('Failed to upload image');
+        }
+      };
+
+      editorConfig.automatic_uploads = true;
+      editorConfig.file_picker_types = 'image';
+      editorConfig.file_picker_callback = (callback, value, meta) => {
+        if (meta.filetype === 'image') {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          
+          input.onchange = async function() {
+            const file = this.files[0];
+            if (file) {
+              try {
+                const url = await bunnyUploadService.uploadFile(file, 'forum');
+                const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
+                callback(optimizedUrl, { alt: file.name });
+              } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Failed to upload image');
+              }
+            }
+          };
+          
+          input.click();
+        }
+      };
+    }
+
+    return editorConfig;
+  };
+
+  // Sanitize HTML content
+  const sanitizeHTML = (content) => {
+    if (!content) return '';
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 's', 'strike', 'del'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height']
+    });
+  };
+
+  // Handle post creation
+  const handleCreatePost = async () => {
+    if (!canCreatePosts()) {
+      alert('Bạn không có quyền tạo bài đăng');
+      return;
+    }
+
+    if (!postTitle.trim()) {
+      alert('Vui lòng nhập tiêu đề');
+      return;
+    }
+
+    const content = editorRef.current ? editorRef.current.getContent() : '';
+    if (!content.trim()) {
+      alert('Vui lòng nhập nội dung');
+      return;
+    }
+
+    createPostMutation.mutate({
+      title: postTitle.trim(),
+      content: sanitizeHTML(content)
+    });
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return 'vừa xong';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} phút`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} giờ`;
+    } else if (diffInSeconds < 2592000) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} ngày`;
+    } else if (diffInSeconds < 31536000) {
+      const months = Math.floor(diffInSeconds / 2592000);
+      return `${months} tháng`;
+    } else {
+      const years = Math.floor(diffInSeconds / 31536000);
+      return `${years} năm`;
+    }
+  };
+
+  // Get role display tag
+  const getRoleTag = (role) => {
+    switch (role) {
+      case 'admin':
+        return { text: 'ADMIN', className: 'role-tag admin-tag' };
+      case 'moderator':
+        return { text: 'MOD', className: 'role-tag mod-tag' };
+      case 'pj_user':
+        return { text: 'QUẢN LÍ DỰ ÁN', className: 'role-tag pj-user-tag' };
+      case 'translator':
+        return { text: 'DỊCH GIẢ', className: 'role-tag translator-tag' };
+      case 'editor':
+        return { text: 'BIÊN TẬP', className: 'role-tag editor-tag' };
+      case 'proofreader':
+        return { text: 'HIỆU ĐÍNH', className: 'role-tag proofreader-tag' };
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="forum-page">
+      <div className="forum-header">
+        <h1 className="forum-title">Thảo luận (Chức năng beta)</h1>
+        {canCreatePosts() && (
+          <button 
+            className="create-post-btn"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <i className="fas fa-plus"></i>
+            Thêm
+          </button>
+        )}
+      </div>
+
+      <div className="forum-content">
+        {postsLoading ? (
+          <div className="forum-loading">
+            <LoadingSpinner size="medium" text="Đang tải bài đăng..." />
+          </div>
+        ) : postsError ? (
+          <div className="forum-error">
+            <p>Không thể tải bài đăng: {postsError.message}</p>
+          </div>
+        ) : posts.length > 0 ? (
+          <>
+            <div className="posts-list">
+              {posts.map((post) => (
+                <div key={post._id} className={`post-item ${post.isPinned ? 'pinned' : ''}`}>
+                  <div className="post-header">
+                    <div className="post-author-info">
+                      <div className="post-author-avatar">
+                        {post.author?.avatar ? (
+                          <img 
+                            src={cdnConfig.getAvatarUrl(post.author.avatar)} 
+                            alt={post.author.displayName || post.author.username} 
+                          />
+                        ) : (
+                          <div className="default-avatar">
+                            {(post.author?.displayName || post.author?.username || 'U').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="post-author-details">
+                        <Link 
+                          to={generateUserProfileUrl(post.author)} 
+                          className="post-author-name"
+                        >
+                          {post.author?.displayName || post.author?.username}
+                          {getRoleTag(post.author?.role) && (
+                            <span className={getRoleTag(post.author.role).className}>
+                              {getRoleTag(post.author.role).text}
+                            </span>
+                          )}
+                          {post.isPinned && <span className="pinned-indicator">📌</span>}
+                        </Link>
+                        <div className="post-meta">
+                          <span className="post-date">{formatDate(post.createdAt)}</span>
+                          <span className="post-stats">
+                            👁️ {post.views} • 💬 {post.commentCount}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="post-content">
+                    <Link to={`/thao-luan/${post.slug}`} className="post-title-link">
+                      <h2 className="post-title">{post.title}</h2>
+                    </Link>
+                    <div 
+                      className="post-preview"
+                      dangerouslySetInnerHTML={{ 
+                        __html: DOMPurify.sanitize(
+                          post.content.substring(0, 300) + (post.content.length > 300 ? '...' : '')
+                        )
+                      }}
+                    />
+                    <Link to={`/thao-luan/${post.slug}`} className="read-more-link">
+                      Đọc thêm →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {paginationData && paginationData.totalPages > 1 && (
+              <div className="forum-pagination">
+                <div className="pagination-info">
+                  Trang {paginationData.currentPage} / {paginationData.totalPages} 
+                  ({paginationData.totalPosts} bài đăng)
+                </div>
+                <div className="pagination-buttons">
+                  <button 
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={!paginationData.hasPrev}
+                  >
+                    ← Trước
+                  </button>
+                  <button 
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    disabled={!paginationData.hasNext}
+                  >
+                    Sau →
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="no-posts">
+            <p>Chưa có bài đăng nào. {canCreatePosts() && 'Hãy tạo bài đăng đầu tiên!'}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Create Post Modal with Portal */}
+      {showCreateModal && portalContainer && createPortal(
+        <div className="forum-modal-overlay">
+          <div className="forum-modal-content">
+            <div className="modal-header">
+              <h3>Tạo bài đăng mới</h3>
+              <button 
+                className="modal-close-btn"
+                onClick={() => setShowCreateModal(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="post-title">Tiêu đề *</label>
+                <input
+                  id="post-title"
+                  type="text"
+                  className="post-title-input"
+                  placeholder="Nhập tiêu đề bài đăng..."
+                  value={postTitle}
+                  onChange={(e) => setPostTitle(e.target.value)}
+                  maxLength={200}
+                />
+                <div className="character-count">
+                  {postTitle.length}/200
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Nội dung *</label>
+                {hasRichTextPrivileges() ? (
+                  <div className="post-editor">
+                    <Editor
+                      onInit={(evt, editor) => editorRef.current = editor}
+                      scriptLoading={{ async: true, load: "domainBased" }}
+                      init={getTinyMCEConfig()}
+                    />
+                  </div>
+                ) : (
+                  <textarea
+                    className="post-content-input"
+                    placeholder="Viết nội dung bài đăng..."
+                    rows={10}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="modal-cancel-btn"
+                onClick={() => setShowCreateModal(false)}
+                disabled={createPostMutation.isLoading}
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                className="modal-submit-btn"
+                onClick={handleCreatePost}
+                disabled={createPostMutation.isLoading}
+              >
+                {createPostMutation.isLoading ? 'Đang tạo...' : 'Tạo bài đăng'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        portalContainer
+      )}
+    </div>
+  );
+};
+
+export default Forum;

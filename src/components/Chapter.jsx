@@ -1389,7 +1389,22 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         show: true 
       });
 
-      // Update with server data for consistency
+      // Check if slug changed (title changed) and redirect if needed
+      if (data.newSlug && novel) {
+        // Clear current query cache
+        queryClient.removeQueries({ queryKey: ['chapter-optimized', chapterId] });
+        
+        // Generate new chapter URL with updated slug
+        const newChapterUrl = `/truyen/${createUniqueSlug(novel.title, novel._id)}/chuong/${data.newSlug}`;
+        
+        // Navigate to new URL
+        navigate(newChapterUrl, { replace: true });
+        
+        // Note: The new page will fetch fresh data with the new slug
+        return;
+      }
+
+      // Update with server data for consistency (only if no slug change)
       queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], {
         ...(previousChapterData || chapterData),
         chapter: {

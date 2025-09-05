@@ -360,7 +360,7 @@ const getAllRoleTags = (globalRole, novelRoles = []) => {
   return tags;
 };
 
-const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null, autoFocusOnMount = false, enabled = true }) => {
+const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticated, defaultSort = 'newest', novel = null, autoFocusOnMount = false, enabled = true, customHeaderContent = null, commentsDisabled = false }) => {
 
 
   const [comments, setComments] = useState([]);
@@ -1044,7 +1044,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         
         return transformedResponse;
       } else {
-        // For other content types (feedback), use the regular endpoint with pagination
+        // For other content types, use the regular endpoint with pagination
         const params = {
           contentType,
           contentId,
@@ -1667,6 +1667,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         window.dispatchEvent(new CustomEvent('openLoginModal'));
         return;
       }
+      if (commentsDisabled) {
+        return; // Don't allow replies when comments are disabled
+      }
       setIsReplying(!isReplying);
     };
 
@@ -2171,6 +2174,8 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   <button 
                     className="reply-button"
                     onClick={handleReplyClick}
+                    disabled={commentsDisabled}
+                    title={commentsDisabled ? "Bình luận đã bị tắt" : undefined}
                   >
                     Trả lời
                   </button>
@@ -2413,17 +2418,22 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
       <div className="comments-header">
         <h3 className="comments-title">Bình luận ({totalComments})</h3>
         
-        {/* Chapter comments toggle - only show on novel detail pages */}
-        {contentType === 'novels' && (
-          <button 
-            className={`chapter-comments-toggle-btn ${hideChapterComments ? 'active' : ''}`}
-            onClick={handleToggleChapterComments}
-            title={hideChapterComments ? 'Hiện bình luận trong chương' : 'Ẩn bình luận trong chương'}
-          >
-            <i className={`fas ${hideChapterComments ? 'fa-eye' : 'fa-eye-slash'}`}></i>
-            {hideChapterComments ? 'Hiện bình luận trong chương' : 'Ẩn bình luận trong chương'}
-          </button>
-        )}
+        <div className="header-controls">
+          {/* Chapter comments toggle - only show on novel detail pages */}
+          {contentType === 'novels' && (
+            <button 
+              className={`chapter-comments-toggle-btn ${hideChapterComments ? 'active' : ''}`}
+              onClick={handleToggleChapterComments}
+              title={hideChapterComments ? 'Hiện bình luận trong chương' : 'Ẩn bình luận trong chương'}
+            >
+              <i className={`fas ${hideChapterComments ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+              {hideChapterComments ? 'Hiện bình luận trong chương' : 'Ẩn bình luận trong chương'}
+            </button>
+          )}
+          
+          {/* Custom header content (e.g., forum comments toggle) */}
+          {customHeaderContent}
+        </div>
       </div>
       
       {/* Sort controls */}
@@ -2449,7 +2459,11 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
         </button>
       </div>
       
-      {isAuthenticated ? (
+      {commentsDisabled ? (
+        <div className="comments-disabled-message">
+          <p>💬 Bình luận đã bị tắt cho bài đăng này.</p>
+        </div>
+      ) : isAuthenticated ? (
         isBanned ? (
           <div className="banned-message">
             Bạn đang bị chặn và không thể đăng bình luận hoặc trả lời.

@@ -235,6 +235,11 @@ const SecondaryNavbar = () => {
               Truyện sáng tác
             </Link>
 
+            {/* Forum link - visible to everyone */}
+            <Link to="/thao-luan" className={`nav-link ${isActive('/thao-luan')}`} onClick={() => setIsMenuOpen(false)}>
+              Thảo luận
+            </Link>
+
             {/* Market link - visible to everyone */}
             <Link to="/bang-yeu-cau" className={`nav-link ${isActive('/bang-yeu-cau')}`} onClick={() => setIsMenuOpen(false)}>
               Bảng yêu cầu ({requestCount})

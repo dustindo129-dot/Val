@@ -648,9 +648,9 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
         <div className="novel-list-wrapper">
             <NovelListSEO currentPage={currentPage} />
 
-            {/* Discord Button - only show on homepage */}
+            {/* Homepage Buttons - only show on homepage */}
             {currentPage === 1 && (
-                <div className="discord-button-container">
+                <div className="homepage-buttons-container">
                     <a
                         href="https://discord.gg/NDv9wz9ZQN"
                         target="_blank"
@@ -661,6 +661,12 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                         <i className="fab fa-discord"></i>
                         Tham gia Discord!
                     </a>
+                    <Link
+                        to="/thao-luan/ve-viec-dang-truyen-tren-web"
+                        className="posting-guide-link"
+                    >
+                        Về việc đăng truyện trên web
+                    </Link>
                 </div>
             )}
 

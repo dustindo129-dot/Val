@@ -8,6 +8,7 @@ const config = {
       avatar: 'avatars',
       illustration: 'illustrations',
       comments: 'comments',
+      forum: 'forum',
       request: 'requests'
     }
   },

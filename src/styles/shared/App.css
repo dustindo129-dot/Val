@@ -137,16 +137,3 @@ html {
 body {
   min-height: 100vh;
 }
-
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  /* Adjust main content padding for mobile */
-  .main-content {
-    padding: 2rem 0;
-  }
-  
-  /* Remove padding on chapter pages for clean reading experience */
-  .main-content.chapter-page {
-    padding: 0;
-  }
-} 
