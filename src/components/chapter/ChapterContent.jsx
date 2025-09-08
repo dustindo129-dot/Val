@@ -667,6 +667,13 @@ const ChapterContent = React.memo(({
         }
     }, [isModulePaid, editedMode]);
 
+    // Effect to ensure proper editedChapterBalance when switching to paid mode
+    useEffect(() => {
+        if (editedMode === 'paid' && (editedChapterBalance === 0 || editedChapterBalance === '')) {
+            setEditedChapterBalance(1);
+        }
+    }, [editedMode, editedChapterBalance]);
+
     // Initialize localFootnotes when entering edit mode
     useEffect(() => {
         if (isEditing) {
@@ -1200,10 +1207,15 @@ const ChapterContent = React.memo(({
         setEditedMode(value);
         setModeError('');
 
+        // Set default chapter balance when switching to paid mode
+        if (value === 'paid' && (editedChapterBalance === 0 || editedChapterBalance === '')) {
+            setEditedChapterBalance(1); // Set minimum value
+        }
+        // Reset chapter balance when switching away from paid mode
         if (value !== 'paid') {
             setEditedChapterBalance(0);
         }
-    }, [userRole, originalMode, isModulePaid]);
+    }, [userRole, originalMode, isModulePaid, editedChapterBalance]);
 
 // Process content for display (with backward compatibility and spacing fixes)
     const processContent = (content) => {
@@ -1950,7 +1962,20 @@ const ChapterContent = React.memo(({
                                                     type="number"
                                                     min="1"
                                                     value={editedChapterBalance}
-                                                    onChange={(e) => setEditedChapterBalance(e.target.value)}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        // Allow empty input for better UX, but ensure minimum on blur
+                                                        if (value === '' || parseInt(value) >= 1) {
+                                                            setEditedChapterBalance(value);
+                                                        }
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        // Ensure minimum value on blur if input is empty or invalid
+                                                        const value = e.target.value;
+                                                        if (value === '' || parseInt(value) < 1) {
+                                                            setEditedChapterBalance(1);
+                                                        }
+                                                    }}
                                                     placeholder="Nhập số lúa chương (tối thiểu 1)"
                                                 />
                                                 <span className="balance-unit">🌾</span>

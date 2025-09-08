@@ -10,6 +10,8 @@
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .market-content {
@@ -23,6 +25,8 @@
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .market-section h2 {
@@ -1700,7 +1704,7 @@
 
 .request-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 20px;
   margin-bottom: 2rem;
 }
@@ -1709,9 +1713,12 @@
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  overflow: visible;
+  overflow: hidden;
   border: 1px solid #e5e7eb;
   transition: transform 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  min-width: 0;
 }
 
 .request-card:hover {
@@ -1724,6 +1731,7 @@
   position: relative;
   margin-top: 15px;
   padding-top: 5px;
+  overflow: hidden;
 }
 
 .admin-request::before {
@@ -1752,8 +1760,11 @@
   font-weight: bold;
   font-size: 1.1rem;
   word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
   margin-bottom: 4px;
   padding-right: 90px;
+  max-width: 100%;
 }
 
 .request-card .request-username {
@@ -2029,14 +2040,51 @@
   background-color: #065f46;
 }
 
-/* Responsive adjustment */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .request-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 
   .request-actions {
     flex-direction: column;
+  }
+  
+  .request-card {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+  
+  .request-card .request-title {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+}
+
+/* Additional mobile protection for very small screens */
+@media (max-width: 480px) {
+  .request-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .request-card {
+    margin: 0;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  
+  .market-section {
+    padding: 1rem 0.5rem;
+  }
+  
+  .market-container {
+    padding: 0 0.5rem;
   }
 }
 

@@ -20,6 +20,7 @@
 import React, {useState, useEffect, useRef, useCallback, startTransition} from 'react';
 import {useParams, useNavigate, Link, useSearchParams} from 'react-router-dom';
 import {useAuth} from '../context/AuthContext';
+import {Helmet} from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/components/ChapterDashboard.css';
 import './chapter/ChapterFootnotes.css';
@@ -267,6 +268,14 @@ const ChapterDashboard = () => {
 
         startTransition(() => {
             setMode(newMode);
+            // Set default chapter balance when switching to paid mode
+            if (newMode === 'paid' && chapterBalance === 0) {
+                setChapterBalance(1); // Set minimum value
+            }
+            // Reset chapter balance when switching away from paid mode
+            if (newMode !== 'paid') {
+                setChapterBalance(0);
+            }
             setError(''); // Clear any previous errors
         });
     };
@@ -281,6 +290,13 @@ const ChapterDashboard = () => {
             });
         }
     }, [isModulePaid, mode]);
+
+    // Effect to ensure proper chapterBalance when switching to paid mode
+    useEffect(() => {
+        if (mode === 'paid' && (chapterBalance === 0 || chapterBalance === '')) {
+            setChapterBalance(1);
+        }
+    }, [mode, chapterBalance]);
 
     // Insert footnote marker at cursor position using new valnote format
     const insertFootnoteAtCursor = useCallback((footnoteName) => {
@@ -1212,6 +1228,24 @@ const ChapterDashboard = () => {
         });
     };
 
+    // Generate dynamic page title
+    const generatePageTitle = () => {
+        if (loading) {
+            return 'Đang tải... - Valvrareteam';
+        }
+
+        const novelTitle = novel?.novel?.title || 'Truyện';
+        const moduleTitle = module?.title || '';
+        
+        if (isEditMode) {
+            const chapterTitleForTitle = chapterTitle || 'Chương';
+            return `Chỉnh sửa: ${chapterTitleForTitle} - ${novelTitle} - Valvrareteam`;
+        } else {
+            const moduleText = moduleTitle ? ` - ${moduleTitle}` : '';
+            return `Thêm chương mới - ${novelTitle}${moduleText} - Valvrareteam`;
+        }
+    };
+
     // Check if user has admin privileges
     if (user?.role !== 'admin' && user?.role !== 'moderator' && user?.role !== 'pj_user') {
         return <div className="error">Không có quyền truy cập. Chỉ dành cho admin, moderator và project user.</div>;
@@ -1244,8 +1278,16 @@ const ChapterDashboard = () => {
     const novelSlug = createUniqueSlug(novel?.novel?.title, novelId);
 
     return (
-        <div className="chapter-dashboard">
-            {/* Header section with novel title and back button */}
+        <>
+            <Helmet>
+                <title>{generatePageTitle()}</title>
+                <meta name="description" content={isEditMode ? 
+                    `Chỉnh sửa chương "${chapterTitle}" thuộc truyện "${novel?.novel?.title || ''}"` : 
+                    `Thêm chương mới cho truyện "${novel?.novel?.title || ''}"${module?.title ? ` - Tập: ${module.title}` : ''}`
+                } />
+            </Helmet>
+            <div className="chapter-dashboard">
+                {/* Header section with novel title and back button */}
             <div className="chapter-dashboard-header">
                 <div className="header-content">
                     <h1>{isEditMode ? 'Chỉnh sửa chương' : 'Thêm chương mới'}</h1>
@@ -1305,19 +1347,28 @@ const ChapterDashboard = () => {
                                 )}
                             </select>
                         </div>
-                        {user?.role === 'admin' && (
-                            <div className="chapter-balance-input" style={{
-                                visibility: mode === 'paid' ? 'visible' : 'hidden',
-                                opacity: mode === 'paid' ? 1 : 0
-                            }}>
+                        {user?.role === 'admin' && mode === 'paid' && (
+                            <div className="chapter-balance-input">
                                 <label>Số lúa chương (Tối thiểu 1 🌾):</label>
                                 <input
                                     type="number"
                                     min="1"
                                     value={chapterBalance}
-                                    onChange={(e) => setChapterBalance(e.target.value)}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        // Allow empty input for better UX, but ensure minimum on blur
+                                        if (value === '' || parseInt(value) >= 1) {
+                                            setChapterBalance(value);
+                                        }
+                                    }}
+                                    onBlur={(e) => {
+                                        // Ensure minimum value on blur if input is empty or invalid
+                                        const value = e.target.value;
+                                        if (value === '' || parseInt(value) < 1) {
+                                            setChapterBalance(1);
+                                        }
+                                    }}
                                     placeholder="Nhập số lúa chương (tối thiểu 1)"
-                                    disabled={mode !== 'paid'}
                                 />
                             </div>
                         )}
@@ -1734,7 +1785,8 @@ const ChapterDashboard = () => {
                     </Link>
                 </div>
             </form>
-        </div>
+            </div>
+        </>
     );
 };
 

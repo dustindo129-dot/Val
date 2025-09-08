@@ -625,6 +625,75 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   .content-grid {
     gap: 15px;
   }
+
+  /* Notes section responsive fixes */
+  .notes-card {
+    padding: 20px;
+    overflow: hidden;
+  }
+  
+  .notes-content {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Novels section responsive fixes */
+  .novels-card {
+    overflow: hidden;
+  }
+  
+  .novels-grid {
+    padding: 15px;
+    overflow: hidden;
+  }
+  
+  .module-item {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 0;
+  }
+  
+  .user-profile-page .module-cover {
+    width: 60px;
+    height: 90px;
+    flex-shrink: 0;
+  }
+  
+  .module-info {
+    flex: 1;
+    min-width: 0; /* Allow text to shrink */
+    overflow: hidden;
+  }
+  
+  .user-profile-page .module-title {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding-right: 1.5rem;
+  }
+  
+  .module-meta span {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+  
+  /* Card header adjustments */
+  .novels-card .card-header {
+    padding: 12px 15px;
+    gap: 0.75rem;
+  }
+  
+  .novels-card .card-header h3 {
+    font-size: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .section-number {
+    font-size: 0.8rem;
+    padding: 1px 6px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -649,14 +718,26 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
     padding: 3px 8px;
   }
 
+  /* Notes section mobile adjustments */
   .notes-header {
     align-items: flex-start;
     gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .notes-card {
+    padding: 15px;
+    margin: 0;
+  }
+
+  .notes-card h3 {
+    font-size: 1.1rem;
   }
 
   .edit-intro-btn {
     font-size: 0.8rem;
     padding: 0.4rem 0.6rem;
+    white-space: nowrap;
   }
 
   .intro-editor-actions {
@@ -669,6 +750,81 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
     font-size: 0.85rem;
     padding: 0.5rem 0.75rem;
     justify-content: center;
+  }
+
+  /* Novels section mobile adjustments */
+  .novels-grid {
+    padding: 12px;
+  }
+  
+  .module-item {
+    gap: 10px;
+    padding: 10px 0;
+  }
+  
+  .user-profile-page .module-cover {
+    width: 50px;
+    height: 75px;
+  }
+  
+  .user-profile-page .module-title {
+    font-size: 0.9rem;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+  
+  .module-meta span {
+    font-size: 0.7rem;
+  }
+  
+  .user-profile-page .module-type-banner {
+    font-size: 7px;
+    padding: 1px 4px;
+    margin-bottom: 2px;
+  }
+  
+  /* Card headers mobile adjustments */
+  .novels-card .card-header {
+    padding: 10px 12px;
+  }
+  
+  .novels-card .card-header h3 {
+    font-size: 0.95rem;
+  }
+  
+  .section-number {
+    font-size: 0.75rem;
+    padding: 1px 4px;
+  }
+  
+  /* Refresh button mobile adjustments */
+  .refresh-modules-btn {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+    gap: 0.2rem;
+  }
+  
+  /* Remove button mobile adjustments */
+  .remove-module-btn {
+    width: 18px;
+    height: 18px;
+    font-size: 0.55rem;
+    top: -2px;
+    right: -2px;
+  }
+  
+  .user-profile-page .module-title {
+    padding-right: 1.2rem;
+  }
+  
+  /* Content grid mobile adjustments */
+  .content-grid {
+    gap: 12px;
+    margin: 0;
+  }
+  
+  .profile-main-content {
+    padding: 0 10px 20px;
   }
 }
 
@@ -795,18 +951,22 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   padding-left: 0;
 } */
 
+/* Global text overflow prevention */
+.user-profile-page * {
+  box-sizing: border-box;
+}
+
+.user-profile-page .module-title,
+.user-profile-page .module-meta span,
+.notes-content,
+.intro-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
 /* Responsive adjustments for drag handles */
 @media (max-width: 768px) {
-  .user-profile-page .module-cover {
-    width: 60px;
-    height: 90px;
-  }
-  
-  .user-profile-page .module-type-banner {
-    font-size: 8px;
-    padding: 1px 6px;
-  }
-  
   .user-profile-page .drag-handle {
     left: -28px;
     font-size: 12px;
