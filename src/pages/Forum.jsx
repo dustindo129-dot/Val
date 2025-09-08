@@ -23,11 +23,20 @@ const Forum = () => {
   const queryClient = useQueryClient();
   const postsPerPage = 10;
 
+  // Dropdown management
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [pinningPosts, setPinningPosts] = useState(new Set());
+
   // Portal container for modal
   const [portalContainer, setPortalContainer] = useState(null);
 
   // Check if user can create posts (admin/moderator only)
   const canCreatePosts = () => {
+    return isAuthenticated && user && (user.role === 'admin' || user.role === 'moderator');
+  };
+
+  // Check if user can manage posts (pin/delete - admin/moderator only)
+  const canManagePosts = () => {
     return isAuthenticated && user && (user.role === 'admin' || user.role === 'moderator');
   };
 
@@ -78,6 +87,70 @@ const Forum = () => {
 
   const posts = postsResponse?.posts || [];
   const paginationData = postsResponse?.pagination || null;
+
+  // Pin/Unpin post handler
+  const handlePin = async (postSlug, postId, currentPinStatus) => {
+    if (!canManagePosts()) {
+      alert('Bạn không có quyền thực hiện hành động này');
+      return;
+    }
+
+    // Prevent multiple simultaneous pin operations on the same post
+    if (pinningPosts.has(postId)) {
+      return;
+    }
+
+    try {
+      // Add post to loading state
+      setPinningPosts(prev => new Set([...prev, postId]));
+
+      const response = await axios.post(
+        `${config.backendUrl}/api/forum/posts/${postSlug}/pin`,
+        {},
+        { headers: getAuthHeaders() }
+      );
+
+      // Invalidate and refetch posts to show updated state
+      queryClient.invalidateQueries({ queryKey: ['forumPosts'] });
+      
+    } catch (error) {
+      console.error('Error pinning post:', error);
+      alert(`Không thể ${currentPinStatus ? 'bỏ ghim' : 'ghim'} bài đăng: ${error.response?.data?.message || error.message}`);
+    } finally {
+      // Remove post from loading state
+      setPinningPosts(prev => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+    }
+  };
+
+  // Delete post handler
+  const handleDeletePost = async (postSlug) => {
+    if (!canManagePosts()) {
+      alert('Bạn không có quyền xóa bài đăng');
+      return;
+    }
+
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài đăng này không? Hành động này không thể hoàn tác.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `${config.backendUrl}/api/forum/posts/${postSlug}`,
+        { headers: getAuthHeaders() }
+      );
+
+      // Invalidate and refetch posts
+      queryClient.invalidateQueries({ queryKey: ['forumPosts'] });
+      
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert(`Không thể xóa bài đăng: ${error.response?.data?.message || error.message}`);
+    }
+  };
 
   // Create portal container for modal
   useEffect(() => {
@@ -130,6 +203,22 @@ const Forum = () => {
       }
     };
   }, [showCreateModal, portalContainer]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.post-dropdown')) {
+        setActiveDropdown(null);
+      }
+    };
+
+    if (activeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [activeDropdown]);
 
   // Check if user has rich text editor privileges (same as comment system)
   const hasRichTextPrivileges = () => {
@@ -315,7 +404,7 @@ const Forum = () => {
   return (
     <div className="forum-page">
       <div className="forum-header">
-        <h1 className="forum-title">Thảo luận (Chức năng beta)</h1>
+        <h1 className="forum-title">Thảo luận</h1>
         {canCreatePosts() && (
           <button 
             className="create-post-btn"
@@ -367,6 +456,7 @@ const Forum = () => {
                             </span>
                           )}
                           {post.isPinned && <span className="pinned-indicator">📌</span>}
+                          {post.commentsDisabled && <span className="locked-indicator" title="Bình luận đã bị tắt">🔒</span>}
                         </Link>
                         <div className="post-meta">
                           <span className="post-date">{formatDate(post.createdAt)}</span>
@@ -376,6 +466,77 @@ const Forum = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Post Management Dropdown */}
+                    {isAuthenticated && user && (
+                      canManagePosts() || 
+                      post.author?._id === user._id || 
+                      post.author?.id === user._id || 
+                      post.author?.username === user.username ||
+                      post.author?.displayName === user.displayName
+                    ) && (
+                      <div className="post-dropdown">
+                        <button
+                          className="post-dropdown-trigger"
+                          onClick={() => setActiveDropdown(activeDropdown === post._id ? null : post._id)}
+                          title="Tùy chọn"
+                        >
+                          ⋯
+                        </button>
+                        {activeDropdown === post._id && (
+                          <div className="post-dropdown-menu">
+                            {/* Pin option - only for admin/moderators */}
+                            {canManagePosts() && (
+                              <button
+                                className="post-dropdown-item"
+                                onClick={() => {
+                                  handlePin(post.slug, post._id, post.isPinned);
+                                  setActiveDropdown(null);
+                                }}
+                                disabled={pinningPosts.has(post._id)}
+                              >
+                                {pinningPosts.has(post._id) ? '⏳' : '📌'} {post.isPinned ? 'Bỏ ghim' : 'Ghim bài đăng'}
+                              </button>
+                            )}
+                            
+                            {/* Edit option - for post author, admin, or moderator */}
+                            {(post.author?._id === user._id || 
+                              post.author?.id === user._id || 
+                              post.author?.username === user.username ||
+                              post.author?.displayName === user.displayName ||
+                              canManagePosts()) && (
+                              <button
+                                className="post-dropdown-item"
+                                onClick={() => {
+                                  // Navigate to edit page or implement edit functionality
+                                  window.location.href = `/thao-luan/${post.slug}`;
+                                  setActiveDropdown(null);
+                                }}
+                              >
+                                ✏️ Chỉnh sửa
+                              </button>
+                            )}
+                            
+                            {/* Delete option - for post author, admin, or moderator */}
+                            {(post.author?._id === user._id || 
+                              post.author?.id === user._id || 
+                              post.author?.username === user.username ||
+                              post.author?.displayName === user.displayName ||
+                              canManagePosts()) && (
+                              <button
+                                className="post-dropdown-item delete-item"
+                                onClick={() => {
+                                  handleDeletePost(post.slug);
+                                  setActiveDropdown(null);
+                                }}
+                              >
+                                🗑️ Xóa bài đăng
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="post-content">
                     <Link to={`/thao-luan/${post.slug}`} className="post-title-link">

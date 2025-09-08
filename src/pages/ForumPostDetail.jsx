@@ -210,6 +210,26 @@ const ForumPostDetail = () => {
     }
   });
 
+  // Pin/Unpin post mutation
+  const pinPostMutation = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(
+        `${config.backendUrl}/api/forum/posts/${slug}/pin`,
+        {},
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch post data
+      queryClient.invalidateQueries({ queryKey: ['forumPost', slug] });
+    },
+    onError: (error) => {
+      console.error('Error toggling pin status:', error);
+      alert(error.response?.data?.message || 'Không thể thay đổi trạng thái ghim. Vui lòng thử lại.');
+    }
+  });
+
   // Toggle comments mutation
   const toggleCommentsMutation = useMutation({
     mutationFn: async (disabled) => {
@@ -297,10 +317,13 @@ const ForumPostDetail = () => {
     return post.author?._id === user._id || post.author?.id === user.id;
   };
 
-  // Check if user can toggle comments (admin/mod only)
+  // Check if user can toggle comments (admin/mod or post author)
   const canToggleComments = () => {
     if (!user) return false;
-    return user.role === 'admin' || user.role === 'moderator';
+    // Admin and moderators can toggle comments on any post
+    if (user.role === 'admin' || user.role === 'moderator') return true;
+    // Post authors can toggle comments on their own posts
+    return post && (post.author?._id === user._id || post.author?.id === user.id);
   };
 
   // Check if user has rich text editor privileges
@@ -434,6 +457,11 @@ const ForumPostDetail = () => {
     setShowDeleteModal(false);
     deletePostMutation.mutate(deleteReason.trim());
     setDeleteReason('');
+  };
+
+  // Handle pin toggle
+  const handleTogglePin = () => {
+    pinPostMutation.mutate();
   };
 
   // Handle comments toggle
@@ -571,12 +599,15 @@ const ForumPostDetail = () => {
       </div>
 
       {/* Main Post Content - like a "big comment" */}
-      <div className="main-post">
+      <div className={`main-post ${post.isPinned ? 'pinned' : ''}`}>
         <div className="post-header">
           {!isEditing ? (
             <>
-              <h1 className="post-title">{post.title}</h1>
-              {post.isPinned && <span className="pinned-badge">📌 Đã ghim</span>}
+              <h1 className="post-title">
+                {post.title}
+                {post.isPinned && <span className="pinned-indicator" title="Đã ghim">📌</span>}
+                {post.commentsDisabled && <span className="locked-indicator" title="Bình luận đã bị tắt">🔒</span>}
+              </h1>
             </>
           ) : (
             <div className="edit-title-section">
@@ -593,7 +624,9 @@ const ForumPostDetail = () => {
           )}
           
           {/* Edit/Delete Dropdown */}
-          {canEditPost() && user && (
+          {user && (
+            // Show dropdown if user is admin/moderator OR if user is the post author
+            (user.role === 'admin' || user.role === 'moderator' || canEditPost()) && (
             <div className="post-dropdown" ref={dropdownRef}>
               <button
                 className="post-dropdown-trigger"
@@ -602,31 +635,53 @@ const ForumPostDetail = () => {
               >
                 ⋯
               </button>
-              {showDropdown && (
-                <div className="post-dropdown-menu">
-                  <button
-                    className="post-dropdown-item"
-                    onClick={() => {
-                      setIsEditing(true);
-                      setShowDropdown(false);
-                    }}
-                    disabled={isEditing}
-                  >
-                    ✏️ Chỉnh sửa
-                  </button>
-                  <button
-                    className="post-dropdown-item delete-item"
-                    onClick={() => {
-                      handleDeleteClick();
-                      setShowDropdown(false);
-                    }}
-                    disabled={deletePostMutation.isLoading}
-                  >
-                    🗑️ {deletePostMutation.isLoading ? 'Đang xóa...' : 'Xóa'}
-                  </button>
-                </div>
-              )}
+                {showDropdown && (
+                  <div className="post-dropdown-menu">
+                    {/* Pin option - only for admin/moderators */}
+                    {(user.role === 'admin' || user.role === 'moderator') && (
+                      <button
+                        className="post-dropdown-item"
+                        onClick={() => {
+                          handleTogglePin();
+                          setShowDropdown(false);
+                        }}
+                        disabled={pinPostMutation.isLoading}
+                      >
+                        {pinPostMutation.isLoading ? '⏳' : '📌'} {post.isPinned ? 'Bỏ ghim' : 'Ghim bài đăng'}
+                      </button>
+                    )}
+                    
+                    {/* Edit option - for post author, admin, or moderator */}
+                    {canEditPost() && (
+                      <button
+                        className="post-dropdown-item"
+                        onClick={() => {
+                          setIsEditing(true);
+                          setShowDropdown(false);
+                        }}
+                        disabled={isEditing}
+                      >
+                        ✏️ Chỉnh sửa
+                      </button>
+                    )}
+                    
+                    {/* Delete option - for post author, admin, or moderator */}
+                    {canEditPost() && (
+                      <button
+                        className="post-dropdown-item delete-item"
+                        onClick={() => {
+                          handleDeleteClick();
+                          setShowDropdown(false);
+                        }}
+                        disabled={deletePostMutation.isLoading}
+                      >
+                        🗑️ {deletePostMutation.isLoading ? 'Đang xóa...' : 'Xóa'}
+                      </button>
+                    )}
+                  </div>
+                )}
             </div>
+            )
           )}
         </div>
 

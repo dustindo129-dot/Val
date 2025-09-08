@@ -2544,7 +2544,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             </div>
           )}
         </>
-      ) : (
+      ) : !commentsDisabled && (
         <div className="no-comments">
           <p>Chưa có bình luận. Hãy là người đầu tiên bình luận!</p>
         </div>
