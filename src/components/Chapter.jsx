@@ -25,7 +25,6 @@ import ChapterAccessGuard from './chapter/ChapterAccessGuard';
 import { SettingsModal, ReportModal } from './chapter/ChapterModals';
 import RentalExpirationModal from './chapter/RentalExpirationModal';
 import ModuleRentalModal from './rental/ModuleRentalModal';
-import ScrollToTop from './ScrollToTop';
 import LoadingSpinner from './LoadingSpinner';
 
 // Import utilities 
@@ -1759,15 +1758,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         canDelete={canDelete}
       />
 
-      {/* Navigation */}
-      <ChapterNavigation
-        chapter={chapter}
-        isNavigating={isNavigating}
-        isEditing={isEditing}
-        handlePrevChapter={handlePrevChapter}
-        handleNextChapter={handleNextChapter}
-        user={user}
-      />
 
       {/* Toolbar with staff info and chapter stats */}
       <ChapterToolbar
@@ -1900,8 +1890,6 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         novel={novel}
       />
 
-      {/* Add the ScrollToTop component */}
-      <ScrollToTop threshold={300} forceVisible={buttonsVisible} navigationVisible={showNavControls} />
 
       {/* Navigation Controls */}
       <ChapterNavigationControls

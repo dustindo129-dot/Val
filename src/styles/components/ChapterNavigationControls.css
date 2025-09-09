@@ -1,4 +1,70 @@
 /* Chapter Navigation Controls Styles */
+
+/* Pre-toggle scroll to top button - positioned above horizontal navigation */
+.pre-toggle-scroll-btn {
+  position: fixed;
+  bottom: 75px; /* Above the horizontal navigation */
+  right: 20px; /* Aligned with toggle button */
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #ff6b6b;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  z-index: 102; /* Higher than other buttons */
+  opacity: 0.8;
+}
+
+.pre-toggle-scroll-btn:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Horizontal Chapter Navigation - appears to the left of toggle button when nav is hidden */
+.horizontal-chapter-nav {
+  position: fixed;
+  bottom: 20px;
+  right: 75px; /* Position to the left of toggle button with proper spacing for up to 2 buttons */
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  z-index: 101; /* Higher than nav controls but lower than scroll-to-top */
+}
+
+.chapter-nav-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #ff6b6b;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  opacity: 0.8;
+}
+
+.chapter-nav-btn:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.chapter-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
 .toggle-btn {
   position: fixed;
   bottom: 20px;
@@ -24,41 +90,33 @@
   opacity: 1;
 }
 
-.nav-controls-container {
+
+/* 4x3 Navigation Grid - now includes toggle button in bottom-right */
+.nav-grid-container {
   position: fixed;
-  bottom: 20px;
-  right: 80px;
-  display: flex;
-  flex-direction: row;
+  bottom: 20px; /* Aligned with where toggle button would be */
+  right: 20px; /* Aligned with toggle button position */
+  display: grid;
+  grid-template-columns: repeat(3, 45px);
+  grid-template-rows: repeat(4, 45px);
   gap: 10px;
   z-index: 100;
   transition: opacity 0.3s ease, visibility 0.3s ease;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none; /* Prevent click events when hidden */
 }
 
-.nav-controls-container.visible {
+.nav-grid-container.visible {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto; /* Re-enable click events when visible */
 }
 
-/* Vertical Navigation Controls */
-.vertical-nav-controls-container {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 100;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-  opacity: 0;
-  visibility: hidden;
-}
-
-.vertical-nav-controls-container.visible {
-  opacity: 1;
-  visibility: visible;
+/* Empty grid cell for spacing */
+.empty-grid-cell {
+  width: 45px;
+  height: 45px;
 }
 
 .control-btn {
@@ -440,8 +498,45 @@
   color: #cbd5e0;
 }
 
+/* Dark mode support for chapter navigation buttons */
+:root.dark-mode .chapter-nav-btn {
+  background-color: #4a5568;
+  color: #f7fafc;
+}
+
+:root.dark-mode .chapter-nav-btn:hover {
+  background-color: #718096;
+}
+
+/* Dark mode support for pre-toggle scroll button */
+:root.dark-mode .pre-toggle-scroll-btn {
+  background-color: #4a5568;
+  color: #f7fafc;
+}
+
+:root.dark-mode .pre-toggle-scroll-btn:hover {
+  background-color: #718096;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
+  .pre-toggle-scroll-btn {
+    bottom: 70px; /* Above horizontal nav on mobile */
+    right: 15px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .horizontal-chapter-nav {
+    bottom: 15px;
+    right: 65px; /* Position to the left of toggle button on mobile for up to 2 buttons */
+  }
+
+  .chapter-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+
   .toggle-btn {
     bottom: 15px;
     right: 15px;
@@ -449,17 +544,19 @@
     height: 40px;
   }
 
-  .nav-controls-container {
-    bottom: 15px;
-    right: 65px;
-  }
-
-  .vertical-nav-controls-container {
-    bottom: 65px;
-    right: 15px;
+  .nav-grid-container {
+    bottom: 15px; /* Align with toggle button on mobile */
+    right: 15px; /* Aligned with toggle button position on mobile */
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(4, 40px);
   }
 
   .control-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .empty-grid-cell {
     width: 40px;
     height: 40px;
   }

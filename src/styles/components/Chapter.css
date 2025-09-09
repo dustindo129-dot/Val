@@ -479,15 +479,15 @@
 
 .chapter-stats {
   display: flex;
-  gap: 15px;
+  gap: 8px;
 }
 
 .chapter-stat-item {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 8px;
   background-color: #f8f9fa;
-  padding: 15px;
+  padding: 8px;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   transition: all 0.2s ease;
@@ -500,7 +500,7 @@
 }
 
 .chapter-stat-item svg {
-  font-size: 1.2em;
+  font-size: 16px;
   color: var(--primary-color);
 }
 
@@ -761,6 +761,7 @@
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   padding: 10px 15px;
+  margin: 10px 0;
   position: relative;
 }
 
@@ -1817,6 +1818,78 @@
 
   .header-nav-container {
     padding: 10px;
+  }
+
+  /* Action toolbar responsive styles */
+  .action-toolbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .staff-info {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .staff-member {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .action-toolbar-right {
+    flex-shrink: 0;
+  }
+
+  .chapter-stats {
+    gap: 6px;
+  }
+
+  .chapter-stat-item {
+    gap: 6px;
+    padding: 6px;
+    font-size: 0.85rem;
+  }
+
+  .chapter-stat-item svg {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Action toolbar for mobile - keep horizontal if space allows */
+  .action-toolbar {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .staff-info {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .staff-member {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+    gap: 3px;
+  }
+
+  .action-toolbar-right {
+    flex-shrink: 0;
+  }
+
+  .chapter-stats {
+    gap: 4px;
+  }
+
+  .chapter-stat-item {
+    gap: 4px;
+    padding: 4px 6px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+  }
+
+  .chapter-stat-item svg {
+    font-size: 16px;
   }
 }
 

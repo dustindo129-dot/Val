@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faTimes, faEllipsisV, faList, faCog,
-    faChevronLeft, faChevronRight, faBars, faLock, faBookmark, faHouse
+    faChevronLeft, faChevronRight, faBars, faLock, faBookmark, faHouse, faArrowUp
 } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
 import '../../styles/components/ChapterNavigationControls.css';
@@ -137,6 +137,43 @@ const ChapterNavigationControls = ({
 
     return (
         <>
+            {/* Scroll to Top - positioned above horizontal navigation when hidden */}
+            {buttonsVisible && !showNavControls && (
+                <button
+                    className="pre-toggle-scroll-btn"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    title="Lên đầu trang"
+                >
+                    <FontAwesomeIcon icon={faArrowUp} />
+                </button>
+            )}
+
+            {/* Horizontal Chapter Navigation - only show when navigation controls are hidden */}
+            {buttonsVisible && !showNavControls && (
+                <div className="horizontal-chapter-nav">
+                    {chapter?.prevChapter && (
+                        <button
+                            className="chapter-nav-btn prev-btn"
+                            onClick={handlePrevChapter}
+                            disabled={isNavigating}
+                            title="Chương trước"
+                        >
+                            <FontAwesomeIcon icon={faChevronLeft} />
+                        </button>
+                    )}
+                    {chapter?.nextChapter && (
+                        <button
+                            className="chapter-nav-btn next-btn"
+                            onClick={handleNextChapter}
+                            disabled={isNavigating}
+                            title="Chương tiếp"
+                        >
+                            <FontAwesomeIcon icon={faChevronRight} />
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* Toggle Button - only show when buttonsVisible is true */}
             {buttonsVisible && (
                 <button
@@ -148,9 +185,23 @@ const ChapterNavigationControls = ({
                 </button>
             )}
 
-            {/* Vertical Navigation Controls */}
+            {/* 4x3 Navigation Grid */}
             {buttonsVisible && (
-                <div className={`vertical-nav-controls-container ${showNavControls ? 'visible' : ''}`}>
+                <div className={`nav-grid-container ${showNavControls ? 'visible' : ''}`}>
+                    {/* Row 1 */}
+                    <div className="empty-grid-cell" />
+                    <div className="empty-grid-cell" />
+                    <button
+                        className="control-btn scroll-to-top-btn"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        title="Lên đầu trang"
+                    >
+                        <FontAwesomeIcon icon={faArrowUp} />
+                    </button>
+
+                    {/* Row 2 */}
+                    <div className="empty-grid-cell" />
+                    <div className="empty-grid-cell" />
                     <button
                         className={`control-btn bookmark-btn ${isBookmarked ? 'active' : ''}`}
                         onClick={handleBookmark}
@@ -159,33 +210,65 @@ const ChapterNavigationControls = ({
                         <FontAwesomeIcon icon={isBookmarked ? faBookmark : farBookmark}/>
                     </button>
 
+                    {/* Row 3 */}
+                    {chapter?.prevChapter ? (
+                        <button
+                            className="control-btn chapter-nav-btn"
+                            onClick={handlePrevChapter}
+                            disabled={isNavigating}
+                            title="Chương trước"
+                        >
+                            <FontAwesomeIcon icon={faChevronLeft} />
+                        </button>
+                    ) : (
+                        <div className="empty-grid-cell" />
+                    )}
+                    
+                    {chapter?.nextChapter ? (
+                        <button
+                            className="control-btn chapter-nav-btn"
+                            onClick={handleNextChapter}
+                            disabled={isNavigating}
+                            title="Chương tiếp"
+                        >
+                            <FontAwesomeIcon icon={faChevronRight} />
+                        </button>
+                    ) : (
+                        <div className="empty-grid-cell" />
+                    )}
+                    
                     <Link to="/" className="control-btn home-btn" title="Trang chủ">
                         <FontAwesomeIcon icon={faHouse}/>
                     </Link>
+
+                    {/* Row 4 */}
+                    <button
+                        className="control-btn"
+                        onClick={() => setShowChapterList(!showChapterList)}
+                        title="Danh sách chương"
+                        id="chapterListBtn"
+                    >
+                        <FontAwesomeIcon icon={faList}/>
+                    </button>
+                    
+                    <button
+                        className="control-btn"
+                        onClick={() => setShowSettingsModal(true)}
+                        title="Cài đặt đọc truyện"
+                    >
+                        <FontAwesomeIcon icon={faCog}/>
+                    </button>
+                    
+                    <button
+                        className="control-btn toggle-btn-in-grid"
+                        onClick={() => setShowNavControls(!showNavControls)}
+                        title="Bật/Tắt bảng điều khiển điều hướng"
+                    >
+                        <FontAwesomeIcon icon={faTimes}/>
+                    </button>
                 </div>
             )}
 
-            {/* Fixed Navigation Controls */}
-            {buttonsVisible && (
-                <div className={`nav-controls-container ${showNavControls ? 'visible' : ''}`}>
-                <button
-                    className="control-btn"
-                    onClick={() => setShowChapterList(!showChapterList)}
-                    title="Danh sách chương"
-                    id="chapterListBtn"
-                >
-                    <FontAwesomeIcon icon={faList}/>
-                </button>
-
-                <button
-                    className="control-btn"
-                    onClick={() => setShowSettingsModal(true)}
-                    title="Cài đặt đọc truyện"
-                >
-                    <FontAwesomeIcon icon={faCog}/>
-                </button>
-            </div>
-            )}
 
             {/* Chapter List Dropdown */}
             {buttonsVisible && (

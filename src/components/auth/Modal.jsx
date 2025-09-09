@@ -31,16 +31,16 @@ const Modal = ({ isOpen, onClose, children, title }) => {
 
   return (
     // Modal overlay with click handler to close
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="auth-modal-overlay" onClick={onClose}>
       {/* Modal content container with click handler to prevent closing */}
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="auth-modal-content" onClick={e => e.stopPropagation()}>
         {/* Modal header with title and close button */}
-        <div className="modal-header">
+        <div className="auth-modal-header">
           <h2>{title}</h2>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+          <button className="auth-modal-close" onClick={onClose}>&times;</button>
         </div>
         {/* Modal body with children content */}
-        <div className="modal-body">
+        <div className="auth-modal-body">
           {children}
         </div>
       </div>

@@ -12,8 +12,8 @@
  * - Dark mode support
  */
 
-/* Modal overlay that covers the entire screen */
-.modal-overlay {
+/* Auth Modal overlay that covers the entire screen */
+.auth-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -27,8 +27,8 @@
   padding: 1rem;
 }
 
-/* Modal content container */
-.modal-content {
+/* Auth Modal content container */
+.auth-modal-content {
   background: #ffffff;
   padding: 2.5rem;
   border-radius: 12px;
@@ -40,24 +40,24 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Modal header section */
-.modal-header {
+/* Auth Modal header section */
+.auth-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
 
-/* Modal title styles */
-.modal-header h2 {
+/* Auth Modal title styles */
+.auth-modal-header h2 {
   margin: 0;
   color: #1a1a1a;
   font-size: 1.75rem;
   font-weight: 600;
 }
 
-/* Close button styles */
-.modal-close {
+/* Auth Modal close button styles */
+.auth-modal-close {
   background: none;
   border: none;
   font-size: 1.75rem;
@@ -68,36 +68,36 @@
   transition: color 0.2s ease;
 }
 
-/* Close button hover state */
-.modal-close:hover {
+/* Auth Modal close button hover state */
+.auth-modal-close:hover {
   color: #1a1a1a;
 }
 
-/* Modal body content */
-.modal-body {
+/* Auth Modal body content */
+.auth-modal-body {
   color: #333;
   padding: 0;
 }
 
-/* Dark mode styles */
-:root.dark-mode .modal-content {
+/* Dark mode styles for Auth Modal */
+:root.dark-mode .auth-modal-content {
   background: #1a1a1a;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
-:root.dark-mode .modal-header h2 {
+:root.dark-mode .auth-modal-header h2 {
   color: #ffffff;
 }
 
-:root.dark-mode .modal-close {
+:root.dark-mode .auth-modal-close {
   color: #999;
 }
 
-:root.dark-mode .modal-close:hover {
+:root.dark-mode .auth-modal-close:hover {
   color: #ffffff;
 }
 
-:root.dark-mode .modal-body {
+:root.dark-mode .auth-modal-body {
   color: #e0e0e0;
 }
 
