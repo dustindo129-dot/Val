@@ -83,25 +83,10 @@ jobs:
             public/sitemap.xml
           delete-branch: true
 
-      - name: Handle errors and log completion
+      - name: Log completion status
         if: always()
         run: |
-          if [ "${{ job.status }}" == "failure" ]; then
-            echo "❌ Workflow failed. Checking for common issues..."
-            
-            # Check if sitemap was generated
-            if [ ! -f "public/sitemap.xml" ]; then
-              echo "🔍 Sitemap file missing - this suggests the generation step failed"
-            else
-              echo "🔍 Sitemap file exists - issue likely in PR creation"
-            fi
-            
-            # Check for network connectivity issues
-            echo "🌐 Testing network connectivity..."
-            curl -s --max-time 10 https://api.github.com > /dev/null && echo "✅ GitHub API accessible" || echo "❌ GitHub API connection failed"
-            
-            exit 1
-          elif [ "${{ steps.create-pr.outputs.pull-request-number }}" != "" ]; then
+          if [ "${{ steps.create-pr.outputs.pull-request-number }}" != "" ]; then
             echo "✅ Pull request created successfully: #${{ steps.create-pr.outputs.pull-request-number }}"
             echo "🔗 URL: ${{ steps.create-pr.outputs.pull-request-url }}"
             echo "📝 Branch: ${{ steps.create-pr.outputs.pull-request-head-sha }}"
@@ -109,3 +94,20 @@ jobs:
             echo "ℹ️ No changes detected in sitemap - no PR created"
             echo "📄 Current sitemap exists: $([ -f "public/sitemap.xml" ] && echo "yes" || echo "no")"
           fi
+          echo "🎉 Workflow completed successfully!"
+
+      - name: Debug on failure
+        if: failure()
+        run: |
+          echo "❌ Workflow failed. Checking for common issues..."
+          
+          # Check if sitemap was generated
+          if [ ! -f "public/sitemap.xml" ]; then
+            echo "🔍 Sitemap file missing - this suggests the generation step failed"
+          else
+            echo "🔍 Sitemap file exists - issue likely in PR creation"
+          fi
+          
+          # Check for network connectivity issues
+          echo "🌐 Testing network connectivity..."
+          curl -s --max-time 10 https://api.github.com > /dev/null && echo "✅ GitHub API accessible" || echo "❌ GitHub API connection failed"
