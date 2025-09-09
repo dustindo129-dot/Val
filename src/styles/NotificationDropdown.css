@@ -592,4 +592,45 @@
 :root.dark-mode .notification-icon i[class*="fa-users"] {
   background-color: #1a365d;
   color: #68d391;
+}
+
+/* Forum notification icons */
+.notification-icon i[class*="fa-check-circle"] {
+  background-color: #e8f5e8;
+  color: #28a745;
+}
+
+.notification-icon i[class*="fa-times-circle"] {
+  background-color: #f8d7da;
+  color: #dc3545;
+}
+
+.notification-icon i[class*="fa-message"] {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.notification-icon i[class*="fa-trash-can"] {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-check-circle"] {
+  background-color: #1a365d;
+  color: #68d391;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-times-circle"] {
+  background-color: #2d1b1b;
+  color: #ff6b6b;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-message"] {
+  background-color: #1a365d;
+  color: #63b3ed;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-trash-can"] {
+  background-color: #3d2914;
+  color: #ffc107;
 } 

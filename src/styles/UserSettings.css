@@ -41,7 +41,7 @@
   gap: 20px;
   grid-template-areas: 
     "avatar account"
-    "blocked reports";
+    "blocked blocked";
 }
 
 /* Avatar section container */
@@ -302,8 +302,19 @@
 
 .blocked-users-section h2 {
   font-size: 18px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   color: #333;
+}
+
+.blocked-users-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+:root.dark-mode .blocked-users-description {
+  color: #a0a0a0;
 }
 
 :root.dark-mode .blocked-users-section h2 {
@@ -399,20 +410,6 @@
   color: #a0a0a0;
 }
 
-/* Reports Section */
-.reports-section {
-  grid-area: reports;
-  margin-top: 20px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-:root.dark-mode .reports-section {
-  background-color: #2d2d2d;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
 
 /* Mobile responsive styles */
 @media (max-width: 768px) {
@@ -422,8 +419,7 @@
     grid-template-areas: 
       "avatar"
       "account"
-      "blocked"
-      "reports";
+      "blocked";
   }
 
   /* Adjust container margins and padding */

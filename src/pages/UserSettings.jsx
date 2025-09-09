@@ -22,7 +22,6 @@ import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/UserSettings.css';
 import config from '../config/config';
-import ReportPanel from '../components/ReportPanel';
 import bunnyUploadService from '../services/bunnyUploadService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import cdnConfig from '../config/bunny';
@@ -97,12 +96,10 @@ const UserSettings = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
-  const [bannedUsers, setBannedUsers] = useState([]);
   const [canChangeDisplayName, setCanChangeDisplayName] = useState(true);
   const [nextDisplayNameChange, setNextDisplayNameChange] = useState(null);
   const [resolvedUser, setResolvedUser] = useState(null);
   const [userResolutionLoading, setUserResolutionLoading] = useState(true);
-  const [pendingReports, setPendingReports] = useState([]);
   
   // Use ref to prevent duplicate API calls
   const fetchedRef = useRef(false);
@@ -177,19 +174,9 @@ const UserSettings = () => {
         setAvatar(data.avatar || '');
         setDisplayName(data.displayName || data.username || '');
         
-        // Set banned users list if admin
-        if (data.bannedUsers) {
-          setBannedUsers(data.bannedUsers);
-        }
-        
         // Set blocked users list if available
         if (data.blockedUsers) {
           setBlockedUsers(data.blockedUsers);
-        }
-        
-        // Set pending reports if admin/moderator
-        if (data.pendingReports) {
-          setPendingReports(data.pendingReports);
         }
         
         
@@ -240,18 +227,6 @@ const UserSettings = () => {
     }
   };
 
-  const handleUnban = async (bannedUsername) => {
-    try {
-      await axios.delete(
-        `${config.backendUrl}/api/users/ban/${bannedUsername}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setBannedUsers(prev => prev.filter(user => user.username !== bannedUsername));
-      setMessage({ type: 'success', text: 'Người dùng đã được mở chặn thành công' });
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Không thể mở chặn người dùng' });
-    }
-  };
 
   /**
    * Handles avatar file change and upload
@@ -685,66 +660,39 @@ const UserSettings = () => {
           </form>
         </div>
 
-        {/* Blocked/Banned Users Section */}
+        {/* Personal Blocked Users Section - For everyone including admin/mod */}
         <div className="blocked-users-section">
-          <h2>{user?.role === 'admin' ? `Danh sách đen (${bannedUsers.length}/50)` : `Người dùng bị chặn (${blockedUsers.length}/50)`}</h2>
+          <h2>Người dùng bị chặn ({blockedUsers.length}/50)</h2>
+          <p className="blocked-users-description">
+            Danh sách người dùng mà bạn đã chặn. Bình luận của họ sẽ được ẩn khỏi bạn.
+          </p>
           <div className="blocked-users-list">
-            {user?.role === 'admin' ? (
-              bannedUsers.map(bannedUser => (
-                <div key={bannedUser._id} className="blocked-user-item">
-                  <div className="blocked-user-info">
-                    <img 
-                      src={cdnConfig.getAvatarUrl(bannedUser.avatar)} 
-                      alt={`${bannedUser.username}'s avatar`} 
-                      className="blocked-user-avatar"
-                    />
-                    <span className="blocked-username">{bannedUser.displayName || bannedUser.username}</span>
-                  </div>
-                  <button
-                    className="unblock-btn"
-                    onClick={() => handleUnban(bannedUser.username)}
-                    title="Mở chặn người dùng"
-                  >
-                    ×
-                  </button>
+            {blockedUsers.map(blockedUser => (
+              <div key={blockedUser._id} className="blocked-user-item">
+                <div className="blocked-user-info">
+                  <img 
+                    src={cdnConfig.getAvatarUrl(blockedUser.avatar)} 
+                    alt={`${blockedUser.username}'s avatar`} 
+                    className="blocked-user-avatar"
+                  />
+                  <span className="blocked-username">{blockedUser.displayName || blockedUser.username}</span>
                 </div>
-              ))
-            ) : (
-              blockedUsers.map(blockedUser => (
-                <div key={blockedUser._id} className="blocked-user-item">
-                  <div className="blocked-user-info">
-                    <img 
-                      src={cdnConfig.getAvatarUrl(blockedUser.avatar)} 
-                      alt={`${blockedUser.username}'s avatar`} 
-                      className="blocked-user-avatar"
-                    />
-                    <span className="blocked-username">{blockedUser.displayName || blockedUser.username}</span>
-                  </div>
-                  <button
-                    className="unblock-btn"
-                    onClick={() => handleUnblock(blockedUser.username)}
-                    title="Mở chặn người dùng"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))
-            )}
-            {((user?.role === 'admin' && bannedUsers.length === 0) || 
-              (user?.role !== 'admin' && blockedUsers.length === 0)) && (
+                <button
+                  className="unblock-btn"
+                  onClick={() => handleUnblock(blockedUser.username)}
+                  title="Mở chặn người dùng"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {blockedUsers.length === 0 && (
               <p className="no-blocked-users">
-                {user?.role === 'admin' ? 'Không có ai trong danh sách đen' : 'Không có người dùng bị chặn'}
+                Không có người dùng bị chặn
               </p>
             )}
           </div>
         </div>
-
-        {/* Reports Section - Only visible for admins and moderators */}
-        {(user?.role === 'admin' || user?.role === 'moderator') && (
-          <div className="reports-section">
-            <ReportPanel user={user} reports={pendingReports} />
-          </div>
-        )}
       </div>
     </div>
   );

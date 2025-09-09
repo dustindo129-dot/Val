@@ -58,8 +58,16 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
     notification.type === 'follow_comment'
   );
 
+  const forumNotifications = allNotifications.filter(notification => 
+    ['forum_post_approved', 'forum_post_declined', 'forum_post_comment', 'forum_post_deleted'].includes(notification.type)
+  );
+
   // Get current category notifications
-  const currentNotifications = activeCategory === 'general' ? generalNotifications : followedNotifications;
+  const currentNotifications = activeCategory === 'general' 
+    ? generalNotifications 
+    : activeCategory === 'followed' 
+    ? followedNotifications 
+    : forumNotifications;
 
   // Fetch notifications with infinite scroll logic
   const { data: notificationsData, isLoading, error, refetch } = useQuery({
@@ -639,6 +647,24 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
           return `/truyen/${novelSlug}`;
         }
         return '#';
+      case 'forum_post_approved':
+      case 'forum_post_declined':
+        // Navigate to the forum post if it was approved, otherwise go to forum main
+        if (notification.type === 'forum_post_approved' && notification.data?.postId) {
+          // We would need the post slug for proper navigation, for now go to forum
+          return '/thao-luan';
+        }
+        return '/thao-luan';
+      case 'forum_post_comment':
+        // Navigate to the forum post
+        if (notification.data?.postId) {
+          // We would need the post slug for proper navigation, for now go to forum
+          return '/thao-luan';
+        }
+        return '/thao-luan';
+      case 'forum_post_deleted':
+        // Just go to the main forum since post is deleted
+        return '/thao-luan';
       default:
         return '#';
     }
@@ -710,6 +736,12 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         >
           Theo dõi ({followedNotifications.length})
         </button>
+        <button 
+          className={`category-tab ${activeCategory === 'forum' ? 'active' : ''}`}
+          onClick={() => setActiveCategory('forum')}
+        >
+          Thảo luận ({forumNotifications.length})
+        </button>
       </div>
 
       <div className="notification-dropdown-content" ref={scrollContainerRef}>
@@ -727,7 +759,9 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
             <span>
               {activeCategory === 'general' 
                 ? 'Không có thông báo chung' 
-                : 'Không có thông báo theo dõi'
+                : activeCategory === 'followed'
+                ? 'Không có thông báo theo dõi'
+                : 'Không có thông báo thảo luận'
               }
             </span>
           </div>
@@ -754,6 +788,10 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         {notification.type === 'liked_comment' && <i className="fa-solid fa-thumbs-up"></i>}
                         {notification.type === 'liked_chapter' && <i className="fa-solid fa-heart"></i>}
                         {notification.type === 'comment_deleted' && <i className="fa-solid fa-trash"></i>}
+                        {notification.type === 'forum_post_approved' && <i className="fa-solid fa-check-circle"></i>}
+                        {notification.type === 'forum_post_declined' && <i className="fa-solid fa-times-circle"></i>}
+                        {notification.type === 'forum_post_comment' && <i className="fa-solid fa-message"></i>}
+                        {notification.type === 'forum_post_deleted' && <i className="fa-solid fa-trash-can"></i>}
                       </div>
                       <div className="notification-text">
                         <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
@@ -781,6 +819,10 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       {notification.type === 'liked_comment' && <i className="fa-solid fa-thumbs-up"></i>}
                       {notification.type === 'liked_chapter' && <i className="fa-solid fa-heart"></i>}
                       {notification.type === 'comment_deleted' && <i className="fa-solid fa-trash"></i>}
+                      {notification.type === 'forum_post_approved' && <i className="fa-solid fa-check-circle"></i>}
+                      {notification.type === 'forum_post_declined' && <i className="fa-solid fa-times-circle"></i>}
+                      {notification.type === 'forum_post_comment' && <i className="fa-solid fa-message"></i>}
+                      {notification.type === 'forum_post_deleted' && <i className="fa-solid fa-trash-can"></i>}
                     </div>
                     <div className="notification-text">
                       <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>

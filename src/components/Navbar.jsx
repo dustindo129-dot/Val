@@ -106,6 +106,25 @@ const Navbar = () => {
     refetchInterval: false // Disable automatic refetching
   });
 
+  // Fetch admin task count for admin/moderator users
+  const { data: adminTaskCount = 0, refetch: refetchAdminTaskCount } = useQuery({
+    queryKey: ['adminTaskCount'],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/users/admin-task-count`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data.totalCount;
+    },
+    enabled: !!user && ['admin', 'moderator'].includes(user.role),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false
+  });
+
   // Set up SSE listeners for real-time unread count updates
   useEffect(() => {
     if (!user) return;
@@ -149,12 +168,25 @@ const Navbar = () => {
       }
     };
 
+    const handleAdminTaskUpdate = () => {
+      // Refresh admin task count when pending posts or reports change
+      if (['admin', 'moderator'].includes(user.role)) {
+        console.log('Admin task update received, refreshing admin task count');
+        queryClient.invalidateQueries({ queryKey: ['adminTaskCount'] });
+      }
+    };
+
     // Add SSE event listeners
     sseService.addEventListener('new_notification', handleNewNotification);
     sseService.addEventListener('notification_read', handleNotificationRead);
     sseService.addEventListener('notifications_cleared', handleNotificationsCleared);
     sseService.addEventListener('notifications_deleted', handleNotificationsDeleted);
     sseService.addEventListener('notification_deleted', handleNotificationDeleted);
+    
+    // Listen for admin task updates (forum posts approved/declined, reports resolved)
+    if (['admin', 'moderator'].includes(user.role)) {
+      sseService.addEventListener('admin_task_update', handleAdminTaskUpdate);
+    }
 
     // Clean up on unmount or user change
     return () => {
@@ -163,6 +195,10 @@ const Navbar = () => {
       sseService.removeEventListener('notifications_cleared', handleNotificationsCleared);
       sseService.removeEventListener('notifications_deleted', handleNotificationsDeleted);
       sseService.removeEventListener('notification_deleted', handleNotificationDeleted);
+      
+      if (['admin', 'moderator'].includes(user.role)) {
+        sseService.removeEventListener('admin_task_update', handleAdminTaskUpdate);
+      }
     };
   }, [user, queryClient]);
 
@@ -170,8 +206,11 @@ const Navbar = () => {
   useEffect(() => {
     if (user) {
       refetchUnreadCount();
+      if (['admin', 'moderator'].includes(user.role)) {
+        refetchAdminTaskCount();
+      }
     }
-  }, [user, refetchUnreadCount]);
+  }, [user, refetchUnreadCount, refetchAdminTaskCount]);
 
   // Add event listener for openLoginModal event
   useEffect(() => {
@@ -478,11 +517,17 @@ const Navbar = () => {
                         alt={`${user.displayName || user.username}'s avatar`} 
                         className="avatar-image"
                       />
+                      {['admin', 'moderator'].includes(user.role) && adminTaskCount > 0 && (
+                        <span className="admin-task-count">{adminTaskCount}</span>
+                      )}
                     </div>
                                           {showDropdown && (
                         <div className="user-dropdown">
                           <Link to={generateUserProfileUrl(user)} className="dropdown-item" onClick={closeDropdown}>
                             Trang cá nhân
+                            {['admin', 'moderator'].includes(user.role) && adminTaskCount > 0 && (
+                              <span className="admin-indicator-dot"></span>
+                            )}
                           </Link>
                           {user?.role === 'admin' && (
                             <Link to="/topup-management" className="dropdown-item" onClick={closeDropdown}>

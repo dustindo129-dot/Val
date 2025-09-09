@@ -1003,4 +1003,983 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 
 .refresh-modules-btn:active {
   transform: translateY(0);
+}
+
+/* Tab Navigation Styles */
+.profile-tabs-nav {
+  display: flex;
+  gap: 0;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e0e0e0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+:root.dark-mode .profile-tabs-nav {
+  border-bottom-color: #444;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 15px 25px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+:root.dark-mode .tab-btn {
+  color: #a0a0a0;
+}
+
+.tab-btn:hover {
+  color: #333;
+  background: rgba(0, 123, 255, 0.05);
+}
+
+:root.dark-mode .tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+}
+
+:root.dark-mode .tab-btn.active {
+  color: #4db8ff;
+  border-bottom-color: #4db8ff;
+  background: rgba(77, 184, 255, 0.1);
+}
+
+.tab-btn i {
+  font-size: 0.9rem;
+}
+
+/* Admin tab count indicator */
+.admin-tab-count {
+  color: #ff6b6b;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+:root.dark-mode .admin-tab-count {
+  color: #ff6b6b;
+}
+
+/* Tab Content */
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Admin Tab Content */
+.admin-content {
+  padding: 20px 0;
+}
+
+.admin-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.placeholder-card {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
+  width: 100%;
+}
+
+:root.dark-mode .placeholder-card {
+  background: #2d2d2d;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.placeholder-icon {
+  margin-bottom: 20px;
+}
+
+.placeholder-icon i {
+  font-size: 3rem;
+  color: #007bff;
+  opacity: 0.6;
+}
+
+:root.dark-mode .placeholder-icon i {
+  color: #4db8ff;
+}
+
+.placeholder-card h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+:root.dark-mode .placeholder-card h3 {
+  color: #fff;
+}
+
+.placeholder-card p {
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+}
+
+:root.dark-mode .placeholder-card p {
+  color: #a0a0a0;
+}
+
+/* Responsive adjustments for tabs */
+@media (max-width: 768px) {
+  .profile-tabs-nav {
+    margin-bottom: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab-btn {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    min-width: max-content;
+  }
+  
+  .tab-btn i {
+    font-size: 0.8rem;
+  }
+  
+  .admin-tab-count {
+    font-size: 0.8rem;
+    margin-left: 3px;
+  }
+  
+  .admin-placeholder {
+    min-height: 300px;
+    padding: 0 15px;
+  }
+  
+  .placeholder-card {
+    padding: 30px 20px;
+  }
+  
+  .placeholder-icon i {
+    font-size: 2.5rem;
+  }
+  
+  .placeholder-card h3 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .tab-btn {
+    padding: 10px 15px;
+    font-size: 0.85rem;
+    gap: 6px;
+  }
+  
+  .admin-tab-count {
+    font-size: 0.75rem;
+    margin-left: 2px;
+  }
+  
+  .placeholder-card {
+    padding: 25px 15px;
+  }
+  
+  .placeholder-icon i {
+    font-size: 2rem;
+  }
+  
+  .placeholder-card h3 {
+    font-size: 1.2rem;
+  }
+  
+  .placeholder-card p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Pending Posts Management Styles */
+.pending-posts-management {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.pending-posts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+:root.dark-mode .pending-posts-header {
+  border-bottom-color: #444;
+}
+
+.pending-posts-header h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+:root.dark-mode .pending-posts-header h3 {
+  color: #fff;
+}
+
+.pending-posts-stats {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+:root.dark-mode .pending-posts-stats {
+  color: #a0a0a0;
+}
+
+.pending-posts-loading,
+.pending-posts-error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.pending-posts-error .retry-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pending-posts-error .retry-btn:hover {
+  background: #0056b3;
+}
+
+.pending-posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pending-post-item {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #ffc107;
+}
+
+:root.dark-mode .pending-post-item {
+  background: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pending-post-header {
+  margin-bottom: 15px;
+}
+
+.post-author-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.post-author-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.post-author-avatar img,
+.post-author-avatar .default-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-author-avatar .default-avatar {
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.post-author-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.post-author-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+:root.dark-mode .post-author-name {
+  color: #fff;
+}
+
+.post-date {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+:root.dark-mode .post-date {
+  color: #a0a0a0;
+}
+
+.pending-post-content {
+  margin-bottom: 20px;
+}
+
+.pending-post-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  color: #333;
+  line-height: 1.4;
+}
+
+:root.dark-mode .pending-post-title {
+  color: #fff;
+}
+
+.pending-post-preview {
+  color: #666;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+:root.dark-mode .pending-post-preview {
+  color: #a0a0a0;
+}
+
+.pending-post-preview p {
+  margin: 0 0 10px 0;
+}
+
+.pending-post-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.approve-btn,
+.reject-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.approve-btn {
+  background: #28a745;
+  color: white;
+}
+
+.approve-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.reject-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.reject-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.approve-btn:disabled,
+.reject-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pending-posts-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+:root.dark-mode .pending-posts-pagination {
+  border-top-color: #444;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+:root.dark-mode .pagination-info {
+  color: #a0a0a0;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.pagination-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.pagination-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.no-pending-posts {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+:root.dark-mode .no-pending-posts {
+  color: #a0a0a0;
+}
+
+/* Responsive adjustments for pending posts */
+@media (max-width: 768px) {
+  .pending-posts-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .pending-post-item {
+    padding: 15px;
+  }
+  
+  .pending-post-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .approve-btn,
+  .reject-btn {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+  
+  .pending-posts-pagination {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .pending-post-item {
+    padding: 12px;
+    margin: 0 10px;
+  }
+  
+  .pending-post-title {
+    font-size: 1.1rem;
+  }
+  
+  .pending-post-preview {
+    font-size: 0.85rem;
+  }
+  
+  .post-author-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .post-author-avatar img,
+  .post-author-avatar .default-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Admin Grid Layout */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  max-width: 100%;
+}
+
+.admin-left-column {
+  grid-column: 1;
+}
+
+.admin-right-column {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-reports-section,
+.admin-blacklist-section {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+:root.dark-mode .admin-reports-section,
+:root.dark-mode .admin-blacklist-section {
+  background: #2d2d2d;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Blacklist Management Styles */
+.blacklist-management {
+  padding: 20px;
+}
+
+.blacklist-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+:root.dark-mode .blacklist-header {
+  border-bottom-color: #444;
+}
+
+.blacklist-header h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+:root.dark-mode .blacklist-header h3 {
+  color: #fff;
+}
+
+.blacklist-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+:root.dark-mode .blacklist-description {
+  color: #a0a0a0;
+}
+
+.blacklist-loading,
+.blacklist-error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.blacklist-error p {
+  color: #dc3545;
+  margin: 0;
+}
+
+:root.dark-mode .blacklist-error p {
+  color: #ff6b6b;
+}
+
+.blacklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blacklist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+:root.dark-mode .blacklist-item {
+  background: #1a1a1a;
+  border-color: #444;
+}
+
+.blacklist-item:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+}
+
+:root.dark-mode .blacklist-item:hover {
+  background: #252525;
+}
+
+.blacklist-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.blacklist-user-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.blacklist-user-avatar img,
+.blacklist-user-avatar .default-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.blacklist-user-avatar .default-avatar {
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.blacklist-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.blacklist-username {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+:root.dark-mode .blacklist-username {
+  color: #fff;
+}
+
+.ban-reason {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+:root.dark-mode .ban-reason {
+  color: #a0a0a0;
+}
+
+.unban-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.unban-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.no-banned-users {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+:root.dark-mode .no-banned-users {
+  color: #a0a0a0;
+}
+
+/* Responsive adjustments for admin grid */
+@media (max-width: 1024px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .admin-left-column,
+  .admin-right-column {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-reports-section,
+  .admin-blacklist-section {
+    padding: 0;
+  }
+  
+  .blacklist-management {
+    padding: 15px;
+  }
+  
+  .blacklist-item {
+    padding: 12px;
+  }
+  
+  .blacklist-user-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .blacklist-user-avatar img,
+  .blacklist-user-avatar .default-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .unban-btn {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-grid {
+    gap: 15px;
+  }
+  
+  .blacklist-item {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .blacklist-user-info {
+    width: 100%;
+  }
+  
+  .unban-btn {
+    align-self: flex-end;
+  }
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+:root.dark-mode .modal-content {
+  background: #2d2d2d;
+  color: #fff;
+}
+
+.modal-content h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+:root.dark-mode .modal-content h3 {
+  color: #fff;
+}
+
+.modal-content p {
+  margin: 0 0 20px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+:root.dark-mode .modal-content p {
+  color: #a0a0a0;
+}
+
+.modal-input-group {
+  margin-bottom: 20px;
+}
+
+.modal-input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+:root.dark-mode .modal-input-group label {
+  color: #fff;
+}
+
+.modal-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.modal-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+:root.dark-mode .modal-textarea {
+  background: #1a1a1a;
+  border-color: #444;
+  color: #fff;
+}
+
+:root.dark-mode .modal-textarea:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-confirm-btn,
+.modal-cancel-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-confirm-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.modal-confirm-btn:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.modal-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-cancel-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.modal-cancel-btn:hover {
+  background: #5a6268;
+}
+
+:root.dark-mode .modal-confirm-btn {
+  background: #ff6b6b;
+}
+
+:root.dark-mode .modal-confirm-btn:hover:not(:disabled) {
+  background: #ff5252;
+}
+
+:root.dark-mode .modal-cancel-btn {
+  background: #666;
+}
+
+:root.dark-mode .modal-cancel-btn:hover {
+  background: #777;
+}
+
+@media (max-width: 576px) {
+  .modal-content {
+    padding: 20px;
+    margin: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-confirm-btn,
+  .modal-cancel-btn {
+    width: 100%;
+  }
 } 

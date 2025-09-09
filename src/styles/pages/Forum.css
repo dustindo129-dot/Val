@@ -218,6 +218,17 @@
   gap: 8px;
 }
 
+.post-approved-by {
+  color: #28a745;
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
+:root.dark-mode .post-approved-by {
+  color: #5cb85c;
+}
+
 .post-content {
   margin-top: 15px;
 }
@@ -615,6 +626,57 @@ body.forum-modal-open {
     justify-content: center;
   }
 
+  .post-item {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .post-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .post-author-info {
+    gap: 8px;
+  }
+
+  .post-author-avatar img,
+  .post-author-avatar .default-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .post-title {
+    font-size: 1.2rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .post-preview {
+    font-size: 13px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+  }
+
+  .post-preview p {
+    margin: 0 0 6px 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .post-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+  }
+
   .modal-content {
     width: 95%;
     max-height: 95vh;
@@ -627,7 +689,7 @@ body.forum-modal-open {
   }
 
   .modal-footer {
-    flex-direction: column;
+    flex-direction: column-reverse;
   }
 
   .modal-cancel-btn,
@@ -657,64 +719,151 @@ body.forum-modal-open {
   }
 }
 
-/* Dark mode support (if needed later) */
-@media (prefers-color-scheme: dark) {
-  :root.dark-mode .forum-page {
-    background: #1a1a1a;
-    color: #e0e0e0;
-  }
+/* Dark mode support */
+:root.dark-mode .forum-page {
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
 
-  :root.dark-mode .forum-title {
-    color: #e0e0e0;
-  }
+:root.dark-mode .forum-title {
+  color: #e0e0e0;
+}
 
-  :root.dark-mode .modal-content {
-    background: #2a2a2a;
-    color: #e0e0e0;
-  }
+:root.dark-mode .post-item {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
 
-  :root.dark-mode .modal-header,
-  :root.dark-mode .modal-footer {
-    background: #333;
-    border-color: #444;
-  }
+:root.dark-mode .post-item.pinned {
+  border: 2px solid #4CAF50;
+  background: linear-gradient(135deg, #1a3d1a 0%, #2a2a2a 15%);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
 
-  :root.dark-mode .post-title-input,
-  :root.dark-mode .post-content-input {
-    background: #333;
-    border-color: #555;
-    color: #e0e0e0;
-  }
+:root.dark-mode .post-title {
+  color: #e0e0e0;
+}
 
-  :root.dark-mode .post-title-input:focus,
-  :root.dark-mode .post-content-input:focus {
-    border-color: #4CAF50;
-  }
+:root.dark-mode .post-author-name {
+  color: #e0e0e0;
+}
 
-  :root.dark-mode .post-dropdown-trigger:hover {
-    background: #444;
-    color: #e0e0e0;
-  }
+:root.dark-mode .post-author-name:hover {
+  color: #4CAF50;
+}
 
-  :root.dark-mode .post-dropdown-menu {
-    background: #333;
-    border-color: #555;
-  }
+:root.dark-mode .post-preview {
+  color: #bbb;
+}
 
-  :root.dark-mode .post-dropdown-item {
-    color: #e0e0e0;
-  }
+:root.dark-mode .post-meta {
+  color: #999;
+}
 
-  :root.dark-mode .post-dropdown-item:hover {
-    background: #444;
-  }
+:root.dark-mode .forum-modal-content {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}
 
-  :root.dark-mode .post-dropdown-item.delete-item:hover {
-    background: #4a2626;
-    color: #ff6b6b;
-  }
+:root.dark-mode .modal-header,
+:root.dark-mode .modal-footer {
+  background: #333;
+  border-color: #444;
+}
 
-  :root.dark-mode .locked-indicator {
-    opacity: 0.9;
-  }
+:root.dark-mode .modal-header h3 {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .post-title-input,
+:root.dark-mode .post-content-input {
+  background: #333;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .post-title-input:focus,
+:root.dark-mode .post-content-input:focus {
+  border-color: #4CAF50;
+}
+
+:root.dark-mode .post-title-input::placeholder,
+:root.dark-mode .post-content-input::placeholder {
+  color: #999;
+}
+
+:root.dark-mode .character-count {
+  color: #999;
+}
+
+:root.dark-mode .modal-cancel-btn {
+  background: #444;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .modal-cancel-btn:hover {
+  background: #555;
+}
+
+:root.dark-mode .post-dropdown-trigger:hover {
+  background: #444;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .post-dropdown-menu {
+  background: #333;
+  border-color: #555;
+}
+
+:root.dark-mode .post-dropdown-item {
+  color: #e0e0e0;
+}
+
+:root.dark-mode .post-dropdown-item:hover {
+  background: #444;
+}
+
+:root.dark-mode .post-dropdown-item.delete-item:hover {
+  background: #4a2626;
+  color: #ff6b6b;
+}
+
+:root.dark-mode .pagination-btn {
+  background: #333;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .pagination-btn:hover:not(:disabled) {
+  background: #4CAF50;
+  border-color: #4CAF50;
+  color: white;
+}
+
+:root.dark-mode .pagination-btn:disabled:hover {
+  background: #333;
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+:root.dark-mode .pagination-info {
+  color: #999;
+}
+
+:root.dark-mode .forum-pagination {
+  border-color: #444;
+}
+
+:root.dark-mode .no-posts,
+:root.dark-mode .forum-loading {
+  color: #999;
+}
+
+:root.dark-mode .forum-error {
+  color: #ff6b6b;
+}
+
+:root.dark-mode .locked-indicator {
+  opacity: 0.9;
 }

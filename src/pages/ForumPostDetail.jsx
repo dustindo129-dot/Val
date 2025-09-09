@@ -719,6 +719,13 @@ const ForumPostDetail = () => {
                 <span className="post-stats">
                   👁️ {post.views} lượt xem
                 </span>
+                {/* Show approved by info only to admin/mod */}
+                {user && (user.role === 'admin' || user.role === 'moderator') && 
+                 post.approvedBy && (
+                  <span className="post-approved-by">
+                    • Duyệt bởi: {post.approvedBy.displayName || post.approvedBy.username}
+                  </span>
+                )}
               </div>
             </div>
           </div>

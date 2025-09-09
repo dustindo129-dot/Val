@@ -48,6 +48,433 @@ import { createSlug } from '../utils/slugUtils';
 import '../styles/UserProfile.css';
 import '../components/DraggableModuleList.css';
 
+// Import React Query for pending posts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import DOMPurify from 'dompurify';
+import ReportPanel from '../components/ReportPanel';
+
+// Blacklist Management Component
+const BlacklistManagement = () => {
+  const [bannedUsers, setBannedUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch banned users
+  useEffect(() => {
+    const fetchBannedUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${config.backendUrl}/api/users/banned`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        setBannedUsers(response.data || []);
+      } catch (err) {
+        console.error('Error fetching banned users:', err);
+        setError('Không thể tải danh sách đen');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBannedUsers();
+  }, []);
+
+  const handleUnban = async (bannedUsername) => {
+    try {
+      await axios.delete(
+        `${config.backendUrl}/api/users/ban/${bannedUsername}`,
+        { 
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem('token')}` 
+          } 
+        }
+      );
+      setBannedUsers(prev => prev.filter(user => user.username !== bannedUsername));
+      alert('Người dùng đã được mở chặn thành công');
+    } catch (error) {
+      console.error('Error unbanning user:', error);
+      alert('Không thể mở chặn người dùng');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="blacklist-loading">
+        <LoadingSpinner size="medium" text="Đang tải danh sách đen..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="blacklist-error">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="blacklist-management">
+      <div className="blacklist-header">
+        <h3>Danh sách đen ({bannedUsers.length})</h3>
+        <p className="blacklist-description">
+          Những người dùng bị cấm truy cập website
+        </p>
+      </div>
+
+      {bannedUsers.length > 0 ? (
+        <div className="blacklist-list">
+          {bannedUsers.map(bannedUser => (
+            <div key={bannedUser._id} className="blacklist-item">
+              <div className="blacklist-user-info">
+                <div className="blacklist-user-avatar">
+                  {bannedUser.avatar ? (
+                    <img 
+                      src={cdnConfig.getAvatarUrl(bannedUser.avatar)} 
+                      alt={bannedUser.displayName || bannedUser.username} 
+                    />
+                  ) : (
+                    <div className="default-avatar">
+                      {(bannedUser.displayName || bannedUser.username || 'U').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="blacklist-user-details">
+                  <span className="blacklist-username">
+                    {bannedUser.displayName || bannedUser.username}
+                  </span>
+                  {bannedUser.banReason && (
+                    <span className="ban-reason">
+                      Lý do: {bannedUser.banReason}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                className="unban-btn"
+                onClick={() => handleUnban(bannedUser.username)}
+                title="Mở chặn người dùng"
+              >
+                Mở chặn
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="no-banned-users">
+          <p>Không có ai trong danh sách đen</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Pending Posts Management Component
+const PendingPostsManagement = () => {
+  const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [processingPosts, setProcessingPosts] = useState(new Set());
+  const postsPerPage = 5;
+
+  // Modal states for decline/delete reasons
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [postToDecline, setPostToDecline] = useState(null);
+  const [postToDelete, setPostToDelete] = useState(null);
+
+  // Fetch pending posts
+  const { data: pendingData, isLoading, error, refetch } = useQuery({
+    queryKey: ['pendingPosts', currentPage],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/forum/pending-posts`, {
+        params: {
+          page: currentPage,
+          limit: postsPerPage
+        },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    },
+    staleTime: 1000 * 30, // 30 seconds
+    cacheTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false
+  });
+
+  // Approve post mutation
+  const approvePostMutation = useMutation({
+    mutationFn: async (postId) => {
+      const response = await axios.post(
+        `${config.backendUrl}/api/forum/posts/${postId}/approve`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendingPosts'] });
+    },
+    onError: (error) => {
+      console.error('Error approving post:', error);
+      alert(error.response?.data?.message || 'Không thể duyệt bài đăng');
+    }
+  });
+
+  // Reject post mutation
+  const rejectPostMutation = useMutation({
+    mutationFn: async ({ postId, reason }) => {
+      const response = await axios.post(
+        `${config.backendUrl}/api/forum/posts/${postId}/reject`,
+        { reason },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendingPosts'] });
+    },
+    onError: (error) => {
+      console.error('Error rejecting post:', error);
+      alert(error.response?.data?.message || 'Không thể từ chối bài đăng');
+    }
+  });
+
+  const handleApprove = async (postId) => {
+    if (processingPosts.has(postId)) return;
+
+    setProcessingPosts(prev => new Set([...prev, postId]));
+    try {
+      await approvePostMutation.mutateAsync(postId);
+    } finally {
+      setProcessingPosts(prev => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+    }
+  };
+
+  const handleReject = (postId) => {
+    if (processingPosts.has(postId)) return;
+    setPostToDecline(postId);
+    setShowDeclineModal(true);
+  };
+
+  const handleDeclineConfirm = async () => {
+    if (!postToDecline) return;
+
+    setProcessingPosts(prev => new Set([...prev, postToDecline]));
+    setShowDeclineModal(false);
+
+    try {
+      await rejectPostMutation.mutateAsync({ postId: postToDecline, reason: declineReason });
+    } finally {
+      setProcessingPosts(prev => {
+        const next = new Set(prev);
+        next.delete(postToDecline);
+        return next;
+      });
+      setPostToDecline(null);
+      setDeclineReason('');
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+    
+    if (diffInHours < 24) {
+      return `${diffInHours} giờ trước`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays} ngày trước`;
+    }
+  };
+
+  const posts = pendingData?.posts || [];
+  const pagination = pendingData?.pagination || null;
+
+  if (isLoading) {
+    return (
+      <div className="pending-posts-loading">
+        <LoadingSpinner size="medium" text="Đang tải bài đăng chờ duyệt..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pending-posts-error">
+        <p>Không thể tải bài đăng chờ duyệt: {error.message}</p>
+        <button onClick={() => refetch()} className="retry-btn">
+          Thử lại
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pending-posts-management">
+      <div className="pending-posts-header">
+        <h3>Bài đăng chờ duyệt</h3>
+        <div className="pending-posts-stats">
+          {pagination && (
+            <span>{pagination.totalPosts} bài đăng đang chờ</span>
+          )}
+        </div>
+      </div>
+
+      {posts.length > 0 ? (
+        <>
+          <div className="pending-posts-list">
+            {posts.map((post) => (
+              <div key={post._id} className="pending-post-item">
+                <div className="pending-post-header">
+                  <div className="post-author-info">
+                    <div className="post-author-avatar">
+                      {post.author?.avatar ? (
+                        <img 
+                          src={cdnConfig.getAvatarUrl(post.author.avatar)} 
+                          alt={post.author.displayName || post.author.username} 
+                        />
+                      ) : (
+                        <div className="default-avatar">
+                          {(post.author?.displayName || post.author?.username || 'U').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="post-author-details">
+                      <span className="post-author-name">
+                        {post.author?.displayName || post.author?.username}
+                      </span>
+                      <span className="post-date">{formatDate(post.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pending-post-content">
+                  <h4 className="pending-post-title">{post.title}</h4>
+                  <div 
+                    className="pending-post-preview"
+                    dangerouslySetInnerHTML={{ 
+                      __html: DOMPurify.sanitize(
+                        post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
+                      )
+                    }}
+                  />
+                </div>
+
+                <div className="pending-post-actions">
+                  <button
+                    className="approve-btn"
+                    onClick={() => handleApprove(post._id)}
+                    disabled={processingPosts.has(post._id)}
+                  >
+                    {processingPosts.has(post._id) ? '⏳' : '✅'} Duyệt
+                  </button>
+                  <button
+                    className="reject-btn"
+                    onClick={() => handleReject(post._id)}
+                    disabled={processingPosts.has(post._id)}
+                  >
+                    {processingPosts.has(post._id) ? '⏳' : '❌'} Từ chối
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="pending-posts-pagination">
+              <div className="pagination-info">
+                Trang {pagination.currentPage} / {pagination.totalPages}
+              </div>
+              <div className="pagination-buttons">
+                <button 
+                  className="pagination-btn"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={!pagination.hasPrev}
+                >
+                  ← Trước
+                </button>
+                <button 
+                  className="pagination-btn"
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={!pagination.hasNext}
+                >
+                  Sau →
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="no-pending-posts">
+          <p>Không có bài đăng nào chờ duyệt.</p>
+        </div>
+      )}
+
+      {/* Decline Post Modal */}
+      {showDeclineModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Từ chối bài đăng</h3>
+            <p>Bạn có chắc chắn muốn từ chối bài đăng này không?</p>
+            <div className="modal-input-group">
+              <label htmlFor="decline-reason">Lý do từ chối (tùy chọn):</label>
+              <textarea
+                id="decline-reason"
+                className="modal-textarea"
+                placeholder="Nhập lý do từ chối..."
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="modal-actions">
+              <button 
+                onClick={handleDeclineConfirm} 
+                className="modal-confirm-btn"
+                disabled={processingPosts.has(postToDecline)}
+              >
+                {processingPosts.has(postToDecline) ? 'Đang xử lý...' : 'Từ chối bài đăng'}
+              </button>
+              <button 
+                onClick={() => {
+                  setShowDeclineModal(false);
+                  setPostToDecline(null);
+                  setDeclineReason('');
+                }} 
+                className="modal-cancel-btn"
+              >
+                Hủy bỏ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Custom drag-and-drop wrapper using native HTML5 API
 const CustomDndWrapper = ({ 
   onDragEnd, 
@@ -287,6 +714,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [domReady, setDomReady] = useState(false);
+  const [activeTab, setActiveTab] = useState('introduction');
   const [userStats, setUserStats] = useState({
     chaptersParticipated: 0,
     commentsCount: 0,
@@ -320,6 +748,32 @@ const UserProfile = () => {
 
     // Separate permission for refresh button - admin/mod or own profile
   const canRefreshModules = user && (['admin', 'moderator'].includes(user.role) || isOwnProfile);
+
+  // Check if admin tab should be visible
+  // Show admin tab if profile user is admin/mod AND current user is admin/mod
+  const showAdminTab = profileUser && 
+                      ['admin', 'moderator'].includes(profileUser.role) && 
+                      user && 
+                      ['admin', 'moderator'].includes(user.role);
+
+  // Fetch admin task count for admin/moderator users
+  const { data: adminTaskCount = 0 } = useQuery({
+    queryKey: ['adminTaskCount'],
+    queryFn: async () => {
+      const response = await axios.get(`${config.backendUrl}/api/users/admin-task-count`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data.totalCount;
+    },
+    enabled: !!user && ['admin', 'moderator'].includes(user.role),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false
+  });
 
 
 
@@ -973,23 +1427,49 @@ const UserProfile = () => {
       {/* Main Content Section */}
       <div className="profile-main-content">
         <div className="container">
-          <div className="content-grid">
-            {/* Left Column - Introduction Section */}
-            <div className="profile-notes-section">
-              <div className="notes-card">
-                <div className="notes-header">
-                  <h3>Giới thiệu</h3>
-                  {isOwnProfile && !isEditingIntro && (
-                    <button 
-                      className="edit-intro-btn"
-                      onClick={handleEditIntro}
-                      title="Chỉnh sửa giới thiệu"
-                    >
-                      <i className="fa-solid fa-edit"></i>
-                      Sửa
-                    </button>
-                  )}
-                </div>
+          {/* Tab Navigation */}
+          <div className="profile-tabs-nav">
+            <button 
+              className={`tab-btn ${activeTab === 'introduction' ? 'active' : ''}`}
+              onClick={() => setActiveTab('introduction')}
+            >
+              <i className="fa-solid fa-user"></i>
+              Giới thiệu
+            </button>
+            {showAdminTab && (
+              <button 
+                className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
+                onClick={() => setActiveTab('admin')}
+              >
+                <i className="fa-solid fa-shield-halved"></i>
+                Quản trị
+                {adminTaskCount > 0 && (
+                  <span className="admin-tab-count">({adminTaskCount})</span>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'introduction' && (
+            <div className="tab-content">
+              <div className="content-grid">
+                {/* Left Column - Introduction Section */}
+                <div className="profile-notes-section">
+                  <div className="notes-card">
+                    <div className="notes-header">
+                      <h3>Giới thiệu</h3>
+                      {isOwnProfile && !isEditingIntro && (
+                        <button 
+                          className="edit-intro-btn"
+                          onClick={handleEditIntro}
+                          title="Chỉnh sửa giới thiệu"
+                        >
+                          <i className="fa-solid fa-edit"></i>
+                          Sửa
+                        </button>
+                      )}
+                    </div>
                 
                 <div className="notes-content">
                   {isEditingIntro ? (
@@ -1073,8 +1553,37 @@ const UserProfile = () => {
                 handleRemoveCompletedModule={handleRemoveCompletedModule}
                 handleReorderCompletedModules={handleReorderCompletedModules}
               />
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Admin Tab Content */}
+          {activeTab === 'admin' && showAdminTab && (
+            <div className="tab-content">
+              <div className="admin-content">
+                <div className="admin-grid">
+                  {/* Left Column - Pending Posts */}
+                  <div className="admin-left-column">
+                    <PendingPostsManagement />
+                  </div>
+                  
+                  {/* Right Column - Reports and Blacklist */}
+                  <div className="admin-right-column">
+                    {/* Reports Section */}
+                    <div className="admin-reports-section">
+                      <ReportPanel user={user} />
+                    </div>
+                    
+                    {/* Blacklist Section */}
+                    <div className="admin-blacklist-section">
+                      <BlacklistManagement />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

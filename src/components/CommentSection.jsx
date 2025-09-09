@@ -376,6 +376,9 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   const [sortOrder, setSortOrder] = useState(defaultSort);
   const [pinningComments, setPinningComments] = useState(new Set());
   
+  // State for blocked users (for hiding blocked users' comments)
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  
   // Facebook-style like system state
   const [likeStates, setLikeStates] = useState(new Map()); // commentId -> { isLiked, count, status }
   const likeSystemRef = useRef(null);
@@ -914,6 +917,30 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
     checkBanStatus();
   }, [user, isAuthenticated]);
 
+  // Fetch blocked users for comment hiding
+  useEffect(() => {
+    const fetchBlockedUsers = async () => {
+      if (!isAuthenticated || !user || !user.userNumber) return;
+      
+      try {
+        const response = await axios.get(
+          `${config.backendUrl}/api/users/number/${user.userNumber}/blocked`,
+          { 
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}` 
+            } 
+          }
+        );
+        setBlockedUsers(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch blocked users:', error);
+        // Silently fail - blocking is not critical functionality
+      }
+    };
+
+    fetchBlockedUsers();
+  }, [user, isAuthenticated]);
+
   // Add image error handling to existing images
   useEffect(() => {
     const handleImageErrors = () => {
@@ -1422,6 +1449,41 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
 
   // Create a recursive component for rendering comments and their replies
   const RenderComment = ({ comment, level = 0 }) => {
+    // Check if comment author is blocked and show mute message
+    const isCommentAuthorBlocked = blockedUsers.some(blockedUser => 
+      blockedUser.username === comment.user.username || 
+      blockedUser._id === comment.user._id
+    );
+    
+    if (isCommentAuthorBlocked) {
+      return (
+        <div className="comment-item muted-comment" data-level={level}>
+          <div className="comment-content">
+            <div className="comment-header">
+              <span className="comment-author blocked-author">
+                Người dùng đã bị chặn
+              </span>
+              <span className="comment-time">
+                {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
+              </span>
+            </div>
+            <div className="comment-text blocked-comment-text">
+              <em>Bạn đã chặn người dùng này</em>
+            </div>
+          </div>
+          
+          {/* Still render replies from non-blocked users */}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="comment-replies">
+              {comment.replies.map((reply) => (
+                <RenderComment key={reply._id} comment={reply} level={level + 1} />
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    
     // Root comment with nested replies rendering
     
     // Move reply state inside this component

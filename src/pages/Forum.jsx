@@ -30,8 +30,18 @@ const Forum = () => {
   // Portal container for modal
   const [portalContainer, setPortalContainer] = useState(null);
 
-  // Check if user can create posts (admin/moderator only)
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [postToDelete, setPostToDelete] = useState(null);
+
+  // Everyone can see the create button (authentication handled in modal)
   const canCreatePosts = () => {
+    return true; // Show button to everyone
+  };
+
+  // Check if user can post immediately (admin/moderator)
+  const canPostImmediately = () => {
     return isAuthenticated && user && (user.role === 'admin' || user.role === 'moderator');
   };
 
@@ -67,17 +77,24 @@ const Forum = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
-      // Invalidate and refetch posts
-      queryClient.invalidateQueries({ queryKey: ['forumPosts'] });
+    onSuccess: (data) => {
       // Reset form and close modal
       setPostTitle('');
       if (editorRef.current) {
         editorRef.current.setContent('');
       }
       setShowCreateModal(false);
-      // Reset to first page to see the new post
-      setCurrentPage(1);
+      
+      // Show appropriate success message
+      if (data.isPending) {
+        alert('Bài đăng của bạn đã được gửi và đang chờ duyệt từ quản trị viên.');
+      } else {
+        alert('Bài đăng đã được tạo thành công!');
+        // Only invalidate and refetch if post was approved immediately
+        queryClient.invalidateQueries({ queryKey: ['forumPosts'] });
+        // Reset to first page to see the new post
+        setCurrentPage(1);
+      }
     },
     onError: (error) => {
       console.error('Error creating post:', error);
@@ -127,20 +144,47 @@ const Forum = () => {
   };
 
   // Delete post handler
-  const handleDeletePost = async (postSlug) => {
-    if (!canManagePosts()) {
+  const handleDeletePost = async (postSlug, post) => {
+    // Check if user can delete this post (admin/mod OR post author)
+    const canDelete = canManagePosts() || (user && post && (
+      post.author?._id === user._id || 
+      post.author?.id === user._id || 
+      post.author?.username === user.username ||
+      post.author?.displayName === user.displayName
+    ));
+
+    if (!canDelete) {
       alert('Bạn không có quyền xóa bài đăng');
       return;
     }
 
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài đăng này không? Hành động này không thể hoàn tác.')) {
-      return;
-    }
+    const isModAction = user.role === 'admin' || user.role === 'moderator';
+    const isOwnPost = post.author?._id === user._id || 
+                      post.author?.id === user._id || 
+                      post.author?.username === user.username ||
+                      post.author?.displayName === user.displayName;
 
+    // If it's a mod action on someone else's post, show the reason modal
+    if (isModAction && !isOwnPost) {
+      setPostToDelete({ slug: postSlug, post });
+      setShowDeleteModal(true);
+    } else {
+      // For own posts, show simple confirmation
+      if (window.confirm('Bạn có chắc chắn muốn xóa bài đăng này không? Hành động này không thể hoàn tác.')) {
+        await executeDeletePost(postSlug, '');
+      }
+    }
+  };
+
+  // Execute the actual delete
+  const executeDeletePost = async (postSlug, reason) => {
     try {
       await axios.delete(
         `${config.backendUrl}/api/forum/posts/${postSlug}`,
-        { headers: getAuthHeaders() }
+        { 
+          headers: getAuthHeaders(),
+          data: { reason }
+        }
       );
 
       // Invalidate and refetch posts
@@ -152,7 +196,19 @@ const Forum = () => {
     }
   };
 
-  // Create portal container for modal
+  // Handle delete with reason submission
+  const handleDeleteWithReason = async () => {
+    if (!postToDelete) return;
+    
+    setShowDeleteModal(false);
+    await executeDeletePost(postToDelete.slug, deleteReason.trim());
+    
+    // Reset modal state
+    setPostToDelete(null);
+    setDeleteReason('');
+  };
+
+  // Create portal container for modals
   useEffect(() => {
     let container = document.getElementById('forum-modal-portal');
     if (!container) {
@@ -170,18 +226,18 @@ const Forum = () => {
     setPortalContainer(container);
 
     return () => {
-      if (container && container.parentNode && !showCreateModal) {
+      if (container && container.parentNode && !showCreateModal && !showDeleteModal) {
         const existingModals = container.children.length;
         if (existingModals === 0) {
           container.parentNode.removeChild(container);
         }
       }
     };
-  }, [showCreateModal]);
+  }, [showCreateModal, showDeleteModal]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (showCreateModal) {
+    if (showCreateModal || showDeleteModal) {
       document.body.style.overflow = 'hidden';
       document.body.classList.add('forum-modal-open');
       if (portalContainer) {
@@ -202,7 +258,7 @@ const Forum = () => {
         portalContainer.style.pointerEvents = 'none';
       }
     };
-  }, [showCreateModal, portalContainer]);
+  }, [showCreateModal, showDeleteModal, portalContainer]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -333,8 +389,8 @@ const Forum = () => {
 
   // Handle post creation
   const handleCreatePost = async () => {
-    if (!canCreatePosts()) {
-      alert('Bạn không có quyền tạo bài đăng');
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để tạo bài đăng');
       return;
     }
 
@@ -463,6 +519,13 @@ const Forum = () => {
                           <span className="post-stats">
                             👁️ {post.views} • 💬 {post.commentCount}
                           </span>
+                          {/* Show approved by info only to admin/mod */}
+                          {user && (user.role === 'admin' || user.role === 'moderator') && 
+                           post.approvedBy && (
+                            <span className="post-approved-by">
+                              • Duyệt bởi: {post.approvedBy.displayName || post.approvedBy.username}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -526,7 +589,7 @@ const Forum = () => {
                               <button
                                 className="post-dropdown-item delete-item"
                                 onClick={() => {
-                                  handleDeletePost(post.slug);
+                                  handleDeletePost(post.slug, post);
                                   setActiveDropdown(null);
                                 }}
                               >
@@ -586,7 +649,7 @@ const Forum = () => {
           </>
         ) : (
           <div className="no-posts">
-            <p>Chưa có bài đăng nào. {canCreatePosts() && 'Hãy tạo bài đăng đầu tiên!'}</p>
+            <p>Chưa có bài đăng nào. Hãy tạo bài đăng đầu tiên!</p>
           </div>
         )}
       </div>
@@ -656,6 +719,62 @@ const Forum = () => {
                 disabled={createPostMutation.isLoading}
               >
                 {createPostMutation.isLoading ? 'Đang tạo...' : 'Tạo bài đăng'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        portalContainer
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && portalContainer && createPortal(
+        <div className="forum-modal-overlay">
+          <div className="forum-modal-content">
+            <div className="modal-header">
+              <h3>Xóa bài đăng</h3>
+              <button 
+                className="modal-close-btn"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setPostToDelete(null);
+                  setDeleteReason('');
+                }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p>Bạn có chắc chắn muốn xóa bài đăng này không?</p>
+              <div className="form-group">
+                <label htmlFor="delete-reason">Lý do xóa (tùy chọn):</label>
+                <textarea
+                  id="delete-reason"
+                  className="delete-reason-input"
+                  placeholder="Nhập lý do xóa bài đăng..."
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="modal-cancel-btn"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setPostToDelete(null);
+                  setDeleteReason('');
+                }}
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                className="modal-submit-btn delete-confirm"
+                onClick={handleDeleteWithReason}
+              >
+                Xóa bài đăng
               </button>
             </div>
           </div>

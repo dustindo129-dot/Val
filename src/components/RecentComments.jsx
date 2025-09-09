@@ -122,7 +122,9 @@ const RecentComments = () => {
       // Add cache busting parameter to force fresh data
       const cacheBuster = new Date().getTime();
       const response = await axios.get(`${config.backendUrl}/api/comments/recent?limit=15&_cb=${cacheBuster}`);
-      return response.data || [];
+      // Filter out forum comments
+      const comments = response.data || [];
+      return comments.filter(comment => comment.contentType !== 'forum');
     },
     staleTime: 24 * 60 * 60 * 1000, // Data remains fresh for 24 hours
     cacheTime: 0, // Don't cache at all

@@ -2250,3 +2250,54 @@
     padding: 0.5rem 0.5rem 0.5rem 0.75rem;
   }
 }
+
+/* Blocked/Muted Comment Styles */
+.muted-comment {
+  opacity: 0.6;
+  background: #f8f9fa;
+  border-left: 3px solid #ccc;
+  margin: 0.5rem 0;
+}
+
+:root.dark-mode .muted-comment {
+  background: #2a2a2a;
+  border-left-color: #555;
+}
+
+.blocked-author {
+  color: #6c757d !important;
+  font-style: italic;
+}
+
+:root.dark-mode .blocked-author {
+  color: #adb5bd !important;
+}
+
+.blocked-comment-text {
+  color: #6c757d;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+:root.dark-mode .blocked-comment-text {
+  color: #adb5bd;
+}
+
+.muted-comment .comment-content {
+  padding: 0.8rem;
+}
+
+.muted-comment .comment-header {
+  margin-bottom: 0.3rem;
+}
+
+/* Make sure replies from non-blocked users still show normally */
+.muted-comment .comment-replies .comment-item:not(.muted-comment) {
+  opacity: 1;
+  background: white;
+  border-left: none;
+}
+
+:root.dark-mode .muted-comment .comment-replies .comment-item:not(.muted-comment) {
+  background: #1a1a1a;
+}
