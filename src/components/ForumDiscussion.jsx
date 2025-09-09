@@ -72,8 +72,9 @@ const ForumDiscussion = () => {
         if (!a.isPinned && b.isPinned) return 1;
         
         // Then sort by lastActivity (most recent first)
-        const dateA = new Date(a.lastActivity || a.createdAt);
-        const dateB = new Date(b.lastActivity || b.createdAt);
+        // Fallback to approvedAt if available, then createdAt
+        const dateA = new Date(a.lastActivity || a.approvedAt || a.createdAt);
+        const dateB = new Date(b.lastActivity || b.approvedAt || b.createdAt);
         return dateB - dateA;
     });
 
@@ -81,8 +82,8 @@ const ForumDiscussion = () => {
         <div className="forum-discussion-section">
             <div className="forum-discussion-list">
                 {sortedPosts.map(post => {
-                    // Use lastActivity if available, fallback to createdAt
-                    const displayDate = post.lastActivity || post.createdAt;
+                    // Use lastActivity if available, fallback to approvedAt, then createdAt
+                    const displayDate = post.lastActivity || post.approvedAt || post.createdAt;
                     
                     return (
                         <div key={post._id} className="forum-discussion-item">

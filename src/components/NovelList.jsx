@@ -674,6 +674,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                                     title="Discord mới chính thức của team, nơi để hối chương, thảo luận, tương tác và bú sự kiện!"
                                 >
                                     <i className="fab fa-discord"></i>
+                                    <span className="header-discord-text">Tham gia Discord!</span>
                                 </a>
                             </div>
                         </div>

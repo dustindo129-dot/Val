@@ -171,14 +171,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: auto;
   height: 40px;
+  padding: 0 12px;
   background: #5865F2;
   color: white;
   border-radius: 10px;
   text-decoration: none;
   transition: all 0.3s ease;
   box-shadow: 0 4px 8px rgba(88, 101, 242, 0.3);
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .header-discord-button:hover {
@@ -191,6 +194,12 @@
 
 .header-discord-button i {
   font-size: 1.3rem;
+}
+
+.header-discord-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
 }
 
 .section-headers h2 {
@@ -1150,6 +1159,10 @@
   .content-layout {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+
+  .header-discord-text {
+    display: none;
   }
 
   .sidebar {
