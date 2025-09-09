@@ -387,13 +387,18 @@ const Forum = () => {
     });
   };
 
-  // Handle post creation
-  const handleCreatePost = async () => {
+  // Handle create post button click
+  const handleCreatePostClick = () => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để tạo bài đăng');
+      // Trigger the login modal instead of just showing an alert
+      window.dispatchEvent(new Event('openLoginModal'));
       return;
     }
+    setShowCreateModal(true);
+  };
 
+  // Handle post creation
+  const handleCreatePost = async () => {
     if (!postTitle.trim()) {
       alert('Vui lòng nhập tiêu đề');
       return;
@@ -464,7 +469,7 @@ const Forum = () => {
         {canCreatePosts() && (
           <button 
             className="create-post-btn"
-            onClick={() => setShowCreateModal(true)}
+            onClick={handleCreatePostClick}
           >
             <i className="fas fa-plus"></i>
             Thêm
