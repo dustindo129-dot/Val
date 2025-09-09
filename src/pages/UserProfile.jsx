@@ -372,11 +372,9 @@ const PendingPostsManagement = () => {
                 <div className="pending-post-content">
                   <h4 className="pending-post-title">{post.title}</h4>
                   <div 
-                    className="pending-post-preview"
+                    className="pending-post-full-content"
                     dangerouslySetInnerHTML={{ 
-                      __html: DOMPurify.sanitize(
-                        post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
-                      )
+                      __html: DOMPurify.sanitize(post.content)
                     }}
                   />
                 </div>

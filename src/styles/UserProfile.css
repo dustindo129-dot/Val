@@ -1392,6 +1392,78 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   margin: 0 0 10px 0;
 }
 
+.pending-post-full-content {
+  color: #666;
+  line-height: 1.6;
+  font-size: 0.9rem;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  background: #f8f9fa;
+  margin: 10px 0;
+}
+
+:root.dark-mode .pending-post-full-content {
+  color: #a0a0a0;
+  border-color: #444;
+  background: #1a1a1a;
+}
+
+.pending-post-full-content p {
+  margin: 0 0 10px 0;
+}
+
+.pending-post-full-content p:last-child {
+  margin-bottom: 0;
+}
+
+.pending-post-full-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.pending-post-full-content h1,
+.pending-post-full-content h2,
+.pending-post-full-content h3,
+.pending-post-full-content h4,
+.pending-post-full-content h5,
+.pending-post-full-content h6 {
+  margin: 15px 0 10px 0;
+  color: #333;
+}
+
+:root.dark-mode .pending-post-full-content h1,
+:root.dark-mode .pending-post-full-content h2,
+:root.dark-mode .pending-post-full-content h3,
+:root.dark-mode .pending-post-full-content h4,
+:root.dark-mode .pending-post-full-content h5,
+:root.dark-mode .pending-post-full-content h6 {
+  color: #fff;
+}
+
+.pending-post-full-content ul,
+.pending-post-full-content ol {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.pending-post-full-content blockquote {
+  border-left: 4px solid #007bff;
+  padding-left: 15px;
+  margin: 15px 0;
+  font-style: italic;
+  color: #555;
+}
+
+:root.dark-mode .pending-post-full-content blockquote {
+  border-left-color: #4db8ff;
+  color: #ccc;
+}
+
 .pending-post-actions {
   display: flex;
   gap: 12px;
@@ -1509,6 +1581,12 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
     padding: 15px;
   }
   
+  .pending-post-full-content {
+    max-height: 350px;
+    padding: 12px;
+    font-size: 0.85rem;
+  }
+  
   .pending-post-actions {
     justify-content: center;
     flex-wrap: wrap;
@@ -1536,8 +1614,15 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
     font-size: 1.1rem;
   }
   
-  .pending-post-preview {
+  .pending-post-preview,
+  .pending-post-full-content {
     font-size: 0.85rem;
+  }
+  
+  .pending-post-full-content {
+    max-height: 300px;
+    padding: 12px;
+    margin: 8px 0;
   }
   
   .post-author-avatar {
