@@ -7,6 +7,7 @@ import { useSEO } from '../context/SEOContext';
 import HotNovels from './HotNovels';
 import RecentlyRead from './RecentlyRead';
 import RecentComments from './RecentComments';
+import ForumDiscussion from './ForumDiscussion';
 import '../styles/NovelList.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
@@ -648,27 +649,6 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
         <div className="novel-list-wrapper">
             <NovelListSEO currentPage={currentPage} />
 
-            {/* Homepage Buttons - only show on homepage */}
-            {currentPage === 1 && (
-                <div className="homepage-buttons-container">
-                    <a
-                        href="https://discord.gg/NDv9wz9ZQN"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="discord-button"
-                        title="Discord mới chính thức của team, nơi để hối chương, thảo luận, tương tác và bú sự kiện!"
-                    >
-                        <i className="fab fa-discord"></i>
-                        Tham gia Discord!
-                    </a>
-                    <Link
-                        to="/thao-luan/ve-viec-dang-truyen-tren-web"
-                        className="posting-guide-link"
-                    >
-                        Về việc đăng truyện trên web
-                    </Link>
-                </div>
-            )}
 
             <div className="novel-list-container">
                 {/* SEO Header - rendered for bots */}
@@ -678,8 +658,24 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                 <div className="content-layout">
                     {/* Main content area */}
                     <div className="main-content">
+                        {/* Mobile Forum Discussion - above section headers */}
+                        <div className="mobile-forum-discussion">
+                            <ForumDiscussion />
+                        </div>
+                        
                         <div className="section-headers">
                             <h2>MỚI CẬP NHẬT</h2>
+                            <div className="header-discord-container">
+                                <a
+                                    href="https://discord.gg/NDv9wz9ZQN"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="header-discord-button"
+                                    title="Discord mới chính thức của team, nơi để hối chương, thảo luận, tương tác và bú sự kiện!"
+                                >
+                                    <i className="fab fa-discord"></i>
+                                </a>
+                            </div>
                         </div>
                         {/* Novel grid */}
                         <div className="novel-grid">
@@ -844,8 +840,9 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                         {/* Pagination controls */}
                         {renderPagination()}
                     </div>
-                    {/* Sidebar with hot novels and Facebook plugin */}
+                    {/* Sidebar with forum discussion, hot novels and Facebook plugin */}
                     <aside className="sidebar">
+                        <ForumDiscussion />
                         <HotNovels/>
                         <RecentlyRead/>
                         <RecentComments/>
