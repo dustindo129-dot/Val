@@ -23,6 +23,12 @@
   border-radius: 4px;
 }
 
+/* Respect inline width/height attributes from TinyMCE */
+.chapter-content img[width][height] {
+  width: auto;
+  height: auto;
+}
+
 /* Target highlight effect */
 .highlight {
   background-color: var(--highlight-color, #fff3cd);
@@ -432,14 +438,6 @@
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
-}
-
-.chapter-content img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 1rem auto;
-  border-radius: 4px;
 }
 
 /* Target highlight effect */
