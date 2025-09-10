@@ -175,17 +175,17 @@
 }
 
 .translator-tag {
-  background: #70a1ff;
-  color: white;
-}
-
-.editor-tag {
   background: #5f27cd;
   color: white;
 }
 
+.editor-tag {
+  background: #70a1ff;
+  color: white;
+}
+
 .proofreader-tag {
-  background: #ff9ff3;
+  background: #f3c212;
   color: #2f3542;
 }
 
