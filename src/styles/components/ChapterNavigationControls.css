@@ -498,26 +498,6 @@
   color: #cbd5e0;
 }
 
-/* Dark mode support for chapter navigation buttons */
-:root.dark-mode .chapter-nav-btn {
-  background-color: #4a5568;
-  color: #f7fafc;
-}
-
-:root.dark-mode .chapter-nav-btn:hover {
-  background-color: #718096;
-}
-
-/* Dark mode support for pre-toggle scroll button */
-:root.dark-mode .pre-toggle-scroll-btn {
-  background-color: #4a5568;
-  color: #f7fafc;
-}
-
-:root.dark-mode .pre-toggle-scroll-btn:hover {
-  background-color: #718096;
-}
-
 /* Mobile responsive */
 @media (max-width: 768px) {
   .pre-toggle-scroll-btn {
