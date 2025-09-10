@@ -452,6 +452,20 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    // Handle account banned event
+    const handleAccountBanned = (event) => {
+      // Clear all auth data
+      signOut(true);
+      
+      // Set error message
+      setError(event.detail?.message || 'Your account has been banned. Please contact support if you believe this is an error.');
+      
+      // Optionally show a modal or alert
+      setTimeout(() => {
+        alert('Your account has been banned. You have been logged out.');
+      }, 100);
+    };
+
     const handleCustomEvent = (event) => {
       // MOBILE FIX: Detect mobile environment for more lenient error handling
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -508,6 +522,7 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('auth-token-invalid', handleCustomEvent);
     window.addEventListener('auth-token-refresh-failed', handleCustomEvent);
     window.addEventListener('auth-token-refreshed', handleCustomEvent);
+    window.addEventListener('account-banned', handleAccountBanned);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -516,6 +531,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('auth-token-invalid', handleCustomEvent);
       window.removeEventListener('auth-token-refresh-failed', handleCustomEvent);
       window.removeEventListener('auth-token-refreshed', handleCustomEvent);
+      window.removeEventListener('account-banned', handleAccountBanned);
     };
   }, []);
 
@@ -604,6 +620,14 @@ export const AuthProvider = ({ children }) => {
       
       return response.data;
     } catch (error) {
+      // Check if account is banned
+      if (error.response?.data?.code === 'ACCOUNT_BANNED') {
+        setError('Your account has been banned. Please contact support if you believe this is an error.');
+        // Clear any existing auth data
+        clearAllAuthData();
+        throw { ...error, isBanned: true };
+      }
+      
       setError(error.response?.data?.message || 'Login failed');
       throw error;
     }

@@ -177,6 +177,26 @@ axios.interceptors.response.use(
       }
     }
 
+    // Handle banned user (403 errors with ACCOUNT_BANNED code)
+    if (error.response?.status === 403 && error.response?.data?.code === 'ACCOUNT_BANNED') {
+      // User account has been banned - clear all auth data and redirect
+      clearAllAuthData();
+      
+      // Dispatch custom event for banned user
+      window.dispatchEvent(new CustomEvent('account-banned', {
+        detail: {
+          message: error.response.data.message || 'Your account has been banned.'
+        }
+      }));
+      
+      // Redirect to home page
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
+      
+      return Promise.reject(error);
+    }
+
     // For other types of 401 errors
     if (error.response?.status === 401) {
       // Special handling for logout endpoint - 401 is expected and should be ignored
