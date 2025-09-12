@@ -588,7 +588,7 @@ const ForumPostDetail = () => {
   return (
     <div className="forum-post-detail-page">
       {/* Breadcrumb Navigation */}
-      <div className="breadcrumb-nav">
+      <div className="forum-post-breadcrumb-nav">
         <Link to="/" className="breadcrumb-item">
           🏠
         </Link>

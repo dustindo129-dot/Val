@@ -49,7 +49,7 @@
 }
 
 /* Breadcrumb Navigation */
-.breadcrumb-nav {
+.forum-post-breadcrumb-nav {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -571,7 +571,7 @@
     font-size: 15px;
   }
 
-  .breadcrumb-nav {
+  .forum-post-breadcrumb-nav {
     margin-bottom: 16px;
   }
 
@@ -1019,7 +1019,7 @@ body.forum-delete-modal-open {
     margin: 12px 0;
   }
 
-  .breadcrumb-nav {
+  .forum-post-breadcrumb-nav {
     margin-bottom: 12px;
     font-size: 13px;
   }
