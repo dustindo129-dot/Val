@@ -422,7 +422,8 @@ const api = {
           illustration: moduleData.illustration,
           mode: moduleData.mode || 'published',
           moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0,
-          rentBalance: moduleData.rentBalance || 0
+          rentBalance: moduleData.rentBalance || 0,
+          recalculateRentOnUnlock: moduleData.mode === 'rent' ? (moduleData.recalculateRentOnUnlock || false) : false
         },
         {
           headers: {
@@ -456,7 +457,8 @@ const api = {
           illustration: moduleData.illustration,
           mode: moduleData.mode || 'published',
           moduleBalance: moduleData.mode === 'paid' ? (moduleData.moduleBalance || 0) : 0,
-          rentBalance: moduleData.rentBalance || 0
+          rentBalance: moduleData.rentBalance || 0,
+          recalculateRentOnUnlock: moduleData.mode === 'rent' ? (moduleData.recalculateRentOnUnlock || false) : false
         },
         {
           headers: {

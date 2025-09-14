@@ -212,7 +212,7 @@ const ModuleForm = memo(({
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
               {/* Only show rent option if module has paid content */}
               {hasPaidContent && (
-                <option value="rent">MỞ TẠM THỜI (Mở khóa có thời hạn)</option>
+                <option value="rent">Mở tạm thời (Mở khóa có thời hạn)</option>
               )}
             </select>
             {/* Show helper text when rent option is not available */}

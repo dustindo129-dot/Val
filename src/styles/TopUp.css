@@ -53,6 +53,32 @@
   color: #ff9800;
 }
 
+/* Prepaid card instructions styles */
+.prepaid-instructions {
+  background-color: #e8f4fd;
+  border-left: 4px solid #007bff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.prepaid-notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prepaid-notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.prepaid-icon {
+  font-size: 1.5rem;
+  color: #007bff;
+}
+
 /* Pending requests section */
 .pending-section {
   background-color: #fff8e1;
@@ -429,6 +455,15 @@
 :root.dark-mode .rules-section {
   background-color: #3a341d;
   border-left-color: #ffc107;
+}
+
+:root.dark-mode .prepaid-instructions {
+  background-color: #1a2332;
+  border-left-color: #8bb9fe;
+}
+
+:root.dark-mode .prepaid-icon {
+  color: #8bb9fe;
 }
 
 :root.dark-mode .pending-section {
@@ -1896,7 +1931,7 @@
 }
 
 :root.dark-mode .option-note {
-  color: #6c757d;
+  color: #adb5bd;
 }
 
 /* History toggle and transaction history */

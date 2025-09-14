@@ -1018,7 +1018,8 @@ const NovelDetail = ({ novelId }) => {
       error: '',
       mode: module.mode || 'published',
       moduleBalance: module.moduleBalance || 0,
-      rentBalance: module.rentBalance || 0
+      rentBalance: module.rentBalance || 0,
+      recalculateRentOnUnlock: module.recalculateRentOnUnlock || false
     });
     
     // Set the editing ID

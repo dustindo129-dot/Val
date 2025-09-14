@@ -669,15 +669,12 @@ const TopUp = () => {
             </div>
 
             <div 
-              className={`payment-method-card ${paymentMethod === 'prepaidCard' ? 'selected' : ''} disabled`}
-              onClick={() => {}}
+              className={`payment-method-card ${paymentMethod === 'prepaidCard' ? 'selected' : ''}`}
+              onClick={() => handleMethodSelect('prepaidCard')}
             >
               <div className="payment-logos">
                 <div className="payment-logo">
                   <img src={cdnConfig.getOptimizedImageUrl("viettel.png", cdnConfig.imageClasses.avatar)} alt="Viettel" />
-                </div>
-                <div className="payment-logo">
-                  <img src={cdnConfig.getOptimizedImageUrl("vinaphone.png", cdnConfig.imageClasses.avatar)} alt="Vinaphone" />
                 </div>
                 <div className="payment-logo">
                   <img src={cdnConfig.getOptimizedImageUrl("mobiphone.png", cdnConfig.imageClasses.avatar)} alt="Mobiphone" />
@@ -693,27 +690,29 @@ const TopUp = () => {
           <section className="top-up-section">
             <h2>Chi tiết thanh toán</h2>
             
-            {/* Select Amount section as radio options */}
-            <div className="amount-selection">
-              <h3>Chọn số tiền</h3>
-              <div className="amount-options">
-                {pricingOptions.map((option, index) => (
-                  <label key={index} className="amount-option">
-                    <input 
-                      type="radio" 
-                      name="amount" 
-                      checked={selectedAmount === option}
-                      onChange={() => handleAmountSelect(option)}
-                    />
-                    <div className="option-details">
-                      <span className="option-price">{formatPrice(option.price)}</span>
-                      <span className="option-balance">{option.balance} 🌾</span>
-                      <span className="option-note">{option.note}</span>
-                    </div>
-                  </label>
-                ))}
+            {/* Select Amount section as radio options - only for bank payments */}
+            {paymentMethod === 'bank' && (
+              <div className="amount-selection">
+                <h3>Chọn số tiền</h3>
+                <div className="amount-options">
+                  {pricingOptions.map((option, index) => (
+                    <label key={index} className="amount-option">
+                      <input 
+                        type="radio" 
+                        name="amount" 
+                        checked={selectedAmount === option}
+                        onChange={() => handleAmountSelect(option)}
+                      />
+                      <div className="option-details">
+                        <span className="option-price">{formatPrice(option.price)}</span>
+                        <span className="option-balance">{option.balance} 🌾</span>
+                        <span className="option-note">{option.note}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             
             {/* Bank transfer details */}
             {paymentMethod === 'bank' && (
@@ -789,6 +788,38 @@ const TopUp = () => {
                         </svg>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Prepaid card instructions */}
+            {paymentMethod === 'prepaidCard' && (
+              <div className="prepaid-instructions">
+                <div className="prepaid-notification-list">
+                  <div className="prepaid-notification-item">
+                    <span className="prepaid-icon">🦋</span>
+                    <p>Hiện tại chỉ chấp nhận thẻ cào Viettel và Mobiphone.</p>
+                  </div>
+                  <div className="prepaid-notification-item">
+                    <span className="prepaid-icon">🦋</span>
+                    <p>Sau khi mua thẻ cào hãy liên lạc với <a href="https://www.facebook.com/profile.php?id=100064392503502" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>fanpage</a> theo cú pháp "Ad/Fanpage/Team ơi cho mình nạp {"{mệnh giá thẻ cào}"} lúa vào tài khoản {"{tên hiển thị}"}".</p>
+                  </div>
+                  <div className="prepaid-notification-item">
+                    <span className="prepaid-icon">🦋</span>
+                    <p>Tên hiển thị nằm ở góc trên bên phải màn hình của bạn khi truy cập web, trường hợp tên đăng nhập giống tên hiển thị thì không nói, nhưng nếu khác nhau, hãy chỉ gửi tên hiển thị (tên đăng nhập thuộc về quyền riêng tư và team không cần thông tin này để nạp lúa cho bạn).</p>
+                  </div>
+                  <div className="prepaid-notification-item">
+                    <span className="prepaid-icon">🦋</span>
+                    <p>Lưu ý: Không gửi gì thêm sau khi inbox như trên, chỉ gửi thông tin thẻ cào sau khi đã được rep. Sau khi ad check thấy tài khoản của bạn có tồn tại và thẻ cào nạp thành công sẽ cộng lúa thủ công vào tài khoản của bạn.</p>
+                  </div>
+                  <div className="prepaid-notification-item">
+                    <span className="prepaid-icon">🦋</span>
+                    <p>Nạp lúa bằng thẻ cào không được cộng bonus, mệnh giá chung 100 VNĐ = 1 lúa.</p>
+                  </div>
+                  <div className="prepaid-notification-item">
+                    <span className="prepaid-icon">🦋</span>
+                    <p>Vì đây là quá trình trao đổi làm thủ công (không phải tự động như quét QR chuyển khoản) nên có thể hơi mất thời gian mong các bạn thông cảm!</p>
                   </div>
                 </div>
               </div>
