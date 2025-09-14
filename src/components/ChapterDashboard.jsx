@@ -1246,14 +1246,34 @@ const ChapterDashboard = () => {
         }
     };
 
-    // Check if user has admin privileges
-    if (user?.role !== 'admin' && user?.role !== 'moderator' && user?.role !== 'pj_user') {
-        return <div className="error">Không có quyền truy cập. Chỉ dành cho admin, moderator và project user.</div>;
+    // Check if user has access to this novel through various means
+    const hasBasicAccess = user?.role === 'admin' || user?.role === 'moderator';
+    
+    // Check novel staff roles first (if novel data is loaded)
+    let hasNovelStaffRole = false;
+    if (!loading && novel?.novel?.active) {
+        hasNovelStaffRole = checkPjUserAccess(novel.novel.active.translator, user) ||
+                           checkPjUserAccess(novel.novel.active.editor, user) ||
+                           checkPjUserAccess(novel.novel.active.proofreader, user);
     }
-
-    // For pj_user, check if they manage this novel - but only after data has loaded
-    if (user?.role === 'pj_user' && !loading && novel && !checkPjUserAccess(novel?.novel?.active?.pj_user, user)) {
-        return <div className="error">Bạn không có quyền quản lý truyện này.</div>;
+    
+    // Check pj_user access (if they have pj_user role)
+    let hasPjUserAccess = false;
+    if (user?.role === 'pj_user' && !loading && novel?.novel?.active) {
+        hasPjUserAccess = checkPjUserAccess(novel?.novel?.active?.pj_user, user);
+    }
+    
+    // Determine overall access
+    const hasAccess = hasBasicAccess || hasNovelStaffRole || hasPjUserAccess;
+    
+    if (!hasAccess) {
+        if (!loading && novel) {
+            // Novel loaded but user has no access
+            return <div className="error">Không có quyền truy cập. Chỉ dành cho admin, moderator, project user và nhân sự của truyện.</div>;
+        } else if (!loading) {
+            // Novel data couldn't be loaded or user has no access
+            return <div className="error">Không có quyền truy cập. Chỉ dành cho admin, moderator, project user và nhân sự của truyện.</div>;
+        }
     }
 
     // Show loading state
@@ -1336,7 +1356,7 @@ const ChapterDashboard = () => {
                                 <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất
                                     cả)
                                 </option>
-                                <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
+                                <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ dành cho nhân sự)</option>
                                 <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng
                                     nhập)
                                 </option>

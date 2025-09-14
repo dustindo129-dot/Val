@@ -17,7 +17,7 @@ const ModuleForm = memo(({
 }) => {
   const { user } = useAuth();
   
-  // Enhanced permission check: admin, moderator, or authorized pj_user
+  // Enhanced permission check: admin, moderator, authorized pj_user, or novel staff
   const canManageModuleModes = user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
@@ -26,6 +26,27 @@ const ModuleForm = memo(({
       novel.active.pj_user.includes(user.id?.toString()) ||
       novel.active.pj_user.includes(user.username) ||
       novel.active.pj_user.includes(user.displayName)
+    )) ||
+    // Check if user has novel-level translator, editor, or proofreader roles
+    (novel?.active && (
+      (novel.active.translator && (
+        novel.active.translator.includes(user._id?.toString()) ||
+        novel.active.translator.includes(user.id?.toString()) ||
+        novel.active.translator.includes(user.username) ||
+        novel.active.translator.includes(user.displayName)
+      )) ||
+      (novel.active.editor && (
+        novel.active.editor.includes(user._id?.toString()) ||
+        novel.active.editor.includes(user.id?.toString()) ||
+        novel.active.editor.includes(user.username) ||
+        novel.active.editor.includes(user.displayName)
+      )) ||
+      (novel.active.proofreader && (
+        novel.active.proofreader.includes(user._id?.toString()) ||
+        novel.active.proofreader.includes(user.id?.toString()) ||
+        novel.active.proofreader.includes(user.username) ||
+        novel.active.proofreader.includes(user.displayName)
+      ))
     ))
   );
   const [mode, setMode] = useState(moduleForm.mode || 'published');
@@ -207,7 +228,7 @@ const ModuleForm = memo(({
               <option value="published">{translateChapterModuleStatus('PUBLISHED')} (Hiển thị cho tất cả)</option>
               {/* Only show draft option for admin/moderator */}
               {(user?.role === 'admin' || user?.role === 'moderator') && (
-                <option value="draft">{translateChapterModuleStatus('DRAFT')} (Chỉ admin/mod)</option>
+                <option value="draft">{translateChapterModuleStatus('DRAFT')} (Chỉ dành cho nhân sự)</option>
               )}
               <option value="paid">{translateChapterModuleStatus('PAID')} (Cần mở khóa)</option>
               {/* Only show rent option if module has paid content */}

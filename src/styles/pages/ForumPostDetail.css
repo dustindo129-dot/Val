@@ -104,6 +104,10 @@
   margin: 0;
   line-height: 1.3;
   flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .pinned-indicator,
@@ -524,6 +528,38 @@
   font-weight: 500;
 }
 
+/* Homepage Visibility Toggle - Inline */
+.homepage-visibility-toggle-inline {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.homepage-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.homepage-toggle-label:hover {
+  background: #e9ecef;
+}
+
+.homepage-toggle-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  white-space: nowrap;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .forum-post-detail-page {
@@ -537,6 +573,16 @@
 
   .post-title {
     font-size: 1.5rem;
+    gap: 12px;
+  }
+  
+  .homepage-visibility-toggle-inline {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+  
+  .homepage-toggle-text {
+    font-size: 11px;
   }
 
   .post-header {
@@ -920,6 +966,20 @@ body.forum-delete-modal-open {
   .post-title {
     font-size: 1.25rem;
     line-height: 1.2;
+    gap: 10px;
+  }
+  
+  .homepage-visibility-toggle-inline {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+  
+  .homepage-toggle-label {
+    padding: 6px 10px;
+  }
+  
+  .homepage-toggle-text {
+    font-size: 10px;
   }
 
   .post-header {
@@ -942,13 +1002,6 @@ body.forum-delete-modal-open {
     flex-direction: row;
     align-items: center;
     gap: 10px;
-  }
-
-  .post-author-avatar img,
-  .post-author-avatar .default-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
   }
 
   .post-author-name {
@@ -1379,4 +1432,17 @@ body.forum-delete-modal-open {
 
 :root.dark-mode .locked-indicator {
   opacity: 0.9;
+}
+
+:root.dark-mode .homepage-toggle-label {
+  background: #2a2a2a;
+  border-color: #555;
+}
+
+:root.dark-mode .homepage-toggle-label:hover {
+  background: #333;
+}
+
+:root.dark-mode .homepage-toggle-text {
+  color: #ccc;
 }

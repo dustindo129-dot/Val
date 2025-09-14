@@ -106,11 +106,17 @@ const ModuleList = memo(({
     });
   }, []);
 
-  // Check if user can edit (admin, moderator, or pj_user managing this novel)
+  // Check if user can edit (admin, moderator, pj_user managing this novel, or novel staff)
   const canEdit = user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
-    (user.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
+    (user.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user)) ||
+    // Check if user has novel-level translator, editor, or proofreader roles
+    (novel?.active && (
+      checkPjUserAccess(novel.active.translator, user) ||
+      checkPjUserAccess(novel.active.editor, user) ||
+      checkPjUserAccess(novel.active.proofreader, user)
+    ))
   );
 
 

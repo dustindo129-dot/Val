@@ -33,6 +33,9 @@ const ForumPostDetail = () => {
 
   // Comments toggle state
   const [commentsDisabled, setCommentsDisabled] = useState(false);
+  
+  // Homepage visibility toggle state
+  const [showOnHomepage, setShowOnHomepage] = useState(true);
 
   // Fetch the forum post with view gating
   const { data: post, isLoading, error } = useQuery({
@@ -150,6 +153,7 @@ const ForumPostDetail = () => {
   useEffect(() => {
     if (post) {
       setCommentsDisabled(post.commentsDisabled || false);
+      setShowOnHomepage(post.showOnHomepage !== false); // Default to true if undefined
     }
   }, [post]);
 
@@ -252,6 +256,30 @@ const ForumPostDetail = () => {
     }
   });
 
+  // Toggle homepage visibility mutation
+  const toggleHomepageVisibilityMutation = useMutation({
+    mutationFn: async (visible) => {
+      const response = await axios.patch(
+        `${config.backendUrl}/api/forum/posts/${slug}/toggle-homepage`,
+        { showOnHomepage: visible },
+        { headers: getAuthHeaders() }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch post data
+      queryClient.invalidateQueries({ queryKey: ['forumPost', slug] });
+      // Also invalidate homepage forum posts
+      queryClient.invalidateQueries({ queryKey: ['homepageForumPosts'] });
+    },
+    onError: (error) => {
+      console.error('Error toggling homepage visibility:', error);
+      alert(error.response?.data?.message || 'Không thể thay đổi hiển thị trang chủ. Vui lòng thử lại.');
+      // Revert the local state on error
+      setShowOnHomepage(!showOnHomepage);
+    }
+  });
+
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -323,6 +351,15 @@ const ForumPostDetail = () => {
     // Admin and moderators can toggle comments on any post
     if (user.role === 'admin' || user.role === 'moderator') return true;
     // Post authors can toggle comments on their own posts
+    return post && (post.author?._id === user._id || post.author?.id === user.id);
+  };
+
+  // Check if user can toggle homepage visibility (admin/mod or post author)
+  const canToggleHomepageVisibility = () => {
+    if (!user) return false;
+    // Admin and moderators can toggle homepage visibility on any post
+    if (user.role === 'admin' || user.role === 'moderator') return true;
+    // Post authors can toggle homepage visibility on their own posts
     return post && (post.author?._id === user._id || post.author?.id === user.id);
   };
 
@@ -471,6 +508,13 @@ const ForumPostDetail = () => {
     toggleCommentsMutation.mutate(newState);
   };
 
+  // Handle homepage visibility toggle
+  const handleToggleHomepageVisibility = () => {
+    const newState = !showOnHomepage;
+    setShowOnHomepage(newState); // Optimistic update
+    toggleHomepageVisibilityMutation.mutate(newState);
+  };
+
   // Process post content similar to comment content
   const processPostContent = (content) => {
     if (!content) return '';
@@ -607,6 +651,24 @@ const ForumPostDetail = () => {
                 {post.title}
                 {post.isPinned && <span className="pinned-indicator" title="Đã ghim">📌</span>}
                 {post.commentsDisabled && <span className="locked-indicator" title="Bình luận đã bị tắt">🔒</span>}
+                
+                {/* Homepage visibility toggle - inline with title */}
+                {canToggleHomepageVisibility() && (
+                  <div className="homepage-visibility-toggle-inline">
+                    <label className="homepage-toggle-label">
+                      <span className="homepage-toggle-text">Hiển thị ở trang chủ</span>
+                      <div className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={showOnHomepage}
+                          onChange={handleToggleHomepageVisibility}
+                          disabled={toggleHomepageVisibilityMutation.isLoading}
+                        />
+                        <span className="toggle-slider"></span>
+                      </div>
+                    </label>
+                  </div>
+                )}
               </h1>
             </>
           ) : (

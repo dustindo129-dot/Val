@@ -1923,7 +1923,7 @@ const ChapterContent = React.memo(({
                                         <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất
                                             cả)
                                         </option>
-                                        <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ admin/mod)</option>
+                                        <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ dành cho nhân sự)</option>
                                         <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng nhập)
                                         </option>
                                         {(userRole === 'admin' || (userRole === 'pj_user' && (originalMode === 'paid' || editedMode === 'paid'))) && (

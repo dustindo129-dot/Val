@@ -5,14 +5,15 @@ import axios from 'axios';
 import config from '../config/config';
 
 const ForumDiscussion = () => {
-    // Fetch forum posts - limited to 5 for homepage display
+    // Fetch forum posts - limited to 10 for homepage display
     const { data: postsResponse, isLoading, error } = useQuery({
         queryKey: ['homepageForumPosts'],
         queryFn: async () => {
             const response = await axios.get(`${config.backendUrl}/api/forum/posts`, {
                 params: {
                     page: 1,
-                    limit: 5
+                    limit: 10,
+                    showOnHomepage: true // Only get posts that should be shown on homepage
                 }
             });
             return response.data;

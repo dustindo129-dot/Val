@@ -237,7 +237,7 @@ const ChapterNavigationControls = ({
                         <div className="empty-grid-cell" />
                     )}
                     
-                    <Link to="/" className="control-btn home-btn" title="Trang chủ">
+                    <Link to={`/truyen/${novelSlug}`} className="control-btn home-btn" title="Về trang truyện">
                         <FontAwesomeIcon icon={faHouse}/>
                     </Link>
 

@@ -945,25 +945,6 @@
   visibility: visible;
 }
 
-.control-btn {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: #ff6b6b;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.control-btn:hover {
-  transform: scale(1.1);
-}
-
 /* Chapter dropdown */
 .chapter-dropdown {
   position: fixed;
