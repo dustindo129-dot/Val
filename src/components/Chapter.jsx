@@ -33,6 +33,9 @@ import {
   unescapeHtml, countWords, countWordsSync, formatDate
 } from './chapter/ChapterUtils';
 
+// Import permission utilities
+import { canEditChapter } from '../utils/novelPermissions';
+
 /**
  * ChapterSEO Component
  * 
@@ -521,12 +524,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const stableUserRole = useMemo(() => user?.role || 'user', [user?.role]);
   const stableNovelData = useMemo(() => novel, [novel]);
 
-  // Check if user can edit
-  const canEdit = useMemo(() => user && (
-    user.role === 'admin' || 
-    user.role === 'moderator' || 
-    (user?.role === 'pj_user' && checkPjUserAccess(novel?.active?.pj_user, user))
-  ), [user, novel?.active?.pj_user, checkPjUserAccess]);
+  // Check if user can edit this specific chapter
+  const canEdit = useMemo(() => {
+    if (!user || !chapter) return false;
+    
+    // Use the new chapter-specific permission logic
+    return canEditChapter(chapter, user);
+  }, [user, chapter]);
   
   // Check if user can delete
   const canDelete = useMemo(() => user && (user.role === 'admin' || user.role === 'moderator'), [user]);

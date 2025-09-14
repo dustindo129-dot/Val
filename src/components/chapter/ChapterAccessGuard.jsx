@@ -118,7 +118,66 @@ const ChapterAccessGuard = ({
         const canAccessDraft = user?.role === 'admin' || user?.role === 'moderator' ||
           (user?.role === 'pj_user' && chapter.novel && checkPjUserAccess(chapter.novel.active?.pj_user, user));
 
-        return canAccessDraft; // Draft accessible to admin, moderator, and assigned pj_user
+        // Also check if user has chapter-specific roles
+        if (!canAccessDraft && user && chapter) {
+          // Check if user is assigned as translator, editor, or proofreader on this chapter
+          const staffFields = ['translator', 'editor', 'proofreader'];
+          const userIdentifiers = [
+            user._id?.toString(),
+            user.id?.toString(), 
+            user.username,
+            user.displayName,
+            user.userNumber?.toString()
+          ].filter(Boolean);
+          
+          const hasChapterRole = staffFields.some(field => {
+            const staffValue = chapter[field];
+            if (!staffValue) return false;
+            
+            if (typeof staffValue === 'object' && staffValue !== null) {
+              const staffIdentifiers = [
+                staffValue._id?.toString(),
+                staffValue.id?.toString(),
+                staffValue.username,
+                staffValue.displayName,
+                staffValue.userNumber?.toString()
+              ].filter(Boolean);
+              
+              return userIdentifiers.some(userId => staffIdentifiers.includes(userId));
+            }
+            
+            return userIdentifiers.includes(staffValue?.toString());
+          });
+          
+          if (hasChapterRole) {
+            return true;
+          }
+          
+          // Also check novel-level translator/editor/proofreader roles
+          if (chapter.novel?.active) {
+            const checkUserInStaffList = (staffList) => {
+              if (!staffList || !Array.isArray(staffList)) return false;
+              return staffList.some(staffValue => {
+                if (typeof staffValue === 'object' && staffValue !== null) {
+                  return staffValue._id?.toString() === user._id?.toString() ||
+                         staffValue.username === user.username ||
+                         staffValue.displayName === user.displayName ||
+                         staffValue.userNumber?.toString() === user.userNumber?.toString();
+                }
+                return staffValue?.toString() === user._id?.toString() ||
+                       staffValue === user.username ||
+                       staffValue === user.displayName ||
+                       staffValue?.toString() === user.userNumber?.toString();
+              });
+            };
+            
+            return checkUserInStaffList(chapter.novel.active.translator) ||
+                   checkUserInStaffList(chapter.novel.active.editor) ||
+                   checkUserInStaffList(chapter.novel.active.proofreader);
+          }
+        }
+
+        return canAccessDraft; // Draft accessible to admin, moderator, assigned pj_user, and chapter/novel staff
       case 'paid':
 
         

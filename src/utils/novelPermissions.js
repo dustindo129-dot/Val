@@ -130,4 +130,74 @@ export const canContributeToNovel = (novel, user) => {
   
   // Any active staff member can contribute
   return hasNovelAccess(novel, user._id);
+};
+
+/**
+ * Check if a user is assigned to a specific chapter as translator, editor, or proofreader
+ * @param {Object} chapter - Chapter object with staff assignments
+ * @param {Object} user - User object with role and _id
+ * @returns {boolean} - True if user is assigned to this specific chapter
+ */
+export const hasChapterRole = (chapter, user) => {
+  if (!user || !chapter) return false;
+  
+  // Check all possible user identifiers against chapter staff assignments
+  const userIdentifiers = [
+    user._id?.toString(),
+    user.id?.toString(), 
+    user.username,
+    user.displayName,
+    user.userNumber?.toString()
+  ].filter(Boolean);
+  
+  // Check if user is assigned as translator, editor, or proofreader on this chapter
+  const staffFields = ['translator', 'editor', 'proofreader'];
+  
+  return staffFields.some(field => {
+    const staffValue = chapter[field];
+    if (!staffValue) return false;
+    
+    // Handle case where staff value is an object (populated user)
+    if (typeof staffValue === 'object' && staffValue !== null) {
+      const staffIdentifiers = [
+        staffValue._id?.toString(),
+        staffValue.id?.toString(),
+        staffValue.username,
+        staffValue.displayName,
+        staffValue.userNumber?.toString()
+      ].filter(Boolean);
+      
+      return userIdentifiers.some(userId => staffIdentifiers.includes(userId));
+    }
+    
+    // Handle case where staff value is a primitive (user ID, username, etc.)
+    return userIdentifiers.includes(staffValue?.toString());
+  });
+};
+
+/**
+ * Check if a user can edit a specific chapter
+ * Admins, moderators, pj_users for the novel, and users assigned to the chapter can edit
+ * @param {Object} chapter - Chapter object with staff assignments and novel data
+ * @param {Object} user - User object with role and _id
+ * @returns {boolean} - True if user can edit this specific chapter
+ */
+export const canEditChapter = (chapter, user) => {
+  if (!user || !chapter) return false;
+  
+  // Admins and moderators can edit any chapter
+  if (user.role === 'admin' || user.role === 'moderator') {
+    return true;
+  }
+  
+  // pj_user can edit chapters for novels they manage
+  if (user.role === 'pj_user' && chapter.novel) {
+    if (isProjectManager(chapter.novel, user._id)) {
+      return true;
+    }
+  }
+  
+  // Users with translator, editor, or proofreader roles can edit chapters they're assigned to
+  // This applies to users with any main role (user, pj_user, etc.) if they're assigned to the chapter
+  return hasChapterRole(chapter, user);
 }; 

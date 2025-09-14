@@ -1255,11 +1255,17 @@ const NovelDetail = ({ novelId }) => {
     });
   };
 
-  // Check if user can edit (admin, moderator, or pj_user managing this novel)
+  // Check if user can edit (admin, moderator, pj_user managing this novel, or novel staff)
   const canEdit = user && (
     user.role === 'admin' || 
     user.role === 'moderator' || 
-    (user.role === 'pj_user' && checkPjUserAccess(data?.novel?.active?.pj_user, user))
+    (user.role === 'pj_user' && checkPjUserAccess(data?.novel?.active?.pj_user, user)) ||
+    // Check if user has novel-level translator, editor, or proofreader roles
+    (data?.novel?.active && (
+      checkPjUserAccess(data.novel.active.translator, user) ||
+      checkPjUserAccess(data.novel.active.editor, user) ||
+      checkPjUserAccess(data.novel.active.proofreader, user)
+    ))
   );
 
 
