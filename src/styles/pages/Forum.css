@@ -112,6 +112,14 @@
   flex: 1;
 }
 
+.post-author-avatar img,
+.post-author-avatar .default-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .post-author-avatar .default-avatar {
   background: #4CAF50;
   color: white;
@@ -631,6 +639,13 @@ body.forum-modal-open {
 
   .post-author-info {
     gap: 8px;
+  }
+
+  .post-author-avatar img,
+  .post-author-avatar .default-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
   }
 
   .post-title {

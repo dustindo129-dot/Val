@@ -131,6 +131,12 @@
   gap: 16px;
 }
 
+.post-author-avatar {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
 .post-author-avatar img,
 .post-author-avatar .default-avatar {
   width: 56px;
@@ -597,7 +603,16 @@
   }
 
   .post-author-avatar {
+    width: 40px;
+    height: 40px;
     align-self: center;
+  }
+
+  .post-author-avatar img,
+  .post-author-avatar .default-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
   }
 
   .post-author-details {
@@ -1002,6 +1017,18 @@ body.forum-delete-modal-open {
     flex-direction: row;
     align-items: center;
     gap: 10px;
+  }
+
+  .post-author-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .post-author-avatar img,
+  .post-author-avatar .default-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
   }
 
   .post-author-name {
