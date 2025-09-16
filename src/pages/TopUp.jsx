@@ -6,6 +6,7 @@ import axios from 'axios';
 import config from '../config/config';
 import { translateTopUpStatus } from '../utils/statusTranslation';
 import cdnConfig from '../config/bunny';
+import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/TopUp.css';
 
 /**
@@ -60,42 +61,7 @@ const TopUp = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
-  // Redirect unauthenticated users
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // Trigger login modal if available, otherwise redirect to home
-      const hasLoginModal = typeof window !== 'undefined' && window.dispatchEvent;
-      if (hasLoginModal) {
-        window.dispatchEvent(new Event('openLoginModal'));
-        navigate('/', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
-    }
-  }, [isAuthenticated, navigate]);
-
-  // Don't render the component if user is not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="top-up-container">
-        <TopUpSEO />
-        <div className="auth-required-message">
-          <h2>Yêu cầu đăng nhập</h2>
-          <p>Bạn cần đăng nhập để sử dụng tính năng nạp lúa.</p>
-          <button 
-            onClick={() => {
-              window.dispatchEvent(new Event('openLoginModal'));
-              navigate('/', { replace: true });
-            }}
-            className="login-button"
-          >
-            Đăng nhập ngay
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // All hooks must be called before any conditional returns
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -117,6 +83,10 @@ const TopUp = () => {
   // Add countdown timer state
   const [countdown, setCountdown] = useState(5 * 60); // 5 minutes in seconds
   const timerRef = useRef(null);
+  
+  // Total balance added state
+  const [totalBalanceAdded, setTotalBalanceAdded] = useState(0);
+  const [fetchingTotalBalance, setFetchingTotalBalance] = useState(true);
 
   // Form data for different payment methods
   const [formData, setFormData] = useState({
@@ -189,6 +159,69 @@ const TopUp = () => {
     fetchPendingRequests();
   }, [user]);
 
+  // Fetch total balance added from topup transactions
+  useEffect(() => {
+    const fetchTotalBalanceAdded = async () => {
+      if (!user) return;
+      
+      try {
+        setFetchingTotalBalance(true);
+        
+        // Get comprehensive user transactions from the same endpoint as transaction history
+        const userTransactionsResponse = await axios.get(
+          `${config.backendUrl}/api/transactions/user-transactions?limit=1000&offset=0&username=${user.username}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        const userTransactions = userTransactionsResponse.data.transactions || [];
+        
+        // Calculate total balance added from topup and admin_topup transactions
+        const totalAdded = userTransactions
+          .filter(transaction => transaction.type === 'topup' || transaction.type === 'admin_topup')
+          .filter(transaction => transaction.amount > 0) // Only count positive amounts
+          .reduce((total, transaction) => total + transaction.amount, 0);
+        
+        setTotalBalanceAdded(totalAdded);
+      } catch (err) {
+        console.error('Failed to fetch total balance added:', err);
+        setTotalBalanceAdded(0);
+      } finally {
+        setFetchingTotalBalance(false);
+      }
+    };
+
+    fetchTotalBalanceAdded();
+  }, [user]);
+
+  // Redirect unauthenticated users
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Simply redirect to home when user is not authenticated
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Clean up timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  // Don't render the component if user is not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="top-up-container">
+        <TopUpSEO />
+        <div className="auth-required-message">
+          <LoadingSpinner size="medium" />
+        </div>
+      </div>
+    );
+  }
+
   // Handle payment method selection
   const handleMethodSelect = (method) => {
     setPaymentMethod(method);
@@ -253,15 +286,6 @@ const TopUp = () => {
     }, 1000);
   };
   
-  // Clean up timer on component unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, []);
-
   // Format countdown time as MM:SS
   const formatCountdown = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -520,6 +544,9 @@ const TopUp = () => {
         // Extract pending requests for cancel functionality
         const pendingRequests = topUpHistory.filter(item => item.status === 'Pending');
         setPendingRequests(pendingRequests);
+        
+        // Refresh total balance added when viewing history for the first time
+        await refreshTotalBalanceAdded();
       } catch (err) {
         console.error('Failed to fetch history:', err);
         // Fallback to original TopUp history if user transactions fail
@@ -562,6 +589,31 @@ const TopUp = () => {
     }
   };
 
+  // Refresh total balance added
+  const refreshTotalBalanceAdded = async () => {
+    if (!user) return;
+    
+    try {
+      // Get comprehensive user transactions from the same endpoint as transaction history
+      const userTransactionsResponse = await axios.get(
+        `${config.backendUrl}/api/transactions/user-transactions?limit=1000&offset=0&username=${user.username}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      const userTransactions = userTransactionsResponse.data.transactions || [];
+      
+      // Calculate total balance added from topup and admin_topup transactions
+      const totalAdded = userTransactions
+        .filter(transaction => transaction.type === 'topup' || transaction.type === 'admin_topup')
+        .filter(transaction => transaction.amount > 0) // Only count positive amounts
+        .reduce((total, transaction) => total + transaction.amount, 0);
+      
+      setTotalBalanceAdded(totalAdded);
+    } catch (err) {
+      console.error('Failed to refresh total balance added:', err);
+    }
+  };
+
   // Refresh transaction history without toggling visibility
   const refreshHistory = async () => {
     setFetchingHistory(true);
@@ -589,6 +641,9 @@ const TopUp = () => {
       // Extract pending requests for cancel functionality
       const pendingRequests = topUpHistory.filter(item => item.status === 'Pending');
       setPendingRequests(pendingRequests);
+      
+      // Refresh total balance added when refreshing history
+      await refreshTotalBalanceAdded();
       
       // Notify SecondaryNavbar to refresh balance display (manual fallback)
       window.dispatchEvent(new Event('balanceUpdated'));
@@ -901,13 +956,26 @@ const TopUp = () => {
           <section className="top-up-section">
             <div className="transaction-header-container">
               <h2>Lịch sử giao dịch</h2>
-              <button 
-                className="topup-refresh-button"
-                onClick={refreshHistory}
-                disabled={fetchingHistory}
-              >
-                {fetchingHistory ? 'Đang tải lại...' : 'Tải lại lịch sử'}
-              </button>
+              <div className="transaction-header-right">
+                {/* Compact total balance display */}
+                <div className="total-balance-compact">
+                  <span className="total-balance-compact-label">Tổng lúa đã nạp:</span>
+                  {fetchingTotalBalance ? (
+                    <span className="total-balance-compact-loading">⏳</span>
+                  ) : (
+                    <span className="total-balance-compact-value">
+                      {totalBalanceAdded.toLocaleString('vi-VN')} 🌾
+                    </span>
+                  )}
+                </div>
+                <button 
+                  className="topup-refresh-button"
+                  onClick={refreshHistory}
+                  disabled={fetchingHistory}
+                >
+                  {fetchingHistory ? 'Đang tải lại...' : 'Tải lại lịch sử'}
+                </button>
+              </div>
             </div>
             {fetchingHistory ? (
               <p>Đang tải lịch sử giao dịch...</p>

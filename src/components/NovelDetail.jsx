@@ -98,6 +98,7 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
     user: null, 
     isAuthenticated: false 
   };
+  const queryClient = useQueryClient();
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [hasContributionHistory, setHasContributionHistory] = useState(false);
@@ -292,7 +293,12 @@ const NovelContributions = ({ novelId, novelBudget, onContributionSuccess, modul
           isOpen={isContributeModalOpen}
           onClose={() => setIsContributeModalOpen(false)}
           novelId={novelId}
-          onContributionSuccess={onContributionSuccess}
+          onContributionSuccess={(data) => {
+            // Call the original success handler
+            onContributionSuccess(data);
+            // Invalidate contribution history queries to trigger immediate refresh
+            queryClient.invalidateQueries({ queryKey: ['contributionHistory', novelId] });
+          }}
         />
         
         <ContributionHistoryModal
@@ -566,6 +572,8 @@ const NovelDetail = ({ novelId }) => {
   const handleContributionSuccess = useCallback(() => {
     // Refresh the novel data to update the budget
     queryClient.invalidateQueries(['completeNovel', novelId]);
+    // Also invalidate contribution history to show new transactions immediately
+    queryClient.invalidateQueries({ queryKey: ['contributionHistory', novelId] });
   }, [queryClient, novelId]);
 
   // Rental modal handlers
@@ -1326,7 +1334,7 @@ const NovelDetail = ({ novelId }) => {
                 editingModule={editingModule}
                 hasPaidContent={editingModule && data?.modules ? 
                   data.modules.find(m => m._id === editingModule)?.chapters?.some(ch => ch.mode === 'paid') || false 
-                  : false}
+                  : false} // New modules don't have paid content yet
                 novel={data.novel}
               />
             </Suspense>

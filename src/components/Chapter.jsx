@@ -1770,6 +1770,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         viewCount={viewCount}
         wordCount={wordCount}
         formatDate={formatDate}
+        user={user}
       />
 
       {/* Chapter Content with Optimized Access Guard */}

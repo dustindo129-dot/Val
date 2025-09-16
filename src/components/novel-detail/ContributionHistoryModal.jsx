@@ -1,16 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import config from '../../config/config';
 import LoadingSpinner from '../LoadingSpinner';
 import '../../styles/components/ContributionModal.css';
 
 const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
-  const [contributions, setContributions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const limit = 50;
-  const [pagination, setPagination] = useState(null);
+
+  // React Query for fetching contribution history
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['contributionHistory', novelId, page],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${config.backendUrl}/api/novels/${novelId}/contribution-history?page=${page}&limit=${limit}`
+      );
+      return response.data;
+    },
+    enabled: isOpen && !!novelId, // Only fetch when modal is open and novelId exists
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false
+  });
+
+  const contributions = data?.contributions || [];
+  const pagination = data?.pagination || null;
 
   // Create portal container
   const [portalContainer, setPortalContainer] = useState(null);
@@ -79,30 +96,6 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
     }
   }, [isOpen, novelId]);
 
-  // Fetch contribution history when modal opens
-  useEffect(() => {
-    const fetchContributions = async () => {
-      if (isOpen && novelId) {
-        setIsLoading(true);
-        try {
-          const response = await axios.get(
-            `${config.backendUrl}/api/novels/${novelId}/contribution-history?page=${page}&limit=${limit}`
-          );
-          setContributions(response.data.contributions || []);
-          setPagination(response.data.pagination || null);
-        } catch (error) {
-          console.error('Failed to fetch contribution history:', error);
-          setContributions([]);
-          setPagination(null);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchContributions();
-  }, [isOpen, novelId, page]);
-
   // Format date to Vietnamese format (DD/MM/YYYY)
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -166,6 +159,11 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
           <div className="vt-contribution-history-modal-body">
             {isLoading ? (
                 <LoadingSpinner size="small" text="Đang tải..." />
+            ) : error ? (
+                <div className="empty-state">
+                  <div className="empty-state-icon">⚠️</div>
+                  <p>Không thể tải lịch sử đóng góp. Vui lòng thử lại.</p>
+                </div>
             ) : contributions.length > 0 ? (
                 <table className="history-table">
                   <thead>

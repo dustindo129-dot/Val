@@ -14,7 +14,8 @@ const ChapterToolbar = ({
   novel,
   viewCount,
   wordCount,
-  formatDate
+  formatDate,
+  user
 }) => {
   // Helper function to resolve staff member display name
   // Staff names are now pre-populated by populateStaffNames in the backend
@@ -23,6 +24,110 @@ const ChapterToolbar = ({
     
     // Staff value is already the display name thanks to populateStaffNames
     return staffValue;
+  };
+
+  // Helper function to check if user has management access to this novel
+  const canViewModeratorInfo = () => {
+    if (!user || !novel) return false;
+    
+    // Admin and moderator can always see
+    if (user.role === 'admin' || user.role === 'moderator') {
+      return true;
+    }
+    
+    // Check if user is pj_user for this novel
+    if (user.role === 'pj_user' && novel.active?.pj_user) {
+      const isProjectUser = novel.active.pj_user.some(pjUser => {
+        if (typeof pjUser === 'object' && pjUser !== null) {
+          return (
+            pjUser._id === user.id ||
+            pjUser._id === user._id ||
+            pjUser.username === user.username ||
+            pjUser.displayName === user.displayName ||
+            pjUser.userNumber === user.userNumber
+          );
+        }
+        return (
+          pjUser === user.id ||
+          pjUser === user._id ||
+          pjUser === user.username ||
+          pjUser === user.displayName ||
+          pjUser === user.userNumber
+        );
+      });
+      if (isProjectUser) return true;
+    }
+    
+    // Check if user is translator for this novel
+    if (novel.active?.translator) {
+      const isTranslator = novel.active.translator.some(staff => {
+        if (typeof staff === 'object' && staff !== null) {
+          return (
+            staff._id === user.id ||
+            staff._id === user._id ||
+            staff.username === user.username ||
+            staff.displayName === user.displayName ||
+            staff.userNumber === user.userNumber
+          );
+        }
+        return (
+          staff === user.id ||
+          staff === user._id ||
+          staff === user.username ||
+          staff === user.displayName ||
+          staff === user.userNumber
+        );
+      });
+      if (isTranslator) return true;
+    }
+    
+    // Check if user is editor for this novel
+    if (novel.active?.editor) {
+      const isEditor = novel.active.editor.some(staff => {
+        if (typeof staff === 'object' && staff !== null) {
+          return (
+            staff._id === user.id ||
+            staff._id === user._id ||
+            staff.username === user.username ||
+            staff.displayName === user.displayName ||
+            staff.userNumber === user.userNumber
+          );
+        }
+        return (
+          staff === user.id ||
+          staff === user._id ||
+          staff === user.username ||
+          staff === user.displayName ||
+          staff === user.userNumber
+        );
+      });
+      if (isEditor) return true;
+    }
+    
+    // Check if user is proofreader for this novel
+    if (novel.active?.proofreader) {
+      const isProofreader = novel.active.proofreader.some(staff => {
+        if (typeof staff === 'object' && staff !== null) {
+          return (
+            staff._id === user.id ||
+            staff._id === user._id ||
+            staff.username === user.username ||
+            staff.displayName === user.displayName ||
+            staff.userNumber === user.userNumber
+          );
+        }
+        return (
+          staff === user.id ||
+          staff === user._id ||
+          staff === user.username ||
+          staff === user.displayName ||
+          staff === user.userNumber
+        );
+      });
+      if (isProofreader) return true;
+    }
+    
+    return false;
   };
 
   return (
@@ -44,9 +149,11 @@ const ChapterToolbar = ({
             <FontAwesomeIcon icon={faCheckDouble}/> {resolveStaffDisplayName(chapter.proofreader)}
           </span>
         )}
-        <span className="staff-member author">
-          <em>Đăng bởi: {chapter.createdByUser ? (chapter.createdByUser.displayName || chapter.createdByUser.username) : 'Không xác định'}</em>
-        </span>
+        {canViewModeratorInfo() && (
+          <span className="staff-member author">
+            <em>Đăng bởi: {chapter.createdByUser ? (chapter.createdByUser.displayName || chapter.createdByUser.username) : 'Không xác định'}</em>
+          </span>
+        )}
       </div>
 
       <div className="action-toolbar-right">

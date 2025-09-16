@@ -117,7 +117,7 @@ const ModuleForm = memo(({
       setMode('published');
       setModuleForm(prev => ({ 
         ...prev, 
-                    error: 'Chế độ mở tạm thời đã được chuyển về "Hiển thị" vì tập này không còn chương trả phí.' 
+        error: 'Chế độ mở tạm thời đã được chuyển về "Công khai" vì tập này không còn chương trả phí.' 
       }));
     }
   }, [mode, hasPaidContent, editingModule, setModuleForm]);
@@ -126,9 +126,12 @@ const ModuleForm = memo(({
   const handleModeChange = (e) => {
     const newMode = e.target.value;
     setMode(newMode);
-    // Reset moduleBalance when changing modes
+    // Set appropriate moduleBalance when changing modes
     if (newMode === 'published' || newMode === 'rent') {
       setModuleBalance(0);
+    } else if (newMode === 'paid') {
+      // Set default to 1 for paid mode (minimum required)
+      setModuleBalance(1);
     }
   };
 
