@@ -156,7 +156,7 @@ const ReviewsPreviewSection = ({ novelId, onViewAllReviews, onRateNow }) => {
               <div key={review.id} className="review-preview-item">
                 <div className="review-preview-header">
                   <span className="review-preview-user">
-                    {review.user.displayName || review.user.username}
+                    {review.user?.displayName || review.user?.username || 'Ẩn danh'}
                   </span>
                   <div className="review-preview-rating">
                     {Array.from({ length: 5 }).map((_, i) => (

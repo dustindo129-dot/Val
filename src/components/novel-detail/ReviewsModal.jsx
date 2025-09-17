@@ -363,7 +363,7 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
                 {reviewsData.reviews.map(review => (
                   <div key={review.id} className="review-item">
                     <div className="review-header">
-                      <span className="review-user">{review.user.displayName || review.user.username}</span>
+                      <span className="review-user">{review.user?.displayName || review.user?.username || 'Ẩn danh'}</span>
                       
                       <div className="review-rating">
                         {Array.from({ length: 5 }).map((_, i) => (
