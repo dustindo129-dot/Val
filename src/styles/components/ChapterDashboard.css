@@ -163,7 +163,6 @@
   display: block;
   margin-bottom: 5px;
   font-weight: 600;
-  color: var(--secondary-color);
 }
 
 /* Status section styles - Remove since we're not using status anymore */
