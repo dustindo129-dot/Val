@@ -147,6 +147,8 @@
 .chapter-balance-input {
   flex: 1;
   min-width: 150px;
+  /* Add debugging for flexbox issues */
+  transition: all 0.2s ease;
 }
 
 .chapter-title-input input,
@@ -426,6 +428,18 @@
 :root.dark-mode .chapter-staff-dropdown option {
   background-color: #3a3a3a;
   color: #ecf0f1;
+}
+
+/* Dark mode styles for chapter balance input */
+:root.dark-mode .chapter-balance-input input {
+  background-color: #3a3a3a;
+  border-color: #555;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .chapter-balance-input input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 /* Responsive styles */
