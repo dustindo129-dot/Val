@@ -112,7 +112,7 @@ const cdnConfig = {
     // Default novel cover
     novel: `${BUNNY_CDN_URL}/defaults/default-novel-cover.png`,
     // Default avatar
-    avatar: `${BUNNY_CDN_URL}/defaults/default-avatar.png`
+    avatar: `${BUNNY_CDN_URL}/defaults/default-avatar.webp`
   },
 
   // Helper function to get avatar URL with proper class
