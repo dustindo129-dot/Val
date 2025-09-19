@@ -78,7 +78,7 @@ const Contest2025 = () => {
            <div className="jury-cards">
              <div className="jury-card">
                                <div className="jury-avatar">
-                  <img src="https://valvrareteam.b-cdn.net/avatars/1751515293094-Guyc3zxW4AAup4-.jfif" alt="Nekko" />
+                  <img src="https://valvrareteam.b-cdn.net/avatars/175151_a93daf81.webp" alt="Nekko" />
                 </div>
                 <div className="jury-info">
                   <h3 className="jury-name">Nekko</h3>
@@ -103,7 +103,7 @@ const Contest2025 = () => {
              
              <div className="jury-card">
                                <div className="jury-avatar">
-                  <img src="https://valvrareteam.b-cdn.net/avatars/1748621369860-MV5BNjcwMDlhYTQtNmY3MS00ZDJlLWI1NTEtMmNkNzIxNjlkNmZmXkEyXkFqcGc-.-V1-.jpg" alt="Rabi" />
+                  <img src="https://valvrareteam.b-cdn.net/avatars/1748621_1168d80a.webp" alt="Rabi" />
                 </div>
                 <div className="jury-info">
                   <h3 className="jury-name">Rabi</h3>
@@ -122,7 +122,7 @@ const Contest2025 = () => {
              
              <div className="jury-card">
                                <div className="jury-avatar">
-                  <img src="https://valvrareteam.b-cdn.net/avatars/1755388276818-IMG-5430.jpeg" alt="Tuân" />
+                  <img src="https://valvrareteam.b-cdn.net/avatars/175538_5cc95129.webp" alt="Tuân" />
                 </div>
                 <div className="jury-info">
                   <h3 className="jury-name">Tuân</h3>
@@ -193,7 +193,7 @@ const Contest2025 = () => {
              <div className="works-container">
                <div className="works-header">
                  <h3>Tác phẩm {selectedRound}</h3>
-                 <span className="works-count">(0 tác phẩm)</span>
+                 <span className="works-count">(13 tác phẩm)</span>
                </div>
                
                <div className="works-list">
