@@ -874,7 +874,7 @@ const TopUp = () => {
                   </div>
                   <div className="prepaid-notification-item">
                     <span className="prepaid-icon">🦋</span>
-                    <p>Vì đây là quá trình trao đổi làm thủ công (không phải tự động như quét QR chuyển khoản) nên có thể hơi mất thời gian mong các bạn thông cảm!</p>
+                    <p>Vì đây là quá trình trao đổi làm thủ công (không phải tự động như quét QR chuyển khoản) nên có thể sẽ hơi mất thời gian mong các bạn thông cảm!</p>
                   </div>
                 </div>
               </div>
