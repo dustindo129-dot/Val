@@ -691,7 +691,7 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   position: relative;
   width: 100%;
   max-width: 450px;
@@ -858,6 +858,11 @@
   display: none;
 }
 
+/* Mobile Blog Section - Hidden on Desktop */
+.mobile-blog-section {
+  display: none;
+}
+
 /* Forum Discussion Section Styles - Sidebar Version */
 .forum-discussion-section {
   background: #fff;
@@ -866,6 +871,27 @@
   border: 1px solid #e0e0e0;
   overflow: hidden;
   margin-top: 4.4rem; /* Align with first novel card */
+}
+
+.forum-discussion-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
+}
+
+.forum-discussion-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.forum-discussion-header i {
+  color: #000;
+  font-size: 14px;
 }
 
 .forum-discussion-list {
@@ -947,6 +973,129 @@
 .forum-discussion-empty-link:hover {
   color: #FF6B6B;
   text-decoration: none;
+}
+
+/* Blog Section Styles - Sidebar Version */
+.blog-section {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.blog-section-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
+}
+
+.blog-section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blog-section-header i {
+  color: #000;
+  font-size: 14px;
+}
+
+.blog-list {
+  padding: 0;
+}
+
+.blog-item {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.blog-item:last-child {
+  border-bottom: none;
+}
+
+.blog-item:hover {
+  background-color: #f8f9fa;
+}
+
+.blog-item-content {
+  padding: 12px 16px;
+}
+
+.blog-item-title {
+  display: block;
+  text-decoration: none;
+  color: #2573ce;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  
+  /* Truncate long titles */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blog-item-title:hover {
+  color: #FF6B6B;
+  text-decoration: none;
+}
+
+.blog-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.blog-item-author {
+  color: #666;
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.blog-item-author:hover {
+  color: #2573ce;
+  text-decoration: none;
+}
+
+.blog-item-date {
+  white-space: nowrap;
+}
+
+.blog-item-likes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #dc3545;
+  margin-left: auto;
+}
+
+.blog-item-likes i {
+  font-size: 11px;
+}
+
+.blog-section-loading,
+.blog-section-empty {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.blog-section-error {
+  padding: 20px;
+  text-align: center;
+  color: #dc3545;
+  font-size: 14px;
 }
 
 
@@ -1103,6 +1252,19 @@
   border-color: #444;
 }
 
+:root.dark-mode .forum-discussion-header {
+  background: #333;
+  border-bottom-color: #444;
+}
+
+:root.dark-mode .forum-discussion-header h3 {
+  color: #fff;
+}
+
+:root.dark-mode .forum-discussion-header i {
+  color: #2573ce;
+}
+
 :root.dark-mode .forum-discussion-item {
   border-bottom-color: #333;
 }
@@ -1139,6 +1301,66 @@
 
 :root.dark-mode .forum-discussion-empty-link:hover {
   color: #FF6B6B;
+}
+
+/* Blog Section Dark Mode */
+:root.dark-mode .blog-section {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+:root.dark-mode .blog-section-header {
+  background: #333;
+  border-bottom-color: #444;
+}
+
+:root.dark-mode .blog-section-header h3 {
+  color: #fff;
+}
+
+:root.dark-mode .blog-section-header i {
+  color: #2573ce;
+}
+
+:root.dark-mode .blog-item {
+  border-bottom-color: #444;
+}
+
+:root.dark-mode .blog-item:hover {
+  background-color: #333;
+}
+
+:root.dark-mode .blog-item-title {
+  color: #4db8ff;
+}
+
+:root.dark-mode .blog-item-title:hover {
+  color: #FF6B6B;
+}
+
+:root.dark-mode .blog-item-meta {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .blog-item-author {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .blog-item-author:hover {
+  color: #4db8ff;
+}
+
+:root.dark-mode .blog-item-likes {
+  color: #ff6b6b;
+}
+
+:root.dark-mode .blog-section-loading,
+:root.dark-mode .blog-section-empty {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .blog-section-error {
+  color: #ff6b6b;
 }
 
 /* Dark mode support for Header Discord Button */
@@ -1212,6 +1434,22 @@
 
   /* Reset forum discussion margins for mobile placement */
   .mobile-forum-discussion .forum-discussion-section {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Show mobile blog section, hide sidebar version */
+  .mobile-blog-section {
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+
+  .sidebar .blog-section {
+    display: none;
+  }
+
+  /* Reset blog section margins for mobile placement */
+  .mobile-blog-section .blog-section {
     margin-top: 0;
     margin-bottom: 1.5rem;
   }

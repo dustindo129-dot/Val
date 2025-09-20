@@ -717,7 +717,8 @@ const UserProfile = () => {
     chaptersParticipated: 0,
     commentsCount: 0,
     ongoingModules: [],
-    completedModules: []
+    completedModules: [],
+    blogPostsCount: 0
   });
 
   // Introduction editing state
@@ -725,6 +726,14 @@ const UserProfile = () => {
   const [introText, setIntroText] = useState('');
   const [isSavingIntro, setIsSavingIntro] = useState(false);
   const editorRef = useRef(null);
+
+  // Blog state management
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [blogLoading, setBlogLoading] = useState(false);
+  const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
+  const [blogTitle, setBlogTitle] = useState('');
+  const [editingBlogPost, setEditingBlogPost] = useState(null);
+  const blogEditorRef = useRef(null);
 
   // Check if current user is viewing their own profile
   const isOwnProfile = user && profileUser && user.username === profileUser.username;
@@ -826,7 +835,8 @@ const UserProfile = () => {
           followingCount: userData.stats.followingCount || 0,
           commentsCount: userData.stats.commentsCount || 0,
           ongoingModules: userData.stats.ongoingModules || [],
-          completedModules: userData.stats.completedModules || []
+          completedModules: userData.stats.completedModules || [],
+          blogPostsCount: userData.stats.blogPostsCount || 0
         };
         
         // Warm the novel cache with all modules to avoid individual requests
@@ -910,6 +920,188 @@ const UserProfile = () => {
     checkNovelRoles();
   }, [profileUser, isOwnProfile, user]);
 
+  // Fetch blog posts when blog tab is active
+  useEffect(() => {
+    if (activeTab === 'blog' && profileUser) {
+      fetchBlogPosts();
+    }
+  }, [activeTab, profileUser]);
+
+  // Blog management functions
+  const fetchBlogPosts = async () => {
+    if (!profileUser) return;
+    
+    try {
+      setBlogLoading(true);
+      const response = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/blog-posts`);
+      setBlogPosts(response.data.posts || []);
+      setUserStats(prev => ({
+        ...prev,
+        blogPostsCount: response.data.posts?.length || 0
+      }));
+    } catch (error) {
+      console.error('Error fetching blog posts:', error);
+      setBlogPosts([]);
+    } finally {
+      setBlogLoading(false);
+    }
+  };
+
+  const handleEditBlogPost = (post) => {
+    setEditingBlogPost(post);
+    setBlogTitle(post.title);
+    setShowCreateBlogModal(true);
+  };
+
+  const handleDeleteBlogPost = async (postId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${config.backendUrl}/api/users/id/${profileUser._id}/blog-posts/${postId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      // Remove from local state
+      setBlogPosts(prev => prev.filter(post => post._id !== postId));
+      setUserStats(prev => ({
+        ...prev,
+        blogPostsCount: Math.max(0, prev.blogPostsCount - 1)
+      }));
+    } catch (error) {
+      console.error('Error deleting blog post:', error);
+      alert('Không thể xóa bài viết. Vui lòng thử lại.');
+    }
+  };
+
+  const handleCloseBlogModal = () => {
+    setShowCreateBlogModal(false);
+    setEditingBlogPost(null);
+    setBlogTitle('');
+    
+    if (blogEditorRef.current) {
+      blogEditorRef.current.destroy();
+      blogEditorRef.current = null;
+    }
+  };
+
+  const handleSaveBlogPost = async () => {
+    if (!blogTitle.trim()) {
+      alert('Vui lòng nhập tiêu đề');
+      return;
+    }
+
+    const content = blogEditorRef.current ? blogEditorRef.current.getContent() : '';
+    if (!content.trim()) {
+      alert('Vui lòng nhập nội dung');
+      return;
+    }
+
+    try {
+      const postData = {
+        title: blogTitle.trim(),
+        content: DOMPurify.sanitize(content, {
+          ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 's', 'strike', 'del'],
+          ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height']
+        })
+      };
+
+      let response;
+      if (editingBlogPost) {
+        // Update existing post
+        response = await axios.put(
+          `${config.backendUrl}/api/users/id/${profileUser._id}/blog-posts/${editingBlogPost._id}`,
+          postData,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        // Update local state
+        setBlogPosts(prev => prev.map(post => 
+          post._id === editingBlogPost._id ? response.data : post
+        ));
+      } else {
+        // Create new post
+        response = await axios.post(
+          `${config.backendUrl}/api/users/id/${profileUser._id}/blog-posts`,
+          postData,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        
+        // Add to local state
+        setBlogPosts(prev => [response.data, ...prev]);
+        setUserStats(prev => ({
+          ...prev,
+          blogPostsCount: prev.blogPostsCount + 1
+        }));
+      }
+
+      handleCloseBlogModal();
+    } catch (error) {
+      console.error('Error saving blog post:', error);
+      alert(error.response?.data?.message || 'Không thể lưu bài viết. Vui lòng thử lại.');
+    }
+  };
+
+  const handleBlogLike = async (postId) => {
+    // Check if user is authenticated
+    if (!user) {
+      // Trigger login modal
+      window.dispatchEvent(new Event('openLoginModal'));
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/users/id/${profileUser._id}/blog-posts/${postId}/like`,
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      // Update local state
+      setBlogPosts(prev => prev.map(post => 
+        post._id === postId 
+          ? {
+              ...post,
+              likesCount: response.data.likesCount,
+              likedByUser: response.data.likedByUser
+            }
+          : post
+      ));
+    } catch (error) {
+      console.error('Error liking blog post:', error);
+      if (error.response?.status === 401) {
+        // Token expired or invalid, trigger login modal
+        window.dispatchEvent(new Event('openLoginModal'));
+      } else {
+        alert('Không thể thích bài viết. Vui lòng thử lại.');
+      }
+    }
+  };
+
+  const handleToggleBlogHomepageVisibility = async (postId, currentVisibility) => {
+    try {
+      const response = await axios.patch(
+        `${config.backendUrl}/api/users/id/${profileUser._id}/blog-posts/${postId}/toggle-homepage`,
+        { showOnHomepage: !currentVisibility },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      // Update local state
+      setBlogPosts(prev => prev.map(post => 
+        post._id === postId 
+          ? {
+              ...post,
+              showOnHomepage: response.data.showOnHomepage
+            }
+          : post
+      ));
+    } catch (error) {
+      console.error('Error toggling blog homepage visibility:', error);
+      alert('Không thể thay đổi hiển thị trang chủ. Vui lòng thử lại.');
+    }
+  };
+
   // TinyMCE initialization and cleanup
   useEffect(() => {
     if (isEditingIntro && !editorRef.current) {
@@ -952,6 +1144,85 @@ const UserProfile = () => {
       };
     }
   }, [isEditingIntro, introText]);
+
+  // TinyMCE initialization for blog editor
+  useEffect(() => {
+    if (showCreateBlogModal && !blogEditorRef.current) {
+      // Wait a bit for DOM to be ready
+      const timer = setTimeout(() => {
+        if (window.tinymce && document.getElementById('blog-editor')) {
+          window.tinymce.init({
+            selector: '#blog-editor',
+            height: 400,
+            menubar: false,
+            license_key: 'gpl',
+            plugins: [
+              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+              'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | formatselect | ' +
+              'bold italic underline strikethrough | ' +
+              'alignleft aligncenter alignright | ' +
+              'bullist numlist | link image | code | removeformat | help',
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size:14px; line-height:1.6; }',
+            setup: (editor) => {
+              blogEditorRef.current = editor;
+              editor.on('init', () => {
+                if (editingBlogPost) {
+                  editor.setContent(editingBlogPost.content || '');
+                }
+              });
+            },
+            file_picker_types: 'image',
+            file_picker_callback: (callback, value, meta) => {
+              if (meta.filetype === 'image') {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+                
+                input.onchange = async function() {
+                  const file = this.files[0];
+                  if (file) {
+                    try {
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      
+                      const response = await axios.post(
+                        `${config.backendUrl}/api/upload/image`,
+                        formData,
+                        {
+                          headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                          }
+                        }
+                      );
+                      
+                      callback(response.data.url, { alt: file.name });
+                    } catch (error) {
+                      console.error('Error uploading image:', error);
+                      alert('Failed to upload image');
+                    }
+                  }
+                };
+                
+                input.click();
+              }
+            }
+          });
+        }
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        if (blogEditorRef.current) {
+          blogEditorRef.current.destroy();
+          blogEditorRef.current = null;
+        }
+      };
+    }
+  }, [showCreateBlogModal, editingBlogPost]);
 
   // Handle introduction editing
   const handleEditIntro = () => {
@@ -1434,6 +1705,13 @@ const UserProfile = () => {
               <i className="fa-solid fa-user"></i>
               Giới thiệu
             </button>
+            <button 
+              className={`tab-btn ${activeTab === 'blog' ? 'active' : ''}`}
+              onClick={() => setActiveTab('blog')}
+            >
+              <i className="fa-solid fa-pen-to-square"></i>
+              Blog ({userStats.blogPostsCount})
+            </button>
             {showAdminTab && (
               <button 
                 className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
@@ -1556,6 +1834,114 @@ const UserProfile = () => {
             </div>
           )}
 
+          {/* Blog Tab Content */}
+          {activeTab === 'blog' && (
+            <div className="tab-content">
+              <div className="blog-content">
+                <div className="blog-header">
+                  <h3>Blog cá nhân</h3>
+                  {isOwnProfile && (
+                    <button 
+                      className="create-blog-btn"
+                      onClick={() => setShowCreateBlogModal(true)}
+                    >
+                      <i className="fa-solid fa-plus"></i>
+                      Viết bài mới
+                    </button>
+                  )}
+                </div>
+
+                {blogLoading ? (
+                  <div className="blog-loading">
+                    <LoadingSpinner size="medium" text="Đang tải bài viết..." />
+                  </div>
+                ) : blogPosts.length > 0 ? (
+                  <div className="blog-posts-list">
+                    {blogPosts.map((post) => (
+                      <div key={post._id} className="blog-post-item">
+                        <div className="blog-post-header">
+                          <div className="blog-post-title-section">
+                            <h4 className="blog-post-title">{post.title}</h4>
+                            {post.updatedAt !== post.createdAt && (
+                              <span className="blog-post-updated">
+                                (Cập nhật: {new Date(post.updatedAt).toLocaleDateString('vi-VN')})
+                              </span>
+                            )}
+                            {isOwnProfile && (
+                              <div className="blog-homepage-visibility-toggle">
+                                <label className="homepage-toggle-label">
+                                  <span className="homepage-toggle-text">Hiển thị ở trang chủ</span>
+                                  <div className="toggle-switch">
+                                    <input
+                                      type="checkbox"
+                                      checked={post.showOnHomepage !== false}
+                                      onChange={() => handleToggleBlogHomepageVisibility(post._id, post.showOnHomepage !== false)}
+                                    />
+                                    <span className="toggle-slider"></span>
+                                  </div>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                          <div className="blog-post-meta">
+                            <div className="blog-post-meta-left">
+                              <button
+                                className={`blog-like-btn ${post.likedByUser ? 'liked' : ''}`}
+                                onClick={() => handleBlogLike(post._id)}
+                                title={post.likedByUser ? 'Bỏ thích' : 'Thích bài viết'}
+                              >
+                                <i className="fa-solid fa-heart"></i>
+                                <span className="like-count">{post.likesCount || 0}</span>
+                              </button>
+                            </div>
+                            {isOwnProfile && (
+                              <div className="blog-post-actions">
+                                <button
+                                  className="edit-blog-btn"
+                                  onClick={() => handleEditBlogPost(post)}
+                                  title="Chỉnh sửa"
+                                >
+                                  <i className="fa-solid fa-edit"></i>
+                                </button>
+                                <button
+                                  className="delete-blog-btn"
+                                  onClick={() => handleDeleteBlogPost(post._id)}
+                                  title="Xóa"
+                                >
+                                  <i className="fa-solid fa-trash"></i>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div 
+                          className="blog-post-content"
+                          dangerouslySetInnerHTML={{ 
+                            __html: DOMPurify.sanitize(post.content)
+                          }}
+                        />
+                        <div className="blog-post-footer">
+                          <span className="blog-post-date">
+                            {new Date(post.createdAt).toLocaleDateString('vi-VN')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-blog-posts">
+                    <p>
+                      {isOwnProfile 
+                        ? 'Chưa có bài viết nào. Hãy viết bài đầu tiên!' 
+                        : 'Người dùng chưa có bài viết nào.'
+                      }
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Admin Tab Content */}
           {activeTab === 'admin' && showAdminTab && (
             <div className="tab-content">
@@ -1584,6 +1970,67 @@ const UserProfile = () => {
           )}
         </div>
       </div>
+
+      {/* Blog Creation/Edit Modal */}
+      {showCreateBlogModal && (
+        <div className="modal-overlay">
+          <div className="blog-modal-content">
+            <div className="modal-header">
+              <h3>{editingBlogPost ? 'Chỉnh sửa bài viết' : 'Viết bài mới'}</h3>
+              <button 
+                className="modal-close-btn"
+                onClick={handleCloseBlogModal}
+              >
+                <i className="fa-solid fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="blog-title">Tiêu đề *</label>
+                <input
+                  id="blog-title"
+                  type="text"
+                  className="blog-title-input"
+                  placeholder="Nhập tiêu đề bài viết..."
+                  value={blogTitle}
+                  onChange={(e) => setBlogTitle(e.target.value)}
+                  maxLength={200}
+                />
+                <div className="character-count">
+                  {blogTitle.length}/200
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Nội dung *</label>
+                <div className="blog-editor">
+                  <textarea 
+                    id="blog-editor"
+                    defaultValue=""
+                    style={{ width: '100%', minHeight: '400px' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="modal-cancel-btn"
+                onClick={handleCloseBlogModal}
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                className="modal-submit-btn"
+                onClick={handleSaveBlogPost}
+              >
+                {editingBlogPost ? 'Cập nhật' : 'Đăng bài'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -52,7 +52,7 @@ html:not(.dark-mode):not(.sepia-mode) .user-profile-page {
   position: relative;
   height: 300px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-image: url('https://valvrareteam.b-cdn.net/Konachan.com_-_367009_animal_animated_bird_building_city_clouds_flowers_lennsan_no_humans_original_petals_polychromatic_reflection_scenic_sky_train_tree_water_1_u8wao6.gif');
+  background-image: url('https://Valvrareteam.b-cdn.net/Konacha_ac0e5b43.gif');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -223,21 +223,20 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 
 .content-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  width: 100%;
 }
 
 /* Notes Section */
 .profile-notes-section {
-  grid-column: 1;
+  width: 100%;
 }
 
 .notes-card {
   background: white;
   border-radius: 12px;
-  padding: 25px;
+  padding: 15px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   height: fit-content;
 }
@@ -424,7 +423,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 
 /* Novels Section */
 .profile-novels-section {
-  grid-column: 2;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -472,21 +471,35 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   min-height: 120px;
   border-radius: 0 0 12px 12px;
   overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
 }
 
 .module-item {
   display: flex;
   gap: 15px;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 0 15px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.module-item:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 :root.dark-mode .module-item {
-  border-bottom-color: #444;
+  border-color: #444;
+  background: #1a1a1a;
 }
 
-.module-item:last-child {
-  border-bottom: none;
+:root.dark-mode .module-item:hover {
+  background: #252525;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Profile-specific module cover styling - higher specificity to override NovelDetail.css */
@@ -568,17 +581,6 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .profile-novels-section {
-    grid-column: 1;
-  }
-}
-
 @media (max-width: 768px) {
   .profile-banner {
     height: 200px;
@@ -645,12 +647,13 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   .novels-grid {
     padding: 15px;
     overflow: hidden;
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
   
   .module-item {
     flex-wrap: wrap;
     gap: 12px;
-    padding: 12px 0;
   }
   
   .user-profile-page .module-cover {
@@ -678,6 +681,13 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
     line-height: 1.3;
   }
   
+  .blog-post-title-section {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
   /* Card header adjustments */
   .novels-card .card-header {
     padding: 12px 15px;
@@ -693,6 +703,139 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   .section-number {
     font-size: 0.8rem;
     padding: 1px 6px;
+  }
+  
+  /* Module search responsive adjustments */
+  .novels-card .module-search-container {
+    max-width: 100%;
+  }
+  
+  .remove-module-btn {
+    width: 20px;
+    height: 20px;
+    font-size: 0.6rem;
+  }
+  
+  .user-profile-page .module-title {
+    padding-right: 1.5rem;
+  }
+  
+  /* Drag handle responsive adjustments */
+  .user-profile-page .drag-handle {
+    left: -28px;
+    font-size: 12px;
+  }
+  
+  .user-profile-page .module-item.can-manage {
+    margin-left: 0; /* Remove margin since we use grid layout */
+    position: relative;
+  }
+  
+  .user-profile-page .novels-grid.can-manage {
+    padding-left: 32px; /* Only maintain padding on mobile when user can manage */
+    grid-template-columns: 1fr; /* Single column on mobile */
+  }
+  
+  /* Tab navigation responsive adjustments */
+  .profile-tabs-nav {
+    margin-bottom: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab-btn {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    min-width: max-content;
+  }
+  
+  .tab-btn i {
+    font-size: 0.8rem;
+  }
+  
+  .admin-tab-count {
+    font-size: 0.8rem;
+    margin-left: 3px;
+  }
+  
+  .admin-placeholder {
+    min-height: 300px;
+    padding: 0 15px;
+  }
+  
+  .placeholder-card {
+    padding: 30px 20px;
+  }
+  
+  .placeholder-icon i {
+    font-size: 2.5rem;
+  }
+  
+  .placeholder-card h3 {
+    font-size: 1.3rem;
+  }
+  
+  /* Pending posts responsive adjustments */
+  .pending-posts-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .pending-post-item {
+    padding: 15px;
+  }
+  
+  .pending-post-full-content {
+    max-height: 350px;
+    padding: 12px;
+    font-size: 0.85rem;
+  }
+  
+  .pending-post-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .approve-btn,
+  .reject-btn {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+  
+  .pending-posts-pagination {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  /* Admin section responsive adjustments */
+  .admin-reports-section,
+  .admin-blacklist-section {
+    padding: 0;
+  }
+  
+  .blacklist-management {
+    padding: 15px;
+  }
+  
+  .blacklist-item {
+    padding: 12px;
+  }
+  
+  .blacklist-user-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .blacklist-user-avatar img,
+  .blacklist-user-avatar .default-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .unban-btn {
+    font-size: 0.8rem;
+    padding: 5px 10px;
   }
 }
 
@@ -755,11 +898,12 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   /* Novels section mobile adjustments */
   .novels-grid {
     padding: 12px;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
   
   .module-item {
     gap: 10px;
-    padding: 10px 0;
   }
   
   .user-profile-page .module-cover {
@@ -825,6 +969,182 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   
   .profile-main-content {
     padding: 0 10px 20px;
+  }
+  
+  /* Tab navigation 576px responsive adjustments */
+  .tab-btn {
+    padding: 10px 15px;
+    font-size: 0.85rem;
+    gap: 6px;
+  }
+  
+  .admin-tab-count {
+    font-size: 0.75rem;
+    margin-left: 2px;
+  }
+  
+  .placeholder-card {
+    padding: 25px 15px;
+  }
+  
+  .placeholder-icon i {
+    font-size: 2rem;
+  }
+  
+  .placeholder-card h3 {
+    font-size: 1.2rem;
+  }
+  
+  .placeholder-card p {
+    font-size: 0.9rem;
+  }
+  
+  /* Pending posts 576px responsive adjustments */
+  .pending-post-item {
+    padding: 12px;
+    margin: 0 10px;
+  }
+  
+  .pending-post-title {
+    font-size: 1.1rem;
+  }
+  
+  .pending-post-preview,
+  .pending-post-full-content {
+    font-size: 0.85rem;
+  }
+  
+  .pending-post-full-content {
+    max-height: 300px;
+    padding: 12px;
+    margin: 8px 0;
+  }
+  
+  .post-author-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .post-author-avatar img,
+  .post-author-avatar .default-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  /* Admin section 576px responsive adjustments */
+  .admin-grid {
+    gap: 15px;
+  }
+  
+  .blacklist-item {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .blacklist-user-info {
+    width: 100%;
+  }
+  
+  .unban-btn {
+    align-self: flex-end;
+  }
+  
+  /* Modal 576px responsive adjustments */
+  .modal-content {
+    padding: 20px;
+    margin: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-confirm-btn,
+  .modal-cancel-btn {
+    width: 100%;
+  }
+  
+  /* Blog 576px responsive adjustments */
+  .blog-header {
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .create-blog-btn {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+  
+  .blog-post-item {
+    padding: 16px;
+  }
+  
+  .blog-post-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .blog-post-title-section {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .blog-post-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .blog-post-meta-left {
+    gap: 12px;
+  }
+  
+  .blog-like-btn {
+    font-size: 0.85rem;
+    padding: 5px 6px;
+    gap: 4px;
+  }
+  
+  .blog-post-title {
+    font-size: 1.1rem;
+  }
+  
+  .blog-post-actions {
+    gap: 6px;
+  }
+  
+  .edit-blog-btn,
+  .delete-blog-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .blog-modal-content {
+    width: 98%;
+    max-height: 95vh;
+  }
+  
+  .blog-modal-content .modal-body {
+    padding: 20px;
+  }
+  
+  .blog-modal-content .modal-header,
+  .blog-modal-content .modal-footer {
+    padding: 16px 20px;
+  }
+  
+  .blog-modal-content .modal-footer {
+    flex-direction: column;
+  }
+  
+  .blog-modal-content .modal-cancel-btn,
+  .blog-modal-content .modal-submit-btn {
+    width: 100%;
   }
 }
 
@@ -896,23 +1216,6 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   gap: 0.25rem;
 }
 
-/* Responsive adjustments for module search */
-@media (max-width: 768px) {
-  .novels-card .module-search-container {
-    max-width: 100%;
-  }
-  
-  .remove-module-btn {
-    width: 20px;
-    height: 20px;
-    font-size: 0.6rem;
-  }
-  
-  .user-profile-page .module-title {
-    padding-right: 1.5rem;
-  }
-}
-
 /* Drag and Drop Adjustments for UserProfile */
 /* Override some DraggableModuleList styles to match UserProfile design */
 .user-profile-page .module-item {
@@ -924,7 +1227,8 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 
 /* Only add drag handle spacing when user can manage modules */
 .user-profile-page .novels-grid.can-manage {
-  padding-left: 40px; /* Make room for drag handles only when needed */
+  padding-left: 50px; /* Make room for drag handles only when needed */
+  grid-template-columns: 1fr 1fr 1fr; /* Maintain 3-column grid */
 }
 
 /* Adjust drag handle positioning for UserProfile layout */
@@ -939,17 +1243,9 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 
 .user-profile-page .module-item.can-manage {
   padding-left: 0; /* Don't add extra padding since handle is positioned outside */
-  margin-left: 40px; /* Add margin to make room for drag handle space only when needed */
+  margin-left: 0; /* Remove margin since we're in a grid now */
+  position: relative; /* Ensure drag handle positioning works */
 }
-
-/* Remove the conditional styling that was causing layout shifts */
-/* .user-profile-page .module-item:not(.can-manage) {
-  margin-left: 0;
-}
-
-.user-profile-page .novels-grid:not(.can-manage) {
-  padding-left: 0;
-} */
 
 /* Global text overflow prevention */
 .user-profile-page * {
@@ -963,22 +1259,6 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-}
-
-/* Responsive adjustments for drag handles */
-@media (max-width: 768px) {
-  .user-profile-page .drag-handle {
-    left: -28px;
-    font-size: 12px;
-  }
-  
-  .user-profile-page .module-item.can-manage {
-    margin-left: 32px; /* Only maintain margin on mobile when user can manage */
-  }
-  
-  .user-profile-page .novels-grid.can-manage {
-    padding-left: 32px; /* Only maintain padding on mobile when user can manage */
-  }
 }
 
 /* Refresh modules button */
@@ -1009,7 +1289,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 .profile-tabs-nav {
   display: flex;
   gap: 0;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   border-bottom: 2px solid #e0e0e0;
   overflow-x: auto;
   white-space: nowrap;
@@ -1155,74 +1435,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   color: #a0a0a0;
 }
 
-/* Responsive adjustments for tabs */
-@media (max-width: 768px) {
-  .profile-tabs-nav {
-    margin-bottom: 20px;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .tab-btn {
-    padding: 12px 20px;
-    font-size: 0.9rem;
-    min-width: max-content;
-  }
-  
-  .tab-btn i {
-    font-size: 0.8rem;
-  }
-  
-  .admin-tab-count {
-    font-size: 0.8rem;
-    margin-left: 3px;
-  }
-  
-  .admin-placeholder {
-    min-height: 300px;
-    padding: 0 15px;
-  }
-  
-  .placeholder-card {
-    padding: 30px 20px;
-  }
-  
-  .placeholder-icon i {
-    font-size: 2.5rem;
-  }
-  
-  .placeholder-card h3 {
-    font-size: 1.3rem;
-  }
-}
 
-@media (max-width: 576px) {
-  .tab-btn {
-    padding: 10px 15px;
-    font-size: 0.85rem;
-    gap: 6px;
-  }
-  
-  .admin-tab-count {
-    font-size: 0.75rem;
-    margin-left: 2px;
-  }
-  
-  .placeholder-card {
-    padding: 25px 15px;
-  }
-  
-  .placeholder-icon i {
-    font-size: 2rem;
-  }
-  
-  .placeholder-card h3 {
-    font-size: 1.2rem;
-  }
-  
-  .placeholder-card p {
-    font-size: 0.9rem;
-  }
-}
 
 /* Pending Posts Management Styles */
 .pending-posts-management {
@@ -1569,74 +1782,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   color: #a0a0a0;
 }
 
-/* Responsive adjustments for pending posts */
-@media (max-width: 768px) {
-  .pending-posts-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .pending-post-item {
-    padding: 15px;
-  }
-  
-  .pending-post-full-content {
-    max-height: 350px;
-    padding: 12px;
-    font-size: 0.85rem;
-  }
-  
-  .pending-post-actions {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  
-  .approve-btn,
-  .reject-btn {
-    font-size: 0.85rem;
-    padding: 6px 12px;
-  }
-  
-  .pending-posts-pagination {
-    flex-direction: column;
-    gap: 15px;
-  }
-}
 
-@media (max-width: 576px) {
-  .pending-post-item {
-    padding: 12px;
-    margin: 0 10px;
-  }
-  
-  .pending-post-title {
-    font-size: 1.1rem;
-  }
-  
-  .pending-post-preview,
-  .pending-post-full-content {
-    font-size: 0.85rem;
-  }
-  
-  .pending-post-full-content {
-    max-height: 300px;
-    padding: 12px;
-    margin: 8px 0;
-  }
-  
-  .post-author-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .post-author-avatar img,
-  .post-author-avatar .default-avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 0.9rem;
-  }
-}
 
 /* Admin Grid Layout */
 .admin-grid {
@@ -1853,57 +1999,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   }
 }
 
-@media (max-width: 768px) {
-  .admin-reports-section,
-  .admin-blacklist-section {
-    padding: 0;
-  }
-  
-  .blacklist-management {
-    padding: 15px;
-  }
-  
-  .blacklist-item {
-    padding: 12px;
-  }
-  
-  .blacklist-user-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .blacklist-user-avatar img,
-  .blacklist-user-avatar .default-avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 0.9rem;
-  }
-  
-  .unban-btn {
-    font-size: 0.8rem;
-    padding: 5px 10px;
-  }
-}
 
-@media (max-width: 576px) {
-  .admin-grid {
-    gap: 15px;
-  }
-  
-  .blacklist-item {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
-  }
-  
-  .blacklist-user-info {
-    width: 100%;
-  }
-  
-  .unban-btn {
-    align-self: flex-end;
-  }
-}
 
 /* Modal styles */
 .modal-overlay {
@@ -2053,18 +2149,580 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   background: #777;
 }
 
-@media (max-width: 576px) {
-  .modal-content {
-    padding: 20px;
-    margin: 20px;
-  }
 
-  .modal-actions {
-    flex-direction: column;
-  }
+/* Blog Tab Styles */
+.blog-content {
+  max-width: 100%;
+  margin: 0 auto;
+}
 
-  .modal-confirm-btn,
-  .modal-cancel-btn {
-    width: 100%;
-  }
-} 
+.blog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-left: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  gap: 20px;
+}
+
+:root.dark-mode .blog-header {
+  border-bottom-color: #444;
+}
+
+.blog-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+  flex-shrink: 0;
+}
+
+:root.dark-mode .blog-header h3 {
+  color: #fff;
+}
+
+.create-blog-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-blog-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.create-blog-btn i {
+  font-size: 0.85rem;
+}
+
+.blog-loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.blog-posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.blog-post-item {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 25px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+:root.dark-mode .blog-post-item {
+  background: #2d2d2d;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.blog-post-item:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+:root.dark-mode .blog-post-item:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.blog-post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.blog-post-title-section {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex: 1;
+}
+
+.blog-post-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+:root.dark-mode .blog-post-title {
+  color: #fff;
+}
+
+.blog-post-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-shrink: 0;
+}
+
+.blog-post-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.blog-post-date {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.blog-like-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.blog-like-btn:hover {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.blog-like-btn.liked {
+  color: #dc3545;
+}
+
+.blog-like-btn.liked:hover {
+  background: rgba(220, 53, 69, 0.2);
+}
+
+.blog-like-btn i {
+  font-size: 0.85rem;
+}
+
+.blog-like-btn .like-count {
+  font-weight: 500;
+  min-width: 1ch;
+}
+
+:root.dark-mode .blog-post-date {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .blog-like-btn {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .blog-like-btn:hover {
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+}
+
+:root.dark-mode .blog-like-btn.liked {
+  color: #ff6b6b;
+}
+
+:root.dark-mode .blog-like-btn.liked:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+.blog-post-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-blog-btn,
+.delete-blog-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-blog-btn {
+  color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+}
+
+.edit-blog-btn:hover {
+  background: rgba(0, 123, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.delete-blog-btn {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.delete-blog-btn:hover {
+  background: rgba(220, 53, 69, 0.2);
+  transform: translateY(-1px);
+}
+
+.blog-post-content {
+  color: #555;
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+:root.dark-mode .blog-post-content {
+  color: #e0e0e0;
+}
+
+.blog-post-content h1,
+.blog-post-content h2,
+.blog-post-content h3,
+.blog-post-content h4,
+.blog-post-content h5,
+.blog-post-content h6 {
+  margin: 25px 0 15px 0;
+  color: #333;
+}
+
+:root.dark-mode .blog-post-content h1,
+:root.dark-mode .blog-post-content h2,
+:root.dark-mode .blog-post-content h3,
+:root.dark-mode .blog-post-content h4,
+:root.dark-mode .blog-post-content h5,
+:root.dark-mode .blog-post-content h6 {
+  color: #fff;
+}
+
+.blog-post-content p {
+  margin: 0 0 15px 0;
+}
+
+.blog-post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.blog-post-content ul,
+.blog-post-content ol {
+  margin: 15px 0;
+  padding-left: 25px;
+}
+
+.blog-post-content li {
+  margin: 8px 0;
+}
+
+.blog-post-content blockquote {
+  border-left: 4px solid #007bff;
+  padding-left: 20px;
+  margin: 20px 0;
+  font-style: italic;
+  color: #666;
+}
+
+:root.dark-mode .blog-post-content blockquote {
+  border-left-color: #4db8ff;
+  color: #a0a0a0;
+}
+
+.blog-post-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+:root.dark-mode .blog-post-footer {
+  border-top-color: #444;
+}
+
+.blog-homepage-visibility-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.blog-homepage-visibility-toggle .homepage-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #666;
+  cursor: pointer;
+  user-select: none;
+}
+
+:root.dark-mode .blog-homepage-visibility-toggle .homepage-toggle-label {
+  color: #a0a0a0;
+}
+
+.blog-homepage-visibility-toggle .homepage-toggle-text {
+  white-space: nowrap;
+}
+
+.blog-homepage-visibility-toggle .toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+}
+
+.blog-homepage-visibility-toggle .toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.blog-homepage-visibility-toggle .toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 9px;
+}
+
+.blog-homepage-visibility-toggle .toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.blog-homepage-visibility-toggle input:checked + .toggle-slider {
+  background-color: #007bff;
+}
+
+.blog-homepage-visibility-toggle input:checked + .toggle-slider:before {
+  transform: translateX(14px);
+}
+
+:root.dark-mode .blog-homepage-visibility-toggle .toggle-slider {
+  background-color: #555;
+}
+
+:root.dark-mode .blog-homepage-visibility-toggle input:checked + .toggle-slider {
+  background-color: #4db8ff;
+}
+
+.blog-post-updated {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+  margin: 0;
+}
+
+:root.dark-mode .blog-post-updated {
+  color: #a0a0a0;
+}
+
+.no-blog-posts {
+  text-align: center;
+  padding: 80px 20px;
+  color: #666;
+  font-style: italic;
+}
+
+:root.dark-mode .no-blog-posts {
+  color: #a0a0a0;
+}
+
+.no-blog-posts p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Blog Modal Styles */
+.blog-modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 800px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+:root.dark-mode .blog-modal-content {
+  background: #2d2d2d;
+  color: #fff;
+}
+
+.blog-modal-content .modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+:root.dark-mode .blog-modal-content .modal-header {
+  border-bottom-color: #444;
+}
+
+.blog-modal-content .modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+}
+
+:root.dark-mode .blog-modal-content .modal-header h3 {
+  color: #fff;
+}
+
+.blog-modal-content .modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.blog-modal-content .modal-close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+:root.dark-mode .blog-modal-content .modal-close-btn {
+  color: #a0a0a0;
+}
+
+:root.dark-mode .blog-modal-content .modal-close-btn:hover {
+  background: #404040;
+  color: #fff;
+}
+
+.blog-modal-content .modal-body {
+  padding: 24px;
+}
+
+.blog-modal-content .form-group {
+  margin-bottom: 20px;
+}
+
+.blog-modal-content .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+:root.dark-mode .blog-modal-content .form-group label {
+  color: #fff;
+}
+
+.blog-title-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.blog-title-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+:root.dark-mode .blog-title-input {
+  background: #1a1a1a;
+  border-color: #444;
+  color: #fff;
+}
+
+:root.dark-mode .blog-title-input:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+}
+
+.character-count {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+:root.dark-mode .character-count {
+  color: #a0a0a0;
+}
+
+.blog-editor {
+  width: 100%;
+}
+
+.blog-modal-content .modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+:root.dark-mode .blog-modal-content .modal-footer {
+  border-top-color: #444;
+}
+
+.blog-modal-content .modal-cancel-btn,
+.blog-modal-content .modal-submit-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.blog-modal-content .modal-cancel-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.blog-modal-content .modal-cancel-btn:hover {
+  background: #5a6268;
+}
+
+.blog-modal-content .modal-submit-btn {
+  background: #007bff;
+  color: white;
+}
+
+.blog-modal-content .modal-submit-btn:hover {
+  background: #0056b3;
+}

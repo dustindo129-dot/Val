@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import config from '../config/config';
+import LoadingSpinner from './LoadingSpinner';
 
 const ForumDiscussion = () => {
     // Fetch forum posts - limited to 10 for homepage display
@@ -47,8 +48,14 @@ const ForumDiscussion = () => {
     if (isLoading) {
         return (
             <div className="forum-discussion-section">
+                <div className="forum-discussion-header">
+                    <h3>
+                        <i className="fa-solid fa-comments"></i>
+                        Thảo luận
+                    </h3>
+                </div>
                 <div className="forum-discussion-loading">
-                    Đang tải thảo luận...
+                    <LoadingSpinner size="small" text="Đang tải thảo luận..." />
                 </div>
             </div>
         );
@@ -57,6 +64,12 @@ const ForumDiscussion = () => {
     if (error || !posts || posts.length === 0) {
         return (
             <div className="forum-discussion-section">
+                <div className="forum-discussion-header">
+                    <h3>
+                        <i className="fa-solid fa-comments"></i>
+                        Thảo luận
+                    </h3>
+                </div>
                 <div className="forum-discussion-empty">
                     <Link to="/thao-luan" className="forum-discussion-empty-link">
                         Xem tất cả thảo luận
@@ -81,6 +94,12 @@ const ForumDiscussion = () => {
 
     return (
         <div className="forum-discussion-section">
+            <div className="forum-discussion-header">
+                <h3>
+                    <i className="fa-solid fa-comments"></i>
+                    Thảo luận
+                </h3>
+            </div>
             <div className="forum-discussion-list">
                 {sortedPosts.map(post => {
                     // Use lastActivity if available, fallback to approvedAt, then createdAt

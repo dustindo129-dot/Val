@@ -8,6 +8,7 @@ import HotNovels from './HotNovels';
 import RecentlyRead from './RecentlyRead';
 import RecentComments from './RecentComments';
 import ForumDiscussion from './ForumDiscussion';
+import BlogSection from './BlogSection';
 import '../styles/NovelList.css';
 import config from '../config/config';
 import cdnConfig from '../config/bunny';
@@ -663,6 +664,11 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                             <ForumDiscussion />
                         </div>
                         
+                        {/* Mobile Blog Section - right under forum discussion */}
+                        <div className="mobile-blog-section">
+                            <BlogSection />
+                        </div>
+                        
                         <div className="section-headers">
                             <h2>MỚI CẬP NHẬT</h2>
                             <div className="header-discord-container">
@@ -844,6 +850,7 @@ const NovelList = ({ filter, seoHeaderHTML, seoFooterHTML }) => {
                     {/* Sidebar with forum discussion, hot novels and Facebook plugin */}
                     <aside className="sidebar">
                         <ForumDiscussion />
+                        <BlogSection />
                         <HotNovels/>
                         <RecentlyRead/>
                         <RecentComments/>
