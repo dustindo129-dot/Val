@@ -57,6 +57,7 @@ const RequestCard = ({
   const [editNote, setEditNote] = useState(request.note || '');
   const [editContactInfo, setEditContactInfo] = useState(request.contactInfo || '');
   const [editImage, setEditImage] = useState(request.illustration || '');
+  const [editGoalBalance, setEditGoalBalance] = useState(request.goalBalance || 1000);
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -66,8 +67,9 @@ const RequestCard = ({
       setEditNote(request.note || '');
       setEditContactInfo(request.contactInfo || '');
       setEditImage(request.illustration || '');
+      setEditGoalBalance(request.goalBalance || 1000);
     }
-  }, [request.note, request.contactInfo, request.illustration, isEditing]);
+  }, [request.note, request.contactInfo, request.illustration, request.goalBalance, isEditing]);
   
   // Check if user can edit (admin, moderator, or user who created a 'new' request)
   const canEdit = user && (
@@ -117,12 +119,16 @@ const RequestCard = ({
     try {
       setIsSaving(true);
       
+      // Validate and set default for goalBalance if empty
+      const validatedGoalBalance = editGoalBalance === '' || editGoalBalance <= 0 ? 1000 : Number(editGoalBalance);
+      
       const response = await axios.put(
         `${config.backendUrl}/api/requests/${request._id}`,
         {
           note: editNote,
           contactInfo: editContactInfo,
-          illustration: editImage
+          illustration: editImage,
+          goalBalance: validatedGoalBalance
         },
         {
           headers: {
@@ -153,6 +159,7 @@ const RequestCard = ({
     setEditNote(request.note || '');
     setEditContactInfo(request.contactInfo || '');
     setEditImage(request.illustration || '');
+    setEditGoalBalance(request.goalBalance || 1000);
   };
 
   // Function to process request note content - enable hyperlinks and preserve line breaks
@@ -234,7 +241,7 @@ const RequestCard = ({
                 accept="image/*"
                 onChange={handleEditImageUpload}
                 id={`edit-image-${request._id}`}
-                style={{ display: 'none' }}
+                className="hidden-file-input"
                 disabled={isImageUploading || isSaving}
               />
               <label 
@@ -264,18 +271,8 @@ const RequestCard = ({
               value={editNote}
               onChange={(e) => setEditNote(e.target.value)}
               placeholder="Ghi chú cho yêu cầu..."
-              className="edit-note-textarea"
+              className="edit-textarea-base edit-textarea-note"
               disabled={isSaving}
-              style={{
-                width: '100%',
-                minHeight: '80px',
-                padding: '8px',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
-                fontFamily: 'inherit',
-                fontSize: '0.9rem',
-                resize: 'vertical'
-              }}
             />
           ) : (
             <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processNoteContent(request.note)) }} />
@@ -295,16 +292,8 @@ const RequestCard = ({
               value={editContactInfo}
               onChange={(e) => setEditContactInfo(e.target.value)}
               placeholder="Thông tin liên lạc của bạn (Facebook, Discord, Zalo,...)"
-              className="edit-note-textarea"
+              className="edit-textarea-base"
               disabled={isSaving}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
-                fontFamily: 'inherit',
-                fontSize: '0.9rem'
-              }}
             />
           ) : (
             <div>
@@ -326,17 +315,31 @@ const RequestCard = ({
             value={editContactInfo}
             onChange={(e) => setEditContactInfo(e.target.value)}
             placeholder="Thông tin liên lạc của bạn (Facebook, Discord, Zalo,...)"
-            className="edit-note-textarea"
+            className="edit-textarea-base"
             disabled={isSaving}
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-              fontSize: '0.9rem'
-            }}
           />
+        </div>
+      )}
+      
+      {/* Goal Balance Edit Field - only for 'web' requests */}
+      {request.type === 'web' && isEditing && user && (user.role === 'admin' || user.role === 'moderator') && (
+        <div className="request-goal-balance">
+          <div className="goal-balance-container">
+            <label className="goal-balance-label">
+              Mục tiêu:
+            </label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={editGoalBalance}
+              onChange={(e) => setEditGoalBalance(e.target.value === '' ? '' : Number(e.target.value))}
+              placeholder="1000"
+              disabled={isSaving}
+              className="goal-balance-input"
+            />
+            <span className="goal-balance-currency">🌾</span>
+          </div>
         </div>
       )}
       
@@ -348,7 +351,10 @@ const RequestCard = ({
       </div>
       
       <div className="progress-container">
-        <div className={`progress-bar ${progressPercent > 100 ? 'exceeded' : ''}`} style={{ width: `${Math.min(100, progressPercent)}%` }}></div>
+        <div 
+          className={`progress-bar ${progressPercent > 100 ? 'exceeded' : ''}`} 
+          style={{ '--progress-width': `${Math.min(100, progressPercent)}%` }}
+        ></div>
       </div>
       <div className="progress-text">
         <span>{request.deposit + totalContributions} 🌾</span>
@@ -438,6 +444,7 @@ const RequestCard = ({
                 setEditNote(request.note || '');
                 setEditContactInfo(request.contactInfo || '');
                 setEditImage(request.illustration || '');
+                setEditGoalBalance(request.goalBalance || 1000);
                 setIsEditing(true);
               }}
               title="Chỉnh sửa yêu cầu"

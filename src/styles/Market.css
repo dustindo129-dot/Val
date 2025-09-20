@@ -1834,7 +1834,7 @@
 .progress-bar {
   height: 100%;
   background-color: #10b981;
-  width: 0;
+  width: var(--progress-width, 0%);
   transition: width 0.5s ease;
 }
 
@@ -2644,4 +2644,79 @@
 
 :root.dark-mode .market-pagination-info {
   color: #adb5bd;
+}
+
+/* Extracted inline styles - General utility classes */
+.hidden-file-input {
+  display: none;
+}
+
+/* Goal balance edit field styles */
+.request-goal-balance {
+  margin-bottom: 12px;
+}
+
+.goal-balance-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.goal-balance-label {
+  font-weight: bold;
+  font-size: 0.85rem;
+  min-width: auto;
+  white-space: nowrap;
+}
+
+.goal-balance-input {
+  width: 120px;
+  padding: 4px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.goal-balance-currency {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Edit form textarea styles */
+.edit-textarea-base {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.edit-textarea-note {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* .edit-textarea-contact inherits all styles from .edit-textarea-base */
+
+/* Progress bar dynamic width - integrated into .progress-bar class above */
+
+/* Dark mode support for extracted styles */
+:root.dark-mode .goal-balance-input {
+  background-color: #2c3237;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+:root.dark-mode .goal-balance-currency {
+  color: #adb5bd;
+}
+
+:root.dark-mode .edit-textarea-base {
+  background-color: #2c3237;
+  border-color: #495057;
+  color: #e9ecef;
 }

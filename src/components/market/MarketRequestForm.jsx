@@ -150,7 +150,7 @@ const MarketRequestForm = ({
               accept="image/*"
               onChange={handleImageUpload}
               id="request-image-upload"
-              style={{ display: 'none' }}
+              className="hidden-file-input"
               disabled={submitting || imageUploading}
             />
             <label 
