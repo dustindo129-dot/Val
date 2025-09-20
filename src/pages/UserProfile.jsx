@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Helmet } from 'react-helmet-async';
@@ -702,6 +702,10 @@ const UserProfileSEO = ({ profileUser, username }) => {
 const UserProfile = () => {
   // Get userNumber from URL parameters
   const { userNumber } = useParams();
+  // Get location for URL search params
+  const location = useLocation();
+  // Get navigate function for programmatic navigation
+  const navigate = useNavigate();
   // Get current user context
   const { user } = useAuth();
   // Get theme context
@@ -712,7 +716,19 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [domReady, setDomReady] = useState(false);
-  const [activeTab, setActiveTab] = useState('introduction');
+  const [activeTab, setActiveTab] = useState(() => {
+    // Check URL parameters for tab
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    
+    // Validate tab parameter against allowed tabs
+    const allowedTabs = ['introduction', 'blog', 'admin'];
+    if (tabParam && allowedTabs.includes(tabParam)) {
+      return tabParam;
+    }
+    
+    return 'introduction';
+  });
   const [userStats, setUserStats] = useState({
     chaptersParticipated: 0,
     commentsCount: 0,
@@ -868,6 +884,23 @@ const UserProfile = () => {
       fetchUserProfile();
     }
   }, [userNumber, user]);
+
+  /**
+   * Handle URL parameter changes to switch tabs
+   */
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    
+    // Validate tab parameter against allowed tabs
+    const allowedTabs = ['introduction', 'blog', 'admin'];
+    if (tabParam && allowedTabs.includes(tabParam)) {
+      setActiveTab(tabParam);
+    } else if (!tabParam) {
+      // If no tab parameter, default to introduction
+      setActiveTab('introduction');
+    }
+  }, [location.search]);
 
   /**
    * Check if user has novel-specific roles (translator, editor, proofreader)
@@ -1223,6 +1256,29 @@ const UserProfile = () => {
       };
     }
   }, [showCreateBlogModal, editingBlogPost]);
+
+  // Handle tab changes with URL update
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    
+    // Update URL with new tab parameter
+    const currentPath = location.pathname;
+    const newSearchParams = new URLSearchParams(location.search);
+    
+    if (tabName === 'introduction') {
+      // Remove tab parameter for introduction (default)
+      newSearchParams.delete('tab');
+    } else {
+      // Set tab parameter for other tabs
+      newSearchParams.set('tab', tabName);
+    }
+    
+    const newSearch = newSearchParams.toString();
+    const newUrl = newSearch ? `${currentPath}?${newSearch}` : currentPath;
+    
+    // Use navigate with replace to avoid cluttering browser history
+    navigate(newUrl, { replace: true });
+  };
 
   // Handle introduction editing
   const handleEditIntro = () => {
@@ -1700,14 +1756,14 @@ const UserProfile = () => {
           <div className="profile-tabs-nav">
             <button 
               className={`tab-btn ${activeTab === 'introduction' ? 'active' : ''}`}
-              onClick={() => setActiveTab('introduction')}
+              onClick={() => handleTabChange('introduction')}
             >
               <i className="fa-solid fa-user"></i>
               Giới thiệu
             </button>
             <button 
               className={`tab-btn ${activeTab === 'blog' ? 'active' : ''}`}
-              onClick={() => setActiveTab('blog')}
+              onClick={() => handleTabChange('blog')}
             >
               <i className="fa-solid fa-pen-to-square"></i>
               Blog ({userStats.blogPostsCount})
@@ -1715,7 +1771,7 @@ const UserProfile = () => {
             {showAdminTab && (
               <button 
                 className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
-                onClick={() => setActiveTab('admin')}
+                onClick={() => handleTabChange('admin')}
               >
                 <i className="fa-solid fa-shield-halved"></i>
                 Quản trị
