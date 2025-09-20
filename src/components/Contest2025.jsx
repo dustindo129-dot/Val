@@ -38,6 +38,38 @@ const Contest2025 = () => {
           </div>
         </div>
 
+        {/* Submission and Rules Section */}
+        <div className="submission-section">
+          <div className="submission-panels">
+            <div className="panel submission-panel">
+              <div className="panel-icon">📧</div>
+              <h3>Gửi bài dự thi</h3>
+              <p>Thí sinh gửi bài dự thi qua email:</p>
+              <div className="email-display">
+              truyenvietcuavalvrareteam@gmail.com 
+              </div>
+              <p className="panel-note">Vui lòng đọc kỹ luật thi trước khi gửi bài</p>
+              <p>Tiêu đề email dự thi cần ghi rõ:</p>
+              <p>Bài dự thi ValOLN2025_[tên tác phẩm]_[tên tác giả]</p>
+            </div>
+            
+            <div className="panel rules-panel">
+              <div className="panel-icon">📋</div>
+              <h3>Luật và chi tiết đầy đủ</h3>
+              <p>Tài liệu chính thức về quy định cuộc thi:</p>
+              <a 
+                href="https://docs.google.com/document/d/15CLdlCD2g0iYoIexOtzF-T78MW7tagJr2bVkHj19c3g/edit?fbclid=IwZXh0bgNhZW0CMTAAYnJpZBExVUgyRXdsbXlmNjlBeE5VbQEelK_n4jzPEmjLXtFV4IjAR3DrSUXDfjGyZhR-VEsz89DTUvcWXtSEuzTaAQ4_aem_GyVJSNe4kg8L88ARV7cTFg&tab=t.0"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rules-button"
+              >
+                Xem luật thi đầy đủ
+              </a>
+              <p className="panel-note">Mở trong tab mới</p>
+            </div>
+          </div>
+        </div>
+
                  {/* Prize Section */}
          <div className="prize-section">
            <h2 className="section-title">🏆 Giải thưởng</h2>
@@ -139,38 +171,6 @@ const Contest2025 = () => {
            </div>
          </div>
 
-         {/* Submission and Rules Section */}
-         <div className="submission-section">
-           <div className="submission-panels">
-             <div className="panel submission-panel">
-               <div className="panel-icon">📧</div>
-               <h3>Gửi bài dự thi</h3>
-               <p>Thí sinh gửi bài dự thi qua email:</p>
-               <div className="email-display">
-               truyenvietcuavalvrareteam@gmail.com 
-               </div>
-               <p className="panel-note">Vui lòng đọc kỹ luật thi trước khi gửi bài</p>
-               <p>Tiêu đề email dự thi cần ghi rõ:</p>
-               <p>Bài dự thi ValOLN2025_[tên tác phẩm]_[tên tác giả]</p>
-             </div>
-             
-             <div className="panel rules-panel">
-               <div className="panel-icon">📋</div>
-               <h3>Luật và chi tiết đầy đủ</h3>
-               <p>Tài liệu chính thức về quy định cuộc thi:</p>
-               <a 
-                 href="https://docs.google.com/document/d/15CLdlCD2g0iYoIexOtzF-T78MW7tagJr2bVkHj19c3g/edit?fbclid=IwZXh0bgNhZW0CMTAAYnJpZBExVUgyRXdsbXlmNjlBeE5VbQEelK_n4jzPEmjLXtFV4IjAR3DrSUXDfjGyZhR-VEsz89DTUvcWXtSEuzTaAQ4_aem_GyVJSNe4kg8L88ARV7cTFg&tab=t.0"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 className="rules-button"
-               >
-                 Xem luật thi đầy đủ
-               </a>
-               <p className="panel-note">Mở trong tab mới</p>
-             </div>
-           </div>
-         </div>
-
          {/* Contest Works Section - Visible to all users */}
          <div className="contest-works-content">
            <div className="contest-works-section">
@@ -193,7 +193,7 @@ const Contest2025 = () => {
              <div className="works-container">
                <div className="works-header">
                  <h3>Tác phẩm {selectedRound}</h3>
-                 <span className="works-count">(13 tác phẩm)</span>
+                 <span className="works-count">(18 tác phẩm)</span>
                </div>
                
                <div className="works-list">
