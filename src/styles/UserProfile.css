@@ -223,9 +223,10 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 
 .content-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   width: 100%;
+  padding: 0 25px;
 }
 
 /* Notes Section */
@@ -472,7 +473,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   border-radius: 0 0 12px 12px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 15px;
 }
 
@@ -484,6 +485,9 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   border-radius: 8px;
   background: #fafafa;
   transition: all 0.2s ease;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 .module-item:hover {
@@ -1151,6 +1155,9 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 /* Module-specific styles */
 .module-info {
   position: relative;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .user-profile-page .module-title {
