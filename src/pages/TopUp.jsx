@@ -88,6 +88,11 @@ const TopUp = () => {
   const [totalBalanceAdded, setTotalBalanceAdded] = useState(0);
   const [fetchingTotalBalance, setFetchingTotalBalance] = useState(true);
 
+  // Pagination state for transaction history
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
+  const [historyTransactionsPerPage] = useState(5);
+
   // Form data for different payment methods
   const [formData, setFormData] = useState({
     bank: { accountNumber: '', accountName: '', bankName: '', transferContent: '' },
@@ -140,57 +145,146 @@ const TopUp = () => {
     fetchPricing();
   }, []);
 
-  // Fetch pending requests
-  useEffect(() => {
-    const fetchPendingRequests = async () => {
-      if (!user) return;
+  // Cache for already fetched data to avoid duplicate API calls
+  const [cachedData, setCachedData] = useState({
+    userTransactions: null,
+    topUpHistory: null,
+    lastFetched: null
+  });
+
+  // Fetch only essential data for page load (topup history + total balance)
+  const fetchEssentialData = async () => {
+    if (!user) return { topUpHistory: [], totalBalance: 0 };
+    
+    try {
+      const topUpHistoryResponse = await axios.get(
+        `${config.backendUrl}/api/topup/history`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
       
-      try {
-        const response = await axios.get(
-          `${config.backendUrl}/api/topup/pending`,
+      const topUpHistory = topUpHistoryResponse.data || [];
+      
+      // Calculate total balance from topup history only (legacy system support)
+      const completedTopUps = topUpHistory.filter(request => request.status === 'Completed');
+      const topUpRequestTotal = completedTopUps.reduce((total, request) => 
+        total + (request.balance || 0), 0
+      );
+      
+      return {
+        topUpHistory,
+        totalBalance: topUpRequestTotal
+      };
+    } catch (err) {
+      console.error('[TopUp] Failed to fetch essential data:', err);
+      return { topUpHistory: [], totalBalance: 0 };
+    }
+  };
+
+  // Fetch complete user transactions for history display
+  const fetchUserTransactions = async () => {
+    if (!user) return [];
+    
+    try {
+      const userTransactionsResponse = await axios.get(
+        `${config.backendUrl}/api/transactions/me?limit=50&offset=0`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      return userTransactionsResponse.data.transactions || [];
+    } catch (err) {
+      console.error('[TopUp] Failed to fetch user transactions:', err);
+      return [];
+    }
+  };
+
+  // Single function to fetch all data when needed (for comprehensive total calculation)
+  const fetchAllData = async (forceRefresh = false) => {
+    if (!user) return;
+    
+    // Return cached data if it's fresh (less than 30 seconds old) and not forced refresh
+    const now = new Date();
+    const cacheAge = cachedData.lastFetched ? (now - cachedData.lastFetched) / 1000 : Infinity;
+    
+    if (!forceRefresh && cacheAge < 30 && cachedData.userTransactions && cachedData.topUpHistory) {
+      return cachedData;
+    }
+    
+    try {
+      // Fetch all data concurrently to minimize database queries
+      const [userTransactionsResponse, topUpHistoryResponse] = await Promise.all([
+        axios.get(
+          `${config.backendUrl}/api/transactions/me?limit=1000&offset=0`,
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        setPendingRequests(response.data);
-      } catch (err) {
-        console.error('Failed to fetch pending requests:', err);
-      }
-    };
+        ),
+        axios.get(
+          `${config.backendUrl}/api/topup/history`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        )
+      ]);
+      
+      const userData = {
+        userTransactions: userTransactionsResponse.data.transactions || [],
+        topUpHistory: topUpHistoryResponse.data || [],
+        lastFetched: now
+      };
+      
+      // Cache the fetched data
+      setCachedData(userData);
+      return userData;
+    } catch (err) {
+      console.error('[TopUp] Failed to fetch data:', err);
+      return cachedData.userTransactions ? cachedData : { userTransactions: [], topUpHistory: [], lastFetched: now };
+    }
+  };
 
-    fetchPendingRequests();
-  }, [user]);
+  // Calculate total balance from cached or fresh data
+  const calculateTotalBalance = (userTransactions, topUpHistory) => {
+    // Calculate total from UserTransaction records (newer system)
+    const userTransactionTopups = userTransactions.filter(transaction => 
+      (transaction.type === 'topup' || transaction.type === 'admin_topup') && transaction.amount > 0
+    );
+    const userTransactionTotal = userTransactionTopups.reduce((total, transaction) => 
+      total + transaction.amount, 0
+    );
+    
+    // Calculate total from TopUpRequest records (legacy system)
+    const completedTopUps = topUpHistory.filter(request => request.status === 'Completed');
+    const topUpRequestTotal = completedTopUps.reduce((total, request) => 
+      total + (request.balance || 0), 0
+    );
+    
+    return userTransactionTotal + topUpRequestTotal;
+  };
 
-  // Fetch total balance added from topup transactions
+  // Extract pending requests from topup history
+  const extractPendingRequests = (topUpHistory) => {
+    return topUpHistory.filter(item => item.status === 'Pending');
+  };
+
+  // Initial data fetch on component mount - only essential data
   useEffect(() => {
-    const fetchTotalBalanceAdded = async () => {
+    const initializeData = async () => {
       if (!user) return;
       
       try {
         setFetchingTotalBalance(true);
         
-        // Get comprehensive user transactions from the same endpoint as transaction history
-        const userTransactionsResponse = await axios.get(
-          `${config.backendUrl}/api/transactions/user-transactions?limit=1000&offset=0&username=${user.username}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        const data = await fetchEssentialData();
         
-        const userTransactions = userTransactionsResponse.data.transactions || [];
+        // Update states from essential data only (no transaction history)
+        setTotalBalanceAdded(data.totalBalance);
+        setPendingRequests(extractPendingRequests(data.topUpHistory));
         
-        // Calculate total balance added from topup and admin_topup transactions
-        const totalAdded = userTransactions
-          .filter(transaction => transaction.type === 'topup' || transaction.type === 'admin_topup')
-          .filter(transaction => transaction.amount > 0) // Only count positive amounts
-          .reduce((total, transaction) => total + transaction.amount, 0);
-        
-        setTotalBalanceAdded(totalAdded);
       } catch (err) {
-        console.error('Failed to fetch total balance added:', err);
+        console.error('[TopUp] Failed to initialize data:', err);
         setTotalBalanceAdded(0);
+        setPendingRequests([]);
       } finally {
         setFetchingTotalBalance(false);
       }
     };
 
-    fetchTotalBalanceAdded();
+    initializeData();
   }, [user]);
 
   // Redirect unauthenticated users
@@ -458,14 +552,11 @@ const TopUp = () => {
     setCurrentRequestId(null);
   };
   
-  // Refresh pending requests
+  // Refresh pending requests using lighter data fetch
   const refreshPendingRequests = async () => {
     try {
-      const response = await axios.get(
-        `${config.backendUrl}/api/topup/pending`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      setPendingRequests(response.data);
+      const data = await fetchEssentialData();
+      setPendingRequests(extractPendingRequests(data.topUpHistory));
     } catch (err) {
       console.error('Failed to fetch pending requests:', err);
     }
@@ -511,56 +602,34 @@ const TopUp = () => {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
-  // Handle viewing transaction history
+  // Handle viewing transaction history - use single comprehensive data fetch
   const handleViewHistory = async () => {
     // Toggle the viewHistory state
     const newViewState = !viewHistory;
     setViewHistory(newViewState);
     
-    // Only fetch data if we're showing the history
+    // Only load transaction history if we're showing it
     if (newViewState) {
       setFetchingHistory(true);
       
       try {
-        // Get comprehensive user transactions from the same endpoint as admin panel
-        const userTransactionsResponse = await axios.get(
-          `${config.backendUrl}/api/transactions/user-transactions?limit=50&offset=0&username=${user.username}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        // Fetch comprehensive data once for both history display and total calculation
+        const allData = await fetchAllData();
         
-        // Also get TopUpRequest history for pending requests
-        const topUpHistoryResponse = await axios.get(
-          `${config.backendUrl}/api/topup/history`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
+        // Use the comprehensive user transactions for history display
+        setHistory(allData.userTransactions);
         
-        // Combine both types of transactions
-        const userTransactions = userTransactionsResponse.data.transactions || [];
-        const topUpHistory = topUpHistoryResponse.data || [];
+        // Calculate pagination for history
+        setHistoryTotalPages(Math.ceil(allData.userTransactions.length / historyTransactionsPerPage));
+        setHistoryCurrentPage(1); // Reset to first page when loading new data
         
-        // Set comprehensive history data
-        setHistory(userTransactions);
+        // Update other states from the same data
+        setPendingRequests(extractPendingRequests(allData.topUpHistory));
+        setTotalBalanceAdded(calculateTotalBalance(allData.userTransactions, allData.topUpHistory));
         
-        // Extract pending requests for cancel functionality
-        const pendingRequests = topUpHistory.filter(item => item.status === 'Pending');
-        setPendingRequests(pendingRequests);
-        
-        // Refresh total balance added when viewing history for the first time
-        await refreshTotalBalanceAdded();
       } catch (err) {
-        console.error('Failed to fetch history:', err);
-        // Fallback to original TopUp history if user transactions fail
-        try {
-          const historyResponse = await axios.get(
-            `${config.backendUrl}/api/topup/history`,
-            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-          );
-          setHistory(historyResponse.data);
-          const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
-          setPendingRequests(pendingRequests);
-        } catch (fallbackErr) {
-          console.error('Failed to fetch fallback history:', fallbackErr);
-        }
+        console.error('Failed to load history:', err);
+        setHistory([]);
       } finally {
         setFetchingHistory(false);
       }
@@ -589,80 +658,42 @@ const TopUp = () => {
     }
   };
 
-  // Refresh total balance added
-  const refreshTotalBalanceAdded = async () => {
+  // Handle history pagination
+  const handleHistoryPageChange = (page) => {
+    setHistoryCurrentPage(page);
+  };
+
+  // Refresh data based on current view state
+  const refreshAllData = async () => {
     if (!user) return;
     
     try {
-      // Get comprehensive user transactions from the same endpoint as transaction history
-      const userTransactionsResponse = await axios.get(
-        `${config.backendUrl}/api/transactions/user-transactions?limit=1000&offset=0&username=${user.username}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      setFetchingTotalBalance(true);
+      if (viewHistory) setFetchingHistory(true);
       
-      const userTransactions = userTransactionsResponse.data.transactions || [];
-      
-      // Calculate total balance added from topup and admin_topup transactions
-      const totalAdded = userTransactions
-        .filter(transaction => transaction.type === 'topup' || transaction.type === 'admin_topup')
-        .filter(transaction => transaction.amount > 0) // Only count positive amounts
-        .reduce((total, transaction) => total + transaction.amount, 0);
-      
-      setTotalBalanceAdded(totalAdded);
-    } catch (err) {
-      console.error('Failed to refresh total balance added:', err);
-    }
-  };
-
-  // Refresh transaction history without toggling visibility
-  const refreshHistory = async () => {
-    setFetchingHistory(true);
-    
-    try {
-      // Get comprehensive user transactions from the same endpoint as admin panel
-      const userTransactionsResponse = await axios.get(
-        `${config.backendUrl}/api/transactions/user-transactions?limit=50&offset=0&username=${user.username}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      // Also get TopUpRequest history for pending requests
-      const topUpHistoryResponse = await axios.get(
-        `${config.backendUrl}/api/topup/history`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
-      
-      // Combine both types of transactions
-      const userTransactions = userTransactionsResponse.data.transactions || [];
-      const topUpHistory = topUpHistoryResponse.data || [];
-      
-      // Set comprehensive history data
-      setHistory(userTransactions);
-      
-      // Extract pending requests for cancel functionality
-      const pendingRequests = topUpHistory.filter(item => item.status === 'Pending');
-      setPendingRequests(pendingRequests);
-      
-      // Refresh total balance added when refreshing history
-      await refreshTotalBalanceAdded();
+      if (viewHistory) {
+        // If history is visible, fetch comprehensive data once for both display and calculation
+        const allData = await fetchAllData(true); // Force refresh
+        
+        // Update all states with fresh data from single source
+        setHistory(allData.userTransactions);
+        setHistoryTotalPages(Math.ceil(allData.userTransactions.length / historyTransactionsPerPage));
+        setTotalBalanceAdded(calculateTotalBalance(allData.userTransactions, allData.topUpHistory));
+        setPendingRequests(extractPendingRequests(allData.topUpHistory));
+      } else {
+        // If history is not visible, just refresh essential data
+        const data = await fetchEssentialData();
+        setTotalBalanceAdded(data.totalBalance);
+        setPendingRequests(extractPendingRequests(data.topUpHistory));
+      }
       
       // Notify SecondaryNavbar to refresh balance display (manual fallback)
       window.dispatchEvent(new Event('balanceUpdated'));
     } catch (err) {
-      console.error('Failed to fetch history:', err);
-      // Fallback to original TopUp history if user transactions fail
-      try {
-        const historyResponse = await axios.get(
-          `${config.backendUrl}/api/topup/history`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-        );
-        setHistory(historyResponse.data);
-        const pendingRequests = historyResponse.data.filter(item => item.status === 'Pending');
-        setPendingRequests(pendingRequests);
-      } catch (fallbackErr) {
-        console.error('Failed to fetch fallback history:', fallbackErr);
-      }
+      console.error('[TopUp] Failed to refresh data:', err);
     } finally {
-      setFetchingHistory(false);
+      setFetchingTotalBalance(false);
+      if (viewHistory) setFetchingHistory(false);
     }
   };
 
@@ -970,10 +1001,10 @@ const TopUp = () => {
                 </div>
                 <button 
                   className="topup-refresh-button"
-                  onClick={refreshHistory}
-                  disabled={fetchingHistory}
+                  onClick={refreshAllData}
+                  disabled={fetchingHistory || fetchingTotalBalance}
                 >
-                  {fetchingHistory ? 'Đang tải lại...' : 'Tải lại lịch sử'}
+                  {(fetchingHistory || fetchingTotalBalance) ? 'Đang tải lại...' : 'Tải lại lịch sử'}
                 </button>
               </div>
             </div>
@@ -982,8 +1013,11 @@ const TopUp = () => {
             ) : history.length === 0 ? (
               <p>Không có lịch sử giao dịch</p>
             ) : (
+              <>
               <div className="transaction-history">
-                {history.map(transaction => {
+                {history
+                  .slice((historyCurrentPage - 1) * historyTransactionsPerPage, historyCurrentPage * historyTransactionsPerPage)
+                  .map(transaction => {
                   // Handle both old TopUpRequest format and new UserTransaction format
                   const isOldFormat = transaction.paymentMethod && transaction.balance;
                   
@@ -1051,6 +1085,42 @@ const TopUp = () => {
                   );
                 })}
               </div>
+              
+              {/* Pagination for transaction history */}
+              {historyTotalPages > 1 && (
+                <div className="topup-pagination">
+                  <button 
+                    onClick={() => handleHistoryPageChange(1)}
+                    disabled={historyCurrentPage === 1}
+                  >
+                    &laquo;
+                  </button>
+                  <button 
+                    onClick={() => handleHistoryPageChange(historyCurrentPage - 1)}
+                    disabled={historyCurrentPage === 1}
+                  >
+                    &lt;
+                  </button>
+                  
+                  <span className="topup-page-info">
+                    Trang {historyCurrentPage} / {historyTotalPages}
+                  </span>
+                  
+                  <button 
+                    onClick={() => handleHistoryPageChange(historyCurrentPage + 1)}
+                    disabled={historyCurrentPage === historyTotalPages}
+                  >
+                    &gt;
+                  </button>
+                  <button 
+                    onClick={() => handleHistoryPageChange(historyTotalPages)}
+                    disabled={historyCurrentPage === historyTotalPages}
+                  >
+                    &raquo;
+                  </button>
+                </div>
+              )}
+            </>
             )}
           </section>
         )}

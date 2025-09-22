@@ -587,6 +587,21 @@
   text-shadow: 0 1px 2px rgba(32, 201, 151, 0.3);
 }
 
+/* Dark mode TopUp Pagination - matches TopUpManagement styling */
+:root.dark-mode .topup-pagination button {
+  border-color: #404040;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+:root.dark-mode .topup-pagination button:disabled {
+  color: #666;
+}
+
+:root.dark-mode .topup-page-info {
+  color: #e0e0e0;
+}
+
 :root.dark-mode .total-balance-note small {
   color: #adb5bd;
 }
@@ -1614,6 +1629,32 @@
 
 .topup-history-pagination .page-info {
   margin: 0 0.5rem;
+}
+
+/* TopUp Pagination - matches TopUpManagement styling */
+.topup-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.topup-pagination button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.topup-pagination button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.topup-page-info {
+  margin: 0 10px;
 }
 
 .reset-filter-button {
