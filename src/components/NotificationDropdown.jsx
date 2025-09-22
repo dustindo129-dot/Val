@@ -59,7 +59,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
   );
 
   const forumNotifications = allNotifications.filter(notification => 
-    ['forum_post_approved', 'forum_post_declined', 'forum_post_comment', 'forum_post_deleted'].includes(notification.type)
+    ['forum_post_approved', 'forum_post_declined', 'forum_post_comment', 'forum_post_deleted', 'liked_blog_post'].includes(notification.type)
   );
 
   // Get current category notifications
@@ -665,6 +665,14 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
       case 'forum_post_deleted':
         // Just go to the main forum since post is deleted
         return '/thao-luan';
+      case 'liked_blog_post':
+        // Navigate to the blog author's profile blog tab
+        if (notification.data?.blogAuthorDisplayName) {
+          // Create user slug from display name
+          const userSlug = createUniqueSlug(notification.data.blogAuthorDisplayName, notification.relatedUser || 'user');
+          return `/nguoi-dung/${userSlug}/trang-ca-nhan?tab=blog`;
+        }
+        return '#';
       default:
         return '#';
     }
@@ -792,6 +800,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                         {notification.type === 'forum_post_declined' && <i className="fa-solid fa-times-circle"></i>}
                         {notification.type === 'forum_post_comment' && <i className="fa-solid fa-message"></i>}
                         {notification.type === 'forum_post_deleted' && <i className="fa-solid fa-trash-can"></i>}
+                        {notification.type === 'liked_blog_post' && <i className="fa-solid fa-heart"></i>}
                       </div>
                       <div className="notification-text">
                         <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>
@@ -823,6 +832,7 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
                       {notification.type === 'forum_post_declined' && <i className="fa-solid fa-times-circle"></i>}
                       {notification.type === 'forum_post_comment' && <i className="fa-solid fa-message"></i>}
                       {notification.type === 'forum_post_deleted' && <i className="fa-solid fa-trash-can"></i>}
+                      {notification.type === 'liked_blog_post' && <i className="fa-solid fa-heart"></i>}
                     </div>
                     <div className="notification-text">
                       <div className="notification-message" dangerouslySetInnerHTML={{ __html: notification.message }}></div>

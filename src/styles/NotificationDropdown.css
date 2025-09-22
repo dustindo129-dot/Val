@@ -633,4 +633,15 @@
 :root.dark-mode .notification-icon i[class*="fa-trash-can"] {
   background-color: #3d2914;
   color: #ffc107;
+}
+
+/* Blog post like notification icon */
+.notification-icon i[class*="fa-heart"] {
+  background-color: #fce4ec;
+  color: #e91e63;
+}
+
+:root.dark-mode .notification-icon i[class*="fa-heart"] {
+  background-color: #3e2723;
+  color: #f48fb1;
 } 

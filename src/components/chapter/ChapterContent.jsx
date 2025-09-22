@@ -320,7 +320,10 @@ const ChapterContent = React.memo(({
             const currentContent = currentData.getContent();
 
             // Convert [valnote_X] to HTML for storage
-            const htmlContent = convertFootnotesToHTML(currentContent);
+            let htmlContent = convertFootnotesToHTML(currentContent);
+            
+            // Remove trailing empty paragraphs before saving
+            htmlContent = htmlContent.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
 
             const dataToSave = {
                 content: htmlContent,
@@ -446,10 +449,13 @@ const ChapterContent = React.memo(({
                 lastReactSyncContentRef.current = currentContent;
 
                 if (setEditedContent) {
+                    // Remove trailing empty paragraphs before syncing to React state
+                    const cleanedContent = currentContent.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
+                    
                     startTransition(() => {
                         setEditedContent(prev => ({
                             ...prev,
-                            content: currentContent
+                            content: cleanedContent
                         }));
                     });
                 }
@@ -1035,14 +1041,17 @@ const ChapterContent = React.memo(({
         reorderedFootnotes[currentIndex].name = name1; // Keep original name for swapped position
         reorderedFootnotes[newIndex].name = name2;     // Keep original name for swapped position
 
+        // Remove trailing empty paragraphs before updating
+        const cleanedContent = content.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
+
         // Update editor and state
-        editor.setContent(content);
+        editor.setContent(cleanedContent);
         setLocalFootnotes(reorderedFootnotes);
 
         if (setEditedContent) {
             setEditedContent(current => ({
                 ...current,
-                content: content,
+                content: cleanedContent,
                 footnotes: reorderedFootnotes
             }));
         }
@@ -1078,8 +1087,11 @@ const ChapterContent = React.memo(({
 
         // Renumber footnotes to maintain sequence
         const renumberedResult = renumberFootnotes(updatedFootnotes, content);
-        const finalContent = renumberedResult.content;
+        let finalContent = renumberedResult.content;
         const finalFootnotes = renumberedResult.footnotes;
+
+        // Remove trailing empty paragraphs before updating
+        finalContent = finalContent.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
 
         // Update editor content
         editor.setContent(finalContent);
@@ -1253,6 +1265,9 @@ const ChapterContent = React.memo(({
                 /\[valnote_(\w+)\]/g,
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$1]</a></sup>'
             );
+
+            // After footnote conversion, clean up any empty paragraphs that may have been created
+            processedContent = processedContent.replace(/<p[^>]*>\s*<\/p>/gi, '');
 
             // Fix inconsistent HTML footnotes - ensure all footnote references have proper id attributes
             // Pattern 1: Standard format without id attribute
@@ -1594,12 +1609,20 @@ const ChapterContent = React.memo(({
                     }
                 );
 
-                return DOMPurify.sanitize(finalContent, {
+                // Additional cleanup for content with footnotes - remove trailing empty paragraphs
+                finalContent = finalContent.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
+                
+                let sanitizedContent = DOMPurify.sanitize(finalContent, {
                     ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td', 'pre'],
                     ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                     KEEP_CONTENT: false,
                     ALLOW_EMPTY_TAGS: ['p'], // Allow empty <p> tags for manual spacing
                 });
+
+                // Final cleanup after sanitization
+                sanitizedContent = sanitizedContent.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
+                
+                return sanitizedContent;
             }
 
             // Fallback paragraph processing (ENHANCED FOR SPACING)
@@ -1641,12 +1664,21 @@ const ChapterContent = React.memo(({
             // ENHANCED: Final cleanup for spacing issues - remove paragraphs with only &nbsp; but keep truly empty <p></p>
             finalContent = finalContent.replace(/<p[^>]*>\s*(&nbsp;|\u00A0)+\s*<\/p>/gi, '');
 
-            return DOMPurify.sanitize(finalContent, {
+            // Remove trailing empty paragraphs that TinyMCE automatically adds
+            finalContent = finalContent.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
+
+            // Final aggressive cleanup of trailing empty paragraphs after all processing
+            let sanitizedContent = DOMPurify.sanitize(finalContent, {
                 ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b', 'table', 'tbody', 'tr', 'td', 'pre'],
                 ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style', 'width', 'valign', 'colspan', 'cellspacing', 'cellpadding', 'border', 'align'],
                 KEEP_CONTENT: false,
                 ALLOW_EMPTY_TAGS: ['p'], // Allow empty <p> tags for manual spacing
             });
+
+            // Remove any trailing empty paragraphs that might have been created during processing
+            sanitizedContent = sanitizedContent.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
+            
+            return sanitizedContent;
         } catch (error) {
             console.error('Content processing error:', error);
             return 'Lỗi tải chương nội dung';
@@ -1747,6 +1779,15 @@ const ChapterContent = React.memo(({
       strong, b { font-weight: bold; }
     `,
         setup: (editor) => {
+            // Override getContent to remove trailing empty paragraphs at source
+            const originalGetContent = editor.getContent.bind(editor);
+            editor.getContent = function(args) {
+                let content = originalGetContent(args);
+                // Remove trailing empty paragraphs
+                content = content.replace(/(<p[^>]*>\s*<\/p>\s*)+$/gi, '');
+                return content;
+            };
+            
             // Load content when editor is ready
             editor.on('init', () => {
                 const restoredContent = restoredContentRef.current;
@@ -1887,7 +1928,7 @@ const ChapterContent = React.memo(({
         },
         images_upload_base_path: '/',
         automatic_uploads: true
-    }), [config.tinymce.scriptPath, convertHTMLToFootnotes, handleNetworkError]);
+    }), [config.tinymce.scriptPath, convertHTMLToFootnotes, handleNetworkError, isLargeContent]);
 
     return (
         <div className="chapter-card">

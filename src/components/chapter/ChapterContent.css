@@ -23,6 +23,11 @@
   border-radius: 4px;
 }
 
+/* Remove any trailing margin/padding from the last elements */
+.chapter-content > :last-child {
+  margin-bottom: 0.5rem;
+}
+
 /* Respect inline width/height attributes from TinyMCE */
 .chapter-content img[width][height] {
   width: auto;

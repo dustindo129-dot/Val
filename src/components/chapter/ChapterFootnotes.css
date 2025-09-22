@@ -13,8 +13,7 @@
  */
 
 .chapter-footnotes {
-  margin-top: 3rem;
-  padding-top: 2rem;
+  padding-top: 1rem;
   border-top: 1px solid var(--border-color, #ddd);
 }
 
@@ -215,7 +214,7 @@
 
 .footnotes-title {
   font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.6rem;
   color: var(--text-color, #333);
 }
 
@@ -351,18 +350,16 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chapter-footnotes {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+    padding-top: 1rem;
   }
 
   .footnotes-title {
     font-size: 1.25rem;
+    margin-bottom: 0.5rem;
   }
 
   .footnotes-list {
     font-size: 0.85rem;
-    margin-top: 15px;
-    border: 1px solid #ddd;
     border-radius: 6px;
     overflow: hidden;
   }
