@@ -1008,6 +1008,7 @@
   font-family: inherit;
   font-size: 0.9rem;
   margin-bottom: 1rem;
+  margin-top: 0.75rem;
 }
 
 .contribution-form-actions {
@@ -2093,8 +2094,18 @@
 }
 
 .market-contribution-modal .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
+  padding: 1rem;
 }
 
 .market-contribution-modal .modal-content {
@@ -2163,15 +2174,10 @@
   font-size: 0.9rem;
 }
 
-.contribution-note-container {
-  margin-bottom: 1.5rem;
-}
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1.5rem;
 }
 
 .modal-actions .cancel-contribution-btn {
@@ -2276,20 +2282,158 @@
 }
 
 /* Responsive styles for Market Contribution Modal */
+
+/* Large screens and tablets - improve spacing and sizing */
+@media (max-width: 1024px) {
+  .market-contribution-modal .modal-content {
+    max-width: 480px;
+    width: 85%;
+  }
+}
+
+/* Tablets and medium screens */
 @media (max-width: 768px) {
+  .market-contribution-modal .modal-overlay {
+    padding: 1rem;
+  }
+  
   .market-contribution-modal .modal-content {
     max-width: 95%;
     width: 95%;
-    margin: 1rem;
+    margin: 0;
+    padding: 2rem;
+    max-height: 85vh;
   }
   
   .market-contribution-modal .modal-header {
-    margin: -2.5rem -2.5rem 1.5rem -2.5rem;
-    padding: 1rem 1.5rem;
+    margin: -2rem -2rem 1.5rem -2rem;
+    padding: 1rem 2rem;
   }
   
   .market-contribution-modal .modal-header h2 {
     font-size: 1.2rem;
+  }
+  
+  .market-contribution-modal .modal-close {
+    width: 28px;
+    height: 28px;
+    font-size: 1.1rem;
+  }
+  
+  /* Form elements responsive adjustments */
+  .market-contribution-modal .modal-body .contribution-input {
+    padding: 0.625rem;
+    font-size: 0.95rem;
+  }
+  
+  .contribution-note-container .contribution-note-input {
+    min-height: 70px;
+    padding: 0.625rem;
+    font-size: 0.9rem;
+  }
+  
+  .modal-actions {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+  
+  .modal-actions .submit-contribution-btn,
+  .modal-actions .cancel-contribution-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Mobile phones and small screens */
+@media (max-width: 576px) {
+  .market-contribution-modal .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .market-contribution-modal .modal-content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1.5rem;
+    border-radius: 8px;
+    max-height: 90vh;
+    min-height: auto;
+  }
+  
+  .market-contribution-modal .modal-header {
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .market-contribution-modal .modal-header h2 {
+    font-size: 1.1rem;
+    line-height: 1.3;
+  }
+  
+  .market-contribution-modal .modal-close {
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+    top: 0.75rem;
+    right: 1rem;
+    position: absolute;
+  }
+  
+  /* Mobile form styling */
+  .market-contribution-modal .modal-body label {
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .market-contribution-modal .modal-body .contribution-input {
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    /* Prevent zoom on iOS */
+    font-size: 16px;
+  }
+  
+  .market-contribution-modal .modal-body .market-balance-display {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  
+  .contribution-note-container label {
+    font-size: 0.9rem;
+  }
+  
+  .contribution-note-container .contribution-note-input {
+    min-height: 80px;
+    padding: 0.75rem;
+    font-size: 16px; /* Prevent iOS zoom */
+    border-radius: 6px;
+    resize: vertical;
+  }
+  
+  /* Mobile actions styling */
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .modal-actions .submit-contribution-btn,
+  .modal-actions .cancel-contribution-btn {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  
+  .modal-actions .submit-contribution-btn {
+    order: 1;
+  }
+  
+  .modal-actions .cancel-contribution-btn {
+    order: 2;
   }
 }
 
