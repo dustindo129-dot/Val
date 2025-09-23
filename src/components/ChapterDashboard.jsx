@@ -258,46 +258,29 @@ const ChapterDashboard = () => {
     // Handle mode change with validation
     const handleModeChange = (e) => {
         const newMode = e.target.value;
-        console.log('🔄 Mode change triggered:', {
-            newMode,
-            currentMode: mode,
-            currentBalance: chapterBalance,
-            balanceType: typeof chapterBalance,
-            isModulePaid,
-            timestamp: new Date().toISOString()
-        });
 
         if (newMode === 'paid' && isModulePaid) {
-            console.log('❌ Blocked paid mode - module already paid');
             startTransition(() => {
                 setError('Không thể đặt chương thành trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
             });
             return;
         }
 
-        console.log('⏳ Starting transition for mode change');
         startTransition(() => {
-            console.log('🔄 Inside transition - setting mode:', newMode);
             setMode(newMode);
             
             // Set default chapter balance when switching to paid mode
-            // Be more defensive about empty/undefined values
             if (newMode === 'paid') {
                 const currentBalance = Number(chapterBalance) || 0;
                 if (currentBalance < 1) {
-                    console.log('💰 Setting balance to 1 (was', chapterBalance, 'type:', typeof chapterBalance, ')');
                     setChapterBalance(1); // Set minimum value
-                } else {
-                    console.log('💰 Keeping existing balance:', currentBalance);
                 }
             }
             // Reset chapter balance when switching away from paid mode
             if (newMode !== 'paid') {
-                console.log('🔄 Resetting balance to 0 (not paid mode)');
                 setChapterBalance(0);
             }
             setError(''); // Clear any previous errors
-            console.log('✅ Transition complete');
         });
     };
 
@@ -314,16 +297,7 @@ const ChapterDashboard = () => {
 
     // Effect to ensure proper chapterBalance when switching to paid mode
     useEffect(() => {
-        console.log('🎯 UseEffect triggered for balance validation:', {
-            mode,
-            chapterBalance,
-            balanceType: typeof chapterBalance,
-            condition: mode === 'paid' && (chapterBalance === 0 || chapterBalance === ''),
-            timestamp: new Date().toISOString()
-        });
-        
         if (mode === 'paid' && (chapterBalance === 0 || chapterBalance === '')) {
-            console.log('💰 UseEffect setting balance to 1');
             setChapterBalance(1);
         }
     }, [mode, chapterBalance]);
@@ -752,55 +726,6 @@ const ChapterDashboard = () => {
         };
     }, []);
 
-    // Debug effect to track balance input visibility and detect shrinking bug
-    useEffect(() => {
-        const shouldShow = user?.role === 'admin' && mode === 'paid';
-        console.log('👁️ Balance input visibility changed:', {
-            shouldShow,
-            mode,
-            userRole: user?.role,
-            chapterBalance,
-            balanceType: typeof chapterBalance,
-            timestamp: new Date().toISOString()
-        });
-        
-        // Check if the element exists in DOM after a small delay
-        setTimeout(() => {
-            const balanceInput = document.querySelector('.chapter-balance-input');
-            if (shouldShow && balanceInput) {
-                const computedStyle = window.getComputedStyle(balanceInput);
-                const width = balanceInput.offsetWidth;
-                const expectedMinWidth = 150; // From CSS min-width
-                
-                console.log('🔍 Balance input element check:', {
-                    exists: !!balanceInput,
-                    width,
-                    computedWidth: computedStyle.width,
-                    flex: computedStyle.flex,
-                    minWidth: computedStyle.minWidth,
-                    isShrunk: width < expectedMinWidth,
-                    chapterBalance,
-                    balanceType: typeof chapterBalance
-                });
-                
-                // Detect shrinking bug and attempt to fix it
-                if (width < expectedMinWidth && (chapterBalance === 0 || chapterBalance === '')) {
-                    console.log('🚨 SHRINKING BUG DETECTED! Attempting to fix...');
-                    
-                    // Force layout recalculation
-                    balanceInput.style.display = 'none';
-                    balanceInput.offsetHeight; // Force reflow
-                    balanceInput.style.display = '';
-                    
-                    // Also ensure balance is set correctly
-                    if (mode === 'paid' && (chapterBalance === 0 || chapterBalance === '')) {
-                        console.log('🔧 Auto-fixing balance value to 1');
-                        setChapterBalance(1);
-                    }
-                }
-            }
-        }, 100);
-    }, [user?.role, mode, chapterBalance, setChapterBalance]);
 
     // Provide access to current footnotes for TinyMCE editor
     useEffect(() => {
@@ -1377,17 +1302,6 @@ const ChapterDashboard = () => {
 
     const novelSlug = createUniqueSlug(novel?.novel?.title, novelId);
 
-    // Log render state for debugging
-    console.log('🎨 Component rendering with state:', {
-        mode,
-        chapterBalance,
-        balanceType: typeof chapterBalance,
-        isAdmin: user?.role === 'admin',
-        shouldShowBalanceInput: user?.role === 'admin' && mode === 'paid',
-        isModulePaid,
-        timestamp: new Date().toISOString()
-    });
-
     return (
         <>
             <Helmet>
@@ -1458,72 +1372,33 @@ const ChapterDashboard = () => {
                                 )}
                             </select>
                         </div>
-                        {user?.role === 'admin' && mode === 'paid' && (
-                            <div 
-                                className="chapter-balance-input"
-                                ref={(el) => {
-                                    if (el) {
-                                        console.log('🎯 Balance input DIV rendered:', {
-                                            chapterBalance,
-                                            balanceType: typeof chapterBalance,
-                                            width: el.offsetWidth,
-                                            computedWidth: window.getComputedStyle(el).width,
-                                            flex: window.getComputedStyle(el).flex,
-                                            timestamp: new Date().toISOString()
-                                        });
-                                    }
-                                }}
-                            >
-                                <label>Số lúa chương (Tối thiểu 1 🌾):</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={chapterBalance}
-                                    ref={(el) => {
-                                        if (el) {
-                                            console.log('🎯 Balance INPUT rendered:', {
-                                                value: el.value,
-                                                chapterBalance,
-                                                balanceType: typeof chapterBalance,
-                                                isEmpty: chapterBalance === '' || chapterBalance === 0,
-                                                inputWidth: el.offsetWidth,
-                                                parentWidth: el.parentElement?.offsetWidth,
-                                                timestamp: new Date().toISOString()
-                                            });
-                                        }
-                                    }}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        console.log('💰 Balance input onChange:', {
-                                            value,
-                                            valueType: typeof value,
-                                            currentBalance: chapterBalance,
-                                            currentBalanceType: typeof chapterBalance,
-                                            isValid: value === '' || parseInt(value) >= 1
-                                        });
-                                        // Allow empty input for better UX, but ensure minimum on blur
-                                        if (value === '' || parseInt(value) >= 1) {
-                                            setChapterBalance(value);
-                                        }
-                                    }}
-                                    onBlur={(e) => {
-                                        const value = e.target.value;
-                                        console.log('💰 Balance input onBlur:', {
-                                            value,
-                                            valueType: typeof value,
-                                            currentBalance: chapterBalance,
-                                            needsCorrection: value === '' || parseInt(value) < 1
-                                        });
-                                        // Ensure minimum value on blur if input is empty or invalid
-                                        if (value === '' || parseInt(value) < 1) {
-                                            console.log('💰 Setting balance to 1 on blur');
-                                            setChapterBalance(1);
-                                        }
-                                    }}
-                                    placeholder="Nhập số lúa chương (tối thiểu 1)"
-                                />
-                            </div>
-                        )}
+                        <div className="chapter-balance-input">
+                            {user?.role === 'admin' && mode === 'paid' && (
+                                <>
+                                    <label>Số lúa chương (Tối thiểu 1 🌾):</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={chapterBalance}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            // Allow empty input for better UX, but ensure minimum on blur
+                                            if (value === '' || parseInt(value) >= 1) {
+                                                setChapterBalance(value);
+                                            }
+                                        }}
+                                        onBlur={(e) => {
+                                            const value = e.target.value;
+                                            // Ensure minimum value on blur if input is empty or invalid
+                                            if (value === '' || parseInt(value) < 1) {
+                                                setChapterBalance(1);
+                                            }
+                                        }}
+                                        placeholder="Nhập số lúa chương (tối thiểu 1)"
+                                    />
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
 

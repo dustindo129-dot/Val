@@ -128,27 +128,30 @@
 
 /* Chapter Title and Status Styling */
 .chapter-title-status-group {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
   gap: 20px;
   width: 100%;
-  align-items: flex-end;
+  align-items: end;
 }
 
 .chapter-title-input {
-  flex: 2;
   min-width: 0;
 }
 
 .chapter-mode-input {
-  flex: 1;
   min-width: 200px;
 }
 
 .chapter-balance-input {
-  flex: 1;
   min-width: 150px;
-  /* Add debugging for flexbox issues */
-  transition: all 0.2s ease;
+  /* Ensure stability when conditionally rendered */
+  width: 100%;
+}
+
+/* Hide empty balance input containers to prevent layout issues */
+.chapter-balance-input:empty {
+  display: none;
 }
 
 .chapter-title-input input,
@@ -462,7 +465,7 @@
   }
 
   .chapter-title-status-group {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 10px;
     align-items: stretch;
   }
@@ -470,7 +473,6 @@
   .chapter-title-input,
   .chapter-mode-input,
   .chapter-balance-input {
-    flex: none;
     width: 100%;
     min-width: auto;
   }
@@ -593,16 +595,6 @@
 /* Responsive adjustments for larger screens */
 @media (min-width: 768px) {
   .chapter-title-status-group {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  
-  .chapter-title-input {
-    flex: 2;
-    margin-right: 15px;
-  }
-  
-  .chapter-mode-input {
-    flex: 1;
+    grid-template-columns: 2fr 1fr auto;
   }
 }
