@@ -328,7 +328,7 @@
 
 /* Staff section styles */
 .staff-section {
-  margin: 1.5rem 0;
+  margin: 0 0 1rem;
   padding: 1rem;
   background-color: #f8f9fa;
   border-radius: 8px;
@@ -2556,7 +2556,7 @@
 /* ===== FLOATING LABEL STYLES ===== */
 .form-group {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-group input,
@@ -2830,6 +2830,184 @@
   .form-group textarea:not(:placeholder-shown) + label,
   .form-group textarea.has-content + label {
     font-size: 0.7rem;
+  }
+}
+
+/* Novel Mode Section Styling */
+.novel-mode-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.mode-section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color, #2c3e50);
+}
+
+.mode-selection-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.mode-option {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  max-width: 200px;
+}
+
+.mode-option input[type="radio"] {
+  display: none;
+}
+
+.mode-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  min-height: 80px;
+}
+
+.mode-option:hover .mode-box {
+  border-color: var(--primary-color, #3498db);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.1);
+}
+
+.mode-option.selected .mode-box {
+  border-color: var(--primary-color, #3498db);
+  background-color: rgba(52, 152, 219, 0.1);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.mode-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mode-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color, #2c3e50);
+  text-align: center;
+}
+
+.mode-option.selected .mode-label {
+  color: var(--primary-color, #3498db);
+}
+
+.mode-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6c757d);
+  font-style: italic;
+  padding: 0.5rem;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  border-left: 3px solid var(--primary-color, #3498db);
+}
+
+/* Dark mode support for novel mode section */
+:root.dark-mode .novel-mode-section {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .mode-section-title {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .mode-box {
+  background-color: #1a202c;
+  border-color: #4a5568;
+}
+
+:root.dark-mode .mode-option:hover .mode-box {
+  border-color: #63b3ed;
+  box-shadow: 0 2px 4px rgba(99, 179, 237, 0.1);
+}
+
+:root.dark-mode .mode-option.selected .mode-box {
+  border-color: #63b3ed;
+  background-color: rgba(99, 179, 237, 0.1);
+  box-shadow: 0 2px 8px rgba(99, 179, 237, 0.2);
+}
+
+:root.dark-mode .mode-label {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .mode-option.selected .mode-label {
+  color: #63b3ed;
+}
+
+:root.dark-mode .mode-description {
+  background-color: #2d3748;
+  color: #a0aec0;
+  border-left-color: #63b3ed;
+}
+
+/* Responsive adjustments for mode section */
+@media (max-width: 768px) {
+  .mode-selection-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .mode-option {
+    max-width: none;
+  }
+
+  .mode-box {
+    min-height: 60px;
+    padding: 0.75rem;
+  }
+
+  .mode-icon {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .mode-label {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .novel-mode-section {
+    padding: 0.75rem;
+    margin: 1rem 0;
+  }
+
+  .mode-section-title {
+    font-size: 1rem;
+  }
+
+  .mode-box {
+    min-height: 50px;
+    padding: 0.5rem;
+  }
+
+  .mode-icon {
+    font-size: 1.1rem;
+  }
+
+  .mode-label {
+    font-size: 0.8rem;
+  }
+
+  .mode-description {
+    font-size: 0.8rem;
+    padding: 0.4rem;
   }
 }
 

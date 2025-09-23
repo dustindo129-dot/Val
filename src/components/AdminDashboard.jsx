@@ -606,6 +606,7 @@ const AdminDashboard = () => {
             user?.username || 'no-username',
             user?.role || 'no-role', 
             sortTypeParam,
+            sortTypeParam === 'draft' ? 'draft-mode' : 'normal-mode', // Ensure cache separation for draft vs normal
             'admin-dashboard'
         ];
     }, [user?._id, user?.id, user?.username, user?.role, sortType]);
@@ -677,6 +678,7 @@ const AdminDashboard = () => {
         alternativeTitles: '',
         author: '',
         illustrator: '',
+        mode: 'published',
         active: {
             pj_user: [],
             translator: [],
@@ -822,8 +824,10 @@ const AdminDashboard = () => {
             // When includePaidInfo=true, backend automatically skips staff population for performance
             const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
             const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
+            const includeDraft = sortType === 'draft' ? '&includeDraft=true' : '';
             
-            const url = `${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}&t=${Date.now()}`;
+            const url = `${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}${includeDraft}&t=${Date.now()}`;
+            
             
             const response = await fetch(url, {
                 headers: {
@@ -884,6 +888,13 @@ const AdminDashboard = () => {
                 const hasPaidChapters = (novel.paidChaptersCount || 0) > 0;
                 
                 return hasPaidModules || hasPaidChapters;
+            });
+        }
+
+        // Further filter for draft novels if needed
+        if (sortType === 'draft') {
+            filteredNovels = filteredNovels.filter(novel => {
+                return novel.mode === 'draft';
             });
         }
 
@@ -1437,6 +1448,7 @@ const AdminDashboard = () => {
                 alternativeTitles: target.alternativeTitles,
                 author: target.author,
                 illustrator: target.illustrator,
+                mode: target.mode || 'published',
                 active: {
                     pj_user: staffData.active.pj_user || [],
                     translator: staffData.active.translator || [],
@@ -1496,8 +1508,9 @@ const AdminDashboard = () => {
                 // Include paid content info when filtering by paid content
                 const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
                 const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
+                const includeDraft = sortType === 'draft' ? '&includeDraft=true' : '';
                 
-                const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}&t=${Date.now()}`, {
+                const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}${includeDraft}&t=${Date.now()}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -1540,6 +1553,7 @@ const AdminDashboard = () => {
             alternativeTitles: novel.alternativeTitles || [],
             author: novel.author || '',
             illustrator: novel.illustrator || '',
+            mode: novel.mode || 'published',
             active: {
                 pj_user: novel.active?.pj_user || [],
                 translator: novel.active?.translator || [],
@@ -1660,6 +1674,7 @@ const AdminDashboard = () => {
             alternativeTitles: '',
             author: '',
             illustrator: '',
+            mode: 'published',
             active: {
                 pj_user: [],
                 translator: [],
@@ -2073,6 +2088,47 @@ const AdminDashboard = () => {
                                 onChange={handleInputChange}
                             />
 
+                            {/* Novel Mode Section - Only for admin/mod */}
+                            {(user?.role === 'admin' || user?.role === 'moderator') && (
+                                <div className="novel-mode-section">
+                                    <h4 className="mode-section-title">Chế độ truyện</h4>
+                                    <div className="mode-selection-container">
+                                        <label className={`mode-option ${(editingNovel ? editingNovel.mode : newNovel.mode) === 'published' ? 'selected' : ''}`}>
+                                            <input
+                                                type="radio"
+                                                name="mode"
+                                                value="published"
+                                                checked={(editingNovel ? editingNovel.mode : newNovel.mode) === 'published' || !(editingNovel ? editingNovel.mode : newNovel.mode)}
+                                                onChange={handleInputChange}
+                                            />
+                                            <div className="mode-box">
+                                                <div className="mode-icon">📖</div>
+                                                <div className="mode-label">Công khai</div>
+                                            </div>
+                                        </label>
+                                        <label className={`mode-option ${(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft' ? 'selected' : ''}`}>
+                                            <input
+                                                type="radio"
+                                                name="mode"
+                                                value="draft"
+                                                checked={(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft'}
+                                                onChange={handleInputChange}
+                                            />
+                                            <div className="mode-box">
+                                                <div className="mode-icon">📝</div>
+                                                <div className="mode-label">Nháp</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div className="mode-description">
+                                        {(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft' ? 
+                                            'Truyện ở chế độ nháp sẽ được ẩn khỏi trang chủ và các danh sách công khai' :
+                                            'Truyện ở chế độ công khai sẽ hiển thị bình thường cho người dùng'
+                                        }
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Staff Section - Active */}
                             <div className="staff-section">
                                 <div className="staff-header">
@@ -2474,6 +2530,9 @@ const AdminDashboard = () => {
                                 <option value="updated">Mới cập nhật</option>
                                 <option value="balance">Số dư nhiều nhất</option>
                                 <option value="paid">Có nội dung trả phí</option>
+                                {(user?.role === 'admin' || user?.role === 'moderator') && (
+                                    <option value="draft">Chế độ nháp</option>
+                                )}
                             </select>
                         </div>
                     </div>
