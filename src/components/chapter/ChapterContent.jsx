@@ -6,7 +6,7 @@ import {formatDate} from '../../utils/helpers';
 import PropTypes from 'prop-types';
 import ChapterFootnotes from './ChapterFootnotes';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faPlus, faTrash} from '@fortawesome/free-solid-svg-icons';
+import {faPlus, faTrash, faPlay, faPause, faStop, faVolumeUp, faVolumeMute} from '@fortawesome/free-solid-svg-icons';
 import './ChapterContent.css';
 import bunnyUploadService from '../../services/bunnyUploadService';
 import {translateChapterModuleStatus} from '../../utils/statusTranslation';
@@ -52,6 +52,20 @@ const ChapterContent = React.memo(({
     const [modeError, setModeError] = useState('');
     const [networkError, setNetworkError] = useState('');
 
+    // Google Cloud TTS state
+    const [ttsSupported, setTtsSupported] = useState(true); // Always supported with Google Cloud
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const [ttsRate, setTtsRate] = useState(1.0);
+    const [ttsVolume, setTtsVolume] = useState(1.0);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [audioUrl, setAudioUrl] = useState(null);
+    const audioRef = useRef(null);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [ttsError, setTtsError] = useState('');
+
     // Auto-save state management
     const [autoSaveStatus, setAutoSaveStatus] = useState('');
     const [lastSaved, setLastSaved] = useState(null);
@@ -68,6 +82,234 @@ const ChapterContent = React.memo(({
 
     // Check if the current module is in paid mode
     const isModulePaid = moduleData?.mode === 'paid';
+
+    // Google Cloud TTS utility functions
+    const extractTextFromHTML = useCallback((htmlContent) => {
+        if (!htmlContent) return '';
+        
+        // Create a temporary div to parse HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        
+        // Remove script and style elements
+        const scripts = tempDiv.querySelectorAll('script, style');
+        scripts.forEach(script => script.remove());
+        
+        // Get text content and clean it up
+        let text = tempDiv.textContent || tempDiv.innerText || '';
+        
+        // Clean up whitespace and line breaks
+        text = text.replace(/\s+/g, ' ').trim();
+        
+        // Replace footnote markers with readable text
+        text = text.replace(/\[(\d+)\]/g, ', chú thích $1,');
+        
+        return text;
+    }, []);
+
+    // Generate speech using Google Cloud TTS
+    const generateTTS = useCallback(async (text) => {
+        try {
+            setIsGenerating(true);
+            setTtsError('');
+
+        console.log('Sending TTS request:', {
+            textLength: text.length,
+            backendUrl: config.backendUrl,
+            voiceName: 'vi-VN-Standard-A',
+            speakingRate: ttsRate
+        });
+
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+        }, 30000); // 30 second timeout
+
+        const response = await fetch(`${config.backendUrl}/api/tts/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                text: text,
+                languageCode: 'vi-VN',
+                voiceName: 'vi-VN-Standard-A', // Vietnamese female voice
+                audioConfig: {
+                    audioEncoding: 'MP3',
+                    speakingRate: ttsRate,
+                    pitch: 0.0,
+                    volumeGainDb: 0.0
+                }
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log('TTS response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('TTS response error:', errorText);
+            throw new Error(`TTS generation failed: ${response.statusText} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('TTS response data:', data);
+        
+        if (data.success && data.audioUrl) {
+            console.log('Audio URL received:', data.audioUrl);
+            setAudioUrl(data.audioUrl);
+            return data.audioUrl;
+        } else {
+            throw new Error(data.message || 'No audio URL received from server');
+        }
+        } catch (error) {
+            console.error('TTS generation error:', error);
+            
+            if (error.name === 'AbortError') {
+                setTtsError('Yêu cầu TTS đã hết thời gian chờ. Vui lòng thử lại.');
+            } else {
+                setTtsError(error.message || 'Không thể tạo âm thanh. Vui lòng thử lại.');
+            }
+            throw error;
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [ttsRate]);
+
+    // Audio playback control functions
+    const handlePlayTTS = useCallback(async () => {
+        try {
+            if (isPaused && audioRef.current) {
+                // Resume paused audio
+                audioRef.current.play();
+                setIsPaused(false);
+                setIsPlaying(true);
+                return;
+            }
+
+            if (audioUrl && audioRef.current) {
+                // Play existing audio
+                audioRef.current.currentTime = 0;
+                audioRef.current.play();
+                setIsPlaying(true);
+                return;
+            }
+
+        // Generate new audio
+        const chapterText = extractTextFromHTML(chapter.content);
+        
+        if (!chapterText.trim()) {
+            alert('Không có nội dung để đọc.');
+            return;
+        }
+
+        console.log('Extracted chapter text (first 100 chars):', chapterText.substring(0, 100));
+
+        const url = await generateTTS(chapterText);
+        
+        console.log('Generated TTS URL:', url);
+        
+        if (url && audioRef.current) {
+            // Validate URL format
+            const isValidUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+            
+            if (!isValidUrl) {
+                console.error('Invalid URL format:', url);
+                setTtsError('URL âm thanh không hợp lệ. Vui lòng thử lại.');
+                return;
+            }
+            
+            console.log('Setting audio src to:', url);
+            
+            // Clear any previous src to prevent issues
+            audioRef.current.src = '';
+            audioRef.current.load(); // Reset the audio element
+            
+            // Set new src
+            audioRef.current.src = url;
+            
+            // Add load event listener to track loading success
+            const handleLoadStart = () => {
+                console.log('Audio loading started');
+            };
+            
+            const handleCanPlay = () => {
+                console.log('Audio can start playing');
+            };
+            
+            const handleLoadError = () => {
+                console.error('Failed to load audio from URL:', url);
+                setTtsError('Không thể tải file âm thanh. Server có thể chưa chạy.');
+            };
+            
+            audioRef.current.addEventListener('loadstart', handleLoadStart, { once: true });
+            audioRef.current.addEventListener('canplay', handleCanPlay, { once: true });
+            audioRef.current.addEventListener('error', handleLoadError, { once: true });
+            
+            audioRef.current.play().catch(playError => {
+                console.error('Failed to play audio:', playError);
+                setTtsError('Không thể phát âm thanh. Vui lòng thử lại.');
+            });
+            setIsPlaying(true);
+        } else {
+            console.error('No valid URL returned from generateTTS:', url);
+            setTtsError('Không thể tạo URL âm thanh. Vui lòng thử lại.');
+        }
+        } catch (error) {
+            console.error('TTS playback error:', error);
+            setTtsError('Không thể phát âm thanh. Vui lòng thử lại.');
+        }
+    }, [isPaused, audioUrl, chapter.content, extractTextFromHTML, generateTTS]);
+
+    const handlePauseTTS = useCallback(() => {
+        if (audioRef.current && !audioRef.current.paused) {
+            audioRef.current.pause();
+            setIsPaused(true);
+            setIsPlaying(false);
+        }
+    }, []);
+
+    const handleStopTTS = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        setIsPlaying(false);
+        setIsPaused(false);
+        setCurrentTime(0);
+    }, []);
+
+    const handleToggleMute = useCallback(() => {
+        setIsMuted(!isMuted);
+        if (audioRef.current) {
+            audioRef.current.muted = !isMuted;
+        }
+    }, [isMuted]);
+
+    const handleRateChange = useCallback((newRate) => {
+        setTtsRate(newRate);
+        if (audioRef.current) {
+            audioRef.current.playbackRate = newRate;
+        }
+    }, []);
+
+    const handleVolumeChange = useCallback((newVolume) => {
+        setTtsVolume(newVolume);
+        if (audioRef.current) {
+            audioRef.current.volume = newVolume;
+        }
+    }, []);
+
+    const handleSeek = useCallback((time) => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+            setCurrentTime(time);
+        }
+    }, []);
 
     // Auto-save key for localStorage
     const autoSaveKey = `chapter_autosave_${chapter._id}`;
@@ -245,6 +487,120 @@ const ChapterContent = React.memo(({
             }
         }, 3000); // 3 second debounce
     }, [onWordCountUpdate]);
+
+    // Initialize audio element and event handlers
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleLoadedMetadata = () => {
+            setDuration(audio.duration);
+        };
+
+        const handleTimeUpdate = () => {
+            setCurrentTime(audio.currentTime);
+        };
+
+        const handleEnded = () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+            setCurrentTime(0);
+        };
+
+        const handleError = (e) => {
+            // Only show error if audio has a valid source (not empty or default)
+            if (!audio.src || audio.src === window.location.href || audio.src === '') {
+                console.log('Audio error ignored - no source set');
+                return;
+            }
+            
+            console.error('Audio error:', e);
+            console.error('Audio element details:', {
+                src: audio.src,
+                readyState: audio.readyState,
+                networkState: audio.networkState,
+                error: audio.error
+            });
+            
+            let errorMessage = 'Lỗi phát âm thanh. Vui lòng thử lại.';
+            
+            if (audio.error) {
+                switch (audio.error.code) {
+                    case 1:
+                        errorMessage = 'Quá trình tải âm thanh đã bị hủy bỏ.';
+                        break;
+                    case 2:
+                        errorMessage = 'Lỗi mạng khi tải âm thanh. Kiểm tra kết nối server.';
+                        break;
+                    case 3:
+                        errorMessage = 'Lỗi giải mã file âm thanh.';
+                        break;
+                    case 4:
+                        errorMessage = 'Định dạng âm thanh không được hỗ trợ.';
+                        break;
+                    default:
+                        errorMessage = `Lỗi âm thanh không xác định (mã: ${audio.error.code}).`;
+                }
+            }
+            
+            setTtsError(errorMessage);
+            setIsPlaying(false);
+            setIsPaused(false);
+        };
+
+        const handlePlay = () => {
+            setIsPlaying(true);
+            setIsPaused(false);
+        };
+
+        const handlePause = () => {
+            setIsPlaying(false);
+            setIsPaused(true);
+        };
+
+        // Add event listeners
+        audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+        audio.addEventListener('ended', handleEnded);
+        audio.addEventListener('error', handleError);
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('pause', handlePause);
+
+        // Set initial properties - but don't set any source
+        audio.volume = ttsVolume;
+        audio.muted = isMuted;
+        audio.playbackRate = ttsRate;
+        
+        // Ensure no src is set initially
+        if (audio.src && audio.src !== '') {
+            audio.removeAttribute('src');
+            audio.load();
+        }
+
+        return () => {
+            audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('ended', handleEnded);
+            audio.removeEventListener('error', handleError);
+            audio.removeEventListener('play', handlePlay);
+            audio.removeEventListener('pause', handlePause);
+        };
+    }, [ttsVolume, isMuted, ttsRate]);
+
+    // Cleanup audio when component unmounts or chapter changes
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = '';
+            }
+            setIsPlaying(false);
+            setIsPaused(false);
+            setAudioUrl(null);
+            setCurrentTime(0);
+            setDuration(0);
+        };
+    }, [chapter._id]);
 
     // Load auto-saved content on component mount
     useEffect(() => {
@@ -2294,6 +2650,108 @@ const ChapterContent = React.memo(({
                 </>
             ) : (
                 <div className="chapter-content-container">
+                    {/* Audio element for Google Cloud TTS - no src initially */}
+                    <audio ref={audioRef} preload="none" style={{display: 'none'}} />
+                    
+                    {/* Google Cloud TTS Controls */}
+                    {false && ttsSupported && !isEditing && (
+                        <div className="tts-controls">
+                            {ttsError && (
+                                <div className="tts-error">
+                                    <span>{ttsError}</span>
+                                    <button onClick={() => setTtsError('')} className="tts-error-close">×</button>
+                                </div>
+                            )}
+                            
+                            <div className="tts-controls-main">
+                                <button
+                                    className={`tts-btn tts-play-btn ${isPlaying ? 'playing' : ''} ${isGenerating ? 'generating' : ''}`}
+                                    onClick={isPlaying ? handlePauseTTS : handlePlayTTS}
+                                    title={isGenerating ? 'Đang tạo âm thanh...' : (isPlaying ? 'Tạm dừng đọc' : (isPaused ? 'Tiếp tục đọc' : 'Bắt đầu đọc'))}
+                                    disabled={!chapter.content || isGenerating}
+                                >
+                                    <FontAwesomeIcon icon={isGenerating ? faVolumeUp : (isPlaying ? faPause : faPlay)} className={isGenerating ? 'fa-spin' : ''} />
+                                    <span>{isGenerating ? 'Đang tạo...' : (isPlaying ? 'Tạm dừng' : (isPaused ? 'Tiếp tục' : 'Đọc chương'))}</span>
+                                </button>
+                                
+                                <button
+                                    className="tts-btn tts-stop-btn"
+                                    onClick={handleStopTTS}
+                                    title="Dừng đọc"
+                                    disabled={!isPlaying && !isPaused}
+                                >
+                                    <FontAwesomeIcon icon={faStop} />
+                                </button>
+                                
+                                <button
+                                    className={`tts-btn tts-mute-btn ${isMuted ? 'muted' : ''}`}
+                                    onClick={handleToggleMute}
+                                    title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+                                >
+                                    <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} />
+                                </button>
+                            </div>
+                            
+                            {/* Progress bar */}
+                            {(isPlaying || isPaused) && duration > 0 && (
+                                <div className="tts-progress-container">
+                                    <span className="tts-time">{Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}</span>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={duration}
+                                        value={currentTime}
+                                        onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                                        className="tts-progress-slider"
+                                    />
+                                    <span className="tts-time">{Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}</span>
+                                </div>
+                            )}
+                            
+                            <div className="tts-controls-settings">
+                                <div className="tts-rate-control">
+                                    <label htmlFor="tts-rate">Tốc độ:</label>
+                                    <input
+                                        id="tts-rate"
+                                        type="range"
+                                        min="0.5"
+                                        max="2"
+                                        step="0.1"
+                                        value={ttsRate}
+                                        onChange={(e) => handleRateChange(parseFloat(e.target.value))}
+                                        className="tts-rate-slider"
+                                    />
+                                    <span className="tts-rate-value">{ttsRate}x</span>
+                                </div>
+                                
+                                <div className="tts-volume-control">
+                                    <label htmlFor="tts-volume">Âm lượng:</label>
+                                    <input
+                                        id="tts-volume"
+                                        type="range"
+                                        min="0"
+                                        max="1"
+                                        step="0.1"
+                                        value={ttsVolume}
+                                        onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                                        className="tts-volume-slider"
+                                    />
+                                    <span className="tts-volume-value">{Math.round(ttsVolume * 100)}%</span>
+                                </div>
+                            </div>
+                            
+                            {(isPlaying || isPaused || isGenerating) && (
+                                <div className="tts-status">
+                                    <span className="tts-status-indicator">
+                                        {isGenerating && <span className="tts-generating-dot"></span>}
+                                        {isPlaying && <span className="tts-playing-dot"></span>}
+                                        {isGenerating ? 'Đang tạo âm thanh...' : (isPlaying ? 'Đang phát...' : 'Đã tạm dừng')}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
                     <div
                         ref={contentRef}
                         className="chapter-content"

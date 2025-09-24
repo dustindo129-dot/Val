@@ -13,6 +13,13 @@ yarn-error.log*
 .env.*
 !.env.example
 
+# Google Cloud credentials
+**/google-cloud-key.json
+**/google-cloud-credentials.json
+**/*-key.json
+**/service-account*.json
+**/*-service-account.json
+
 # OS
 .DS_Store
 Thumbs.db
