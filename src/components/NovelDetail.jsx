@@ -978,21 +978,50 @@ const NovelDetail = ({ novelId }) => {
             )
           });
 
-          try {
-            // Make API call
-            await api.reorderChapter({ 
-              novelId,
-              moduleId,
-              chapterId, 
-              direction 
-            });
-          } catch (error) {
-            // On error, revert to previous state
-            if (previousData) {
-              queryClient.setQueryData(['completeNovel', novelId], previousData);
+        try {
+          // Make API call
+          const response = await api.reorderChapter({ 
+            novelId,
+            moduleId,
+            chapterId, 
+            direction 
+          });
+
+          // Update chapter orders with backend response data
+          if (response?.swappedChapters && Array.isArray(response.swappedChapters)) {
+            const currentDataAfterOptimistic = queryClient.getQueryData(['completeNovel', novelId]);
+            
+            if (currentDataAfterOptimistic?.modules) {
+              const updatedModules = currentDataAfterOptimistic.modules.map(module => {
+                if (module._id === moduleId) {
+                  const updatedChapters = module.chapters.map(chapter => {
+                    // Find if this chapter was one of the swapped chapters
+                    const swappedChapter = response.swappedChapters.find(sc => sc._id === chapter._id);
+                    if (swappedChapter) {
+                      // Update the order with the value from backend
+                      return { ...chapter, order: swappedChapter.order };
+                    }
+                    return chapter;
+                  });
+                  return { ...module, chapters: updatedChapters };
+                }
+                return module;
+              });
+
+              // Update cache with corrected order values
+              queryClient.setQueryData(['completeNovel', novelId], {
+                ...currentDataAfterOptimistic,
+                modules: updatedModules
+              });
             }
-            throw error;
           }
+        } catch (error) {
+          // On error, revert to previous state
+          if (previousData) {
+            queryClient.setQueryData(['completeNovel', novelId], previousData);
+          }
+          throw error;
+        }
         }
       }
     } catch (error) {
