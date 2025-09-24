@@ -193,17 +193,23 @@ const Contest2025 = () => {
              <div className="works-container">
                <div className="works-header">
                  <h3>Tác phẩm {selectedRound}</h3>
-                 <span className="works-count">(18 tác phẩm)</span>
+                 <span className="works-count">(29 tác phẩm)</span>
                </div>
                
-               <div className="works-list">
-                 {/* Placeholder for empty state */}
-                 <div className="empty-state">
-                   <div className="empty-icon">📚</div>
-                   <p>Chưa có tác phẩm nào trong {selectedRound}</p>
-                   <span className="empty-note">Các tác phẩm sẽ được hiển thị ở đây khi có dữ liệu</span>
-                 </div>
-               </div>
+              <div className="works-list">
+                {selectedRound === 'vòng 1' ? (
+                  <div className="empty-state">
+                    <div className="empty-icon">🔒</div>
+                    <p>Các tác phẩm vòng 1 sẽ được công bố sau khi cuộc thi kết thúc</p>
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <div className="empty-icon">📚</div>
+                    <p>Chưa có tác phẩm nào trong {selectedRound}</p>
+                    <span className="empty-note">Các tác phẩm sẽ được hiển thị ở đây khi có dữ liệu</span>
+                  </div>
+                )}
+              </div>
              </div>
            </div>
          </div>
