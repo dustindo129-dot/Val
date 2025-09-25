@@ -4,6 +4,7 @@ import DOMPurify from 'dompurify';
 import config from '../../config/config';
 import {formatDate} from '../../utils/helpers';
 import PropTypes from 'prop-types';
+import { useFullscreen } from '../../context/FullscreenContext';
 import ChapterFootnotes from './ChapterFootnotes';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faPlus, faTrash, faPlay, faPause, faStop, faVolumeUp, faVolumeMute} from '@fortawesome/free-solid-svg-icons';
@@ -39,6 +40,9 @@ const ChapterContent = React.memo(({
                                        novelData = null,
                                        onNetworkError
                                    }) => {
+
+    // Get fullscreen context
+    const { isFullscreen } = useFullscreen();
 
 
 
@@ -2285,6 +2289,83 @@ const ChapterContent = React.memo(({
         images_upload_base_path: '/',
         automatic_uploads: true
     }), [config.tinymce.scriptPath, convertHTMLToFootnotes, handleNetworkError, isLargeContent]);
+
+    // Render fullscreen layout
+    if (isFullscreen && !isEditing) {
+        return (
+            <div className="fullscreen-chapter-container">
+                {/* Admin controls floating at top right */}
+                {canEdit && (
+                    <div className="fullscreen-admin-controls">
+                        {/* Add any admin controls here if needed */}
+                    </div>
+                )}
+                
+                {/* Module title */}
+                {moduleData && (
+                    <div className="fullscreen-module-title">
+                        {moduleData.title}
+                    </div>
+                )}
+                
+                {/* Chapter title */}
+                <h1 className="fullscreen-chapter-title">
+                    {chapter.title}
+                </h1>
+                
+                {/* Staff and stats line */}
+                <div className="fullscreen-meta-line">
+                    {chapter.translator && (
+                        <span>Dịch giả: {typeof chapter.translator === 'object' ? (chapter.translator.displayName || chapter.translator.username) : chapter.translator}</span>
+                    )}
+                    {chapter.editor && (
+                        <span> • Biên tập: {typeof chapter.editor === 'object' ? (chapter.editor.displayName || chapter.editor.username) : chapter.editor}</span>
+                    )}
+                    {chapter.proofreader && (
+                        <span> • Hiệu đính: {typeof chapter.proofreader === 'object' ? (chapter.proofreader.displayName || chapter.proofreader.username) : chapter.proofreader}</span>
+                    )}
+                    {(chapter.translator || chapter.editor || chapter.proofreader) && (chapter.publishedAt || chapter.wordCount || chapter.views) && (
+                        <span> • </span>
+                    )}
+                    {chapter.publishedAt && (
+                        <span>Đăng: {formatDate(chapter.publishedAt)}</span>
+                    )}
+                    {chapter.wordCount && (
+                        <span>{chapter.publishedAt ? ' • ' : ''}{chapter.wordCount.toLocaleString()} từ</span>
+                    )}
+                    {chapter.views && (
+                        <span> • {chapter.views.toLocaleString()} lượt xem</span>
+                    )}
+                </div>
+                
+                {/* Chapter content */}
+                <div className="fullscreen-chapter-content">
+                    <div
+                        ref={contentRef}
+                        className="chapter-content"
+                        style={{
+                            '--content-font-size': `${fontSize}px`,
+                            '--content-font-family': fontFamily,
+                            '--content-line-height': lineHeight,
+                            '--content-margin-spacing': `${marginSpacing}px`,
+                            fontSize: `${fontSize}px`,
+                            fontFamily: fontFamily,
+                            lineHeight: lineHeight,
+                            padding: `15px ${marginSpacing}px`
+                        }}
+                        dangerouslySetInnerHTML={{__html: processContent(chapter.content || '')}}
+                    />
+
+                    {chapter.footnotes && chapter.footnotes.length > 0 && (
+                        <ChapterFootnotes
+                            footnotes={chapter.footnotes}
+                            onFootnoteClick={handleFootnoteClick}
+                        />
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="chapter-card">

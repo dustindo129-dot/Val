@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faTimes, faEllipsisV, faList, faCog,
-    faChevronLeft, faChevronRight, faBars, faLock, faBookmark, faHouse, faArrowUp
+    faChevronLeft, faChevronRight, faBars, faLock, faBookmark, faHouse, faArrowUp, faExpand, faCompress
 } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
 import '../../styles/components/ChapterNavigationControls.css';
@@ -34,7 +34,9 @@ const ChapterNavigationControls = ({
                                        user,
                                        buttonsVisible = true,
                                        isBookmarked,
-                                       handleBookmark
+                                       handleBookmark,
+                                       isFullscreen,
+                                       toggleFullscreen
                                    }) => {
     // Ref for the chapter list container to handle scrolling
     const chapterListRef = useRef(null);
@@ -201,7 +203,13 @@ const ChapterNavigationControls = ({
 
                     {/* Row 2 */}
                     <div className="empty-grid-cell" />
-                    <div className="empty-grid-cell" />
+                    <button
+                        className={`control-btn fullscreen-btn ${isFullscreen ? 'active' : ''}`}
+                        onClick={toggleFullscreen}
+                        title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                    >
+                        <FontAwesomeIcon icon={isFullscreen ? faCompress : faExpand}/>
+                    </button>
                     <button
                         className={`control-btn bookmark-btn ${isBookmarked ? 'active' : ''}`}
                         onClick={handleBookmark}

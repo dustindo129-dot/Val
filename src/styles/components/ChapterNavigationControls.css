@@ -143,6 +143,11 @@
   background-color: #28a745;
 }
 
+/* Special styling for fullscreen button */
+.fullscreen-btn.active {
+  background-color: #6f42c1;
+}
+
 /* Home button link styling */
 .home-btn {
   text-decoration: none;

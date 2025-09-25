@@ -6,6 +6,7 @@ import { BookmarkProvider } from './context/BookmarkContext';
 import { NovelStatusProvider } from './context/NovelStatusContext';
 import { NovelProvider } from './context/NovelContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { FullscreenProvider } from './context/FullscreenContext';
 import { SEOProvider } from './context/SEOContext';
 import { initGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
@@ -42,11 +43,12 @@ const App = () => {
   return (
     <HelmetProvider>
       <ThemeProvider>
-        <SEOProvider>
-          <AuthProvider>
-            <NovelProvider>
-              <NovelStatusProvider>
-                <BookmarkProvider>
+        <FullscreenProvider>
+          <SEOProvider>
+            <AuthProvider>
+              <NovelProvider>
+                <NovelStatusProvider>
+                  <BookmarkProvider>
                 <div className="app">
                   <StructuredData type="website" />
                   <div 
@@ -66,11 +68,12 @@ const App = () => {
                   {/* Global ScrollToTop button - hidden on chapter pages for clean reading experience */}
                   {!isChapterPage && <ScrollToTop threshold={300} />}
                 </div>
-                </BookmarkProvider>
-              </NovelStatusProvider>
-            </NovelProvider>
-          </AuthProvider>
-        </SEOProvider>
+                  </BookmarkProvider>
+                </NovelStatusProvider>
+              </NovelProvider>
+            </AuthProvider>
+          </SEOProvider>
+        </FullscreenProvider>
       </ThemeProvider>
     </HelmetProvider>
   );

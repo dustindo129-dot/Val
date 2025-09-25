@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useFullscreen } from '../context/FullscreenContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import '../styles/components/Chapter.css';
@@ -236,6 +237,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
   // Get theme from unified theme context
   const { theme, applyTheme } = useTheme();
+  
+  // Get fullscreen context
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   // UI state
   const [isEditing, setIsEditing] = useState(false);
@@ -1917,6 +1921,8 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         buttonsVisible={buttonsVisible}
         isBookmarked={isBookmarked}
         handleBookmark={handleBookmark}
+        isFullscreen={isFullscreen}
+        toggleFullscreen={toggleFullscreen}
       />
 
       {/* Modals */}

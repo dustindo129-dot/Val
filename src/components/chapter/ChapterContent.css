@@ -1191,6 +1191,149 @@
     border-color: var(--dark-danger-border, #721c24);
 }
 
+/* Fullscreen Reading Mode Styles */
+.fullscreen-reading {
+  overflow: hidden;
+}
+
+.fullscreen-reading .secondary-navbar,
+.fullscreen-reading .navbar,
+.fullscreen-reading .avatar-announcement-strip,
+.fullscreen-reading .action-toolbar,
+.fullscreen-reading .header-nav-container {
+  display: none !important;
+}
+
+.fullscreen-reading .main-content {
+  margin: 0;
+  max-width: none;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+
+/* New Fullscreen Layout Container */
+.fullscreen-chapter-container {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  max-width: 1200px;
+  width: 100%;
+  min-height: calc(100vh - 40px);
+  padding: 15px 50px;
+  margin: 0 auto;
+  position: relative;
+  text-align: center;
+}
+
+/* Admin controls floating at top right */
+.fullscreen-admin-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+/* Module title - biggest but not too big */
+.fullscreen-module-title {
+  font-size: 24px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Chapter title - slightly smaller than module */
+.fullscreen-chapter-title {
+  font-size: 20px;
+  color: var(--text-color);
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Staff and stats meta line - smallest */
+.fullscreen-meta-line {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.5;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Chapter content area */
+.fullscreen-chapter-content {
+  text-align: left;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.fullscreen-chapter-content .chapter-content {
+  line-height: 1.8;
+  font-size: 18px;
+  color: var(--text-color);
+}
+
+/* Ensure all text elements inherit proper colors in fullscreen */
+.fullscreen-chapter-content .chapter-content p,
+.fullscreen-chapter-content .chapter-content div,
+.fullscreen-chapter-content .chapter-content span,
+.fullscreen-chapter-content .chapter-content strong,
+.fullscreen-chapter-content .chapter-content b,
+.fullscreen-chapter-content .chapter-content em,
+.fullscreen-chapter-content .chapter-content i,
+.fullscreen-chapter-content .chapter-content u {
+  color: var(--text-color);
+}
+
+.fullscreen-chapter-content .chapter-content h1,
+.fullscreen-chapter-content .chapter-content h2,
+.fullscreen-chapter-content .chapter-content h3,
+.fullscreen-chapter-content .chapter-content h4,
+.fullscreen-chapter-content .chapter-content h5,
+.fullscreen-chapter-content .chapter-content h6 {
+  color: var(--text-color);
+}
+
+/* Fullscreen footnote links */
+.fullscreen-chapter-content .chapter-content .footnote-ref {
+  color: var(--primary-color);
+}
+
+.fullscreen-chapter-content .chapter-content .footnote-ref:hover {
+  color: var(--primary-hover);
+}
+
+/* Mobile responsive for fullscreen mode */
+@media (max-width: 768px) {
+  .fullscreen-chapter-container {
+    min-height: calc(100vh - 20px);
+    padding: 20px 30px;
+  }
+  
+  .fullscreen-module-title {
+    font-size: 20px;
+  }
+  
+  .fullscreen-chapter-title {
+    font-size: 18px;
+  }
+  
+  .fullscreen-meta-line {
+    font-size: 13px;
+  }
+  
+  .fullscreen-chapter-content .chapter-content {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+}
+
 :root.dark-mode .tts-time {
     color: var(--dark-text, #e2e8f0);
 }
