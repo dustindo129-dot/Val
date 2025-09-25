@@ -1253,7 +1253,9 @@ const ChapterContent = React.memo(({
                     element.classList.remove('highlight');
                 }, 2000);
                 if (window.location.hash !== `#${targetId}`) {
-                    window.history.replaceState(null, null, `#${targetId}`);
+                    // Preserve current pathname and only update hash
+                    const newUrl = `${window.location.pathname}${window.location.search}#${targetId}`;
+                    window.history.replaceState(null, null, newUrl);
                 }
             }
         }, 50);
