@@ -5,6 +5,7 @@ import config from '../../config/config';
 import {formatDate} from '../../utils/helpers';
 import PropTypes from 'prop-types';
 import { useFullscreen } from '../../context/FullscreenContext';
+import { useAuth } from '../../context/AuthContext';
 import ChapterFootnotes from './ChapterFootnotes';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faPlus, faTrash, faPlay, faPause, faStop, faVolumeUp, faVolumeMute} from '@fortawesome/free-solid-svg-icons';
@@ -43,6 +44,9 @@ const ChapterContent = React.memo(({
 
     // Get fullscreen context
     const { isFullscreen } = useFullscreen();
+    
+    // Get authentication context
+    const { isAuthenticated, user } = useAuth();
 
 
 
@@ -69,6 +73,9 @@ const ChapterContent = React.memo(({
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [ttsError, setTtsError] = useState('');
+    
+    // Track active TTS request to prevent multiple simultaneous requests
+    const activeTTSRequest = useRef(null);
 
     // Auto-save state management
     const [autoSaveStatus, setAutoSaveStatus] = useState('');
@@ -113,76 +120,98 @@ const ChapterContent = React.memo(({
 
     // Generate speech using Google Cloud TTS
     const generateTTS = useCallback(async (text) => {
+        // Check if there's already an active request
+        if (activeTTSRequest.current) {
+            activeTTSRequest.current.abort('new-request');
+        }
+        
         try {
             setIsGenerating(true);
             setTtsError('');
 
-        console.log('Sending TTS request:', {
-            textLength: text.length,
-            backendUrl: config.backendUrl,
-            voiceName: 'vi-VN-Standard-A',
-            speakingRate: ttsRate
-        });
+            // Check if user is authenticated
+            if (!isAuthenticated || !user) {
+                throw new Error('Bạn cần đăng nhập để sử dụng tính năng đọc truyện.');
+            }
 
-        // Create AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-            controller.abort();
-        }, 30000); // 30 second timeout
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            }
 
-        const response = await fetch(`${config.backendUrl}/api/tts/generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                text: text,
-                languageCode: 'vi-VN',
-                voiceName: 'vi-VN-Standard-A', // Vietnamese female voice
-                audioConfig: {
-                    audioEncoding: 'MP3',
-                    speakingRate: ttsRate,
-                    pitch: 0.0,
-                    volumeGainDb: 0.0
-                }
-            }),
-            signal: controller.signal
-        });
+            // Generate TTS request with timeout
+            // Use relative URL to leverage Vite proxy in development
+            const apiUrl = import.meta.env.DEV ? '/api/tts/generate' : `${config.backendUrl}/api/tts/generate`;
 
-        clearTimeout(timeoutId);
+            // Create AbortController for timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller.abort('timeout');
+            }, 30000);
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    text: text,
+                    languageCode: 'vi-VN',
+                    voiceName: 'vi-VN-Neural2-A', // Premium AI Vietnamese female voice
+                    audioConfig: {
+                        audioEncoding: 'MP3',
+                        speakingRate: ttsRate,
+                        pitch: 0.0,
+                        volumeGainDb: 0.0
+                    },
+                    chapterInfo: {
+                        novelSlug: chapter.novel?.slug || '',
+                        novelTitle: chapter.novel?.title || '',
+                        moduleTitle: chapter.module?.title || '',
+                        chapterTitle: chapter.title || '',
+                        chapterId: chapter._id || ''
+                    }
+                })
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`TTS generation failed: ${response.statusText} - ${errorText}`);
+            }
 
-        console.log('TTS response status:', response.status);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('TTS response error:', errorText);
-            throw new Error(`TTS generation failed: ${response.statusText} - ${errorText}`);
-        }
-
-        const data = await response.json();
-        console.log('TTS response data:', data);
+            const data = await response.json();
         
         if (data.success && data.audioUrl) {
-            console.log('Audio URL received:', data.audioUrl);
             setAudioUrl(data.audioUrl);
             return data.audioUrl;
         } else {
             throw new Error(data.message || 'No audio URL received from server');
         }
-        } catch (error) {
-            console.error('TTS generation error:', error);
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            console.error('❌ Fetch error:', fetchError);
             
-            if (error.name === 'AbortError') {
-                setTtsError('Yêu cầu TTS đã hết thời gian chờ. Vui lòng thử lại.');
+            if (fetchError.name === 'AbortError') {
+                if (fetchError.message === 'timeout') {
+                    setTtsError('Yêu cầu TTS quá lâu (>30s). Vui lòng thử lại.');
+                } else {
+                    setTtsError('Yêu cầu TTS đã bị hủy. Vui lòng thử lại.');
+                }
+            } else if (fetchError.message.includes('NetworkError') || fetchError.message.includes('Failed to fetch')) {
+                setTtsError('Lỗi kết nối mạng. Kiểm tra server và thử lại.');
             } else {
-                setTtsError(error.message || 'Không thể tạo âm thanh. Vui lòng thử lại.');
+                setTtsError(fetchError.message || 'Không thể tạo âm thanh. Vui lòng thử lại.');
             }
-            throw error;
+            throw fetchError;
         } finally {
+            // Always clean up
+            activeTTSRequest.current = null;
             setIsGenerating(false);
         }
-    }, [ttsRate]);
+    }, [ttsRate, isAuthenticated, user]);
 
     // Audio playback control functions
     const handlePlayTTS = useCallback(async () => {
@@ -211,23 +240,16 @@ const ChapterContent = React.memo(({
             return;
         }
 
-        console.log('Extracted chapter text (first 100 chars):', chapterText.substring(0, 100));
-
         const url = await generateTTS(chapterText);
-        
-        console.log('Generated TTS URL:', url);
         
         if (url && audioRef.current) {
             // Validate URL format
             const isValidUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
             
             if (!isValidUrl) {
-                console.error('Invalid URL format:', url);
                 setTtsError('URL âm thanh không hợp lệ. Vui lòng thử lại.');
                 return;
             }
-            
-            console.log('Setting audio src to:', url);
             
             // Clear any previous src to prevent issues
             audioRef.current.src = '';
@@ -237,34 +259,20 @@ const ChapterContent = React.memo(({
             audioRef.current.src = url;
             
             // Add load event listener to track loading success
-            const handleLoadStart = () => {
-                console.log('Audio loading started');
-            };
-            
-            const handleCanPlay = () => {
-                console.log('Audio can start playing');
-            };
-            
             const handleLoadError = () => {
-                console.error('Failed to load audio from URL:', url);
                 setTtsError('Không thể tải file âm thanh. Server có thể chưa chạy.');
             };
             
-            audioRef.current.addEventListener('loadstart', handleLoadStart, { once: true });
-            audioRef.current.addEventListener('canplay', handleCanPlay, { once: true });
             audioRef.current.addEventListener('error', handleLoadError, { once: true });
             
             audioRef.current.play().catch(playError => {
-                console.error('Failed to play audio:', playError);
                 setTtsError('Không thể phát âm thanh. Vui lòng thử lại.');
             });
             setIsPlaying(true);
         } else {
-            console.error('No valid URL returned from generateTTS:', url);
             setTtsError('Không thể tạo URL âm thanh. Vui lòng thử lại.');
         }
         } catch (error) {
-            console.error('TTS playback error:', error);
             setTtsError('Không thể phát âm thanh. Vui lòng thử lại.');
         }
     }, [isPaused, audioUrl, chapter.content, extractTextFromHTML, generateTTS]);
@@ -514,17 +522,8 @@ const ChapterContent = React.memo(({
         const handleError = (e) => {
             // Only show error if audio has a valid source (not empty or default)
             if (!audio.src || audio.src === window.location.href || audio.src === '') {
-                console.log('Audio error ignored - no source set');
                 return;
             }
-            
-            console.error('Audio error:', e);
-            console.error('Audio element details:', {
-                src: audio.src,
-                readyState: audio.readyState,
-                networkState: audio.networkState,
-                error: audio.error
-            });
             
             let errorMessage = 'Lỗi phát âm thanh. Vui lòng thử lại.';
             
@@ -2736,8 +2735,23 @@ const ChapterContent = React.memo(({
                     {/* Audio element for Google Cloud TTS - no src initially */}
                     <audio ref={audioRef} preload="none" style={{display: 'none'}} />
                     
-                    {/* Google Cloud TTS Controls */}
-                    {false && ttsSupported && !isEditing && (
+                    {/* Google Cloud TTS Controls - DISABLED */}
+                    {false && ttsSupported && !isEditing && !isAuthenticated && (
+                        <div className="tts-controls">
+                            <div className="tts-auth-required" style={{
+                                padding: '15px',
+                                textAlign: 'center',
+                                backgroundColor: '#f8f9fa',
+                                border: '1px solid #e9ecef',
+                                borderRadius: '6px',
+                                color: '#6c757d'
+                            }}>
+                                📢 Vui lòng <strong>đăng nhập</strong> để sử dụng tính năng đọc truyện
+                            </div>
+                        </div>
+                    )}
+                    
+                    {false && ttsSupported && !isEditing && isAuthenticated && (
                         <div className="tts-controls">
                             {ttsError && (
                                 <div className="tts-error">
