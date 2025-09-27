@@ -193,7 +193,7 @@ const Contest2025 = () => {
              <div className="works-container">
                <div className="works-header">
                  <h3>Tác phẩm {selectedRound}</h3>
-                 <span className="works-count">(42 tác phẩm)</span>
+                 <span className="works-count">(48 tác phẩm)</span>
                </div>
                
               <div className="works-list">
