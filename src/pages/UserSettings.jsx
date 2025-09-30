@@ -16,7 +16,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
@@ -83,6 +83,7 @@ const UserSettings = () => {
     updateUser: () => {}, 
     signOut: () => {} 
   };
+  const navigate = useNavigate();
   
   // State management for form data
   const [avatar, setAvatar] = useState('');
@@ -94,6 +95,7 @@ const UserSettings = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [canChangeDisplayName, setCanChangeDisplayName] = useState(true);
@@ -444,8 +446,13 @@ const UserSettings = () => {
    */
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
+    
+    // Clear previous errors
+    setPasswordError('');
+    setMessage({ type: '', text: '' });
+    
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Mật khẩu không khớp' });
+      setPasswordError('Mật khẩu mới không khớp');
       return;
     }
 
@@ -464,20 +471,22 @@ const UserSettings = () => {
           }
         }
       );
-      setMessage({ type: 'success', text: 'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại với mật khẩu mới.' });
-      
-      // Clear form
-      setPasswordCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      
-      // Log out the user after successful password change
-      setTimeout(() => {
-        signOut();
-      }, 2000);
+    setMessage({ type: 'success', text: 'Mật khẩu đã được cập nhật thành công!' });
+    
+    // Clear form
+    setPasswordCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError('');
+    
+    // Log out the user and redirect to homepage immediately after successful password change
+    setTimeout(async () => {
+      await signOut();
+      navigate('/');
+    }, 500);
       
     } catch (error) {
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Không thể cập nhật mật khẩu' });
+      setPasswordError(error.response?.data?.message || 'Không thể cập nhật mật khẩu');
     } finally {
       setIsLoading(false);
     }
@@ -621,12 +630,20 @@ const UserSettings = () => {
           {/* Password update form */}
           <form onSubmit={handlePasswordUpdate} className="settings-form">
             <h2>Cài đặt mật khẩu</h2>
+            {passwordError && (
+              <div className="alert alert-danger" style={{ marginBottom: '16px' }}>
+                {passwordError}
+              </div>
+            )}
             <div className="settings-form-group">
               <label>Mật khẩu hiện tại</label>
               <input
                 type="password"
                 value={passwordCurrentPassword}
-                onChange={(e) => setPasswordCurrentPassword(e.target.value)}
+                onChange={(e) => {
+                  setPasswordCurrentPassword(e.target.value);
+                  setPasswordError('');
+                }}
                 className="form-control"
                 disabled={isLoading}
                 required
@@ -637,7 +654,10 @@ const UserSettings = () => {
               <input
                 type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setPasswordError('');
+                }}
                 className="form-control"
                 disabled={isLoading}
                 required
@@ -648,7 +668,10 @@ const UserSettings = () => {
               <input
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setPasswordError('');
+                }}
                 className="form-control"
                 disabled={isLoading}
                 required
