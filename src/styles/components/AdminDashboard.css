@@ -2833,7 +2833,7 @@
   }
 }
 
-/* Novel Settings Section (Mode + TTS) Styling */
+/* Novel Settings Section (Mode + TTS + Pinned) - 2x2 Grid Layout */
 .novel-settings-section {
   margin: 1.5rem 0;
   padding: 1rem;
@@ -2843,14 +2843,14 @@
 }
 
 .settings-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: flex-start;
 }
 
 .settings-half {
-  flex: 1;
-  min-width: 0; /* Allows flex items to shrink */
+  min-width: 0; /* Allows grid items to shrink */
 }
 
 /* Legacy support for novel-mode-section */
@@ -2993,7 +2993,7 @@
 /* Responsive adjustments for settings section */
 @media (max-width: 768px) {
   .settings-row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
   }
   
@@ -3154,5 +3154,89 @@
     font-size: 11px;
     padding: 5px 10px;
   }
+}
+
+/* Pinned Checkbox Section */
+.pinned-checkbox-container {
+  padding: 0.25rem 0;
+}
+
+.pinned-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-color, #2c3e50);
+  user-select: none;
+}
+
+.pinned-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-color, #3498db);
+  flex-shrink: 0;
+  order: 2;
+}
+
+.pinned-label-text {
+  font-weight: 500;
+  white-space: nowrap;
+  order: 1;
+}
+
+.pinned-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6c757d);
+  font-style: italic;
+  padding: 0.5rem;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  border-left: 3px solid var(--primary-color, #3498db);
+  margin-top: 0.5rem;
+}
+
+/* Responsive adjustments for pinned section */
+@media (max-width: 768px) {
+  .pinned-label-text {
+    font-size: 0.85rem;
+  }
+  
+  .pinned-checkbox {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 576px) {
+  .pinned-checkbox-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .pinned-label-text {
+    font-size: 0.85rem;
+    order: 1;
+  }
+  
+  .pinned-checkbox {
+    width: 16px;
+    height: 16px;
+    order: 2;
+    margin-left: 0;
+  }
+}
+
+/* Dark mode support for pinned section */
+:root.dark-mode .pinned-checkbox-label {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .pinned-description {
+  background-color: #2d3748;
+  color: #a0aec0;
+  border-left-color: #63b3ed;
 }
 

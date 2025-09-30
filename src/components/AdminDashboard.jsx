@@ -680,6 +680,7 @@ const AdminDashboard = () => {
         illustrator: '',
         mode: 'published',
         ttsEnabled: false,
+        pinned: false,
         active: {
             pj_user: [],
             translator: [],
@@ -825,7 +826,7 @@ const AdminDashboard = () => {
             // When includePaidInfo=true, backend automatically skips staff population for performance
             const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
             const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
-            const includeDraft = (sortType === 'draft' || sortType === 'tts') ? '&includeDraft=true' : '';
+            const includeDraft = sortType === 'draft' ? '&includeDraft=true' : '';
             
             const url = `${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}${includeDraft}&t=${Date.now()}`;
             
@@ -925,7 +926,16 @@ const AdminDashboard = () => {
                 const timestampB = new Date(b.updatedAt || b.createdAt).getTime();
                 return timestampB - timestampA;
             } else {
-                // Sort by updatedAt timestamp (most recent first) - default behavior
+                // Sort by updatedAt timestamp (most recent first) - default "mới cập nhật" behavior
+                // Prioritize pinned novels first
+                const pinnedA = a.pinned ? 1 : 0;
+                const pinnedB = b.pinned ? 1 : 0;
+                
+                if (pinnedA !== pinnedB) {
+                    return pinnedB - pinnedA; // Pinned novels come first
+                }
+                
+                // If both have same pinned status, sort by update time
                 const timestampA = new Date(a.updatedAt || a.createdAt).getTime();
                 const timestampB = new Date(b.updatedAt || b.createdAt).getTime();
                 return timestampB - timestampA;
@@ -1458,6 +1468,7 @@ const AdminDashboard = () => {
                 illustrator: target.illustrator,
                 mode: target.mode || 'published',
                 ttsEnabled: target.ttsEnabled || false,
+                pinned: target.pinned || false,
                 active: {
                     pj_user: staffData.active.pj_user || [],
                     translator: staffData.active.translator || [],
@@ -1517,7 +1528,7 @@ const AdminDashboard = () => {
                 // Include paid content info when filtering by paid content
                 const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
                 const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
-                const includeDraft = (sortType === 'draft' || sortType === 'tts') ? '&includeDraft=true' : '';
+                const includeDraft = sortType === 'draft' ? '&includeDraft=true' : '';
                 
                 const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}${includeDraft}&t=${Date.now()}`, {
                     headers: {
@@ -1564,6 +1575,7 @@ const AdminDashboard = () => {
             illustrator: novel.illustrator || '',
             mode: novel.mode || 'published',
             ttsEnabled: novel.ttsEnabled || false,
+            pinned: novel.pinned || false,
             active: {
                 pj_user: novel.active?.pj_user || [],
                 translator: novel.active?.translator || [],
@@ -1686,6 +1698,7 @@ const AdminDashboard = () => {
             illustrator: '',
             mode: 'published',
             ttsEnabled: false,
+            pinned: false,
             active: {
                 pj_user: [],
                 translator: [],
@@ -2190,6 +2203,38 @@ const AdminDashboard = () => {
                                                 }
                                             </div>
                                         </div>
+                                    
+                                        {/* Bottom Left - Pinned Section (Only for admins) */}
+                                        {user?.role === 'admin' && (
+                                            <div className="settings-half">
+                                                <h4 className="mode-section-title">Ghim truyện</h4>
+                                                <div className="pinned-checkbox-container">
+                                                    <label className="pinned-checkbox-label">
+                                                        <input
+                                                            type="checkbox"
+                                                            name="pinned"
+                                                            checked={!!(editingNovel ? editingNovel.pinned : newNovel.pinned)}
+                                                            onChange={(e) => handleInputChange({ 
+                                                                target: { 
+                                                                    name: 'pinned', 
+                                                                    value: e.target.checked 
+                                                                } 
+                                                            })}
+                                                            className="pinned-checkbox"
+                                                        />
+                                                        <span className="pinned-label-text">
+                                                            📌 Ghim truyện lên đầu trang
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div className="pinned-description">
+                                                    {(editingNovel ? editingNovel.pinned : newNovel.pinned) ? 
+                                                        'Truyện này sẽ luôn hiển thị ở đầu danh sách cập nhật mới nhất' :
+                                                        'Truyện sẽ hiển thị theo thứ tự cập nhật bình thường'
+                                                    }
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
