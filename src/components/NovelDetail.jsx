@@ -1036,12 +1036,44 @@ const NovelDetail = ({ novelId }) => {
     if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return;
     
     if (window.confirm('Bạn có chắc chắn muốn xóa chương này? Hành động này không thể hoàn tác.')) {
+      // Store the previous data for rollback if needed
+      const previousData = queryClient.getQueryData(['completeNovel', novelId]);
+      
       try {
+        // Optimistic update: immediately remove the chapter from the cache
+        queryClient.setQueryData(['completeNovel', novelId], (oldData) => {
+          if (!oldData) return oldData;
+          
+          // Create a deep copy of the data to avoid mutations
+          const newData = JSON.parse(JSON.stringify(oldData));
+          
+          // Find and remove the chapter from all modules
+          if (newData.modules && Array.isArray(newData.modules)) {
+            newData.modules.forEach(module => {
+              if (module.chapters && Array.isArray(module.chapters)) {
+                module.chapters = module.chapters.filter(chapter => chapter._id !== chapterId);
+              }
+            });
+          }
+          
+          return newData;
+        });
+        
+        // Make the actual API call
         await api.deleteChapter(chapterId);
-        // Refresh the data
+        
+        // Invalidate queries to ensure fresh data from server
         queryClient.invalidateQueries(['completeNovel', novelId]);
       } catch (error) {
         console.error('Không thể xóa chương:', error);
+        
+        // Rollback: restore the previous data if deletion failed
+        if (previousData) {
+          queryClient.setQueryData(['completeNovel', novelId], previousData);
+        }
+        
+        // Show error message to user
+        alert('Không thể xóa chương. Vui lòng thử lại.');
       }
     }
   }, [user, novelId, queryClient]);

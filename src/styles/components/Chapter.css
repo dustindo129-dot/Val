@@ -2490,3 +2490,204 @@
 .chapter-content p[style*="margin-top: 0pt"][style*="margin-bottom: 0pt"] {
   margin: 0.75em 0 !important; /* Override inline margin styles for better readability */
 }
+
+/* =========================
+   FULLSCREEN MODE STYLES
+   ========================= */
+
+/* Fullscreen container */
+.fullscreen-chapter-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Fullscreen admin controls */
+.fullscreen-admin-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+/* Fullscreen module title */
+.fullscreen-module-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* Fullscreen chapter title */
+.fullscreen-chapter-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0 0 15px 0;
+  text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+/* Fullscreen meta line */
+.fullscreen-meta-line {
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  line-height: 1.5;
+}
+
+/* Fullscreen chapter content container */
+.fullscreen-chapter-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Ensure fullscreen content has proper text wrapping */
+.fullscreen-chapter-content .chapter-content {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+}
+
+/* Ensure all paragraphs in fullscreen mode wrap properly */
+.fullscreen-chapter-content .chapter-content p {
+  width: 100%;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  box-sizing: border-box;
+  margin: 1.5rem 0;
+  text-align: justify;
+  line-height: inherit;
+}
+
+/* Ensure all text elements wrap properly in fullscreen */
+.fullscreen-chapter-content .chapter-content *,
+.fullscreen-chapter-content .chapter-content span,
+.fullscreen-chapter-content .chapter-content div {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
+
+/* Handle long words and URLs in fullscreen mode */
+.fullscreen-chapter-content .chapter-content {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Themed containers in fullscreen should also wrap properly */
+.fullscreen-chapter-content .chapter-content .content-frame.themed-container {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.fullscreen-chapter-content .chapter-content .content-frame.themed-container * {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
+
+/* Tables in fullscreen mode */
+.fullscreen-chapter-content .chapter-content table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.fullscreen-chapter-content .chapter-content td,
+.fullscreen-chapter-content .chapter-content th {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 0;
+}
+
+/* Pre-formatted content in fullscreen */
+.fullscreen-chapter-content .chapter-content .chapter-pre-content {
+  max-width: 100%;
+  overflow-x: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Mobile responsive for fullscreen mode */
+@media (max-width: 768px) {
+  .fullscreen-chapter-container {
+    padding: 15px;
+  }
+
+  .fullscreen-chapter-title {
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+
+  .fullscreen-meta-line {
+    font-size: 0.85rem;
+  }
+
+  .fullscreen-admin-controls {
+    top: 15px;
+    right: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .fullscreen-chapter-container {
+    padding: 10px;
+  }
+
+  .fullscreen-chapter-title {
+    font-size: 1.3rem;
+    line-height: 1.4;
+  }
+
+  .fullscreen-meta-line {
+    font-size: 0.8rem;
+  }
+
+  .fullscreen-admin-controls {
+    top: 10px;
+    right: 10px;
+  }
+}
