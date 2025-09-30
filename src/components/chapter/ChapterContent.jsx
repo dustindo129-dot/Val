@@ -156,12 +156,23 @@ const ChapterContent = React.memo(({
             const textBytes = new TextEncoder().encode(text).length;
             const estimatedChunks = Math.max(1, Math.ceil(textBytes / 4500));
             
+            // Estimate realistic processing time based on text length
+            // Google TTS processes ~100 characters per second
+            const characterCount = text.length;
+            const estimatedProcessingTimeMs = Math.max(5000, (characterCount / 100) * 1000); // Minimum 5 seconds
+            
+            // Calculate progress increment to spread evenly across estimated time
+            const totalProgressRange = 90; // Progress from 5% to 95%
+            const updateIntervalMs = 500; // Update every 500ms for smoother animation
+            const totalUpdates = estimatedProcessingTimeMs / updateIntervalMs;
+            const progressIncrement = totalProgressRange / totalUpdates;
+            
             // Update initial progress
             setTtsProgress(5);
             setTtsProgressMessage('Đang gửi yêu cầu...');
 
             // Generate TTS request with timeout (increased for longer content)
-            const timeoutDuration = Math.max(30000, estimatedChunks * 5000); // 5s per chunk minimum
+            const timeoutDuration = Math.max(30000, estimatedChunks * 10000); // 10s per chunk minimum
             
             // Use relative URL to leverage Vite proxy in development
             const apiUrl = import.meta.env.DEV ? '/api/tts/generate' : `${config.backendUrl}/api/tts/generate`;
@@ -172,14 +183,25 @@ const ChapterContent = React.memo(({
                 controller.abort('timeout');
             }, timeoutDuration);
             
-            // Simulate progress updates during generation
+            // Simulate progress updates based on actual estimated processing time
+            let currentProgress = 5;
             const progressInterval = setInterval(() => {
                 setTtsProgress(prev => {
-                    if (prev >= 90) return prev; // Cap at 90% until we get response
-                    return Math.min(90, prev + (90 / estimatedChunks));
+                    currentProgress = Math.min(95, prev + progressIncrement);
+                    return currentProgress;
                 });
-                setTtsProgressMessage(`Đang tạo âm thanh... (${estimatedChunks > 1 ? 'Xử lý từng đoạn' : 'Đang xử lý'})`);
-            }, 1000);
+                
+                // Update message based on progress stage
+                if (currentProgress < 25) {
+                    setTtsProgressMessage('Đang phân tích văn bản...');
+                } else if (currentProgress < 50) {
+                    setTtsProgressMessage(`Đang xử lý ${estimatedChunks > 1 ? `đoạn 1/${estimatedChunks}` : 'âm thanh'}...`);
+                } else if (currentProgress < 75) {
+                    setTtsProgressMessage(`Đang tạo âm thanh ${estimatedChunks > 1 ? `(${Math.floor(estimatedChunks / 2)}/${estimatedChunks})` : ''}...`);
+                } else {
+                    setTtsProgressMessage('Đang hoàn thiện file âm thanh...');
+                }
+            }, updateIntervalMs);
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -212,7 +234,7 @@ const ChapterContent = React.memo(({
             clearInterval(progressInterval);
             clearTimeout(timeoutId);
             
-            setTtsProgress(95);
+            setTtsProgress(98);
             setTtsProgressMessage('Đang hoàn tất...');
             
             if (!response.ok) {
