@@ -596,7 +596,7 @@ const AdminDashboard = () => {
     const {user} = useAuth();
 
     // Add state for sort control (moved up to avoid initialization order issues)
-    const [sortType, setSortType] = useState('updated'); // 'updated', 'balance', or 'paid'
+    const [sortType, setSortType] = useState('updated'); // 'updated', 'balance', 'paid', 'draft', or 'tts'
 
     // Helper function to generate consistent cache key for admin dashboard
     const getAdminDashboardCacheKey = useCallback((sortTypeParam = sortType) => {
@@ -606,7 +606,7 @@ const AdminDashboard = () => {
             user?.username || 'no-username',
             user?.role || 'no-role', 
             sortTypeParam,
-            sortTypeParam === 'draft' ? 'draft-mode' : 'normal-mode', // Ensure cache separation for draft vs normal
+            sortTypeParam === 'draft' ? 'draft-mode' : (sortTypeParam === 'tts' ? 'tts-mode' : 'normal-mode'), // Ensure cache separation for draft/tts vs normal
             'admin-dashboard'
         ];
     }, [user?._id, user?.id, user?.username, user?.role, sortType]);
@@ -679,6 +679,7 @@ const AdminDashboard = () => {
         author: '',
         illustrator: '',
         mode: 'published',
+        ttsEnabled: false,
         active: {
             pj_user: [],
             translator: [],
@@ -824,7 +825,7 @@ const AdminDashboard = () => {
             // When includePaidInfo=true, backend automatically skips staff population for performance
             const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
             const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
-            const includeDraft = sortType === 'draft' ? '&includeDraft=true' : '';
+            const includeDraft = (sortType === 'draft' || sortType === 'tts') ? '&includeDraft=true' : '';
             
             const url = `${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}${includeDraft}&t=${Date.now()}`;
             
@@ -895,6 +896,13 @@ const AdminDashboard = () => {
         if (sortType === 'draft') {
             filteredNovels = filteredNovels.filter(novel => {
                 return novel.mode === 'draft';
+            });
+        }
+
+        // Further filter for TTS-enabled novels if needed
+        if (sortType === 'tts') {
+            filteredNovels = filteredNovels.filter(novel => {
+                return novel.ttsEnabled === true;
             });
         }
 
@@ -1449,6 +1457,7 @@ const AdminDashboard = () => {
                 author: target.author,
                 illustrator: target.illustrator,
                 mode: target.mode || 'published',
+                ttsEnabled: target.ttsEnabled || false,
                 active: {
                     pj_user: staffData.active.pj_user || [],
                     translator: staffData.active.translator || [],
@@ -1508,7 +1517,7 @@ const AdminDashboard = () => {
                 // Include paid content info when filtering by paid content
                 const includePaidInfo = sortType === 'paid' ? '&includePaidInfo=true' : '';
                 const skipPopulation = sortType === 'paid' ? '' : '&skipPopulation=true';
-                const includeDraft = sortType === 'draft' ? '&includeDraft=true' : '';
+                const includeDraft = (sortType === 'draft' || sortType === 'tts') ? '&includeDraft=true' : '';
                 
                 const fetchResponse = await fetch(`${config.backendUrl}/api/novels?limit=1000&bypass=true${skipPopulation}${includePaidInfo}${includeDraft}&t=${Date.now()}`, {
                     headers: {
@@ -1554,6 +1563,7 @@ const AdminDashboard = () => {
             author: novel.author || '',
             illustrator: novel.illustrator || '',
             mode: novel.mode || 'published',
+            ttsEnabled: novel.ttsEnabled || false,
             active: {
                 pj_user: novel.active?.pj_user || [],
                 translator: novel.active?.translator || [],
@@ -1675,6 +1685,7 @@ const AdminDashboard = () => {
             author: '',
             illustrator: '',
             mode: 'published',
+            ttsEnabled: false,
             active: {
                 pj_user: [],
                 translator: [],
@@ -2088,43 +2099,97 @@ const AdminDashboard = () => {
                                 onChange={handleInputChange}
                             />
 
-                            {/* Novel Mode Section - Only for admin/mod */}
+                            {/* Novel Mode and TTS Section - Only for admin/mod */}
                             {(user?.role === 'admin' || user?.role === 'moderator') && (
-                                <div className="novel-mode-section">
-                                    <h4 className="mode-section-title">Chế độ truyện</h4>
-                                    <div className="mode-selection-container">
-                                        <label className={`mode-option ${(editingNovel ? editingNovel.mode : newNovel.mode) === 'published' ? 'selected' : ''}`}>
-                                            <input
-                                                type="radio"
-                                                name="mode"
-                                                value="published"
-                                                checked={(editingNovel ? editingNovel.mode : newNovel.mode) === 'published' || !(editingNovel ? editingNovel.mode : newNovel.mode)}
-                                                onChange={handleInputChange}
-                                            />
-                                            <div className="mode-box">
-                                                <div className="mode-icon">📖</div>
-                                                <div className="mode-label">Công khai</div>
+                                <div className="novel-settings-section">
+                                    <div className="settings-row">
+                                        {/* Left Half - Novel Mode */}
+                                        <div className="settings-half">
+                                            <h4 className="mode-section-title">Chế độ truyện</h4>
+                                            <div className="mode-selection-container">
+                                                <label className={`mode-option ${(editingNovel ? editingNovel.mode : newNovel.mode) === 'published' ? 'selected' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="mode"
+                                                        value="published"
+                                                        checked={(editingNovel ? editingNovel.mode : newNovel.mode) === 'published' || !(editingNovel ? editingNovel.mode : newNovel.mode)}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                    <div className="mode-box">
+                                                        <div className="mode-icon">📖</div>
+                                                        <div className="mode-label">Công khai</div>
+                                                    </div>
+                                                </label>
+                                                <label className={`mode-option ${(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft' ? 'selected' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="mode"
+                                                        value="draft"
+                                                        checked={(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft'}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                    <div className="mode-box">
+                                                        <div className="mode-icon">📝</div>
+                                                        <div className="mode-label">Nháp</div>
+                                                    </div>
+                                                </label>
                                             </div>
-                                        </label>
-                                        <label className={`mode-option ${(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft' ? 'selected' : ''}`}>
-                                            <input
-                                                type="radio"
-                                                name="mode"
-                                                value="draft"
-                                                checked={(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft'}
-                                                onChange={handleInputChange}
-                                            />
-                                            <div className="mode-box">
-                                                <div className="mode-icon">📝</div>
-                                                <div className="mode-label">Nháp</div>
+                                            <div className="mode-description">
+                                                {(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft' ? 
+                                                    'Truyện ở chế độ nháp sẽ được ẩn khỏi trang chủ và các danh sách công khai' :
+                                                    'Truyện ở chế độ công khai sẽ hiển thị bình thường cho người dùng'
+                                                }
                                             </div>
-                                        </label>
-                                    </div>
-                                    <div className="mode-description">
-                                        {(editingNovel ? editingNovel.mode : newNovel.mode) === 'draft' ? 
-                                            'Truyện ở chế độ nháp sẽ được ẩn khỏi trang chủ và các danh sách công khai' :
-                                            'Truyện ở chế độ công khai sẽ hiển thị bình thường cho người dùng'
-                                        }
+                                        </div>
+
+                                        {/* Right Half - TTS Settings */}
+                                        <div className="settings-half">
+                                            <h4 className="mode-section-title">Giọng đọc AI</h4>
+                                            <div className="tts-selection-container">
+                                                <label className={`tts-option ${(editingNovel ? editingNovel.ttsEnabled : newNovel.ttsEnabled) ? 'selected' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="ttsEnabled"
+                                                        value="true"
+                                                        checked={!!(editingNovel ? editingNovel.ttsEnabled : newNovel.ttsEnabled)}
+                                                        onChange={(e) => handleInputChange({ 
+                                                            target: { 
+                                                                name: 'ttsEnabled', 
+                                                                value: true 
+                                                            } 
+                                                        })}
+                                                    />
+                                                    <div className="tts-box">
+                                                        <div className="tts-icon">🔊</div>
+                                                        <div className="tts-label">Bật</div>
+                                                    </div>
+                                                </label>
+                                                <label className={`tts-option ${!(editingNovel ? editingNovel.ttsEnabled : newNovel.ttsEnabled) ? 'selected' : ''}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="ttsEnabled"
+                                                        value="false"
+                                                        checked={!(editingNovel ? editingNovel.ttsEnabled : newNovel.ttsEnabled)}
+                                                        onChange={(e) => handleInputChange({ 
+                                                            target: { 
+                                                                name: 'ttsEnabled', 
+                                                                value: false 
+                                                            } 
+                                                        })}
+                                                    />
+                                                    <div className="tts-box">
+                                                        <div className="tts-icon">🔇</div>
+                                                        <div className="tts-label">Tắt</div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                            <div className="tts-description">
+                                                {(editingNovel ? editingNovel.ttsEnabled : newNovel.ttsEnabled) ? 
+                                                    'Giọng đọc AI được bật cho truyện này, người dùng có thể nghe đọc chương' :
+                                                    'Giọng đọc AI bị tắt, tính năng đọc truyện sẽ không hiển thị'
+                                                }
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -2531,7 +2596,10 @@ const AdminDashboard = () => {
                                 <option value="balance">Số dư nhiều nhất</option>
                                 <option value="paid">Có nội dung trả phí</option>
                                 {(user?.role === 'admin' || user?.role === 'moderator') && (
-                                    <option value="draft">Chế độ nháp</option>
+                                    <>
+                                        <option value="draft">Chế độ nháp</option>
+                                        <option value="tts">Có giọng đọc AI</option>
+                                    </>
                                 )}
                             </select>
                         </div>

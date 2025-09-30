@@ -223,40 +223,95 @@
   flex-shrink: 0;
 }
 
-.edit-chapter-btn,
-.delete-chapter-btn {
-  padding: 6px 12px;
+/* Chapter Admin Controls */
+.admin-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-controls button {
+  padding: 5px 10px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: white;
+  line-height: 1.4;
 }
 
+.admin-controls button svg {
+  font-size: 13px;
+}
+
+.admin-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Edit Button */
 .edit-chapter-btn {
   background-color: #3498db;
-  color: white;
   border-color: #2980b9;
 }
 
 .edit-chapter-btn:hover:not(:disabled) {
   background-color: #2980b9;
+  transform: translateY(-1px);
 }
 
+/* Delete Button */
 .delete-chapter-btn {
   background-color: #e74c3c;
-  color: white;
   border-color: #c0392b;
 }
 
 .delete-chapter-btn:hover:not(:disabled) {
   background-color: #c0392b;
+  transform: translateY(-1px);
 }
 
+/* Save Button */
+.save-changes-btn {
+  background-color: #2ecc71;
+  border-color: #27ae60;
+}
+
+.save-changes-btn:hover:not(:disabled) {
+  background-color: #27ae60;
+  transform: translateY(-1px);
+}
+
+/* Cancel Button */
+.cancel-edit-btn {
+  background-color: #95a5a6;
+  border-color: #7f8c8d;
+}
+
+.cancel-edit-btn:hover:not(:disabled) {
+  background-color: #7f8c8d;
+  transform: translateY(-1px);
+}
+
+/* Loading Spinner in Save Button */
+.save-changes-btn .loading-spinner {
+  margin-right: 6px;
+}
+
+/* Dark Mode Styles */
 :root.dark-mode .edit-chapter-btn {
   background-color: #2980b9;
   border-color: #2471a3;
+}
+
+:root.dark-mode .edit-chapter-btn:hover:not(:disabled) {
+  background-color: #2471a3;
 }
 
 :root.dark-mode .delete-chapter-btn {
@@ -264,12 +319,26 @@
   border-color: #a93226;
 }
 
-:root.dark-mode .edit-chapter-btn:hover:not(:disabled) {
-  background-color: #2471a3;
-}
-
 :root.dark-mode .delete-chapter-btn:hover:not(:disabled) {
   background-color: #a93226;
+}
+
+:root.dark-mode .save-changes-btn {
+  background-color: #27ae60;
+  border-color: #219a52;
+}
+
+:root.dark-mode .save-changes-btn:hover:not(:disabled) {
+  background-color: #219a52;
+}
+
+:root.dark-mode .cancel-edit-btn {
+  background-color: #7f8c8d;
+  border-color: #6c7a7a;
+}
+
+:root.dark-mode .cancel-edit-btn:hover:not(:disabled) {
+  background-color: #6c7a7a;
 }
 
 :root.dark-mode .chapter-header {

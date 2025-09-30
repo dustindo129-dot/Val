@@ -67,15 +67,26 @@ const ChapterContent = React.memo(({
     const [isMuted, setIsMuted] = useState(false);
     const [ttsRate, setTtsRate] = useState(1.0);
     const [ttsVolume, setTtsVolume] = useState(1.0);
+    const [ttsVoice, setTtsVoice] = useState('nu'); // Selected voice
     const [isGenerating, setIsGenerating] = useState(false);
     const [audioUrl, setAudioUrl] = useState(null);
     const audioRef = useRef(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [ttsError, setTtsError] = useState('');
+    const [ttsProgress, setTtsProgress] = useState(0); // Progress percentage 0-100
+    const [ttsProgressMessage, setTtsProgressMessage] = useState(''); // Progress message
     
     // Track active TTS request to prevent multiple simultaneous requests
     const activeTTSRequest = useRef(null);
+    // Track if a play operation is in progress to prevent race conditions
+    const playOperationInProgress = useRef(false);
+    
+    // Available Vietnamese voices (Standard quality only)
+    const availableVoices = [
+        { value: 'nu', label: 'Nữ', gender: 'Nữ', googleVoice: 'vi-VN-Standard-A' },
+        { value: 'nam', label: 'Nam', gender: 'Nam', googleVoice: 'vi-VN-Standard-D' },
+    ];
 
     // Auto-save state management
     const [autoSaveStatus, setAutoSaveStatus] = useState('');
@@ -118,7 +129,7 @@ const ChapterContent = React.memo(({
         return text;
     }, []);
 
-    // Generate speech using Google Cloud TTS
+    // Generate speech using Google Cloud TTS with progress tracking
     const generateTTS = useCallback(async (text) => {
         // Check if there's already an active request
         if (activeTTSRequest.current) {
@@ -128,6 +139,8 @@ const ChapterContent = React.memo(({
         try {
             setIsGenerating(true);
             setTtsError('');
+            setTtsProgress(0);
+            setTtsProgressMessage('Đang chuẩn bị...');
 
             // Check if user is authenticated
             if (!isAuthenticated || !user) {
@@ -139,7 +152,17 @@ const ChapterContent = React.memo(({
                 throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
             }
 
-            // Generate TTS request with timeout
+            // Calculate estimated chunks for progress tracking
+            const textBytes = new TextEncoder().encode(text).length;
+            const estimatedChunks = Math.max(1, Math.ceil(textBytes / 4500));
+            
+            // Update initial progress
+            setTtsProgress(5);
+            setTtsProgressMessage('Đang gửi yêu cầu...');
+
+            // Generate TTS request with timeout (increased for longer content)
+            const timeoutDuration = Math.max(30000, estimatedChunks * 5000); // 5s per chunk minimum
+            
             // Use relative URL to leverage Vite proxy in development
             const apiUrl = import.meta.env.DEV ? '/api/tts/generate' : `${config.backendUrl}/api/tts/generate`;
 
@@ -147,7 +170,17 @@ const ChapterContent = React.memo(({
             const controller = new AbortController();
             const timeoutId = setTimeout(() => {
                 controller.abort('timeout');
-            }, 30000);
+            }, timeoutDuration);
+            
+            // Simulate progress updates during generation
+            const progressInterval = setInterval(() => {
+                setTtsProgress(prev => {
+                    if (prev >= 90) return prev; // Cap at 90% until we get response
+                    return Math.min(90, prev + (90 / estimatedChunks));
+                });
+                setTtsProgressMessage(`Đang tạo âm thanh... (${estimatedChunks > 1 ? 'Xử lý từng đoạn' : 'Đang xử lý'})`);
+            }, 1000);
+            
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -158,7 +191,7 @@ const ChapterContent = React.memo(({
                 body: JSON.stringify({
                     text: text,
                     languageCode: 'vi-VN',
-                    voiceName: 'vi-VN-Neural2-A', // Premium AI Vietnamese female voice
+                    voiceName: ttsVoice, // Use selected voice
                     audioConfig: {
                         audioEncoding: 'MP3',
                         speakingRate: ttsRate,
@@ -170,12 +203,17 @@ const ChapterContent = React.memo(({
                         novelTitle: chapter.novel?.title || '',
                         moduleTitle: chapter.module?.title || '',
                         chapterTitle: chapter.title || '',
-                        chapterId: chapter._id || ''
+                        chapterId: chapter._id || '',
+                        voiceName: ttsVoice // Include voice name for cache differentiation
                     }
                 })
             });
             
+            clearInterval(progressInterval);
             clearTimeout(timeoutId);
+            
+            setTtsProgress(95);
+            setTtsProgressMessage('Đang hoàn tất...');
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -185,18 +223,30 @@ const ChapterContent = React.memo(({
             const data = await response.json();
         
         if (data.success && data.audioUrl) {
+            setTtsProgress(100);
+            setTtsProgressMessage('Hoàn thành!');
+            
+            // Clear progress after a brief delay
+            setTimeout(() => {
+                setTtsProgress(0);
+                setTtsProgressMessage('');
+            }, 1000);
+            
             setAudioUrl(data.audioUrl);
             return data.audioUrl;
         } else {
             throw new Error(data.message || 'No audio URL received from server');
         }
         } catch (fetchError) {
-            clearTimeout(timeoutId);
             console.error('❌ Fetch error:', fetchError);
+            
+            // Reset progress on error
+            setTtsProgress(0);
+            setTtsProgressMessage('');
             
             if (fetchError.name === 'AbortError') {
                 if (fetchError.message === 'timeout') {
-                    setTtsError('Yêu cầu TTS quá lâu (>30s). Vui lòng thử lại.');
+                    setTtsError('Yêu cầu TTS quá lâu. Vui lòng thử lại.');
                 } else {
                     setTtsError('Yêu cầu TTS đã bị hủy. Vui lòng thử lại.');
                 }
@@ -211,14 +261,24 @@ const ChapterContent = React.memo(({
             activeTTSRequest.current = null;
             setIsGenerating(false);
         }
-    }, [ttsRate, isAuthenticated, user]);
+    }, [ttsRate, ttsVoice, isAuthenticated, user, chapter]);
 
     // Audio playback control functions
     const handlePlayTTS = useCallback(async () => {
+        // Prevent multiple simultaneous play operations
+        if (playOperationInProgress.current) {
+            return;
+        }
+        
+        playOperationInProgress.current = true;
+        
         try {
             if (isPaused && audioRef.current) {
                 // Resume paused audio
-                audioRef.current.play();
+                await audioRef.current.play().catch(err => {
+                    console.error('Error resuming audio:', err);
+                    setTtsError('Không thể tiếp tục phát âm thanh. Vui lòng thử lại.');
+                });
                 setIsPaused(false);
                 setIsPlaying(true);
                 return;
@@ -227,7 +287,10 @@ const ChapterContent = React.memo(({
             if (audioUrl && audioRef.current) {
                 // Play existing audio
                 audioRef.current.currentTime = 0;
-                audioRef.current.play();
+                await audioRef.current.play().catch(err => {
+                    console.error('Error playing audio:', err);
+                    setTtsError('Không thể phát âm thanh. Vui lòng thử lại.');
+                });
                 setIsPlaying(true);
                 return;
             }
@@ -265,7 +328,8 @@ const ChapterContent = React.memo(({
             
             audioRef.current.addEventListener('error', handleLoadError, { once: true });
             
-            audioRef.current.play().catch(playError => {
+            await audioRef.current.play().catch(playError => {
+                console.error('Error playing generated audio:', playError);
                 setTtsError('Không thể phát âm thanh. Vui lòng thử lại.');
             });
             setIsPlaying(true);
@@ -274,6 +338,9 @@ const ChapterContent = React.memo(({
         }
         } catch (error) {
             setTtsError('Không thể phát âm thanh. Vui lòng thử lại.');
+        } finally {
+            // Always reset the flag when done
+            playOperationInProgress.current = false;
         }
     }, [isPaused, audioUrl, chapter.content, extractTextFromHTML, generateTTS]);
 
@@ -321,6 +388,24 @@ const ChapterContent = React.memo(({
             audioRef.current.currentTime = time;
             setCurrentTime(time);
         }
+    }, []);
+
+    const handleVoiceChange = useCallback((newVoice) => {
+        // Stop current playback if playing
+        if (audioRef.current && !audioRef.current.paused) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        
+        // Clear audio URL and reset playback state
+        setAudioUrl(null);
+        setIsPlaying(false);
+        setIsPaused(false);
+        setCurrentTime(0);
+        setDuration(0);
+        
+        // Update voice selection
+        setTtsVoice(newVoice);
     }, []);
 
     // Auto-save key for localStorage
@@ -500,7 +585,7 @@ const ChapterContent = React.memo(({
         }, 3000); // 3 second debounce
     }, [onWordCountUpdate]);
 
-    // Initialize audio element and event handlers
+    // Initialize audio element and event handlers (runs once)
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
@@ -569,11 +654,6 @@ const ChapterContent = React.memo(({
         audio.addEventListener('play', handlePlay);
         audio.addEventListener('pause', handlePause);
 
-        // Set initial properties - but don't set any source
-        audio.volume = ttsVolume;
-        audio.muted = isMuted;
-        audio.playbackRate = ttsRate;
-        
         // Ensure no src is set initially
         if (audio.src && audio.src !== '') {
             audio.removeAttribute('src');
@@ -581,6 +661,7 @@ const ChapterContent = React.memo(({
         }
 
         return () => {
+            // Only remove listeners in cleanup
             audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
             audio.removeEventListener('timeupdate', handleTimeUpdate);
             audio.removeEventListener('ended', handleEnded);
@@ -588,13 +669,27 @@ const ChapterContent = React.memo(({
             audio.removeEventListener('play', handlePlay);
             audio.removeEventListener('pause', handlePause);
         };
+    }, []); // Run only once on mount
+
+    // Update audio properties when they change (separate effect)
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        // Update properties without interrupting playback
+        audio.volume = ttsVolume;
+        audio.muted = isMuted;
+        audio.playbackRate = ttsRate;
     }, [ttsVolume, isMuted, ttsRate]);
 
     // Cleanup audio when component unmounts or chapter changes
     useEffect(() => {
         return () => {
             if (audioRef.current) {
-                audioRef.current.pause();
+                // Pause audio safely without triggering errors
+                if (!audioRef.current.paused) {
+                    audioRef.current.pause();
+                }
                 audioRef.current.src = '';
             }
             setIsPlaying(false);
@@ -2735,8 +2830,8 @@ const ChapterContent = React.memo(({
                     {/* Audio element for Google Cloud TTS - no src initially */}
                     <audio ref={audioRef} preload="none" style={{display: 'none'}} />
                     
-                    {/* Google Cloud TTS Controls - DISABLED */}
-                    {false && ttsSupported && !isEditing && !isAuthenticated && (
+                    {/* Google Cloud TTS Controls - Check if TTS is enabled for this novel */}
+                    {chapter.novel?.ttsEnabled && ttsSupported && !isEditing && !isAuthenticated && (
                         <div className="tts-controls">
                             <div className="tts-auth-required" style={{
                                 padding: '15px',
@@ -2751,7 +2846,7 @@ const ChapterContent = React.memo(({
                         </div>
                     )}
                     
-                    {false && ttsSupported && !isEditing && isAuthenticated && (
+                    {chapter.novel?.ttsEnabled && ttsSupported && !isEditing && isAuthenticated && (
                         <div className="tts-controls">
                             {ttsError && (
                                 <div className="tts-error">
@@ -2787,6 +2882,24 @@ const ChapterContent = React.memo(({
                                 >
                                     <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} />
                                 </button>
+                                
+                                {/* Progress bar for TTS generation */}
+                                {isGenerating && ttsProgress > 0 && (
+                                    <div className="tts-progress-container">
+                                        <div className="tts-progress-info">
+                                            <span className="tts-progress-message">{ttsProgressMessage}</span>
+                                            <span className="tts-progress-percentage">{Math.round(ttsProgress)}%</span>
+                                        </div>
+                                        <div className="tts-progress-bar-wrapper">
+                                            <div 
+                                                className="tts-progress-bar-fill" 
+                                                style={{ width: `${ttsProgress}%` }}
+                                            >
+                                                <div className="tts-progress-bar-shimmer"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             
                             {/* Progress bar */}
@@ -2806,6 +2919,24 @@ const ChapterContent = React.memo(({
                             )}
                             
                             <div className="tts-controls-settings">
+                                <div className="tts-voice-control">
+                                    <label htmlFor="tts-voice">Giọng đọc:</label>
+                                    <select
+                                        id="tts-voice"
+                                        value={ttsVoice}
+                                        onChange={(e) => handleVoiceChange(e.target.value)}
+                                        className="tts-voice-select"
+                                        disabled={isGenerating}
+                                        title="Thay đổi giọng đọc (sẽ dừng phát hiện tại)"
+                                    >
+                                        {availableVoices.map((voice) => (
+                                            <option key={voice.value} value={voice.value}>
+                                                {voice.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
                                 <div className="tts-rate-control">
                                     <label htmlFor="tts-rate">Tốc độ:</label>
                                     <input

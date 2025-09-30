@@ -101,26 +101,59 @@
   font-size: 0.8rem;
 }
 
-/* Delete chapter button styles */
-.delete-chapter-btn {
-  background: #e74c3c;
-  color: white;
-  border: none;
+/* Module Chapter Action Buttons */
+.module-chapter-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.module-chapter-btn {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  margin: 0 4px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.delete-chapter-btn:hover {
+.module-chapter-btn svg {
+  font-size: 12px;
+}
+
+.module-chapter-btn--delete {
+  background: #e74c3c;
+  color: white;
+  border-color: #c0392b;
+}
+
+.module-chapter-btn--delete:hover:not(:disabled) {
   background: #c0392b;
+  transform: translateY(-1px);
 }
 
-.delete-chapter-btn:active {
-  transform: translateY(1px);
+.module-chapter-btn--delete:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.module-chapter-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Dark Mode Support */
+:root.dark-mode .module-chapter-btn--delete {
+  background: #c0392b;
+  border-color: #a93226;
+}
+
+:root.dark-mode .module-chapter-btn--delete:hover:not(:disabled) {
+  background: #a93226;
 }
 
 /* Make chapter items appear faded when they're part of a paid module */

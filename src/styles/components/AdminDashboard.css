@@ -2833,7 +2833,27 @@
   }
 }
 
-/* Novel Mode Section Styling */
+/* Novel Settings Section (Mode + TTS) Styling */
+.novel-settings-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.settings-row {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.settings-half {
+  flex: 1;
+  min-width: 0; /* Allows flex items to shrink */
+}
+
+/* Legacy support for novel-mode-section */
 .novel-mode-section {
   margin: 1.5rem 0;
   padding: 1rem;
@@ -2849,24 +2869,28 @@
   color: var(--text-color, #2c3e50);
 }
 
-.mode-selection-container {
+.mode-selection-container,
+.tts-selection-container {
   display: flex;
   gap: 1rem;
   margin-bottom: 0.75rem;
 }
 
-.mode-option {
+.mode-option,
+.tts-option {
   cursor: pointer;
   transition: all 0.2s ease;
   flex: 1;
   max-width: 200px;
 }
 
-.mode-option input[type="radio"] {
+.mode-option input[type="radio"],
+.tts-option input[type="radio"] {
   display: none;
 }
 
-.mode-box {
+.mode-box,
+.tts-box {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2890,12 +2914,14 @@
   box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
 }
 
-.mode-icon {
+.mode-icon,
+.tts-icon {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
 }
 
-.mode-label {
+.mode-label,
+.tts-label {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-color, #2c3e50);
@@ -2906,7 +2932,8 @@
   color: var(--primary-color, #3498db);
 }
 
-.mode-description {
+.mode-description,
+.tts-description {
   font-size: 0.85rem;
   color: var(--text-secondary, #6c757d);
   font-style: italic;
@@ -2916,7 +2943,8 @@
   border-left: 3px solid var(--primary-color, #3498db);
 }
 
-/* Dark mode support for novel mode section */
+/* Dark mode support for novel settings section */
+:root.dark-mode .novel-settings-section,
 :root.dark-mode .novel-mode-section {
   background-color: #2d3748;
   border-color: #4a5568;
@@ -2926,63 +2954,80 @@
   color: #e2e8f0;
 }
 
-:root.dark-mode .mode-box {
+:root.dark-mode .mode-box,
+:root.dark-mode .tts-box {
   background-color: #1a202c;
   border-color: #4a5568;
 }
 
-:root.dark-mode .mode-option:hover .mode-box {
+:root.dark-mode .mode-option:hover .mode-box,
+:root.dark-mode .tts-option:hover .tts-box {
   border-color: #63b3ed;
   box-shadow: 0 2px 4px rgba(99, 179, 237, 0.1);
 }
 
-:root.dark-mode .mode-option.selected .mode-box {
+:root.dark-mode .mode-option.selected .mode-box,
+:root.dark-mode .tts-option.selected .tts-box {
   border-color: #63b3ed;
   background-color: rgba(99, 179, 237, 0.1);
   box-shadow: 0 2px 8px rgba(99, 179, 237, 0.2);
 }
 
-:root.dark-mode .mode-label {
+:root.dark-mode .mode-label,
+:root.dark-mode .tts-label {
   color: #e2e8f0;
 }
 
-:root.dark-mode .mode-option.selected .mode-label {
+:root.dark-mode .mode-option.selected .mode-label,
+:root.dark-mode .tts-option.selected .tts-label {
   color: #63b3ed;
 }
 
-:root.dark-mode .mode-description {
+:root.dark-mode .mode-description,
+:root.dark-mode .tts-description {
   background-color: #2d3748;
   color: #a0aec0;
   border-left-color: #63b3ed;
 }
 
-/* Responsive adjustments for mode section */
+/* Responsive adjustments for settings section */
 @media (max-width: 768px) {
-  .mode-selection-container {
+  .settings-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .mode-selection-container,
+  .tts-selection-container {
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  .mode-option {
+  .mode-option,
+  .tts-option {
     max-width: none;
   }
 
-  .mode-box {
+  .mode-box,
+  .tts-box {
     min-height: 60px;
     padding: 0.75rem;
   }
 
-  .mode-icon {
+  .mode-icon,
+  .tts-icon {
     font-size: 1.25rem;
     margin-bottom: 0.25rem;
   }
 
-  .mode-label {
+  .mode-label,
+  .tts-label {
     font-size: 0.85rem;
   }
 }
 
 @media (max-width: 480px) {
+  .novel-settings-section,
   .novel-mode-section {
     padding: 0.75rem;
     margin: 1rem 0;
@@ -2992,20 +3037,24 @@
     font-size: 1rem;
   }
 
-  .mode-box {
+  .mode-box,
+  .tts-box {
     min-height: 50px;
     padding: 0.5rem;
   }
 
-  .mode-icon {
+  .mode-icon,
+  .tts-icon {
     font-size: 1.1rem;
   }
 
-  .mode-label {
+  .mode-label,
+  .tts-label {
     font-size: 0.8rem;
   }
 
-  .mode-description {
+  .mode-description,
+  .tts-description {
     font-size: 0.8rem;
     padding: 0.4rem;
   }

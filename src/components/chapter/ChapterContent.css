@@ -767,7 +767,6 @@
     border: 1px solid var(--border-color, #e9ecef);
     border-radius: 8px;
     padding: 16px;
-    margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -776,6 +775,128 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+/* TTS Progress Bar Styles */
+.tts-progress-container {
+    flex: 1 1 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-radius: 8px;
+    border: 1px solid #81c784;
+    margin-top: 12px;
+}
+
+:root.dark-mode .tts-progress-container {
+    background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+    border-color: #4caf50;
+}
+
+.tts-progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.tts-progress-message {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2e7d32;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+:root.dark-mode .tts-progress-message {
+    color: #a5d6a7;
+}
+
+.tts-progress-message::before {
+    content: '🎵';
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+.tts-progress-percentage {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1b5e20;
+    min-width: 45px;
+    text-align: right;
+}
+
+:root.dark-mode .tts-progress-percentage {
+    color: #81c784;
+}
+
+.tts-progress-bar-wrapper {
+    height: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+:root.dark-mode .tts-progress-bar-wrapper {
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tts-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, 
+        #4CAF50 0%, 
+        #66bb6a 50%, 
+        #4CAF50 100%);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.5);
+}
+
+:root.dark-mode .tts-progress-bar-fill {
+    background: linear-gradient(90deg, 
+        #66bb6a 0%, 
+        #81c784 50%, 
+        #66bb6a 100%);
+    box-shadow: 0 2px 8px rgba(129, 199, 132, 0.6);
+}
+
+.tts-progress-bar-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+:root.dark-mode .tts-progress-bar-shimmer {
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 100%
+    );
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 200%; }
 }
 
 .tts-btn {
@@ -853,8 +974,76 @@
     display: flex;
     align-items: center;
     gap: 20px;
-    padding: 12px 0;
-    border-top: 1px solid var(--border-light, #dee2e6);
+    padding: 10px 0;
+    flex-wrap: wrap;
+}
+
+/* Voice Selection Dropdown */
+.tts-voice-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 250px;
+}
+
+.tts-voice-control label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary, #212529);
+    white-space: nowrap;
+}
+
+:root.dark-mode .tts-voice-control label {
+    color: var(--text-primary-dark, #e0e0e0);
+}
+
+.tts-voice-select {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color, #ced4da);
+    border-radius: 4px;
+    background: var(--input-bg, white);
+    color: var(--text-primary, #212529);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.tts-voice-select:hover:not(:disabled) {
+    border-color: var(--primary-color, #007bff);
+}
+
+.tts-voice-select:focus {
+    border-color: var(--primary-color, #007bff);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.tts-voice-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--disabled-bg, #e9ecef);
+}
+
+:root.dark-mode .tts-voice-select {
+    background: #2a2a2a;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+:root.dark-mode .tts-voice-select:hover:not(:disabled) {
+    border-color: #5a9fd4;
+}
+
+:root.dark-mode .tts-voice-select:focus {
+    border-color: #5a9fd4;
+    box-shadow: 0 0 0 3px rgba(90, 159, 212, 0.2);
+}
+
+:root.dark-mode .tts-voice-select:disabled {
+    background: #1a1a1a;
 }
 
 .tts-rate-control {
@@ -1072,7 +1261,7 @@
     padding: 12px 0;
     border-top: 1px solid var(--border-light, #dee2e6);
     border-bottom: 1px solid var(--border-light, #dee2e6);
-    margin: 12px 0;
+    margin: 10px 0;
 }
 
 .tts-progress-slider {

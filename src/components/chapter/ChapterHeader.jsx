@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faSave, faHome } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faSave, faHome, faTrash, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { createUniqueSlug, generateNovelUrl } from '../../utils/slugUtils';
 import LoadingSpinner from '../LoadingSpinner';
 
@@ -51,12 +51,14 @@ const ChapterHeader = ({
                     className="save-changes-btn" 
                     onClick={handleEditChapter}
                     disabled={isSaving}
+                    title="Lưu thay đổi"
                   >
                     {isSaving ? (
                       <LoadingSpinner inline text="Đang lưu..." />
                     ) : (
                       <>
-                        <FontAwesomeIcon icon={faSave} /> Lưu thay đổi
+                        <FontAwesomeIcon icon={faSave} />
+                        <span>Lưu thay đổi</span>
                       </>
                     )}
                   </button>
@@ -69,22 +71,31 @@ const ChapterHeader = ({
                       setIsEditing(false);
                     }}
                     disabled={isSaving}
+                    title="Hủy bỏ thay đổi"
                   >
-                    Hủy bỏ thay đổi
+                    <FontAwesomeIcon icon={faTimes} />
+                    <span>Hủy bỏ</span>
                   </button>
                 </>
               ) : (
                 <button 
                   className="edit-chapter-btn" 
                   onClick={() => setIsEditing(true)}
+                  title="Chỉnh sửa nội dung chương"
                 >
-                  <FontAwesomeIcon icon={faEdit} /> Chỉnh sửa chương
+                  <FontAwesomeIcon icon={faEdit} /> 
+                  <span>Chỉnh sửa chương</span>
                 </button>
               )}
               
               {canDelete && !isEditing && (
-                <button className="delete-chapter-btn" onClick={handleDeleteChapter}>
-                  Xóa chương
+                <button 
+                  className="delete-chapter-btn" 
+                  onClick={handleDeleteChapter}
+                  title="Xóa chương này"
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                  <span>Xóa chương</span>
                 </button>
               )}
             </div>
