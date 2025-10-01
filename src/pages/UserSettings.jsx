@@ -469,7 +469,7 @@ const UserSettings = () => {
     try {
       setIsLoading(true);
       await axios.put(
-        `/api/users/number/${userNumber}/password`,
+        `${config.backendUrl}/api/users/number/${userNumber}/password`,
         {
           currentPassword: passwordCurrentPassword,
           newPassword
