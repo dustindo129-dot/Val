@@ -81,6 +81,8 @@ const ChapterContent = React.memo(({
     const activeTTSRequest = useRef(null);
     // Track if a play operation is in progress to prevent race conditions
     const playOperationInProgress = useRef(false);
+    // Track if we're intentionally clearing audio (e.g., during voice change)
+    const isIntentionalClear = useRef(false);
     
     // Available Vietnamese voices (Standard quality only)
     const availableVoices = [
@@ -216,7 +218,7 @@ const ChapterContent = React.memo(({
                     voiceName: ttsVoice, // Use selected voice
                     audioConfig: {
                         audioEncoding: 'MP3',
-                        speakingRate: ttsRate,
+                        speakingRate: 1.0, // Always generate at 1x speed, playback rate is controlled client-side
                         pitch: 0.0,
                         volumeGainDb: 0.0
                     },
@@ -283,7 +285,7 @@ const ChapterContent = React.memo(({
             activeTTSRequest.current = null;
             setIsGenerating(false);
         }
-    }, [ttsRate, ttsVoice, isAuthenticated, user, chapter]);
+    }, [ttsVoice, isAuthenticated, user, chapter]);
 
     // Audio playback control functions
     const handlePlayTTS = useCallback(async () => {
@@ -336,19 +338,20 @@ const ChapterContent = React.memo(({
                 return;
             }
             
+            // Set flag to prevent error during intentional reset
+            isIntentionalClear.current = true;
+            
             // Clear any previous src to prevent issues
             audioRef.current.src = '';
             audioRef.current.load(); // Reset the audio element
             
+            // Reset flag after a brief delay
+            setTimeout(() => {
+                isIntentionalClear.current = false;
+            }, 50);
+            
             // Set new src
             audioRef.current.src = url;
-            
-            // Add load event listener to track loading success
-            const handleLoadError = () => {
-                setTtsError('Không thể tải file âm thanh. Server có thể chưa chạy.');
-            };
-            
-            audioRef.current.addEventListener('error', handleLoadError, { once: true });
             
             await audioRef.current.play().catch(playError => {
                 console.error('Error playing generated audio:', playError);
@@ -413,10 +416,16 @@ const ChapterContent = React.memo(({
     }, []);
 
     const handleVoiceChange = useCallback((newVoice) => {
-        // Stop current playback if playing
-        if (audioRef.current && !audioRef.current.paused) {
+        // Set flag to prevent error messages during intentional clear
+        isIntentionalClear.current = true;
+        
+        // Stop current playback completely
+        if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
+            // Clear the audio source to fully stop playback
+            audioRef.current.src = '';
+            audioRef.current.load();
         }
         
         // Clear audio URL and reset playback state
@@ -425,9 +434,15 @@ const ChapterContent = React.memo(({
         setIsPaused(false);
         setCurrentTime(0);
         setDuration(0);
+        setTtsError(''); // Clear any previous errors
         
         // Update voice selection
         setTtsVoice(newVoice);
+        
+        // Reset flag after a brief delay to allow load() to complete
+        setTimeout(() => {
+            isIntentionalClear.current = false;
+        }, 100);
     }, []);
 
     // Auto-save key for localStorage
@@ -627,6 +642,11 @@ const ChapterContent = React.memo(({
         };
 
         const handleError = (e) => {
+            // Skip errors during intentional clearing (e.g., voice change)
+            if (isIntentionalClear.current) {
+                return;
+            }
+            
             // Only show error if audio has a valid source (not empty or default)
             if (!audio.src || audio.src === window.location.href || audio.src === '') {
                 return;

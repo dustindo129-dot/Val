@@ -40,16 +40,7 @@
   transition: background-color 0.3s ease;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .chapter-content-container {
-      padding: 0.5rem;
-  }
-
-  .chapter-content {
-      font-size: calc(var(--content-font-size, 1rem) * 0.95);
-  }
-}
+/* Responsive adjustments - consolidated at end of file */
 
 .chapter-balance-input {
   margin-top: 10px;
@@ -246,27 +237,6 @@
   color: #ecf0f1;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .chapter-controls-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .control-column {
-    width: 100%;
-  }
-
-  .autosave-column {
-    justify-content: flex-start;
-    min-height: auto;
-  }
-
-  .chapter-controls {
-    margin-top: 15px;
-    padding: 12px;
-  }
-}
 
 /* Staff Section Styles */
 .chapter-staff-section {
@@ -361,18 +331,6 @@
   color: #fff;
 }
 
-/* Responsive adjustments for staff section */
-@media (max-width: 768px) {
-  .chapter-staff-controls {
-      grid-template-columns: 1fr;
-      gap: 10px;
-  }
-
-  .chapter-staff-section {
-      margin-top: 15px;
-      padding: 12px;
-  }
-}
 
 .auto-save-message {
   color: #28a745;
@@ -673,45 +631,6 @@
   font-weight: 600;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .chapter-content-container {
-      padding: 0.5rem;
-  }
-
-  .chapter-content {
-      font-size: calc(var(--content-font-size, 1rem) * 0.95);
-  }
-
-  .chapter-staff-controls {
-      grid-template-columns: 1fr;
-      gap: 10px;
-  }
-
-  .chapter-staff-section {
-      margin-top: 15px;
-      padding: 12px;
-  }
-
-  .chapter-controls {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 15px;
-  }
-
-  .chapter-controls .mode-dropdown {
-      width: 100%;
-      margin-right: 0;
-  }
-
-  .chapter-controls .chapter-balance-input {
-      width: 100%;
-  }
-
-  .chapter-controls .chapter-balance-input input {
-      width: 100%;
-  }
-}
 
 @keyframes highlight-fade {
   0% {
@@ -1158,57 +1077,6 @@
     color: var(--dark-text-muted, #a0aec0);
 }
 
-/* Responsive design for TTS */
-@media (max-width: 768px) {
-    .tts-controls {
-        padding: 12px;
-        margin-bottom: 16px;
-    }
-    
-    .tts-controls-main {
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-    
-    .tts-btn {
-        padding: 8px 12px;
-        font-size: 13px;
-        min-height: 36px;
-    }
-    
-    .tts-btn span {
-        display: none;
-    }
-    
-    .tts-controls-settings {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    
-    .tts-rate-control {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .tts-rate-slider {
-        flex: 1;
-        max-width: 150px;
-    }
-}
-
-@media (max-width: 480px) {
-    .tts-controls-main {
-        justify-content: center;
-    }
-    
-    .tts-rate-control {
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-    }
-}
 
 /* Google Cloud TTS Specific Styles */
 .tts-error {
@@ -1498,31 +1366,6 @@
   color: var(--primary-hover);
 }
 
-/* Mobile responsive for fullscreen mode */
-@media (max-width: 768px) {
-  .fullscreen-chapter-container {
-    min-height: calc(100vh - 20px);
-    padding: 20px 30px;
-  }
-  
-  .fullscreen-module-title {
-    font-size: 20px;
-  }
-  
-  .fullscreen-chapter-title {
-    font-size: 18px;
-  }
-  
-  .fullscreen-meta-line {
-    font-size: 13px;
-  }
-  
-  .fullscreen-chapter-content .chapter-content {
-    font-size: 16px;
-    line-height: 1.7;
-  }
-}
-
 :root.dark-mode .tts-time {
     color: var(--dark-text, #e2e8f0);
 }
@@ -1536,8 +1379,107 @@
     background: var(--dark-slider-bg, #4a5568);
 }
 
-/* Responsive adjustments for Google Cloud TTS */
+
+/* ============================================
+   CONSOLIDATED RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and below (768px) */
 @media (max-width: 768px) {
+    /* Chapter Content */
+    .chapter-content-container {
+        padding: 0.5rem;
+    }
+
+    .chapter-content {
+        font-size: calc(var(--content-font-size, 1rem) * 0.95);
+    }
+
+    /* Chapter Controls */
+    .chapter-controls-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .control-column {
+        width: 100%;
+    }
+
+    .autosave-column {
+        justify-content: flex-start;
+        min-height: auto;
+    }
+
+    .chapter-controls {
+        margin-top: 15px;
+        padding: 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .chapter-controls .mode-dropdown {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .chapter-controls .chapter-balance-input {
+        width: 100%;
+    }
+
+    .chapter-controls .chapter-balance-input input {
+        width: 100%;
+    }
+
+    /* Staff Section */
+    .chapter-staff-controls {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .chapter-staff-section {
+        margin-top: 15px;
+        padding: 12px;
+    }
+
+    /* TTS Controls */
+    .tts-controls {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .tts-controls-main {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .tts-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-height: 36px;
+    }
+    
+    .tts-btn span {
+        display: none;
+    }
+    
+    .tts-controls-settings {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+    
+    .tts-rate-control {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .tts-rate-slider {
+        flex: 1;
+        max-width: 150px;
+    }
+
     .tts-progress-container {
         flex-direction: column;
         gap: 8px;
@@ -1545,12 +1487,6 @@
     
     .tts-progress-slider {
         width: 100%;
-    }
-    
-    .tts-controls-settings {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
     }
     
     .tts-volume-control {
@@ -1561,9 +1497,43 @@
         flex: 1;
         max-width: 150px;
     }
+
+    /* Fullscreen Mode */
+    .fullscreen-chapter-container {
+        min-height: calc(100vh - 20px);
+        padding: 20px 30px;
+    }
+    
+    .fullscreen-module-title {
+        font-size: 20px;
+    }
+    
+    .fullscreen-chapter-title {
+        font-size: 18px;
+    }
+    
+    .fullscreen-meta-line {
+        font-size: 13px;
+    }
+    
+    .fullscreen-chapter-content .chapter-content {
+        font-size: 16px;
+        line-height: 1.7;
+    }
 }
 
-@media (max-width: 480px) {
+/* Mobile (576px) */
+@media (max-width: 576px) {
+    /* TTS Controls */
+    .tts-controls-main {
+        justify-content: center;
+    }
+    
+    .tts-rate-control {
+        align-items: center;
+        gap: 8px;
+    }
+
     .tts-error {
         flex-direction: column;
         align-items: flex-start;
