@@ -103,6 +103,11 @@ const UserSettings = () => {
   const [resolvedUser, setResolvedUser] = useState(null);
   const [userResolutionLoading, setUserResolutionLoading] = useState(true);
   
+  // Password visibility states
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   // Use ref to prevent duplicate API calls
   const fetchedRef = useRef(false);
   const currentUserNumberRef = useRef(null);
@@ -456,6 +461,11 @@ const UserSettings = () => {
       return;
     }
 
+    if (newPassword.length < 6) {
+      setPasswordError('Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
     try {
       setIsLoading(true);
       await axios.put(
@@ -486,7 +496,10 @@ const UserSettings = () => {
     }, 500);
       
     } catch (error) {
-      setPasswordError(error.response?.data?.message || 'Không thể cập nhật mật khẩu');
+      console.error('Password update error:', error);
+      // Display the specific error message from the server
+      const errorMessage = error.response?.data?.message || 'Không thể cập nhật mật khẩu. Vui lòng thử lại.';
+      setPasswordError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -637,45 +650,81 @@ const UserSettings = () => {
             )}
             <div className="settings-form-group">
               <label>Mật khẩu hiện tại</label>
-              <input
-                type="password"
-                value={passwordCurrentPassword}
-                onChange={(e) => {
-                  setPasswordCurrentPassword(e.target.value);
-                  setPasswordError('');
-                }}
-                className="form-control"
-                disabled={isLoading}
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={passwordCurrentPassword}
+                  onChange={(e) => {
+                    setPasswordCurrentPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  className="form-control"
+                  disabled={isLoading}
+                  required
+                  style={{ paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="password-toggle-btn"
+                  aria-label={showCurrentPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  disabled={isLoading}
+                >
+                  <i className={showCurrentPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}></i>
+                </button>
+              </div>
             </div>
             <div className="settings-form-group">
               <label>Mật khẩu mới</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setPasswordError('');
-                }}
-                className="form-control"
-                disabled={isLoading}
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  className="form-control"
+                  disabled={isLoading}
+                  required
+                  style={{ paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="password-toggle-btn"
+                  aria-label={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  disabled={isLoading}
+                >
+                  <i className={showNewPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}></i>
+                </button>
+              </div>
             </div>
             <div className="settings-form-group">
               <label>Xác nhận mật khẩu mới</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setPasswordError('');
-                }}
-                className="form-control"
-                disabled={isLoading}
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  className="form-control"
+                  disabled={isLoading}
+                  required
+                  style={{ paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="password-toggle-btn"
+                  aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  disabled={isLoading}
+                >
+                  <i className={showConfirmPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}></i>
+                </button>
+              </div>
             </div>
             <button type="submit" className="btn btn-primary" disabled={isLoading}>
               Cập nhật mật khẩu
