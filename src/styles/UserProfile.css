@@ -473,7 +473,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   border-radius: 0 0 12px 12px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 15px;
 }
 
@@ -648,11 +648,15 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
     overflow: hidden;
   }
   
-  .novels-grid {
+  .user-profile-page .novels-grid {
     padding: 15px;
     overflow: hidden;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Higher specificity override */
     gap: 15px;
+  }
+  
+  .user-profile-page .novels-grid.can-manage {
+    grid-template-columns: 1fr; /* Override 3-column layout on mobile */
   }
   
   .module-item {
@@ -899,10 +903,11 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
     justify-content: center;
   }
 
-  /* Novels section mobile adjustments */
-  .novels-grid {
+  /* Novels section mobile adjustments - FORCE 1 column */
+  .user-profile-page .novels-grid,
+  .user-profile-page .novels-grid.can-manage {
     padding: 12px;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important; /* Force single column on small mobile */
     gap: 12px;
   }
   
@@ -1164,6 +1169,12 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   padding-right: 2rem; /* Make space for remove button */
 }
 
+/* Only add drag handle spacing when user can manage modules - MUST come before media queries */
+.user-profile-page .novels-grid.can-manage {
+  padding-left: 50px; /* Make room for drag handles only when needed */
+  grid-template-columns: repeat(3, 1fr); /* 3-column grid for desktop */
+}
+
 /* Remove module button */
 .remove-module-btn {
   position: absolute;
@@ -1230,12 +1241,6 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   border-radius: 0;
   box-shadow: none;
   background: transparent;
-}
-
-/* Only add drag handle spacing when user can manage modules */
-.user-profile-page .novels-grid.can-manage {
-  padding-left: 50px; /* Make room for drag handles only when needed */
-  grid-template-columns: 1fr 1fr 1fr; /* Maintain 3-column grid */
 }
 
 /* Adjust drag handle positioning for UserProfile layout */
@@ -2003,6 +2008,28 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   .admin-left-column,
   .admin-right-column {
     grid-column: 1;
+  }
+
+  /* 2-column layout for tablets */
+  .user-profile-page .novels-grid {
+    grid-template-columns: repeat(2, 1fr); /* Higher specificity override */
+  }
+  
+  .user-profile-page .novels-grid.can-manage {
+    grid-template-columns: repeat(2, 1fr); /* Override 3-column layout for tablets */
+    padding-left: 40px; /* Reduce padding for tablets */
+  }
+}
+
+/* Medium tablet breakpoint */
+@media (max-width: 900px) {
+  .user-profile-page .novels-grid {
+    grid-template-columns: repeat(2, 1fr); /* Higher specificity override */
+  }
+  
+  .user-profile-page .novels-grid.can-manage {
+    grid-template-columns: repeat(2, 1fr); /* Override 3-column layout for medium tablets */
+    padding-left: 35px; /* Further reduce padding */
   }
 }
 
