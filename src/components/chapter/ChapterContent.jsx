@@ -1764,9 +1764,6 @@ const ChapterContent = React.memo(({
                 '<sup><a href="#note-$1" id="ref-$1" class="footnote-ref" data-footnote="$1">[$1]</a></sup>'
             );
 
-            // After footnote conversion, clean up any empty paragraphs that may have been created
-            processedContent = processedContent.replace(/<p[^>]*>\s*<\/p>/gi, '');
-
             // Fix inconsistent HTML footnotes - ensure all footnote references have proper id attributes
             // Pattern 1: Standard format without id attribute
             processedContent = processedContent.replace(
@@ -3120,8 +3117,8 @@ ChapterContent.propTypes = {
     setEditedTitle: PropTypes.func,
     fontSize: PropTypes.number,
     fontFamily: PropTypes.string,
-    lineHeight: PropTypes.string,
-    marginSpacing: PropTypes.string,
+    lineHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    marginSpacing: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     editorRef: PropTypes.object,
     onModeChange: PropTypes.func,
     canEdit: PropTypes.bool,
