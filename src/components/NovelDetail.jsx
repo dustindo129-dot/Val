@@ -1155,6 +1155,22 @@ const NovelDetail = ({ novelId }) => {
       }
     };
 
+    // Handle novel budget updates (from request approvals, admin changes, etc.)
+    const handleNovelBudgetUpdate = (data) => {
+      if (data.novelId === novelId || data.id === novelId) {
+        console.log('NovelDetail: Novel budget updated, refreshing data');
+        queryClient.invalidateQueries(['completeNovel', novelId]);
+      }
+    };
+
+    // Handle request updates that might affect this novel's budget
+    const handleRequestUpdate = () => {
+      // When requests are updated (approved/declined), it might affect novel budgets
+      // Since we don't have the specific novel ID in the event, we need to refresh
+      // This is a bit broad but ensures the contribution section shows up immediately
+      queryClient.invalidateQueries(['completeNovel', novelId]);
+    };
+
     // Use dynamic import pattern like Chapter component
     import('../services/sseService').then(({ default: sseService }) => {
       if (isSetup) return;
@@ -1166,7 +1182,15 @@ const NovelDetail = ({ novelId }) => {
       sseService.addEventListener('new_chapter', handleNewChapter);
       sseService.addEventListener('module_mode_changed', handleModuleModeChanged);
       sseService.addEventListener('new_module', handleNewModule);
+      sseService.addEventListener('novel_budget_updated', handleNovelBudgetUpdate);
     });
+
+    // Also listen for window events from Market page
+    const handleWindowRequestUpdate = () => {
+      handleRequestUpdate();
+    };
+
+    window.addEventListener('requestUpdated', handleWindowRequestUpdate);
 
     return () => {
       import('../services/sseService').then(({ default: sseService }) => {
@@ -1176,7 +1200,10 @@ const NovelDetail = ({ novelId }) => {
         sseService.removeEventListener('new_chapter', handleNewChapter);
         sseService.removeEventListener('module_mode_changed', handleModuleModeChanged);
         sseService.removeEventListener('new_module', handleNewModule);
+        sseService.removeEventListener('novel_budget_updated', handleNovelBudgetUpdate);
       });
+      
+      window.removeEventListener('requestUpdated', handleWindowRequestUpdate);
     };
   }, [novelId, queryClient, navigate]);
 
