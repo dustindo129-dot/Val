@@ -6,6 +6,33 @@ import DOMPurify from 'dompurify';
 import { useAuth } from '../../context/AuthContext';
 import { getAuthHeaders } from '../../utils/auth';
 
+// Utility function to clean empty HTML tags
+const cleanEmptyTags = (html) => {
+  if (!html) return '';
+  
+  let cleaned = html;
+  
+  // Remove empty paragraphs with only non-breaking spaces, whitespace, or nothing
+  cleaned = cleaned.replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
+  
+  // Remove standalone br tags that are not inside other elements
+  cleaned = cleaned.replace(/^(\s*<br\s*\/?>)+|(\s*<br\s*\/?>)+$/gi, '');
+  
+  // Remove multiple consecutive br tags (more than 2)
+  cleaned = cleaned.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
+  
+  // Remove empty divs with only whitespace or br tags
+  cleaned = cleaned.replace(/<div[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, '');
+  
+  // Remove empty spans with only whitespace or non-breaking spaces
+  cleaned = cleaned.replace(/<span[^>]*>(\s|&nbsp;)*<\/span>/gi, '');
+  
+  // Clean up any remaining excessive whitespace
+  cleaned = cleaned.replace(/^\s+|\s+$/g, '');
+  
+  return cleaned;
+};
+
 const ReviewsModal = ({ novelId, isOpen, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -296,13 +323,17 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
         return htmlTags[parseInt(index)] || '';
       });
       
+      // Clean empty tags before sanitization
+      processedContent = cleanEmptyTags(processedContent);
+      
       return DOMPurify.sanitize(processedContent, {
         ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'u', 's', 'strike', 'del'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class']
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class'],
+        ALLOW_EMPTY_TAGS: [] // Don't allow empty tags
       });
     } catch (error) {
       console.error('Error processing review content:', error);
-      return content;
+      return cleanEmptyTags(content);
     }
   }, []);
 

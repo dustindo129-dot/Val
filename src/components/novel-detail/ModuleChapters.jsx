@@ -433,7 +433,6 @@ const ModuleChapters = memo(({
                         className="module-chapter-btn module-chapter-btn--delete"
                         onClick={() => handleChapterDelete(chapterId)}
                         title="Xóa chương này khỏi tập"
-                        title="Xóa chương"
                       >
                         Xóa
                       </button>

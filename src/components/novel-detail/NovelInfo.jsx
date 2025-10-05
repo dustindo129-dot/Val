@@ -348,6 +348,33 @@ const convertToHex = (color) => {
     return namedColors[color.toLowerCase()] || color;
 };
 
+// Utility function to clean empty HTML tags
+const cleanEmptyTags = (html) => {
+  if (!html) return '';
+  
+  let cleaned = html;
+  
+  // Remove empty paragraphs with only non-breaking spaces, whitespace, or nothing
+  cleaned = cleaned.replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
+  
+  // Remove standalone br tags that are not inside other elements
+  cleaned = cleaned.replace(/^(\s*<br\s*\/?>)+|(\s*<br\s*\/?>)+$/gi, '');
+  
+  // Remove multiple consecutive br tags (more than 2)
+  cleaned = cleaned.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
+  
+  // Remove empty divs with only whitespace or br tags
+  cleaned = cleaned.replace(/<div[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, '');
+  
+  // Remove empty spans with only whitespace or non-breaking spaces
+  cleaned = cleaned.replace(/<span[^>]*>(\s|&nbsp;)*<\/span>/gi, '');
+  
+  // Clean up any remaining excessive whitespace
+  cleaned = cleaned.replace(/^\s+|\s+$/g, '');
+  
+  return cleaned;
+};
+
 // Content processing function (matches ChapterContent.jsx logic)
 const processContent = (content) => {
     if (!content) return '';
@@ -513,16 +540,16 @@ const processContent = (content) => {
 
         // Check if content already contains proper paragraph tags
         if (processedContent.includes('<p')) {
-            // Content already has paragraph structure, preserve it including empty paragraphs
+            // Content already has paragraph structure, preserve it but clean empty paragraphs
             let finalContent = processedContent;
-            // Just ensure empty paragraphs have non-breaking space
-            finalContent = finalContent.replace(/<p(\s[^>]*)?>\s*<\/p>/gi, '<p$1>&nbsp;</p>');
+            // Clean empty paragraphs with the new cleaning function
+            finalContent = cleanEmptyTags(finalContent);
 
             return DOMPurify.sanitize(finalContent, {
                 ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
                 ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
                 KEEP_CONTENT: false,
-                ALLOW_EMPTY_TAGS: ['p'],
+                ALLOW_EMPTY_TAGS: [], // Don't allow empty tags anymore
             });
         }
 
@@ -547,9 +574,10 @@ const processContent = (content) => {
                     }
                     return trimmedBlock;
                 }
-                // Return empty paragraph with non-breaking space to preserve spacing
-                return '<p>&nbsp;</p>';
-            });
+                // Don't return empty paragraphs anymore
+                return '';
+            })
+            .filter(block => block !== ''); // Remove empty blocks
 
         let finalContent = paragraphBlocks.join('');
 
@@ -558,15 +586,18 @@ const processContent = (content) => {
             finalContent = `<p class="text-default-color">${cleanContent}</p>`;
         }
 
+        // Clean the final content
+        finalContent = cleanEmptyTags(finalContent);
+
         return DOMPurify.sanitize(finalContent, {
             ADD_TAGS: ['sup', 'a', 'p', 'br', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'strong', 'em', 'u', 'i', 'b'],
             ADD_ATTR: ['href', 'id', 'class', 'data-footnote', 'dir', 'style'],
             KEEP_CONTENT: false,
-            ALLOW_EMPTY_TAGS: ['p'],
+            ALLOW_EMPTY_TAGS: [], // Don't allow empty tags
         });
     } catch (error) {
         console.error('Lỗi xử lý nội dung:', error);
-        return DOMPurify.sanitize(content);
+        return DOMPurify.sanitize(cleanEmptyTags(content));
     }
 };
 
@@ -1788,7 +1819,7 @@ const NovelInfo = ({novel, readingProgress, chaptersData, userInteraction = {}, 
                             <div className={`rd-description-content ${isDescriptionExpanded ? 'expanded' : ''}`}>
                                 <div dangerouslySetInnerHTML={{
                                     __html: isDescriptionExpanded
-                                        ? novelData.description
+                                        ? cleanEmptyTags(novelData.description)
                                         : truncateHTML(novelData.description, 300)
                                 }}/>
                             </div>

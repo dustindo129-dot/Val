@@ -52,21 +52,51 @@ const ContributionModal = lazy(() => import('./novel-detail/ContributionModal'))
 const ContributionHistoryModal = lazy(() => import('./novel-detail/ContributionHistoryModal'));
 const Login = lazy(() => import('./auth/Login'));
 
+// Utility function to clean empty HTML tags
+const cleanEmptyTags = (html) => {
+  if (!html) return '';
+  
+  let cleaned = html;
+  
+  // Remove empty paragraphs with only non-breaking spaces, whitespace, or nothing
+  cleaned = cleaned.replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
+  
+  // Remove standalone br tags that are not inside other elements
+  cleaned = cleaned.replace(/^(\s*<br\s*\/?>)+|(\s*<br\s*\/?>)+$/gi, '');
+  
+  // Remove multiple consecutive br tags (more than 2)
+  cleaned = cleaned.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
+  
+  // Remove empty divs with only whitespace or br tags
+  cleaned = cleaned.replace(/<div[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, '');
+  
+  // Remove empty spans with only whitespace or non-breaking spaces
+  cleaned = cleaned.replace(/<span[^>]*>(\s|&nbsp;)*<\/span>/gi, '');
+  
+  // Clean up any remaining excessive whitespace
+  cleaned = cleaned.replace(/^\s+|\s+$/g, '');
+  
+  return cleaned;
+};
+
 // Utility for HTML truncation, used in description
 const truncateHTML = (html, maxLength) => {
   if (!html) return '';
   
+  // Clean empty tags first
+  const cleanedHtml = cleanEmptyTags(html);
+  
   const div = document.createElement('div');
-  div.innerHTML = html;
+  div.innerHTML = cleanedHtml;
   const text = div.textContent || div.innerText || '';
   
   if (text.length <= maxLength) {
-    return html;  // Return original HTML if text is shorter than maxLength
+    return cleanedHtml;  // Return cleaned HTML if text is shorter than maxLength
   }
 
   let truncated = '';
   let currentLength = 0;
-  const words = html.split(/(<[^>]*>|\s+)/);
+  const words = cleanedHtml.split(/(<[^>]*>|\s+)/);
 
   for (let i = 0; i < words.length; i++) {
     const word = words[i];
@@ -82,7 +112,7 @@ const truncateHTML = (html, maxLength) => {
     }
   }
 
-  return truncated + '...';  // Return truncated HTML with ellipsis
+  return cleanEmptyTags(truncated + '...');  // Clean again and return truncated HTML with ellipsis
 };
 
 /**
