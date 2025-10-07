@@ -437,6 +437,10 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
+.novels-card.ongoing-novels {
+  margin-bottom: 20px;
+}
+
 :root.dark-mode .novels-card {
   background: #2d2d2d;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
@@ -474,6 +478,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   overflow: hidden;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  max-width: 100%;
   gap: 15px;
 }
 
@@ -1172,7 +1177,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 /* Only add drag handle spacing when user can manage modules - MUST come before media queries */
 .user-profile-page .novels-grid.can-manage {
   padding-left: 50px; /* Make room for drag handles only when needed */
-  grid-template-columns: repeat(3, 1fr); /* 3-column grid for desktop */
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Larger min-width = fewer columns */
 }
 
 /* Remove module button */

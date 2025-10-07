@@ -607,7 +607,7 @@ const CustomDndWrapper = ({
                 <button 
                   className="refresh-modules-btn"
                   onClick={handleRefreshModules}
-                  title="Làm mới danh sách tập"
+                  title="Làm mới danh sách tập và cập nhật số chương đã tham gia"
                 >
                   <i className="fa-solid fa-refresh"></i>
                 </button>
@@ -1434,7 +1434,7 @@ const UserProfile = () => {
     }
   };
 
-  // Module refresh function for admin/mod to repopulate modules
+  // Module refresh function for admin/mod to repopulate modules and recalculate chapters participated
   const handleRefreshModules = useCallback(async () => {
     if (!canRefreshModules) return;
     
@@ -1446,25 +1446,46 @@ const UserProfile = () => {
     handleRefreshModules.lastCall = now;
     
     try {
-      // Refetch user modules from backend using the new /id/ endpoint WITH autoAddNew=true
-      const response = await axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules?autoAddNew=true`);
+      // Refetch user modules and complete profile data in parallel
+      const [modulesResponse, profileResponse] = await Promise.all([
+        axios.get(`${config.backendUrl}/api/users/id/${profileUser._id}/role-modules?autoAddNew=true`),
+        // Force refresh complete profile (bypassing cache) to recalculate chapters participated
+        axios.get(`${config.backendUrl}/api/users/number/${profileUser.userNumber}/public-profile-complete?forceRefresh=true`)
+      ]);
       
-      setUserStats(prev => ({
-        ...prev,
-        ongoingModules: response.data.ongoingModules || [],
-        completedModules: response.data.completedModules || []
-      }));
+      // Update modules
+      setUserStats(prev => {
+        const newChaptersParticipated = profileResponse.data.stats.chaptersParticipated || prev.chaptersParticipated;
+        
+        return {
+          ...prev,
+          ongoingModules: modulesResponse.data.ongoingModules || [],
+          completedModules: modulesResponse.data.completedModules || [],
+          // Update chapters participated from fresh profile data
+          chaptersParticipated: newChaptersParticipated
+        };
+      });
+      
+      // Clear user stats and profile caches since data was refreshed
+      try {
+        // Clear the complete profile cache by making a request to clear it
+        // This ensures the fresh data gets cached properly for subsequent loads
+        await axios.delete(`${config.backendUrl}/api/users/number/${profileUser.userNumber}/cache`);
+      } catch (cacheError) {
+        // Don't fail the operation if cache clearing fails
+        console.warn('Could not clear profile cache:', cacheError);
+      }
       
       // Show success message with count of new modules added
-      const newModulesCount = response.data.newModulesCount || 0;
+      const newModulesCount = modulesResponse.data.newModulesCount || 0;
       if (newModulesCount > 0) {
-        alert(`Đã làm mới danh sách tập thành công! Đã thêm ${newModulesCount} tập mới.`);
+        alert(`Đã làm mới thành công! Đã thêm ${newModulesCount} tập mới và cập nhật số chương đã tham gia.`);
       } else {
-        alert('Đã làm mới danh sách tập thành công! Không có tập mới.');
+        alert('Đã làm mới thành công! Không có tập mới, đã cập nhật số chương đã tham gia.');
       }
     } catch (error) {
-      console.error('Error refreshing modules:', error);
-      alert('Không thể làm mới danh sách tập');
+      console.error('Error refreshing modules and chapters:', error);
+      alert('Không thể làm mới danh sách tập và số chương đã tham gia');
     }
   }, [canRefreshModules, profileUser]);
 
