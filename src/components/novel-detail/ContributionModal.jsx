@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import config from '../../config/config';
 import '../../styles/components/ContributionModal.css';
@@ -9,6 +10,7 @@ import '../../styles/components/ContributionModal.css';
 const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [amount, setAmount] = useState(10);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -152,6 +154,9 @@ const ContributionModal = ({ isOpen, onClose, novelId, onContributionSuccess }) 
       }));
       
       alert(`Cảm ơn bạn đã đóng góp ${amount} 🌾!`);
+      
+      // Invalidate contribution history cache to show the new contribution immediately
+      queryClient.invalidateQueries({ queryKey: ['contributionHistory', novelId] });
       
       // Reset form
       setAmount(10);

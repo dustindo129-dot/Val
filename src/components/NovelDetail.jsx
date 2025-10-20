@@ -1330,6 +1330,9 @@ const NovelDetail = ({ novelId }) => {
       // Also invalidate the old query key in case other components use it
       await queryClient.invalidateQueries({ queryKey: ['novel', novelId] });
       
+      // Invalidate contribution history cache since module updates can trigger auto-unlock
+      await queryClient.invalidateQueries({ queryKey: ['contributionHistory', novelId] });
+      
       // Only invalidate rental-related queries if the module mode changed to/from 'rent'
       const wasRentMode = editingModule && currentNovelData?.modules?.find(m => m._id === editingModule)?.mode === 'rent';
       const isRentMode = dataToSubmit.mode === 'rent';

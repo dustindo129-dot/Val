@@ -21,8 +21,8 @@ const ContributionHistoryModal = ({ isOpen, onClose, novelId }) => {
       return response.data;
     },
     enabled: isOpen && !!novelId, // Only fetch when modal is open and novelId exists
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 30, // 30 seconds - reduced for better responsiveness
+    cacheTime: 1000 * 60 * 5, // 5 minutes - reduced cache time
     refetchOnWindowFocus: false
   });
 
