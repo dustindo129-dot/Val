@@ -27,6 +27,38 @@ const Contest2025 = () => {
   // State for managing selected round in contest works section
   const [selectedRound, setSelectedRound] = useState('vòng 1');
 
+  // Contest works data
+  const contestWorksData = {
+    'vòng 1': {
+      count: 48,
+      works: null, // Will show locked message
+    },
+    'vòng 2': {
+      count: 9,
+      works: [
+        { id: 'Val2025008', title: 'Bí mật sau đôi mắt', author: 'Satyr' },
+        { id: 'Val2025017', title: 'Dawnbringer Of Humanity', author: 'Thằn Lằn Đen' },
+        { id: 'Val2025020', title: 'Nàng hầu gái ở thành phố Mây', author: 'Azuma Minakoto' },
+        { id: 'Val2025027', title: 'Hai mươi mốt gram', author: 'Nguyễn Duy Thiện' },
+        { id: 'Val2025032', title: 'Tấm Cám Hậu Truyện', author: 'Cyan Sparrow' },
+        { id: 'Val2025040', title: 'Đồi Ký Ức', author: 'Ngân Hà' },
+        { id: 'Val2025041', title: 'Gióng', author: 'Mạt Trà' },
+        { id: 'Val2025046', title: 'Tiên cá điếc nhạc', author: 'Fuku-ya' },
+        { id: 'Val2025047', title: 'Di cư dị giới tôi trở thành công dân Việt Nam', author: 'Hoshi' }
+      ]
+    },
+    'vòng 3': {
+      count: 5,
+      works: [
+        { id: 'Val2025008', title: 'Bí mật sau đôi mắt', author: 'Satyr' },
+        { id: 'Val2025017', title: 'Dawnbringer Of Humanity', author: 'Thằn Lằn Đen' },
+        { id: 'Val2025027', title: 'Hai mươi mốt gram', author: 'Nguyễn Duy Thiện' },
+        { id: 'Val2025032', title: 'Tấm Cám Hậu Truyện', author: 'Cyan Sparrow' },
+        { id: 'Val2025046', title: 'Tiên cá điếc nhạc', author: 'Fuku-ya' }
+      ]
+    }
+  };
+
   return (
     <div className="contest-2025-container">
       <div className="contest-content">
@@ -189,18 +221,31 @@ const Contest2025 = () => {
                ))}
              </div>
 
-             {/* Works Display Area */}
-             <div className="works-container">
-               <div className="works-header">
-                 <h3>Tác phẩm {selectedRound}</h3>
-                 <span className="works-count">(48 tác phẩm)</span>
-               </div>
-               
-              <div className="works-list">
+            {/* Works Display Area */}
+            <div className="works-container">
+              <div className="works-header">
+                <h3>Tác phẩm {selectedRound}</h3>
+                <span className="works-count">({contestWorksData[selectedRound].count} tác phẩm)</span>
+              </div>
+              
+             <div className="works-list">
                 {selectedRound === 'vòng 1' ? (
                   <div className="empty-state">
                     <div className="empty-icon">🔒</div>
                     <p>Các tác phẩm vòng 1 sẽ được công bố sau khi cuộc thi kết thúc</p>
+                  </div>
+                ) : contestWorksData[selectedRound].works ? (
+                  <div className="works-grid">
+                    {contestWorksData[selectedRound].works.map((work, index) => (
+                      <div key={work.id} className="work-item">
+                        <div className="work-number">{index + 1}</div>
+                        <div className="work-details">
+                          <div className="work-id">{work.id}</div>
+                          <div className="work-title">{work.title}</div>
+                          <div className="work-author">tác giả: {work.author}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="empty-state">
@@ -210,7 +255,7 @@ const Contest2025 = () => {
                   </div>
                 )}
               </div>
-             </div>
+            </div>
            </div>
          </div>
       </div>

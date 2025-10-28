@@ -146,6 +146,74 @@
   justify-content: center;
 }
 
+/* Works grid */
+.works-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+.work-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.work-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e0;
+}
+
+.work-number {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.work-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.work-id {
+  color: #667eea;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.work-title {
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.work-author {
+  color: #718096;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
 /* Empty state */
 .empty-state {
   text-align: center;
@@ -326,6 +394,23 @@
   color: #718096;
 }
 
+:root.dark-mode .work-item {
+  background: #343434;
+  border-color: #555;
+}
+
+:root.dark-mode .work-item:hover {
+  border-color: #718096;
+}
+
+:root.dark-mode .work-title {
+  color: #e2e8f0;
+}
+
+:root.dark-mode .work-author {
+  color: #a0aec0;
+}
+
 :root.dark-mode .info-section {
   background: #2d2d2d;
   border-color: #404040;
@@ -390,6 +475,21 @@
     gap: 0.75rem;
     text-align: center;
   }
+
+  .work-item {
+    padding: 1rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .work-details {
+    gap: 0.5rem;
+  }
+
+  .work-title {
+    font-size: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -426,6 +526,24 @@
 
   .empty-icon {
     font-size: 2.5rem;
+  }
+
+  .work-item {
+    padding: 0.75rem;
+  }
+
+  .work-number {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .work-title {
+    font-size: 0.95rem;
+  }
+
+  .work-author {
+    font-size: 0.85rem;
   }
 }
 
