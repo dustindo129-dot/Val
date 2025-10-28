@@ -97,7 +97,7 @@ const TopUpManagement = () => {
   const [selectedTransactionUser, setSelectedTransactionUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [transactionsPerPage] = useState(20);
+  const [transactionsPerPage] = useState(5);
   
   // New state variables for novel transactions
   const [novelTransactions, setNovelTransactions] = useState([]);
