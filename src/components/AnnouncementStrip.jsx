@@ -34,7 +34,7 @@ const AnnouncementStrip = () => {
   return (
     <div className="avatar-announcement-strip">
       <div className="announcement-content">
-        <span>Từ giờ đã có thể up ảnh bìa + ảnh avatar tại trang cá nhân</span>
+        <span>Từ giờ đã có thể up ảnh bìa và ảnh avatar tại trang cá nhân</span>
         <button onClick={handleClose} className="close-button" aria-label="Đóng thông báo">
           <i className="fa-solid fa-times"></i>
         </button>
