@@ -781,7 +781,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
   ]);
 
   // TinyMCE configuration for comments
-  const getTinyMCEConfig = () => {
+  const getTinyMCEConfig = (submitHandler = null) => {
     // Base plugins that all users get
     const basePlugins = [
       'advlist', 'autolink', 'lists', 'link', 'charmap',
@@ -840,6 +840,20 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             editor.focus();
           }
         });
+        
+        // Handle Enter key: Enter submits, Shift+Enter creates new line
+        if (submitHandler) {
+          editor.on('keydown', (e) => {
+            if (e.keyCode === 13) { // Enter key
+              if (!e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                submitHandler();
+              }
+              // If Shift+Enter, allow default behavior (new line)
+            }
+          });
+        }
       }
     };
 
@@ -2119,7 +2133,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                     }}
                     scriptLoading={{ async: true, load: "domainBased" }}
                     init={{
-                      ...getTinyMCEConfig(),
+                      ...getTinyMCEConfig(handleEditSubmit),
                       height: 450, // Increased height for better editing experience
                       // Remove placeholder for edit mode since we're prefilling content
                       placeholder: '',
@@ -2171,6 +2185,12 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                   placeholder="Chỉnh sửa bình luận..."
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleEditSubmit();
+                    }
+                  }}
                   required
                   ref={editTextareaRef}
                 />
@@ -2258,7 +2278,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                       onInit={(evt, editor) => replyEditorRef.current = editor}
                       scriptLoading={{ async: true, load: "domainBased" }}
                       init={{
-                        ...getTinyMCEConfig(),
+                        ...getTinyMCEConfig(handleReplySubmit),
                         height: 150,
                         placeholder: 'Viết trả lời...',
                         // Override image upload handler for reply mode (only for privileged users)
@@ -2294,6 +2314,12 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                     placeholder="Viết trả lời..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleReplySubmit();
+                      }
+                    }}
                     required
                     ref={replyTextareaRef}
                   />
@@ -2537,7 +2563,7 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 <Editor
                   onInit={(evt, editor) => commentEditorRef.current = editor}
                   scriptLoading={{ async: true, load: "domainBased" }}
-                  init={getTinyMCEConfig()}
+                  init={getTinyMCEConfig(() => handleSubmit(new Event('submit')))}
                 />
               </div>
             ) : (
@@ -2546,6 +2572,12 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
                 placeholder="Thêm bình luận..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
                 disabled={submitting}
                 required
               />

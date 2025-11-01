@@ -960,7 +960,8 @@ const ChapterDashboard = () => {
                     trimmedBlock = trimmedBlock.replace(/^(<br>\s*)+|(<br>\s*)+$/gi, '');
 
                     if (trimmedBlock) {
-                        if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+                        // Only wrap in paragraph tags if it's truly plain text without any HTML tags
+                        if (!trimmedBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i) && !trimmedBlock.includes('<')) {
                             return `<p class="text-default-color">${trimmedBlock}</p>`;
                         }
                         return trimmedBlock;

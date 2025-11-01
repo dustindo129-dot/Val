@@ -1248,7 +1248,29 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     try {
       const currentChapterId = chapter._id;
 
-      // Optimistic UI update if using React Query
+      // Store previous data for potential rollback
+      const previousNovelData = queryClient.getQueryData(['completeNovel', novelId]);
+
+      // Optimistic UI update - remove chapter from novel cache immediately
+      queryClient.setQueryData(['completeNovel', novelId], (oldData) => {
+        if (!oldData) return oldData;
+        
+        // Create a deep copy of the data to avoid mutations
+        const newData = JSON.parse(JSON.stringify(oldData));
+        
+        // Find and remove the chapter from all modules
+        if (newData.modules && Array.isArray(newData.modules)) {
+          newData.modules.forEach(module => {
+            if (module.chapters && Array.isArray(module.chapters)) {
+              module.chapters = module.chapters.filter(ch => ch._id !== currentChapterId);
+            }
+          });
+        }
+        
+        return newData;
+      });
+
+      // Cancel and remove chapter-specific queries
       await queryClient.cancelQueries({queryKey: ['chapter-optimized', chapterId, user?.id]});
       queryClient.removeQueries(['chapter-optimized', chapterId, user?.id]);
 
@@ -1262,14 +1284,19 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         }
       );
 
-      // Invalidate related queries
+      // Invalidate related queries to ensure fresh data from server
       queryClient.invalidateQueries({queryKey: ['chapter-optimized', chapterId, user?.id]});
+      queryClient.invalidateQueries({queryKey: ['completeNovel', novelId]});
+      queryClient.invalidateQueries({queryKey: ['novel', novelId]});
 
       // Navigate back to novel page
       navigate(generateNovelUrl({ _id: novelId, title: novel.title }), {replace: true});
     } catch (err) {
       console.error('Không thể xóa chương:', err);
       setError('Không thể xóa chương. Vui lòng thử lại.');
+      
+      // On error, force refetch to restore correct state
+      queryClient.invalidateQueries({queryKey: ['completeNovel', novelId]});
     }
   };
 
