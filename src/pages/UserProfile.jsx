@@ -2158,10 +2158,14 @@ const UserProfile = () => {
                         onClick={handleUploadWallpaper}
                         disabled={isUploadingWallpaper}
                       >
-                        <i className="fa-solid fa-upload"></i>
+                        <i className={isUploadingWallpaper ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-upload"}></i>
                         <div className="option-text">
-                          <span className="option-title">Tải ảnh lên</span>
-                          <span className="option-desc">Chọn ảnh từ máy tính</span>
+                          <span className="option-title">
+                            {isUploadingWallpaper ? 'Đang tải lên...' : 'Tải ảnh lên'}
+                          </span>
+                          <span className="option-desc">
+                            {isUploadingWallpaper ? 'Vui lòng chờ...' : 'Chọn ảnh từ máy tính'}
+                          </span>
                         </div>
                       </button>
 
