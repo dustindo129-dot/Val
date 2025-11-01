@@ -8,8 +8,9 @@ const config = {
       avatar: 'avatars',
       illustration: 'illustrations',
       comments: 'comments',
-      forum: 'forum',
-      request: 'requests'
+      forum: 'forums',
+      request: 'requests',
+      wallpaper: 'wallpapers'
     }
   },
   tinymce: {

@@ -7,7 +7,7 @@
  * 
  * Styles for the user profile page component.
  * Features:
- * - Profile banner
+ * - Profile wallpaper
  * - User avatar and info section
  * - Notes section
  * - Novels sections (ongoing/completed)
@@ -17,7 +17,7 @@
 
 /* Profile Header Section */
 .profile-header-section {
-  margin-top: -100px;
+  margin-top: -30px; /* Only covers 10% of wallpaper (30px) */
   position: relative;
   z-index: 10;
   padding: 0 20px;
@@ -25,6 +25,63 @@
   transition: margin-top 0.1s ease;
   /* Ensure proper positioning on initial load */
   transform: translateZ(0); /* Force hardware acceleration */
+}
+
+/* Avatar that overlaps the header */
+.profile-avatar-overlap {
+  position: absolute;
+  top: -84px; /* Show 70% of avatar above header, 30% overlaps */
+  left: 40px;
+  z-index: 15;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-avatar-overlap .profile-avatar-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  object-fit: cover;
+}
+
+/* Avatar upload overlay */
+.profile-avatar-upload-overlay {
+  position: absolute;
+  bottom: 8px; /* Increased slightly more to ensure perfect fit */
+  right: 4px;  /* Account for the 4px border */
+  left: 4px;   /* Account for the 4px border */
+  height: calc(50% - 10px); /* Reduced height slightly more */
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 0 0 54px 54px; /* Slightly smaller border-radius for tighter fit */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(5px);
+  overflow: hidden; /* Ensure overlay stays within bounds */
+}
+
+.profile-avatar-wrapper:hover .profile-avatar-upload-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.profile-avatar-upload-overlay i {
+  color: white;
+  font-size: 16px; /* Slightly smaller to fit better */
+  transition: transform 0.2s ease;
+  pointer-events: none; /* Prevent icon from interfering with click */
+}
+
+.profile-avatar-upload-overlay:hover i {
+  transform: scale(1.1);
 }
 
 /* Prevent layout issues on initial load */
@@ -47,8 +104,8 @@ html:not(.dark-mode):not(.sepia-mode) .user-profile-page {
   background-color: #1a1a1a;
 }
 
-/* Profile Banner */
-.profile-banner {
+/* Profile Wallpaper */
+.profile-wallpaper {
   position: relative;
   height: 300px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -61,7 +118,33 @@ html:not(.dark-mode):not(.sepia-mode) .user-profile-page {
   transition: background-color 0.15s ease;
 }
 
-.banner-overlay {
+/* Improve touch handling on mobile for wallpaper repositioning */
+.profile-wallpaper.repositioning {
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  position: relative;
+}
+
+/* Add visual feedback when repositioning */
+.profile-wallpaper.repositioning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Active dragging state */
+.profile-wallpaper.repositioning.dragging {
+  cursor: grabbing;
+}
+
+.wallpaper-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -70,19 +153,466 @@ html:not(.dark-mode):not(.sepia-mode) .user-profile-page {
   background: rgba(0, 0, 0, 0.3);
 }
 
-.banner-content {
+.wallpaper-content {
   position: relative;
   z-index: 2;
   height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 20px;
+}
+
+/* Edit wallpaper button */
+.edit-wallpaper-btn {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+}
+
+.edit-wallpaper-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.edit-wallpaper-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.edit-wallpaper-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.edit-wallpaper-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.edit-wallpaper-btn i {
+  font-size: 16px;
+}
+
+/* Remove wallpaper button */
+.remove-wallpaper-btn {
+  background: rgba(220, 53, 69, 0.8);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+}
+
+.remove-wallpaper-btn:hover {
+  background: rgba(220, 53, 69, 0.9);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.remove-wallpaper-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
+}
+
+.remove-wallpaper-btn i {
+  font-size: 16px;
+}
+
+/* Wallpaper Button Container */
+.wallpaper-button-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Wallpaper Dropdown Modal */
+.wallpaper-dropdown-modal {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 999999;
+  min-width: 280px;
+}
+
+/* Media queries for dropdown responsiveness */
+@media (max-width: 768px) {
+  .wallpaper-button-container {
+    position: relative; /* Ensure consistent positioning */
+  }
+  
+  .wallpaper-dropdown-modal {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0; /* Stay aligned to right edge of button */
+    left: auto;
+    min-width: 280px;
+    max-width: 320px; /* Keep compact */
+    transform: none; /* Ensure no transforms interfere */
+  }
+  
+  .wallpaper-modal-content {
+    border-radius: 14px;
+  }
+  
+  .wallpaper-options {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .wallpaper-option-btn {
+    padding: 12px;
+    gap: 0;
+    border-radius: 8px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+  }
+  
+  .wallpaper-option-btn i {
+    font-size: 18px;
+  }
+  
+  .option-text,
+  .option-title,
+  .option-desc {
+    display: none !important; /* Hide all text, show only icons */
+  }
+}
+
+@media (max-width: 576px) {
+  .wallpaper-button-container {
+    position: relative; /* Ensure consistent positioning */
+  }
+  
+  .wallpaper-dropdown-modal {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0; /* Keep aligned to button, no offset needed */
+    left: auto;
+    min-width: 240px;
+    max-width: 280px; /* Keep compact */
+    transform: none; /* Ensure no transforms interfere */
+  }
+  
+  .wallpaper-modal-content {
+    border-radius: 16px;
+  }
+  
+  .wallpaper-options {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px;
+  }
+  
+  .wallpaper-option-btn {
+    padding: 10px;
+    gap: 0;
+    border-radius: 8px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
+  }
+  
+  .wallpaper-option-btn i {
+    font-size: 16px;
+  }
+  
+  .option-text,
+  .option-title,
+  .option-desc {
+    display: none !important; /* Hide all text, show only icons */
+  }
+}
+
+/* Wallpaper Modal Styles */
+.wallpaper-modal-content {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Dropdown arrow */
+.wallpaper-modal-content::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 20px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid rgba(0, 0, 0, 0.1);
+}
+
+.wallpaper-modal-content::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 20px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid white;
+}
+
+.wallpaper-options {
+  padding: 0;
+}
+
+.wallpaper-option-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.wallpaper-option-btn:hover {
+  background: #f8f9fa;
+}
+
+.wallpaper-option-btn:last-child {
+  border-bottom: none;
+}
+
+.wallpaper-option-btn.remove {
+  color: #dc3545;
+}
+
+.wallpaper-option-btn.remove:hover {
+  background: #fff5f5;
+}
+
+.wallpaper-option-btn i {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+  color: #495057;
+}
+
+.wallpaper-option-btn.remove i {
+  color: #dc3545;
+}
+
+.option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #212529;
+}
+
+.option-desc {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.wallpaper-option-btn.remove .option-title {
+  color: #dc3545;
+}
+
+/* Facebook-style In-Place Wallpaper Repositioning */
+.profile-wallpaper.repositioning {
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.profile-wallpaper.repositioning:active {
+  cursor: grabbing;
+}
+
+.reposition-mode-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.reposition-mode-overlay > * {
+  pointer-events: auto;
+}
+
+.reposition-top-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+.reposition-cancel-btn,
+.reposition-save-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.reposition-cancel-btn {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.reposition-cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.reposition-save-btn {
+  background: #1877f2;
+  color: white;
+}
+
+.reposition-save-btn:hover {
+  background: #166fe5;
+}
+
+.reposition-save-btn:disabled,
+.reposition-cancel-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.reposition-instructions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.instruction-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.instruction-text i {
+  font-size: 16px;
+}
+
+/* Dark mode support */
+:root.dark-mode .wallpaper-modal-content {
+  background: #2d2d2d;
+  color: white;
+  border-color: #404040;
+}
+
+:root.dark-mode .wallpaper-modal-content::after {
+  border-bottom-color: #2d2d2d;
+}
+
+:root.dark-mode .wallpaper-modal-content::before {
+  border-bottom-color: #404040;
+}
+
+:root.dark-mode .wallpaper-option-btn {
+  background: #2d2d2d;
+  color: white;
+  border-bottom-color: #404040;
+}
+
+:root.dark-mode .wallpaper-option-btn:hover {
+  background: #383838;
+}
+
+:root.dark-mode .wallpaper-option-btn.remove:hover {
+  background: #3d2929;
+}
+
+:root.dark-mode .option-title {
+  color: white;
 }
 
 /* Additional stability for profile header */
 .profile-header-content {
   background: white;
   border-radius: 12px;
-  padding: 30px;
+  padding: 20px 30px 20px 180px; /* Left padding for avatar space, increased vertical for better spacing */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
+  text-align: left;
+  display: flex;
+  align-items: flex-start; /* Changed from center to flex-start */
   /* Add transition to prevent flash of unstyled content */
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
   /* Ensure proper rendering on initial load */
@@ -101,10 +631,117 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.profile-avatar-section {
+/* Dark mode for overlapping avatar border */
+:root.dark-mode .profile-avatar-overlap .profile-avatar-image {
+  border-color: #2d2d2d;
+}
+
+/* Dark mode for avatar upload overlay */
+:root.dark-mode .profile-avatar-upload-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* Dark mode for new layout */
+:root.dark-mode .profile-username {
+  color: white;
+}
+
+:root.dark-mode .profile-stats-inline .stat-number {
+  color: white;
+}
+
+:root.dark-mode .profile-stats-inline .stat-label {
+  color: #ccc;
+}
+
+:root.dark-mode .profile-meta-inline .meta-item {
+  color: #ccc;
+}
+
+:root.dark-mode .profile-meta-inline .meta-item i {
+  color: #999;
+}
+
+
+/* Mixed layout: username under avatar, stats/meta to the right */
+.profile-user-info {
+  display: grid;
+  grid-template-columns: 160px 1fr; /* Avatar column and content column */
+  grid-template-rows: auto auto;
+  gap: 0;
+  width: 100%;
+  align-items: start;
+}
+
+.profile-username {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 8px;
+  white-space: nowrap;
+  grid-column: 1;
+  grid-row: 2;
+  margin-top: 8px; /* Space from avatar */
+}
+
+/* Container for stats and meta that goes to the right */
+.profile-stats-meta-container {
+  grid-column: 2;
+  grid-row: 1 / -1; /* Span all rows */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-left: 20px; /* Space from username column */
+}
+
+.profile-stats-inline {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.profile-stats-inline .stat-item {
+  text-align: center;
+}
+
+.profile-stats-inline .stat-number {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+}
+
+.profile-stats-inline .stat-label {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.profile-meta-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  align-items: center;
+}
+
+.profile-meta-inline .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.profile-meta-inline .meta-item i {
+  color: #999;
 }
 
 .profile-avatar-wrapper {
@@ -131,7 +768,6 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 .profile-username {
   font-size: 2.2rem;
   font-weight: 700;
-  margin: 0 0 15px 0;
   color: #333;
   display: flex;
   align-items: center;
@@ -591,29 +1227,122 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .profile-banner {
+  /* Admin grid adjustments */
+  .admin-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .admin-left-column,
+  .admin-right-column {
+    grid-column: 1;
+  }
+
+  /* 2-column layout for tablets */
+  .user-profile-page .novels-grid {
+    grid-template-columns: repeat(2, 1fr); /* Higher specificity override */
+  }
+  
+  .user-profile-page .novels-grid.can-manage {
+    grid-template-columns: repeat(2, 1fr); /* Override 3-column layout for tablets */
+    padding-left: 40px; /* Reduce padding for tablets */
+  }
+
+  /* Wallpaper and general responsive styles */
+  .profile-wallpaper {
     height: 200px;
   }
   
+  .wallpaper-content {
+    padding: 15px;
+  }
+  
+  .edit-wallpaper-btn {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .edit-wallpaper-btn i {
+    font-size: 14px;
+  }
+
+  .wallpaper-modal-content {
+    max-width: none;
+  }
+
+  .reposition-top-controls {
+    top: 15px;
+    right: 15px;
+    gap: 8px;
+  }
+
+  .reposition-cancel-btn,
+  .reposition-save-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .reposition-instructions {
+    font-size: 12px;
+    padding: 10px 16px;
+    border-radius: 20px;
+    gap: 8px;
+  }
+
+  .wallpaper-option-btn {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .option-title {
+    font-size: 13px;
+  }
+
+  .option-desc {
+    font-size: 12px;
+  }
+  
   .profile-header-section {
-    margin-top: -60px;
+    margin-top: -30px; /* Maintain consistent 10% wallpaper coverage */
     padding: 0 15px;
   }
   
-  .profile-header-content {
-    padding: 20px;
+  
+  .profile-avatar-overlap {
+    position: absolute; /* Keep absolute positioning for overlap */
+    top: -84px; /* Maintain 30% overlap (36px of 120px) */
+    left: 20px; /* Move to left side like desktop */
+    transform: none;
+    z-index: 15;
   }
   
-  .profile-avatar-section {
+  .profile-header-content {
+    padding: 15px 20px 15px 150px; /* Left padding for avatar space */
+    text-align: left; /* Left-align content */
+    align-items: flex-start;
+  }
+  
+  .profile-user-info {
+    display: flex;
     flex-direction: column;
-    text-align: center;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .profile-stats-meta-container {
+    padding-left: 0; /* Remove padding on mobile */
+  }
+  
+  .profile-stats-inline {
+    gap: 15px; /* Reduced for mobile */
+  }
+  
+  .profile-meta-inline {
     gap: 15px;
   }
   
   .profile-username {
     font-size: 1.9rem;
-    text-align: center;
-    justify-content: center;
   }
   
   .profile-stats {
@@ -853,8 +1582,65 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
 }
 
 @media (max-width: 576px) {
+  /* Wallpaper dropdown adjustments with 480px consolidation */
+  .wallpaper-dropdown-modal {
+    min-width: 240px;
+    max-width: 280px;
+  }
+  
+  .wallpaper-option-btn {
+    padding: 10px;
+    gap: 8px;
+  }
+  
+  .wallpaper-option-btn i {
+    font-size: 12px;
+  }
+  
+  .option-text .option-title {
+    font-size: 12px;
+  }
+  
+  .option-text .option-desc {
+    font-size: 9px;
+  }
+
+  /* Ensure consistent header and avatar positioning on mobile */
+  .profile-header-section {
+    margin-top: -30px; /* Maintain 10% wallpaper coverage */
+    padding: 0 10px;
+  }
+  
+  .profile-avatar-overlap {
+    position: absolute; /* Keep absolute positioning for overlap */
+    top: -84px; /* Maintain 30% overlap (36px of 120px) */
+    left: 15px; /* Move to left side */
+    transform: none;
+    z-index: 15;
+  }
+  
+  .profile-header-content {
+    padding: 15px 15px 15px 140px; /* Left padding for avatar space */
+    text-align: left;
+    flex-direction: row;
+    align-items: center;
+  }
+
   .profile-username {
-    font-size: 1.8rem;
+    font-size: 1.6rem; /* Smaller for mobile */
+  }
+  
+  /* Adjust stats for mobile layout */
+  .profile-stats-inline .stat-number {
+    font-size: 18px;
+  }
+  
+  .profile-stats-inline .stat-label {
+    font-size: 13px;
+  }
+  
+  .profile-meta-inline .meta-item {
+    font-size: 12px;
   }
   
   .profile-stats {
@@ -2003,40 +2789,6 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   color: #a0a0a0;
 }
 
-/* Responsive adjustments for admin grid */
-@media (max-width: 1024px) {
-  .admin-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .admin-left-column,
-  .admin-right-column {
-    grid-column: 1;
-  }
-
-  /* 2-column layout for tablets */
-  .user-profile-page .novels-grid {
-    grid-template-columns: repeat(2, 1fr); /* Higher specificity override */
-  }
-  
-  .user-profile-page .novels-grid.can-manage {
-    grid-template-columns: repeat(2, 1fr); /* Override 3-column layout for tablets */
-    padding-left: 40px; /* Reduce padding for tablets */
-  }
-}
-
-/* Medium tablet breakpoint */
-@media (max-width: 900px) {
-  .user-profile-page .novels-grid {
-    grid-template-columns: repeat(2, 1fr); /* Higher specificity override */
-  }
-  
-  .user-profile-page .novels-grid.can-manage {
-    grid-template-columns: repeat(2, 1fr); /* Override 3-column layout for medium tablets */
-    padding-left: 35px; /* Further reduce padding */
-  }
-}
 
 
 

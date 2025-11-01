@@ -235,73 +235,6 @@ const UserSettings = () => {
   };
 
 
-  /**
-   * Handles avatar file change and upload
-   * @param {Event} e - File input change event
-   */
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file type and size
-    if (!file.type.match('image.*')) {
-      setMessage({ type: 'error', text: 'Vui lòng chọn tệp ảnh' });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      setMessage({ type: 'error', text: 'Kích thước ảnh phải nhỏ hơn 5MB' });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setMessage({ type: 'info', text: 'Đang tải ảnh đại diện...' });
-
-      // Upload to Bunny.net
-      const newAvatarUrl = await bunnyUploadService.uploadFile(
-        file,
-        'avatar'
-      );
-
-      // Create axios instance with proper config
-      const api = axios.create({
-        baseURL: config.backendUrl,
-        withCredentials: true,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      // Send avatar URL to backend
-      await api.post(
-        `/api/users/number/${userNumber}/avatar`,
-        {
-          avatar: newAvatarUrl
-        }
-      );
-      
-      // Update both local state and localStorage
-      setAvatar(newAvatarUrl);
-      
-      // Update user data in localStorage and AuthContext
-      const updatedUser = { ...user, avatar: newAvatarUrl };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      updateUser(updatedUser);
-      
-      setMessage({ type: 'success', text: 'Ảnh đại diện đã được cập nhật thành công' });
-      
-    } catch (error) {
-      console.error('Lỗi tải ảnh đại diện:', error);
-      setMessage({ 
-        type: 'error', 
-        text: 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.' 
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   /**
    * Handles display name update form submission
@@ -544,16 +477,6 @@ const UserSettings = () => {
                 alt="Profile"
                 className="profile-avatar"
               />
-              <label className="avatar-upload-overlay">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  disabled={isLoading}
-                  style={{ display: 'none' }}
-                />
-                <i className="fa-solid fa-camera"></i>
-              </label>
             </div>
             <h2 className="profile-username">{user?.displayName || resolvedUser?.displayName || resolvedUser?.username}</h2>
           </div>

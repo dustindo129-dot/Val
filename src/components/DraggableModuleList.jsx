@@ -23,6 +23,29 @@ import cdnConfig from '../config/bunny';
 // Custom HTML5 drag-and-drop implementation
 const ENABLE_CUSTOM_DRAG_AND_DROP = true;
 
+// Custom hook to detect mobile devices with reactive resize detection
+const useMobileDetection = () => {
+  const [isMobile, setIsMobile] = useState(() => {
+    return window.matchMedia && window.matchMedia('(max-width: 576px)').matches;
+  });
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 576px)');
+    
+    const handleChange = (e) => {
+      setIsMobile(e.matches);
+    };
+    
+    mediaQuery.addListener(handleChange);
+    
+    return () => {
+      mediaQuery.removeListener(handleChange);
+    };
+  }, []);
+
+  return isMobile;
+};
+
 // Helper function to move array items
 const arrayMove = (array, fromIndex, toIndex) => {
   const newArray = [...array];
@@ -225,11 +248,23 @@ const NovelTypeBanner = ({ novelId }) => {
 /**
  * Custom draggable module item using HTML5 drag-and-drop
  */
-const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModules, onRemove, dragHandlers, containerType }) => {
+const CustomDraggableModuleItem = ({ 
+  moduleData, 
+  canManageModules, 
+  canRemoveModules, 
+  onRemove, 
+  dragHandlers, 
+  containerType,
+  modules = [],
+  onMoveUp,
+  onMoveDown,
+  onMoveToOtherSection
+}) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const itemRef = useRef(null);
   const isCleaningUpRef = useRef(false);
+  const isMobile = useMobileDetection();
   
   // Clear drop target state when drag operation ends globally
   useEffect(() => {
@@ -352,10 +387,17 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     // Keep cleanup flag active for longer to prevent re-adding the class
     setTimeout(() => {
       isCleaningUpRef.current = false;
-    }, 300);
-  };
+      }, 300);
+    };
 
-  // Create the novel detail page URL
+    // Find current index in modules array for mobile actions
+    const currentIndex = modules.findIndex(m => m.moduleId._id === moduleData.moduleId._id);
+    const canMoveUp = currentIndex > 0;
+    const canMoveDown = currentIndex < modules.length - 1;
+    const otherSectionType = containerType === 'ongoing' ? 'completed' : 'ongoing';
+    const otherSectionLabel = otherSectionType === 'ongoing' ? 'Đang tiến hành' : 'Đã hoàn thành';
+  
+    // Create the novel detail page URL
   const novelSlug = createUniqueSlug(
     moduleData.moduleId?.novelId?.title || 'novel',
     moduleData.moduleId?.novelId?._id || moduleData.moduleId?.novelId
@@ -377,26 +419,27 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
     return classes.join(' ');
   };
 
-  return (
-    <div
-      ref={itemRef}
-      className={getClassName()}
-      draggable={canManageModules && ENABLE_CUSTOM_DRAG_AND_DROP}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      {/* Drag handle */}
-      {canManageModules && ENABLE_CUSTOM_DRAG_AND_DROP && (
-        <div 
-          className="drag-handle"
-          title="Kéo để sắp xếp lại"
-        >
-          <i className="fa-solid fa-grip-vertical"></i>
-        </div>
-      )}
+    return (
+      <div
+        ref={itemRef}
+        className={getClassName()}
+        draggable={canManageModules && ENABLE_CUSTOM_DRAG_AND_DROP && !isMobile}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Drag handle - desktop only */}
+        {canManageModules && ENABLE_CUSTOM_DRAG_AND_DROP && !isMobile && (
+          <div 
+            className="drag-handle"
+            title="Kéo để sắp xếp lại"
+          >
+            <i className="fa-solid fa-grip-vertical"></i>
+          </div>
+        )}
+
       
       <div className="module-cover-container">
         <img 
@@ -437,7 +480,42 @@ const CustomDraggableModuleItem = ({ moduleData, canManageModules, canRemoveModu
             <i className="fa-solid fa-times"></i>
           </button>
         )}
+
+        {/* Mobile action buttons - positioned under remove button */}
+        {canManageModules && isMobile && (
+          <div className="mobile-action-buttons">
+            {canMoveUp && (
+              <button 
+                className="mobile-action-btn move-up"
+                onClick={() => onMoveUp && onMoveUp(moduleData.moduleId._id)}
+                title="Di chuyển lên"
+                aria-label="Di chuyển lên"
+              >
+                <i className="fa-solid fa-chevron-up"></i>
+              </button>
+            )}
+            {canMoveDown && (
+              <button 
+                className="mobile-action-btn move-down"
+                onClick={() => onMoveDown && onMoveDown(moduleData.moduleId._id)}
+                title="Di chuyển xuống"
+                aria-label="Di chuyển xuống"
+              >
+                <i className="fa-solid fa-chevron-down"></i>
+              </button>
+            )}
+            <button 
+              className="mobile-action-btn move-transfer"
+              onClick={() => onMoveToOtherSection && onMoveToOtherSection(moduleData.moduleId._id)}
+              title={`Chuyển sang ${otherSectionLabel}`}
+              aria-label={`Chuyển sang ${otherSectionLabel}`}
+            >
+              <i className={`fa-solid fa-arrow-${otherSectionType === 'ongoing' ? 'left' : 'right'}`}></i>
+            </button>
+          </div>
+        )}
       </div>
+
     </div>
   );
 };
@@ -827,21 +905,44 @@ const DraggableModuleList = ({
         </div>
       )}
     </div>
-  ) : (
-    <div className={`novels-grid ${canManageModules ? 'can-manage' : ''}`}>
-      {modulesWithType.map((moduleData) => (
-        <CustomDraggableModuleItem
-          key={moduleData.moduleId._id}
-          moduleData={moduleData}
-          canManageModules={canManageModules}
-          canRemoveModules={canRemoveModules}
-          onRemove={onRemove}
-          dragHandlers={dragHandlers}
-          containerType={type}
-        />
-      ))}
-    </div>
-  );
+    ) : (
+      <div className={`novels-grid ${canManageModules ? 'can-manage' : ''}`}>
+        {modulesWithType.map((moduleData) => (
+          <CustomDraggableModuleItem
+            key={moduleData.moduleId._id}
+            moduleData={moduleData}
+            canManageModules={canManageModules}
+            canRemoveModules={canRemoveModules}
+            onRemove={onRemove}
+            dragHandlers={dragHandlers}
+            containerType={type}
+            modules={modulesWithType}
+            onMoveUp={(moduleId) => {
+              const currentIndex = modulesWithType.findIndex(m => m.moduleId._id === moduleId);
+              if (currentIndex > 0) {
+                const newOrder = arrayMove(modulesWithType, currentIndex, currentIndex - 1);
+                onReorder && onReorder(newOrder);
+              }
+            }}
+            onMoveDown={(moduleId) => {
+              const currentIndex = modulesWithType.findIndex(m => m.moduleId._id === moduleId);
+              if (currentIndex < modulesWithType.length - 1) {
+                const newOrder = arrayMove(modulesWithType, currentIndex, currentIndex + 1);
+                onReorder && onReorder(newOrder);
+              }
+            }}
+            onMoveToOtherSection={(moduleId) => {
+              // This callback will be handled by the parent UserProfile component
+              // For now, we'll emit a custom event
+              const event = new CustomEvent('moduleTransfer', {
+                detail: { moduleId, from: type, to: type === 'ongoing' ? 'completed' : 'ongoing' }
+              });
+              window.dispatchEvent(event);
+            }}
+          />
+        ))}
+      </div>
+    );
 
   return (
     <CustomDroppableContainer 

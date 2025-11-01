@@ -338,7 +338,7 @@ const Forum = () => {
             type: blobInfo.blob().type
           });
           
-          const url = await bunnyUploadService.uploadFile(file, 'forum');
+          const url = await bunnyUploadService.uploadFile(file, 'forums');
           const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
           
           return optimizedUrl;
@@ -360,7 +360,7 @@ const Forum = () => {
             const file = this.files[0];
             if (file) {
               try {
-                const url = await bunnyUploadService.uploadFile(file, 'forum');
+                const url = await bunnyUploadService.uploadFile(file, 'forums');
                 const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
                 callback(optimizedUrl, { alt: file.name });
               } catch (error) {

@@ -83,7 +83,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 576px) {
   .drag-handle {
     left: 4px;
     font-size: 12px;
@@ -201,7 +201,7 @@
 }
 
 /* Responsive adjustments for cross-section dragging */
-@media (max-width: 768px) {
+@media (max-width: 576px) {
   .droppable-container {
     min-height: 80px;
   }
@@ -254,4 +254,117 @@
   font-size: inherit;
   font-weight: inherit;
   line-height: inherit;
-} 
+}
+
+/* Mobile-specific styles */
+@media (max-width: 576px) {
+  .module-item.can-manage {
+    padding-left: 32px; /* Keep some padding for drag handle space on desktop */
+  }
+}
+
+/* Mobile action buttons */
+.mobile-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.mobile-action-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.mobile-action-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+}
+
+.mobile-action-btn:active {
+  transform: scale(0.95);
+}
+
+.mobile-action-btn.move-up {
+  color: var(--primary-color, #007bff);
+}
+
+.mobile-action-btn.move-down {
+  color: var(--primary-color, #007bff);
+}
+
+.mobile-action-btn.move-transfer {
+  color: var(--success-color, #28a745);
+}
+
+.mobile-action-btn.remove-btn {
+  color: var(--danger-color, #dc3545);
+}
+
+.mobile-action-btn.move-up:hover,
+.mobile-action-btn.move-down:hover {
+  color: var(--primary-color, #007bff);
+  background: rgba(0, 123, 255, 0.1);
+}
+
+.mobile-action-btn.move-transfer:hover {
+  color: var(--success-color, #28a745);
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.mobile-action-btn.remove-btn:hover {
+  color: var(--danger-color, #dc3545);
+  background: rgba(220, 53, 69, 0.1);
+}
+
+/* Dark theme support for mobile action buttons */
+:root.dark-mode .mobile-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #b2bec3;
+}
+
+:root.dark-mode .mobile-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+:root.dark-mode .mobile-action-btn.move-up,
+:root.dark-mode .mobile-action-btn.move-down {
+  color: var(--primary-color-dark, #4db8ff);
+}
+
+:root.dark-mode .mobile-action-btn.move-transfer {
+  color: var(--success-color-dark, #55a3ff);
+}
+
+:root.dark-mode .mobile-action-btn.remove-btn {
+  color: var(--danger-color-dark, #ff6b7a);
+}
+
+:root.dark-mode .mobile-action-btn.move-up:hover,
+:root.dark-mode .mobile-action-btn.move-down:hover {
+  background: rgba(77, 184, 255, 0.2);
+}
+
+:root.dark-mode .mobile-action-btn.move-transfer:hover {
+  background: rgba(85, 163, 255, 0.2);
+}
+
+:root.dark-mode .mobile-action-btn.remove-btn:hover {
+  background: rgba(255, 107, 122, 0.2);
+}

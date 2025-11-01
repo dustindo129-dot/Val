@@ -425,7 +425,7 @@ const ForumPostDetail = () => {
             type: blobInfo.blob().type
           });
           
-          const url = await bunnyUploadService.uploadFile(file, 'forum');
+          const url = await bunnyUploadService.uploadFile(file, 'forums');
           const optimizedUrl = cdnConfig.getOptimizedImageUrl(url.replace(cdnConfig.bunnyBaseUrl, ''), cdnConfig.imageClasses.commentImg);
           
           return optimizedUrl;

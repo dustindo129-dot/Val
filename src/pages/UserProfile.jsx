@@ -18,6 +18,7 @@ import axios from 'axios';
 import config from '../config/config';
 import LoadingSpinner from '../components/LoadingSpinner';
 import cdnConfig from '../config/bunny';
+import bunnyUploadService from '../services/bunnyUploadService';
 
 import DraggableModuleList from '../components/DraggableModuleList';
 import InterestTagsManager from '../components/InterestTagsManager';
@@ -751,6 +752,19 @@ const UserProfile = () => {
   const [editingBlogPost, setEditingBlogPost] = useState(null);
   const blogEditorRef = useRef(null);
 
+  // Wallpaper ref for touch event handling
+  const wallpaperRef = useRef(null);
+
+  // Wallpaper state management
+  const [isUploadingWallpaper, setIsUploadingWallpaper] = useState(false);
+  const [customWallpaper, setCustomWallpaper] = useState(null);
+  const [showWallpaperModal, setShowWallpaperModal] = useState(false);
+  const [wallpaperPosition, setWallpaperPosition] = useState(50); // Default center position
+  const [showRepositionModal, setShowRepositionModal] = useState(false);
+
+  // Avatar state management
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
   // Check if current user is viewing their own profile
   const isOwnProfile = user && profileUser && user.username === profileUser.username;
   
@@ -844,6 +858,10 @@ const UserProfile = () => {
         const userData = response.data;
         setProfileUser(userData);
         setIntroText(userData.intro || '');
+        setCustomWallpaper(userData.wallpaper || null);
+        const initialPosition = userData.wallpaperPosition || 50;
+        setWallpaperPosition(initialPosition);
+        setOriginalWallpaperPosition(initialPosition);
         
         // Prepare user stats from the optimized response
         const stats = {
@@ -1132,6 +1150,359 @@ const UserProfile = () => {
     } catch (error) {
       console.error('Error toggling blog homepage visibility:', error);
       alert('Không thể thay đổi hiển thị trang chủ. Vui lòng thử lại.');
+    }
+  };
+
+  // Wallpaper management functions
+  const wallpaperButtonRef = useRef(null);
+  
+  const handleShowWallpaperModal = () => {
+    // Toggle modal - close if already open, open if closed
+    setShowWallpaperModal(prev => !prev);
+  };
+
+  const handleCloseWallpaperModal = () => {
+    setShowWallpaperModal(false);
+  };
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showWallpaperModal && wallpaperButtonRef.current && !wallpaperButtonRef.current.parentElement.contains(event.target)) {
+        setShowWallpaperModal(false);
+      }
+    };
+
+    if (showWallpaperModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showWallpaperModal]);
+
+  const handleUploadWallpaper = () => {
+    if (isUploadingWallpaper) return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file hình ảnh');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        alert('Kích thước file không được vượt quá 5MB');
+        return;
+      }
+
+      try {
+        setIsUploadingWallpaper(true);
+        
+        // Upload to bunny.net wallpapers folder
+        const wallpaperUrl = await bunnyUploadService.uploadFile(file, 'wallpaper');
+        
+        // Update user's wallpaper on backend
+        await axios.put(
+          `${config.backendUrl}/api/users/number/${profileUser.userNumber}/wallpaper`,
+          { wallpaper: wallpaperUrl },
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+
+        // Update local state
+        setCustomWallpaper(wallpaperUrl);
+        setProfileUser(prev => ({ ...prev, wallpaper: wallpaperUrl }));
+        
+        // Close modal and show reposition
+        setShowWallpaperModal(false);
+        setShowRepositionModal(true);
+        
+        alert('Ảnh bìa đã được cập nhật thành công!');
+      } catch (error) {
+        console.error('Error uploading wallpaper:', error);
+        alert('Không thể tải lên ảnh bìa. Vui lòng thử lại.');
+      } finally {
+        setIsUploadingWallpaper(false);
+      }
+    };
+    
+    input.click();
+  };
+
+  const [originalWallpaperPosition, setOriginalWallpaperPosition] = useState(wallpaperPosition);
+
+  const handleShowReposition = () => {
+    setShowWallpaperModal(false);
+    setOriginalWallpaperPosition(wallpaperPosition); // Store original position
+    setShowRepositionModal(true);
+  };
+
+  // Handle wallpaper dragging for reposition mode - State declarations first
+  const [isDraggingWallpaper, setIsDraggingWallpaper] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [dragStartPosition, setDragStartPosition] = useState(0);
+
+  // Prevent body scrolling when in repositioning mode
+  useEffect(() => {
+    if (showRepositionModal) {
+      // Prevent body scrolling
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      
+      return () => {
+        // Restore body scrolling
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+      };
+    }
+  }, [showRepositionModal]);
+
+  // Set up non-passive touch event listeners for wallpaper
+  useEffect(() => {
+    if (showRepositionModal && wallpaperRef.current) {
+      const element = wallpaperRef.current;
+      
+      const handleTouchStart = (e) => {
+        handleWallpaperTouchStart(e);
+      };
+      
+      const handleTouchMove = (e) => {
+        e.preventDefault(); // Now we can safely prevent default
+        handleWallpaperTouchMove(e);
+      };
+      
+      const handleTouchEnd = (e) => {
+        handleWallpaperTouchEnd(e);
+      };
+      
+      // Add non-passive touch event listeners
+      element.addEventListener('touchstart', handleTouchStart, { passive: false });
+      element.addEventListener('touchmove', handleTouchMove, { passive: false });
+      element.addEventListener('touchend', handleTouchEnd, { passive: false });
+      
+      return () => {
+        element.removeEventListener('touchstart', handleTouchStart);
+        element.removeEventListener('touchmove', handleTouchMove);
+        element.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [showRepositionModal, wallpaperPosition, dragStartY, dragStartPosition]);
+
+  const handleWallpaperMouseDown = (e) => {
+    if (!showRepositionModal) return;
+    setIsDraggingWallpaper(true);
+    setDragStartY(e.clientY);
+    setDragStartPosition(wallpaperPosition);
+    e.preventDefault();
+  };
+
+  const handleWallpaperTouchStart = (e) => {
+    if (!showRepositionModal) return;
+    e.stopPropagation(); // Prevent event bubbling
+    setIsDraggingWallpaper(true);
+    setDragStartY(e.touches[0].clientY);
+    setDragStartPosition(wallpaperPosition);
+  };
+
+  const handleWallpaperMouseMove = (e) => {
+    if (!isDraggingWallpaper || !showRepositionModal) return;
+    
+    const deltaY = e.clientY - dragStartY;
+    const containerHeight = 300; // Wallpaper height
+    const positionChange = (deltaY / containerHeight) * 100;
+    const newPosition = Math.max(0, Math.min(100, dragStartPosition + positionChange));
+    
+    setWallpaperPosition(newPosition);
+  };
+
+  const handleWallpaperTouchMove = (e) => {
+    if (!isDraggingWallpaper || !showRepositionModal) return;
+    
+    e.stopPropagation(); // Prevent event bubbling
+    const deltaY = e.touches[0].clientY - dragStartY;
+    const containerHeight = 300; // Wallpaper height
+    const positionChange = (deltaY / containerHeight) * 100;
+    const newPosition = Math.max(0, Math.min(100, dragStartPosition + positionChange));
+    
+    setWallpaperPosition(newPosition);
+  };
+
+  const handleWallpaperMouseUp = () => {
+    setIsDraggingWallpaper(false);
+  };
+
+  const handleWallpaperTouchEnd = () => {
+    setIsDraggingWallpaper(false);
+  };
+
+  // Global mouse/touch events when dragging wallpaper
+  useEffect(() => {
+    if (isDraggingWallpaper && showRepositionModal) {
+      document.addEventListener('mousemove', handleWallpaperMouseMove);
+      document.addEventListener('mouseup', handleWallpaperMouseUp);
+      document.addEventListener('touchmove', handleWallpaperTouchMove);
+      document.addEventListener('touchend', handleWallpaperTouchEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleWallpaperMouseMove);
+        document.removeEventListener('mouseup', handleWallpaperMouseUp);
+        document.removeEventListener('touchmove', handleWallpaperTouchMove);
+        document.removeEventListener('touchend', handleWallpaperTouchEnd);
+      };
+    }
+  }, [isDraggingWallpaper, showRepositionModal, dragStartY, dragStartPosition]);
+
+  // Arrow key controls for repositioning
+  useEffect(() => {
+    if (!showRepositionModal) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setWallpaperPosition(prev => Math.max(0, prev - 2));
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setWallpaperPosition(prev => Math.min(100, prev + 2));
+      } else if (e.key === 'Escape') {
+        setShowRepositionModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showRepositionModal]);
+
+  const handleRepositionSave = async (newPosition) => {
+    try {
+      setIsUploadingWallpaper(true);
+      
+      // Update user's wallpaper position on backend
+      const response = await axios.put(
+        `${config.backendUrl}/api/users/number/${profileUser.userNumber}/wallpaper-position`,
+        { wallpaperPosition: newPosition },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      // Update local state and original position
+      setWallpaperPosition(newPosition);
+      setOriginalWallpaperPosition(newPosition); // Update original position after successful save
+      setProfileUser(prev => ({ ...prev, wallpaperPosition: newPosition }));
+      setShowRepositionModal(false);
+      
+    } catch (error) {
+      console.error('Error updating wallpaper position:', error);
+      alert('Không thể cập nhật vị trí ảnh bìa. Vui lòng thử lại.');
+    } finally {
+      setIsUploadingWallpaper(false);
+    }
+  };
+
+  const handleRemoveWallpaper = async () => {
+    if (!window.confirm('Bạn có muốn xóa ảnh bìa và sử dụng ảnh mặc định không?')) {
+      return;
+    }
+
+    try {
+      setIsUploadingWallpaper(true);
+      
+      // Remove user's wallpaper on backend
+      await axios.delete(
+        `${config.backendUrl}/api/users/number/${profileUser.userNumber}/wallpaper`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      // Update local state
+      setCustomWallpaper(null);
+      setWallpaperPosition(50);
+      setProfileUser(prev => ({ ...prev, wallpaper: null, wallpaperPosition: 50 }));
+      setShowWallpaperModal(false);
+      
+      alert('Ảnh bìa đã được xóa. Sử dụng ảnh mặc định.');
+    } catch (error) {
+      console.error('Error removing wallpaper:', error);
+      alert('Không thể xóa ảnh bìa. Vui lòng thử lại.');
+    } finally {
+      setIsUploadingWallpaper(false);
+    }
+  };
+
+  // Avatar management functions
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.match('image.*')) {
+      alert('Vui lòng chọn tệp ảnh');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('Kích thước ảnh phải nhỏ hơn 5MB');
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+
+      // Upload to Bunny.net
+      const newAvatarUrl = await bunnyUploadService.uploadFile(
+        file,
+        'avatar'
+      );
+
+      // Send avatar URL to backend
+      await axios.post(
+        `${config.backendUrl}/api/users/number/${profileUser.userNumber}/avatar`,
+        { avatar: newAvatarUrl },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      // Update local state
+      setProfileUser(prev => ({ ...prev, avatar: newAvatarUrl }));
+      
+      // Update user data in localStorage and AuthContext if this is own profile
+      if (user && user._id === profileUser._id) {
+        const updatedUser = { ...user, avatar: newAvatarUrl };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // We would need updateUser function here, but it's not available in this context
+        // The avatar will be updated on next page load/refresh
+      }
+      
+      alert('Ảnh đại diện đã được cập nhật thành công!');
+      
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Không thể cập nhật ảnh đại diện. Vui lòng thử lại.');
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -1434,6 +1805,25 @@ const UserProfile = () => {
     }
   };
 
+  // Listen for mobile module transfer events
+  useEffect(() => {
+    const handleModuleTransfer = (event) => {
+      const { moduleId, from, to } = event.detail;
+      
+      if (from === 'ongoing' && to === 'completed') {
+        handleMoveToCompleted(moduleId);
+      } else if (from === 'completed' && to === 'ongoing') {
+        handleMoveToOngoing(moduleId);
+      }
+    };
+
+    window.addEventListener('moduleTransfer', handleModuleTransfer);
+    
+    return () => {
+      window.removeEventListener('moduleTransfer', handleModuleTransfer);
+    };
+  }, []);
+
   // Module refresh function for admin/mod to repopulate modules and recalculate chapters participated
   const handleRefreshModules = useCallback(async () => {
     if (!canRefreshModules) return;
@@ -1699,69 +2089,181 @@ const UserProfile = () => {
     <div className="user-profile-page">
       <UserProfileSEO profileUser={profileUser} username={userNumber} />
       
-      {/* Profile Banner */}
-      <div className="profile-banner">
-        <div className="banner-overlay"></div>
-        <div className="banner-content">
-          {/* Banner background - you can customize this */}
+      {/* Profile Wallpaper */}
+      <div 
+        ref={wallpaperRef}
+        className={`profile-wallpaper ${showRepositionModal ? 'repositioning' : ''} ${isDraggingWallpaper ? 'dragging' : ''}`}
+        style={customWallpaper ? {
+          backgroundImage: `url(${customWallpaper})`,
+          backgroundPosition: `center ${wallpaperPosition}%`
+        } : {}}
+        onMouseDown={showRepositionModal ? handleWallpaperMouseDown : undefined}
+      >
+        <div className="wallpaper-overlay"></div>
+        
+        {/* Reposition Mode Controls */}
+        {showRepositionModal && (
+          <div className="reposition-mode-overlay">
+            <div className="reposition-top-controls">
+              <button 
+                className="reposition-cancel-btn"
+                onClick={() => {
+                  setWallpaperPosition(originalWallpaperPosition); // Revert to original position
+                  setShowRepositionModal(false);
+                }}
+                disabled={isUploadingWallpaper}
+              >
+                Hủy
+              </button>
+              <button 
+                className="reposition-save-btn"
+                onClick={() => handleRepositionSave(wallpaperPosition)}
+                disabled={isUploadingWallpaper}
+              >
+                {isUploadingWallpaper ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </button>
+            </div>
+            
+            <div className="reposition-instructions">
+              <div className="instruction-text">
+                <i className="fa-solid fa-hand-paper"></i>
+                Kéo thả hoặc dùng phím mũi tên để điều chỉnh
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="wallpaper-content">
+          {/* Wallpaper background - you can customize this */}
+          {isOwnProfile && !showRepositionModal && (
+            <div className="wallpaper-button-container">
+              <button 
+                ref={wallpaperButtonRef}
+                className="edit-wallpaper-btn"
+                onClick={handleShowWallpaperModal}
+                disabled={isUploadingWallpaper}
+                title="Chỉnh sửa ảnh bìa"
+              >
+                <i className="fa-solid fa-camera"></i>
+                Chỉnh sửa ảnh bìa
+              </button>
+              
+              {/* Wallpaper Edit Modal - Positioned as dropdown */}
+        {showWallpaperModal && (
+          <div className="wallpaper-dropdown-modal">
+                  <div className="wallpaper-modal-content">
+                    <div className="wallpaper-options">
+                      <button 
+                        className="wallpaper-option-btn"
+                        onClick={handleUploadWallpaper}
+                        disabled={isUploadingWallpaper}
+                      >
+                        <i className="fa-solid fa-upload"></i>
+                        <div className="option-text">
+                          <span className="option-title">Tải ảnh lên</span>
+                          <span className="option-desc">Chọn ảnh từ máy tính</span>
+                        </div>
+                      </button>
+
+                      {customWallpaper && (
+                        <button 
+                          className="wallpaper-option-btn"
+                          onClick={handleShowReposition}
+                        >
+                          <i className="fa-solid fa-arrows-alt-v"></i>
+                          <div className="option-text">
+                            <span className="option-title">Điều chỉnh vị trí</span>
+                            <span className="option-desc">Di chuyển ảnh lên xuống</span>
+                          </div>
+                        </button>
+                      )}
+
+                      {customWallpaper && (
+                        <button 
+                          className="wallpaper-option-btn remove"
+                          onClick={handleRemoveWallpaper}
+                          disabled={isUploadingWallpaper}
+                        >
+                          <i className="fa-solid fa-trash"></i>
+                          <div className="option-text">
+                            <span className="option-title">Xóa</span>
+                            <span className="option-desc">Sử dụng ảnh mặc định</span>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Profile Header Section */}
       <div className="profile-header-section">
         <div className="container">
+          {/* Avatar that overlaps the header */}
+          <div className="profile-avatar-overlap">
+            <div className="profile-avatar-wrapper">
+              <img
+                src={cdnConfig.getAvatarUrl(profileUser.avatar)}
+                alt={`${profileUser.displayName || profileUser.username}'s avatar`}
+                className="profile-avatar-image"
+              />
+              {isOwnProfile && (
+                <label className="profile-avatar-upload-overlay">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={isUploadingAvatar}
+                    style={{ display: 'none' }}
+                  />
+                  <i className="fa-solid fa-camera"></i>
+                </label>
+              )}
+            </div>
+          </div>
+          
           <div className="profile-header-content">
-            {/* User Avatar and Basic Info */}
-            <div className="profile-avatar-section">
-              <div className="profile-avatar-wrapper">
-                <img
-                  src={cdnConfig.getAvatarUrl(profileUser.avatar)}
-                  alt={`${profileUser.displayName || profileUser.username}'s avatar`}
-                  className="profile-avatar-image"
-                />
-              </div>
+            <div className="profile-user-info">
+              <h1 className="profile-username">
+                {profileUser.displayName || profileUser.username}
+                {(profileUser.role === 'admin' || 
+                  profileUser.role === 'moderator' || 
+                  profileUser.role === 'pj_user' || 
+                  hasNovelRoles) && (
+                  <span className="verification-badge" title="Đã xác minh">
+                    <i className="fa-solid fa-circle-check"></i>
+                  </span>
+                )}
+              </h1>
               
-              <div className="profile-user-info">
-                <h1 className="profile-username">
-                  {profileUser.displayName || profileUser.username}
-                  {(profileUser.role === 'admin' || 
-                    profileUser.role === 'moderator' || 
-                    profileUser.role === 'pj_user' || 
-                    hasNovelRoles) && (
-                    <span className="verification-badge" title="Đã xác minh">
-                      <i className="fa-solid fa-circle-check"></i>
-                    </span>
-                  )}
-                </h1>
-                
-                <div className="profile-stats">
+              <div className="profile-stats-meta-container">
+                <div className="profile-stats-inline">
                   <div className="stat-item">
                     <span className="stat-number">{formatNumber(userStats.chaptersParticipated)}</span>
                     <span className="stat-label">Chương đã tham gia</span>
                   </div>
-                  
                   <div className="stat-item">
                     <span className="stat-number">{formatNumber(userStats.followingCount)}</span>
                     <span className="stat-label">Đang theo dõi</span>
                   </div>
-                  
                   <div className="stat-item">
                     <span className="stat-number">{formatNumber(userStats.commentsCount)}</span>
                     <span className="stat-label">Bình luận</span>
                   </div>
                 </div>
-
-                <div className="profile-meta">
-                  <div className="meta-row">
-                    <div className="meta-item">
-                      <i className="fa-solid fa-clock"></i>
-                      <span>Tham gia: {new Date(profileUser.createdAt).toLocaleDateString('vi-VN')}</span>
-                    </div>
-                    
-                    <div className="meta-item">
-                      <i className="fa-solid fa-eye"></i>
-                      <span>Lượt ghé thăm: {formatNumber(profileUser.visitors?.total || 0)}</span>
-                    </div>
+                
+                <div className="profile-meta-inline">
+                  <div className="meta-item">
+                    <i className="fa-solid fa-calendar-days"></i>
+                    <span>Tham gia: {new Date(profileUser.createdAt).toLocaleDateString('vi-VN')}</span>
+                  </div>
+                  <div className="meta-item">
+                    <i className="fa-solid fa-eye"></i>
+                    <span>Lượt ghé thăm: {formatNumber(profileUser.visitors?.total || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -2108,8 +2610,11 @@ const UserProfile = () => {
           </div>
         </div>
       )}
+
+
     </div>
   );
 };
+
 
 export default UserProfile; 
