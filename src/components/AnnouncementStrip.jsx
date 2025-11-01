@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import '../styles/components/AvatarAnnouncementStrip.css';
+import '../styles/components/AnnouncementStrip.css';
 
-const AvatarAnnouncementStrip = () => {
+const AnnouncementStrip = () => {
   const [isVisible, setIsVisible] = useState(false);
   const location = useLocation();
 
@@ -34,7 +34,7 @@ const AvatarAnnouncementStrip = () => {
   return (
     <div className="avatar-announcement-strip">
       <div className="announcement-content">
-        <span>Đổi avatar bằng cách chọn hình đại diện góc trên bên phải {'->'} Cài đặt</span>
+        <span>Từ giờ đã có thể up ảnh bìa + ảnh avatar tại trang cá nhân</span>
         <button onClick={handleClose} className="close-button" aria-label="Đóng thông báo">
           <i className="fa-solid fa-times"></i>
         </button>
@@ -43,4 +43,4 @@ const AvatarAnnouncementStrip = () => {
   );
 };
 
-export default AvatarAnnouncementStrip;
+export default AnnouncementStrip;

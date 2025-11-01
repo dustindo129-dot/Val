@@ -11,7 +11,7 @@ import { SEOProvider } from './context/SEOContext';
 import { initGA, trackPageView } from './utils/analytics';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
-import AvatarAnnouncementStrip from './components/AvatarAnnouncementStrip';
+import AnnouncementStrip from './components/AnnouncementStrip';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import StructuredData from './components/StructuredData';
@@ -59,7 +59,7 @@ const App = () => {
                   />
                   <Navbar />
                   <SecondaryNavbar />
-                  <AvatarAnnouncementStrip />
+                  <AnnouncementStrip />
                   <main className={`main-content ${isChapterPage ? 'chapter-page' : ''}`}>
                     <RouteTracker />
                     <AppRoutes />
