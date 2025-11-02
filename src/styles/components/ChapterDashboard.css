@@ -592,6 +592,237 @@
   color: #3498db;
 }
 
+/* TinyMCE Dark Mode Support for Insert/Edit Image Modal */
+:root.dark-mode .tox-dialog {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-dialog__header {
+  background-color: #333;
+  border-bottom: 1px solid #444;
+}
+
+:root.dark-mode .tox-dialog__title {
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-dialog__body {
+  background-color: #2c2c2c;
+}
+
+:root.dark-mode .tox-dialog__body-nav {
+  background-color: #333;
+  border-bottom: 1px solid #444;
+}
+
+:root.dark-mode .tox-dialog__body-nav-item {
+  background-color: #333;
+  color: #ecf0f1;
+  border-right: 1px solid #444;
+}
+
+:root.dark-mode .tox-dialog__body-nav-item:hover {
+  background-color: #404040;
+}
+
+:root.dark-mode .tox-dialog__body-nav-item--active {
+  background-color: #2c2c2c;
+  color: #3498db;
+  border-bottom: 2px solid #3498db;
+}
+
+:root.dark-mode .tox-dialog__body-content {
+  background-color: #2c2c2c;
+}
+
+:root.dark-mode .tox-form__group {
+  background-color: transparent;
+}
+
+:root.dark-mode .tox-label {
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-textfield {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-textfield:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+:root.dark-mode .tox-textfield:invalid {
+  border-color: #e74c3c;
+}
+
+:root.dark-mode .tox-control-wrap__status-icon-invalid {
+  color: #e74c3c;
+}
+
+:root.dark-mode .tox-button {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-button:hover {
+  background-color: #404040;
+  border-color: #666;
+}
+
+:root.dark-mode .tox-button--secondary {
+  background-color: #444;
+  border-color: #666;
+}
+
+:root.dark-mode .tox-button--secondary:hover {
+  background-color: #555;
+}
+
+:root.dark-mode .tox-button--naked {
+  background-color: transparent;
+  border: none;
+}
+
+:root.dark-mode .tox-button--naked:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.dark-mode .tox-lock {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+}
+
+:root.dark-mode .tox-lock:hover {
+  background-color: #404040;
+}
+
+:root.dark-mode .tox-lock-icon__lock,
+:root.dark-mode .tox-lock-icon__unlock {
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-dialog__footer {
+  background-color: #333;
+  border-top: 1px solid #444;
+}
+
+:root.dark-mode .tox-dialog__footer-start,
+:root.dark-mode .tox-dialog__footer-end {
+  background-color: transparent;
+}
+
+/* TinyMCE Upload Tab Styles */
+:root.dark-mode .tox-dropzone {
+  background-color: #3a3a3a;
+  border: 2px dashed #555;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-dropzone:hover {
+  border-color: #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+:root.dark-mode .tox-dropzone__text {
+  color: #ecf0f1;
+}
+
+/* TinyMCE Progress Bar */
+:root.dark-mode .tox-progress-bar {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+}
+
+:root.dark-mode .tox-progress-bar__bar {
+  background-color: #3498db;
+}
+
+/* TinyMCE File Browser */
+:root.dark-mode .tox-browse-url {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-browse-url:hover {
+  background-color: #404040;
+}
+
+/* TinyMCE Checkbox and Radio Buttons */
+:root.dark-mode .tox-checkbox__input {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+}
+
+:root.dark-mode .tox-checkbox__input:checked {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+/* TinyMCE Select Dropdown */
+:root.dark-mode .tox-selectfield {
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-selectfield:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+/* TinyMCE Slider */
+:root.dark-mode .tox-slider {
+  background-color: #3a3a3a;
+}
+
+:root.dark-mode .tox-slider__rail {
+  background-color: #555;
+}
+
+:root.dark-mode .tox-slider__handle {
+  background-color: #3498db;
+  border: 2px solid #2980b9;
+}
+
+/* TinyMCE Collection Items */
+:root.dark-mode .tox-collection__item {
+  background-color: #3a3a3a;
+  color: #ecf0f1;
+}
+
+:root.dark-mode .tox-collection__item:hover {
+  background-color: #404040;
+}
+
+:root.dark-mode .tox-collection__item--active {
+  background-color: #3498db;
+  color: white;
+}
+
+/* TinyMCE Tab Panel Content */
+:root.dark-mode .tox-tab {
+  background-color: #333;
+  color: #ecf0f1;
+  border: 1px solid #444;
+}
+
+:root.dark-mode .tox-tab:hover {
+  background-color: #404040;
+}
+
+:root.dark-mode .tox-tab--active {
+  background-color: #2c2c2c;
+  color: #3498db;
+  border-bottom-color: #2c2c2c;
+}
+
 /* Responsive adjustments for larger screens */
 @media (min-width: 768px) {
   .chapter-title-status-group {
