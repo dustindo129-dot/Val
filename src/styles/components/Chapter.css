@@ -731,6 +731,20 @@
   color: white;
 }
 
+/* Like button states */
+.action-btn.like.pending {
+  background-color: #f39c12;
+  color: white;
+  border-color: #f39c12;
+}
+
+.action-btn.like.error {
+  background-color: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+  opacity: 0.8;
+}
+
 .like-count {
   font-weight: 600;
   font-size: 0.85rem;
@@ -1622,8 +1636,35 @@
 }
 
 :root.dark-mode .action-btn.like.active .chapter-like-count {
-  background-color: rgba(231, 76, 60, 0.2);
-  color: #ff6b6b;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #1a1a1a;
+}
+
+/* Dark mode support for active like button */
+:root.dark-mode .action-btn.like.active {
+  background-color: #ff6b6b;
+  color: #1a1a1a;
+  border-color: #ff6b6b;
+}
+
+:root.dark-mode .action-btn.like.active:hover {
+  background-color: #ff5252;
+  color: #1a1a1a;
+  border-color: #ff5252;
+}
+
+/* Dark mode support for like button states */
+:root.dark-mode .action-btn.like.pending {
+  background-color: #f39c12;
+  color: #1a1a1a;
+  border-color: #f39c12;
+}
+
+:root.dark-mode .action-btn.like.error {
+  background-color: #e74c3c;
+  color: #fff;
+  border-color: #e74c3c;
+  opacity: 0.8;
 }
 
 

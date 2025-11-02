@@ -37,6 +37,279 @@ import {
 // Import permission utilities
 import { canEditChapter } from '../utils/novelPermissions';
 
+// Facebook-style Like System Classes
+class LikeQueue {
+  constructor(sendToServer) {
+    this.queue = new Map(); // chapterId -> { targetState, timestamp, retryCount }
+    this.processing = new Set();
+    this.sendToServer = sendToServer;
+    this.deviceId = this.generateDeviceId();
+  }
+
+  generateDeviceId() {
+    return localStorage.getItem('deviceId') || 
+           (() => {
+             const id = 'device_' + Math.random().toString(36).substr(2, 9);
+             localStorage.setItem('deviceId', id);
+             return id;
+           })();
+  }
+
+  async addToQueue(chapterId, currentState, userId) {
+    const timestamp = Date.now();
+    const targetState = !currentState;
+    
+    // Store intended final state with metadata
+    this.queue.set(chapterId, {
+      targetState,
+      timestamp,
+      userId,
+      deviceId: this.deviceId,
+      retryCount: 0
+    });
+
+    // Process if not already processing
+    if (!this.processing.has(chapterId)) {
+      await this.processQueue(chapterId);
+    }
+  }
+
+  async processQueue(chapterId) {
+    this.processing.add(chapterId);
+
+    try {
+      while (this.queue.has(chapterId)) {
+        const queueItem = this.queue.get(chapterId);
+        this.queue.delete(chapterId);
+
+        try {
+          // Make API call
+          await this.sendToServer(chapterId, queueItem);
+        } catch (error) {
+          // Handle retry logic
+          if (queueItem.retryCount < 3 && this.isRetryableError(error)) {
+            queueItem.retryCount++;
+            this.queue.set(chapterId, queueItem);
+            
+            // Exponential backoff
+            await this.delay(Math.pow(2, queueItem.retryCount) * 1000);
+          } else {
+            throw error; // Let error recovery handle it
+          }
+        }
+      }
+    } finally {
+      this.processing.delete(chapterId);
+    }
+  }
+
+  isRetryableError(error) {
+    return error.code === 'NETWORK_ERROR' || 
+           error.response?.status >= 500 ||
+           error.code === 'TIMEOUT';
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  clear() {
+    this.queue.clear();
+    this.processing.clear();
+  }
+}
+
+class LikeBatcher {
+  constructor(flushCallback) {
+    this.batch = new Map();
+    this.timeout = null;
+    this.flushCallback = flushCallback;
+    this.batchSize = 10;
+    this.batchDelay = 50; // 50ms
+  }
+
+  addToBatch(chapterId, data) {
+    this.batch.set(chapterId, data);
+    
+    // Flush if batch is full
+    if (this.batch.size >= this.batchSize) {
+      this.flush();
+      return;
+    }
+
+    // Set timeout if not already set
+    if (!this.timeout) {
+      this.timeout = setTimeout(() => this.flush(), this.batchDelay);
+    }
+  }
+
+  async flush() {
+    if (this.batch.size === 0) return;
+
+    const actions = Array.from(this.batch.entries());
+    this.batch.clear();
+    
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+
+    // Send batch to callback
+    await this.flushCallback(actions);
+  }
+
+  clear() {
+    this.batch.clear();
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+  }
+}
+
+class LikeRateLimiter {
+  constructor() {
+    this.actionCount = new Map();
+    this.windowStart = new Map();
+    this.maxActionsPerMinute = 10;
+    this.windowDuration = 60000; // 1 minute
+  }
+
+  canLike(chapterId) {
+    const now = Date.now();
+    const windowStart = this.windowStart.get(chapterId) || 0;
+    const count = this.actionCount.get(chapterId) || 0;
+
+    // Reset window if needed
+    if (now - windowStart > this.windowDuration) {
+      this.actionCount.set(chapterId, 0);
+      this.windowStart.set(chapterId, now);
+      return true;
+    }
+
+    return count < this.maxActionsPerMinute;
+  }
+
+  recordAction(chapterId) {
+    const count = this.actionCount.get(chapterId) || 0;
+    this.actionCount.set(chapterId, count + 1);
+  }
+
+  clear() {
+    this.actionCount.clear();
+    this.windowStart.clear();
+  }
+}
+
+class LikeErrorRecovery {
+  constructor(updateCallback) {
+    this.pendingActions = new Map();
+    this.updateCallback = updateCallback;
+    this.dbName = 'ChapterLikes';
+    this.storeName = 'pendingLikes';
+    this.initDB();
+  }
+
+  async initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, 1);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName, { keyPath: 'chapterId' });
+        }
+      };
+    });
+  }
+
+  async storePendingAction(chapterId, action) {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readwrite');
+    const store = transaction.objectStore(this.storeName);
+    
+    await new Promise((resolve, reject) => {
+      const request = store.put({ chapterId, ...action, timestamp: Date.now() });
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    this.pendingActions.set(chapterId, action);
+    this.updateCallback(chapterId, 'pending');
+  }
+
+  async removePendingAction(chapterId) {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readwrite');
+    const store = transaction.objectStore(this.storeName);
+    
+    await new Promise((resolve, reject) => {
+      const request = store.delete(chapterId);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    this.pendingActions.delete(chapterId);
+  }
+
+  async retryPendingActions() {
+    if (!this.db) await this.initDB();
+    
+    const transaction = this.db.transaction([this.storeName], 'readonly');
+    const store = transaction.objectStore(this.storeName);
+    
+    const pendingActions = await new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    for (const action of pendingActions) {
+      try {
+        // Retry the action
+        await this.retryAction(action);
+        await this.removePendingAction(action.chapterId);
+      } catch (error) {
+        console.error('Failed to retry action:', error);
+      }
+    }
+  }
+
+  async retryAction(action) {
+    // This will be implemented by the component
+    throw new Error('retryAction must be implemented');
+  }
+}
+
+class LikeConflictResolver {
+  constructor() {
+    this.lastActionTimestamp = new Map();
+  }
+
+  recordAction(chapterId, timestamp) {
+    this.lastActionTimestamp.set(chapterId, timestamp);
+  }
+
+  shouldAcceptUpdate(chapterId, serverTimestamp) {
+    const lastAction = this.lastActionTimestamp.get(chapterId);
+    
+    // Accept if we haven't acted on this chapter or server is newer
+    return !lastAction || serverTimestamp > lastAction;
+  }
+
+  clear() {
+    this.lastActionTimestamp.clear();
+  }
+}
+
 /**
  * ChapterSEO Component
  * 
@@ -273,11 +546,11 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   const [notification, setNotification] = useState({ type: '', message: '', show: false });
 
   // Interaction state
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+  const [likeState, setLikeState] = useState({ isLiked: false, count: 0, status: 'idle' }); // { isLiked, count, status }
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [viewCount, setViewCount] = useState(0);
   const [wordCount, setWordCount] = useState(0);
+  const likeSystemRef = useRef(null);
 
   // Report form state
   const [reportReason, setReportReason] = useState('');
@@ -286,18 +559,14 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   // Use the reading progress hook
   const readingProgress = useReadingProgress(contentRef);
 
-  // Add debouncing
-  const [lastLikeTime, setLastLikeTime] = useState(0);
-  const LIKE_COOLDOWN = 500; // 500ms cooldown between likes
-
   // Long content state
   const [longContentProcessed, setLongContentProcessed] = useState(false);
   
   // Chapter view tracking state
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // OPTIMIZED: Single query for all chapter data including user interactions
-  const { data: chapterData, error: chapterError, isLoading, refetch } = useQuery({
+  // Memoize query options to prevent infinite re-renders
+  const queryOptions = useMemo(() => ({
     queryKey: ['chapter-optimized', chapterId, user?._id], // Use user._id instead of user.id
     queryFn: async () => {
       const chapterRes = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}/full-optimized`, {
@@ -314,14 +583,13 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
       }
       // Shorter stale time for access-denied content to improve UX
       if (data?.chapter?.accessDenied) return 0; // Always refetch if access was denied
-      return 1000 * 60 * 5; // 5 minutes for normal content (reduced from 10)
+      
+      // RACE CONDITION FIX: Always consider interaction data stale to prevent sync issues
+      // This ensures we always get fresh data from the server, especially after likes
+      return 0; // Always fetch fresh data to prevent race conditions
     },
-    // Ensure a fresh auth check on mount for protected chapters
-    refetchOnMount: (query) => {
-      const mode = query.state.data?.chapter?.mode;
-      const wasAccessDenied = query.state.data?.chapter?.accessDenied;
-      return mode === 'protected' || wasAccessDenied;
-    },
+    // RACE CONDITION FIX: Always refetch on mount to ensure fresh interaction data
+    refetchOnMount: true, // Always refetch to prevent stale interaction data
     enabled: !!chapterId,
     retry: (failureCount, error) => {
       // Don't retry on auth errors to prevent logout loops
@@ -340,33 +608,60 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     refetchOnWindowFocus: (query) => {
       // Always refetch protected or access-denied content on focus to check for auth changes
       const chapter = query.state.data?.chapter;
-      return !!(chapter && (chapter.mode === 'protected' || chapter.accessDenied));
+      const hasProtectedContent = !!(chapter && (chapter.mode === 'protected' || chapter.accessDenied));
+      
+      // RACE CONDITION FIX: Also refetch on focus if user is authenticated to catch any missed interaction updates
+      // This helps sync like states if user refreshed quickly after liking in another tab/window
+      const shouldRefetchForInteractions = !!user;
+      
+      return hasProtectedContent || shouldRefetchForInteractions;
     },
     gcTime: 1000 * 60 * 5 // Reduced cache time for better auth responsiveness
-  });
+  }), [chapterId, user?._id]);
+
+  // OPTIMIZED: Single query for all chapter data including user interactions
+  const { data: chapterData, error: chapterError, isLoading, refetch } = useQuery(queryOptions);
 
   // Extract chapter and novel data early to avoid circular dependencies
   const chapter = chapterData?.chapter;
   const novel = chapter?.novel || {title: "Novel"};
   
 
-  // Extract interaction data from the consolidated endpoint
+  // Extract interaction data from the consolidated endpoint (memoized to prevent infinite loops)
   // Ensure interactions data is always available, even for non-authenticated users
-  const interactions = chapterData?.interactions || {
-    totalLikes: 0,
-    userInteraction: {
-      liked: false,
-      bookmarked: false
-    }
-  };
-  
-  // Ensure totalLikes is always a number, even if backend doesn't provide it
-  if (typeof interactions.totalLikes !== 'number') {
-    interactions.totalLikes = 0;
-  }
+  const interactions = useMemo(() => {
+    // The backend response structure might be different - check multiple possible locations
+    let totalLikes = 0;
+    let userInteraction = { liked: false, bookmarked: false };
 
-  // User interaction data is now included in the main query, no separate fetch needed
-  const userInteraction = interactions.userInteraction;
+    // Try to get total likes from different possible locations
+    if (chapterData?.interactions?.totalLikes !== undefined) {
+      totalLikes = chapterData.interactions.totalLikes;
+    } else if (chapterData?.chapter?.chapterStats?.totalLikes !== undefined) {
+      totalLikes = chapterData.chapter.chapterStats.totalLikes;
+    } else if (typeof chapterData?.chapter?.chapterStats === 'object' && chapterData.chapter.chapterStats !== null) {
+      // MongoDB aggregation might return chapterStats differently
+      totalLikes = chapterData.chapter.chapterStats.totalLikes || 0;
+    }
+
+    // Try to get user interaction from different possible locations
+    if (chapterData?.interactions?.userInteraction) {
+      userInteraction = chapterData.interactions.userInteraction;
+    } else if (chapterData?.chapter?.userInteraction) {
+      userInteraction = chapterData.chapter.userInteraction;
+    }
+
+    return {
+      totalLikes: typeof totalLikes === 'number' ? totalLikes : 0,
+      userInteraction: userInteraction || { liked: false, bookmarked: false }
+    };
+  }, [chapterData]);
+
+  // User interaction data is now included in the main query, no separate fetch needed (memoized)
+  const userInteraction = useMemo(() => {
+    const result = interactions.userInteraction || { liked: false, bookmarked: false };
+    return result;
+  }, [interactions.userInteraction]);
 
   // Use module data already included in chapter response (no separate query needed!)
   const moduleData = chapter?.module || null;
@@ -716,21 +1011,269 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     });
   }, [rentalStatus, user, canAccessPaidContent]); // Removed lastRentalCheck from dependencies to prevent infinite loop
 
+  // Initialize Facebook-style like system
+  useEffect(() => {
+    const likeSystem = {
+      queue: new LikeQueue(async (chapterId, queueItem) => {
+        return await sendLikeToServer(chapterId, queueItem);
+      }),
+      
+      batcher: new LikeBatcher(async (actions) => {
+        await processBatchedLikes(actions);
+      }),
+      
+      rateLimiter: new LikeRateLimiter(),
+      
+      errorRecovery: new LikeErrorRecovery((chapterId, status) => {
+        updateLikeState({ status });
+      }),
+      
+      conflictResolver: new LikeConflictResolver()
+    };
+
+    // Implement retry action for error recovery
+    likeSystem.errorRecovery.retryAction = async (action) => {
+      await likeSystem.queue.addToQueue(action.chapterId, !action.targetState, action.userId);
+    };
+
+    likeSystemRef.current = likeSystem;
+
+    // Setup online/offline handlers
+    const handleOnline = () => {
+      likeSystem.errorRecovery.retryPendingActions();
+    };
+
+    const handleOffline = () => {
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Retry pending actions on component mount
+    if (navigator.onLine) {
+      likeSystem.errorRecovery.retryPendingActions();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      
+      // Cleanup
+      likeSystem.queue.clear();
+      likeSystem.batcher.clear();
+      likeSystem.rateLimiter.clear();
+      likeSystem.conflictResolver.clear();
+    };
+  }, []);
+
+  // Update like state helper
+  const updateLikeState = useCallback((updates) => {
+    setLikeState(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  // Send like to server
+  const sendLikeToServer = async (chapterId, queueItem) => {
+
+    try {
+      const response = await axios.post(
+        `${config.backendUrl}/api/userchapterinteractions/like`,
+        {
+          chapterId,
+          timestamp: queueItem.timestamp,
+          deviceId: queueItem.deviceId,
+          targetLikedState: queueItem.targetState
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${getValidToken()}`
+          },
+          timeout: 10000 // 10 second timeout
+        }
+      );
+
+      const data = response.data;
+
+      // Update state with server response
+      const serverState = {
+        isLiked: data.liked,
+        count: data.totalLikes,
+        status: 'success',
+        serverTimestamp: data.timestamp || Date.now()
+      };
+      
+      updateLikeState(serverState);
+
+      // Remove from error recovery if it was there
+      await likeSystemRef.current.errorRecovery.removePendingAction(chapterId);
+
+      // Update the local cache with the new like status
+      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          interactions: {
+            ...oldData.interactions,
+            totalLikes: data.totalLikes,
+            userInteraction: {
+              ...oldData.interactions.userInteraction,
+              liked: data.liked
+            }
+          }
+        };
+      });
+
+      // Invalidate cache to ensure fresh data on next fetch
+      queryClient.invalidateQueries({
+        queryKey: ['chapter-optimized', chapterId],
+        exact: false
+      });
+
+      return data;
+    } catch (error) {
+      console.error('❌ Chapter Like Server: Request failed', {
+        error: error.message,
+        status: error.response?.status,
+        code: error.code
+      });
+
+      // Handle different types of errors
+      if (error.code === 'ECONNABORTED') {
+        error.code = 'TIMEOUT';
+      } else if (!navigator.onLine) {
+        error.code = 'NETWORK_ERROR';
+      }
+
+      // Store for retry if it's a recoverable error
+      if (likeSystemRef.current.queue.isRetryableError(error)) {
+        await likeSystemRef.current.errorRecovery.storePendingAction(chapterId, queueItem);
+      } else {
+        // Revert optimistic update for non-recoverable errors
+        updateLikeState({
+          isLiked: userInteraction?.liked || false,
+          count: interactions.totalLikes || 0,
+          status: 'error'
+        });
+      }
+
+      throw error;
+    }
+  };
+
+  // Process batched likes
+  const processBatchedLikes = async (actions) => {
+    // For now, process individually - could be optimized with a batch endpoint
+    for (const [chapterId, queueItem] of actions) {
+      try {
+        await likeSystemRef.current.queue.addToQueue(chapterId, !queueItem.targetState, queueItem.userId);
+      } catch (error) {
+        console.error('Failed to process batched like:', error);
+      }
+    }
+  };
+
   // Effect to update interaction stats and ensure state consistency
   useEffect(() => {
-    if (userInteraction) {
+    if (userInteraction && chapterData) {
+      
       // Set interaction states directly from the user interaction data
-      setIsLiked(userInteraction.liked || false);
+      updateLikeState({
+        isLiked: userInteraction.liked || false,
+        count: interactions.totalLikes || 0,
+        status: 'idle'
+      });
       setIsBookmarked(userInteraction.bookmarked || false);
     }
-  }, [userInteraction]);
+  }, [userInteraction, interactions.totalLikes, chapterData]); // Added chapterData to ensure we have server data
+
+  // TIMEOUT RECOVERY: Auto-recover from stuck processing states
+  useEffect(() => {
+    if (likeState.status === 'loading' || likeState.status === 'pending') {
+      
+      const timeoutId = setTimeout(() => {
+        // Force refresh to get latest state from server
+        refetch();
+        
+        // Reset to idle state as fallback
+        updateLikeState({
+          status: 'idle'
+        });
+      }, 10000); // 10 second timeout
+      
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [likeState.status, refetch]);
+
+  // Enhanced recovery system for interrupted like states
+  useEffect(() => {
+    if (!user || !likeSystemRef.current) return;
+
+    const performRecoveryCheck = async () => {
+      try {
+        const likeSystem = likeSystemRef.current;
+
+          // Check for pending actions in IndexedDB
+        if (likeSystem.errorRecovery && likeSystem.errorRecovery.pendingActions) {
+          const hasPendingLike = likeSystem.errorRecovery.pendingActions.has(chapterId);
+          
+          if (hasPendingLike) {
+            refetch();
+            return;
+          }
+        }
+
+        // Check if we're stuck in processing state
+        if (likeState.status === 'loading' || likeState.status === 'pending') {
+          refetch();
+          return;
+        }
+
+        // Check for state mismatch between frontend and backend
+        if (userInteraction && chapterData && likeState.status === 'idle') {
+          const serverLiked = userInteraction.liked || false;
+          const frontendLiked = likeState.isLiked;
+          const serverCount = interactions.totalLikes || 0;
+          const frontendCount = likeState.count;
+
+          // Only sync if there's a significant mismatch
+          const hasSignificantMismatch = (serverLiked !== frontendLiked && (serverLiked || frontendLiked)) || 
+                                       Math.abs(serverCount - frontendCount) > 1;
+
+          if (hasSignificantMismatch) {
+            
+            // Sync with server state
+            updateLikeState({
+              isLiked: serverLiked,
+              count: serverCount,
+              status: 'idle'
+            });
+            return;
+          }
+        }
+
+        // Retry any pending actions from IndexedDB
+        if (likeSystem.errorRecovery && typeof likeSystem.errorRecovery.retryPendingActions === 'function') {
+          await likeSystem.errorRecovery.retryPendingActions();
+        }
+
+      } catch (error) {
+        console.error('❌ Chapter Like Recovery: Error during recovery check:', error);
+        // Refresh as fallback
+        refetch();
+      }
+    };
+
+    // Run recovery check after like system initializes
+    const timer = setTimeout(performRecoveryCheck, 1000);
+    return () => clearTimeout(timer);
+  }, [user?._id, chapterId]);
 
   // Effect to update interaction stats from chapter data
   useEffect(() => {
-    // Since we now ensure interactions always exists, we can directly use it
-    setLikeCount(interactions.totalLikes || 0);
+    // Update view count from chapter data
     setViewCount(chapter?.views || 0);
-  }, [interactions, chapter]);
+  }, [chapter]);
 
   // Effect to handle chapter view tracking with proper cooldown
   useEffect(() => {
@@ -833,36 +1376,42 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
     }
   }, [chapter, isEditing]);
 
-  // Real-time SSE listener for chapter like updates
+  // Enhanced real-time SSE listener for chapter like updates with conflict resolution
   useEffect(() => {
     if (!chapterId) return;
 
     const handleChapterLikeUpdate = (data) => {
       // Only update if this is for the current chapter
       if (data.chapterId === chapterId) {
-        // Update like count
-        setLikeCount(data.likeCount);
+        const likeSystem = likeSystemRef.current;
         
-        // Update user's like status if they were the one who liked
-        if (user && data.likedBy === user._id) {
-          setIsLiked(data.isLiked);
-        }
+        // Check if we should accept this update (conflict resolution)
+        if (likeSystem && likeSystem.conflictResolver.shouldAcceptUpdate(chapterId, data.timestamp)) {
+          const userId = user?.id || user?._id;
+          
+          updateLikeState({
+            isLiked: data.likedBy?.includes(userId) || false,
+            count: data.likeCount,
+            status: 'success',
+            serverTimestamp: data.timestamp
+          });
 
-        // Update cache to keep it in sync
-        queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            interactions: {
-              ...oldData.interactions,
-              totalLikes: data.likeCount,
-              userInteraction: {
-                ...oldData.interactions.userInteraction,
-                liked: user && data.likedBy === user._id ? data.isLiked : oldData.interactions.userInteraction?.liked
+          // Update cache to keep it in sync
+          queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              interactions: {
+                ...oldData.interactions,
+                totalLikes: data.likeCount,
+                userInteraction: {
+                  ...oldData.interactions.userInteraction,
+                  liked: data.likedBy?.includes(userId) || false
+                }
               }
-            }
-          };
-        });
+            };
+          });
+        }
       }
     };
 
@@ -877,7 +1426,7 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
         sseService.removeEventListener('chapter_like_update', handleChapterLikeUpdate);
       });
     };
-  }, [chapterId, user, queryClient]);
+  }, [chapterId, user?._id, queryClient]); // Removed updateLikeState from deps since it's stable
 
   // Effect to handle edit mode initialization
   useEffect(() => {
@@ -1487,95 +2036,70 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
   };
 
   /**
-   * Handles liking/unliking a chapter (Facebook-style with metadata and real-time updates)
+   * Handles liking/unliking a chapter (Facebook-style with sophisticated queue system)
    */
-  const handleLike = async () => {
+  const handleLike = useCallback(async () => {
+
     if (!user) {
       alert('Vui lòng đăng nhập để thích chương');
       window.dispatchEvent(new CustomEvent('openLoginModal'));
       return;
     }
 
-    // Check cooldown to prevent spam clicking
-    const currentTime = Date.now();
-    if (currentTime - lastLikeTime < LIKE_COOLDOWN) {
+    if (!user || (!user._id && !user.id)) {
+      alert('Thông tin người dùng bị thiếu. Vui lòng đăng nhập lại.');
       return;
     }
-    setLastLikeTime(currentTime);
 
-    // Optimistic UI update
-    const previousLiked = isLiked;
-    const previousCount = likeCount;
-    
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    const userId = user.id || user._id;
+    const likeSystem = likeSystemRef.current;
 
-    try {
-      const headers = getAuthHeaders();
-      if (!headers.Authorization) {
-        alert('Vui lòng đăng nhập để thích chương');
-        window.dispatchEvent(new CustomEvent('openLoginModal'));
-        return;
-      }
-      
-      // Generate device ID for tracking (simple approach)
-      let deviceId = localStorage.getItem('deviceId');
-      if (!deviceId) {
-        deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('deviceId', deviceId);
-      }
-
-      const response = await axios.post(
-        `${config.backendUrl}/api/userchapterinteractions/like`,
-        { 
-          chapterId,
-          timestamp: new Date().toISOString(),
-          deviceId: deviceId
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${getValidToken()}`
-          }
-        }
-      );
-
-      // Update the user interaction in the main chapter cache
-      // No separate user-chapter-interaction query needed since it's included in the main query
-
-      // Update the local cache with the new like status
-      queryClient.setQueryData(['chapter-optimized', chapterId, user?.id], oldData => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          interactions: {
-            ...oldData.interactions,
-            totalLikes: response.data.totalLikes,
-            userInteraction: {
-              ...oldData.interactions.userInteraction,
-              liked: response.data.liked
-            }
-          }
-        };
-      });
-
-      // Update state with server response to ensure consistency
-      setIsLiked(response.data.liked);
-      setLikeCount(response.data.totalLikes);
-
-    } catch (err) {
-      console.error('Failed to like/unlike chapter:', err);
-      
-      // Revert optimistic update on error
-      setIsLiked(previousLiked);
-      setLikeCount(previousCount);
-      
-      // Show user-friendly error message
-      alert('Có lỗi xảy ra khi thích chương. Vui lòng thử lại.');
-      
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries(['chapter-optimized', chapterId, user?.id]);
+    if (!likeSystem) {
+      console.error('❌ Chapter Like: Like system not initialized');
+      return;
     }
-  };
+
+    // Check rate limit
+    if (!likeSystem.rateLimiter.canLike(chapterId)) {
+      alert('Bạn đang thích quá nhanh. Vui lòng chờ một chút.');
+      return;
+    }
+
+    // Get current state
+    const currentState = likeState.isLiked;
+    
+    
+    // Record action for conflict resolution
+    const timestamp = Date.now();
+    likeSystem.conflictResolver.recordAction(chapterId, timestamp);
+    
+    // Record rate limit action
+    likeSystem.rateLimiter.recordAction(chapterId);
+
+    // Optimistic update
+    const newState = {
+      isLiked: !currentState,
+      count: currentState ? likeState.count - 1 : likeState.count + 1,
+      status: 'loading'
+    };
+    
+    updateLikeState(newState);
+
+    // Add to queue
+    try {
+      await likeSystem.queue.addToQueue(chapterId, currentState, userId);
+    } catch (error) {
+      console.error('❌ Chapter Like: Failed to add to queue:', error);
+      
+      // Revert optimistic update
+      const revertState = {
+        isLiked: currentState,
+        count: likeState.count,
+        status: 'error'
+      };
+      updateLikeState(revertState);
+    }
+  }, [user, chapterId, likeState.isLiked, likeState.count, updateLikeState]);
 
   /**
    * Handles bookmarking/unbookmarking a chapter
@@ -1885,8 +2409,9 @@ const Chapter = ({ novelId, chapterId, error, preloadedChapter, preloadedNovel, 
 
         {/* User Actions */}
         <ChapterActions
-          isLiked={isLiked}
-          likeCount={likeCount}
+          isLiked={likeState.isLiked}
+          likeCount={likeState.count}
+          likeStatus={likeState.status}
           handleLike={handleLike}
         />
       </div>
