@@ -117,7 +117,8 @@
   border-radius: 8px;
 }
 
-.droppable-container.drag-over {
+/* Removed droppable container drag-over styling to eliminate blue container indicator */
+/* .droppable-container.drag-over {
   background-color: rgba(59, 130, 246, 0.1);
   border: 2px dashed #3b82f6;
 }
@@ -125,7 +126,7 @@
 :root.dark-mode .droppable-container.drag-over {
   background-color: rgba(59, 130, 246, 0.15);
   border-color: #60a5fa;
-}
+} */
 
 /* Cross-section drag visual feedback */
 .module-item.dragging-cross-section {

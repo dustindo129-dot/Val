@@ -1699,7 +1699,7 @@ const UserProfile = () => {
   };
 
   // Module management functions
-  const handleMoveToCompleted = async (moduleId) => {
+  const handleMoveToCompleted = useCallback(async (moduleId) => {
     if (!canManageModules) return;
     
     try {
@@ -1730,9 +1730,9 @@ const UserProfile = () => {
       console.error('Error moving module to completed:', error);
       alert('Không thể chuyển tập sang danh sách đã hoàn thành');
     }
-  };
+  }, [canManageModules, profileUser]);
 
-  const handleMoveToOngoing = async (moduleId) => {
+  const handleMoveToOngoing = useCallback(async (moduleId) => {
     if (!canManageModules) return;
     
     try {
@@ -1763,7 +1763,7 @@ const UserProfile = () => {
       console.error('Error moving module to ongoing:', error);
       alert('Không thể chuyển tập sang danh sách đang tiến hành');
     }
-  };
+  }, [canManageModules, profileUser]);
 
   const handleRemoveOngoingModule = async (moduleId) => {
     if (!canRemoveModules) return;
@@ -1822,7 +1822,7 @@ const UserProfile = () => {
     return () => {
       window.removeEventListener('moduleTransfer', handleModuleTransfer);
     };
-  }, []);
+  }, [handleMoveToCompleted, handleMoveToOngoing]);
 
   // Module refresh function for admin/mod to repopulate modules and recalculate chapters participated
   const handleRefreshModules = useCallback(async () => {

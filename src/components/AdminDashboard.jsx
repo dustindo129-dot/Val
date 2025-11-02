@@ -2535,7 +2535,7 @@ const AdminDashboard = () => {
                                             'insertdatetime', 'media', 'table', 'help', 'wordcount'
                                         ],
                                         toolbar: 'undo redo | formatselect | ' +
-                                            'bold italic underline | ' +
+                                            'bold italic underline strikethrough | ' +
                                             'bullist numlist | ' +
                                             'link | code preview | removeformat | help',
                                         contextmenu: 'cut copy paste | link | removeformat',
