@@ -38,6 +38,7 @@
 .profile-avatar-wrapper {
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .profile-avatar-overlap .profile-avatar-image {
@@ -670,31 +671,33 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   grid-template-rows: auto auto;
   gap: 0;
   width: 100%;
-  align-items: start;
+  align-items: center; /* Center align grid items horizontally */
+  flex: 1;
 }
 
 .profile-username {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 2.2rem;
+  font-weight: 700;
   margin: 0;
   color: #333;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   white-space: nowrap;
   grid-column: 1;
-  grid-row: 2;
-  margin-top: 8px; /* Space from avatar */
+  grid-row: 1; /* Same row as stats/meta */
 }
 
 /* Container for stats and meta that goes to the right */
 .profile-stats-meta-container {
   grid-column: 2;
-  grid-row: 1 / -1; /* Span all rows */
+  grid-row: 1; /* Single row only */
   display: flex;
-  flex-direction: column;
-  gap: 15px;
-  padding-left: 20px; /* Space from username column */
+  flex-direction: row;
+  align-items: center;
+  gap: 30px;
+  padding-left: 3.5rem; /* Increased space for verification badge */
+  flex-wrap: wrap; /* Allow wrapping if not enough space */
 }
 
 .profile-stats-inline {
@@ -744,9 +747,6 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   color: #999;
 }
 
-.profile-avatar-wrapper {
-  flex-shrink: 0;
-}
 
 .profile-avatar-image {
   width: 120px;
@@ -761,18 +761,7 @@ html:not(.dark-mode):not(.sepia-mode) .profile-header-content {
   border-color: #404040;
 }
 
-.profile-user-info {
-  flex: 1;
-}
 
-.profile-username {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 :root.dark-mode .profile-username {
   color: #fff;

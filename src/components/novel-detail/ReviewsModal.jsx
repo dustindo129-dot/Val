@@ -404,7 +404,7 @@ const ReviewsModal = ({ novelId, isOpen, onClose }) => {
                         ))}
                       </div>
                       
-                      <span className="review-date">{formatDate(review.updatedAt || review.date)}</span>
+                      <span className="review-date">{formatDate(review.date || review.createdAt)}</span>
                       
                       {isReviewEdited(review) && (
                         <span className="review-edited-indicator">(Đã chỉnh sửa)</span>

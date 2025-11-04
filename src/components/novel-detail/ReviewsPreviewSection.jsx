@@ -31,7 +31,6 @@ const cleanEmptyTags = (html) => {
 };
 
 const ReviewsPreviewSection = ({ novelId, onViewAllReviews, onRateNow }) => {
-  // Fetch latest 2 reviews
   const { data: reviewsData, isLoading } = useQuery({
     queryKey: ['novel-reviews-preview', novelId],
     queryFn: () => api.getNovelReviews(novelId, 1, 2), // page 1, limit 2
@@ -197,7 +196,7 @@ const ReviewsPreviewSection = ({ novelId, onViewAllReviews, onRateNow }) => {
                     ))}
                   </div>
                   <div className="review-preview-date-wrapper">
-                    <span className="review-preview-date">{formatDate(review.updatedAt || review.date)}</span>
+                    <span className="review-preview-date">{formatDate(review.date || review.createdAt)}</span>
                     {isReviewEdited(review) && (
                       <span className="review-preview-edited-indicator">(Đã chỉnh sửa)</span>
                     )}
