@@ -498,6 +498,9 @@ const sanitizeHTML = (html) => {
             'em': [],
             'i': [],
             'u': [],
+            's': [], // strikethrough
+            'del': [], // deleted text (strikethrough)
+            'strike': [], // strikethrough (deprecated but still used)
             'p': [],
             'br': [],
             'h1': [], 'h2': [], 'h3': [], 'h4': [], 'h5': [], 'h6': [],
@@ -2491,8 +2494,8 @@ const AdminDashboard = () => {
                                             const sanitizedContent = sanitizeHTML(args.node.innerHTML);
                                             args.node.innerHTML = sanitizedContent;
                                         },
-                                        valid_elements: 'p,br,strong,b,em,i,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|target|title],img[src|alt|title|width|height],blockquote,pre,code,sup[class|data-footnote],sub',
-                                        valid_children: '+p[strong|b|em|i|u|a|img|sup|sub|code],+li[p|strong|b|em|i|u|a|img|sup|sub|code]',
+                                        valid_elements: 'p,br,strong,b,em,i,u,s,del,strike,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|target|title],img[src|alt|title|width|height],blockquote,pre,code,sup[class|data-footnote],sub',
+                                        valid_children: '+p[strong|b|em|i|u|s|del|strike|a|img|sup|sub|code],+li[p|strong|b|em|i|u|s|del|strike|a|img|sup|sub|code]',
                                         extended_valid_elements: 'sup[class|data-footnote]',
                                         images_upload_handler: (blobInfo) => {
                                             return new Promise((resolve, reject) => {
@@ -2578,8 +2581,8 @@ const AdminDashboard = () => {
                                             const sanitizedContent = sanitizeHTML(args.node.innerHTML);
                                             args.node.innerHTML = sanitizedContent;
                                         },
-                                        valid_elements: 'p,br,strong,b,em,i,u,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|target|title],blockquote,pre,code,sup[class|data-footnote],sub',
-                                        valid_children: '+p[strong|b|em|i|u|a|sup|sub|code],+li[p|strong|b|em|i|u|a|sup|sub|code]',
+                                        valid_elements: 'p,br,strong,b,em,i,u,s,del,strike,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|target|title],blockquote,pre,code,sup[class|data-footnote],sub',
+                                        valid_children: '+p[strong|b|em|i|u|s|del|strike|a|sup|sub|code],+li[p|strong|b|em|i|u|s|del|strike|a|sup|sub|code]',
                                         extended_valid_elements: 'sup[class|data-footnote]'
                                     }}
                                 />
