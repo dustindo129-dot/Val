@@ -1584,7 +1584,7 @@ const ChapterDashboard = () => {
                                         'preview'
                                     ],
                                     toolbar: 'undo redo | formatselect | ' +
-                                        'bold italic underline strikethrough | ' +
+                                        'bold italic underline strikethrough | processitalics | ' +
                                         'alignleft aligncenter alignright alignjustify | ' +
                                         'bullist numlist outdent indent | ' +
                                         'link image | code preview | removeformat | help',
@@ -1660,13 +1660,80 @@ const ChapterDashboard = () => {
                                             }
                                         });
 
+                                        // Add custom function to process *text* patterns manually
+                                        const processItalicPatterns = () => {
+                                            let content = editor.getContent();
+                                            const originalContent = content;
+                                            
+                                            // Convert *text* patterns to <em>text</em>, but avoid already formatted text
+                                            // Use a more compatible regex approach
+                                            const textNodes = content.split(/(<[^>]*>)/);
+                                            let hasChanges = false;
+                                            
+                                            for (let i = 0; i < textNodes.length; i++) {
+                                                // Only process text nodes (not HTML tags)
+                                                if (!textNodes[i].startsWith('<')) {
+                                                    const originalNode = textNodes[i];
+                                                    // Convert *text* to <em>text</em>, avoiding nested asterisks
+                                                    textNodes[i] = textNodes[i].replace(/\*([^*\n]+?)\*/g, '<em>$1</em>');
+                                                    if (textNodes[i] !== originalNode) {
+                                                        hasChanges = true;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if (hasChanges) {
+                                                content = textNodes.join('');
+                                                editor.setContent(content);
+                                                return true;
+                                            }
+                                            return false;
+                                        };
 
-                                        // Handle paste to convert old footnote formats
+                                        // Add custom command for processing italic patterns
+                                        editor.addCommand('ProcessItalicPatterns', processItalicPatterns);
+
+                                        // Add custom button for processing patterns
+                                        editor.ui.registry.addButton('processitalics', {
+                                            text: '*→In nghiêng',
+                                            tooltip: 'Convert *text* to italics',
+                                            onAction: function () {
+                                                const processed = processItalicPatterns();
+                                                if (processed) {
+                                                    editor.notificationManager.open({
+                                                        text: 'Italic patterns processed!',
+                                                        type: 'success',
+                                                        timeout: 2000
+                                                    });
+                                                } else {
+                                                    editor.notificationManager.open({
+                                                        text: 'No *text* patterns found to convert.',
+                                                        type: 'info',
+                                                        timeout: 2000
+                                                    });
+                                                }
+                                            }
+                                        });
+
+                                        // Add keyboard shortcut (Ctrl+Shift+I) for processing italic patterns
+                                        editor.addShortcut('ctrl+shift+i', 'Process italic patterns', 'ProcessItalicPatterns');
+
+                                        // Auto-process patterns after find/replace operations
+                                        editor.on('ExecCommand', (e) => {
+                                            if (e.command === 'mceReplace' || e.command === 'SearchReplace') {
+                                                setTimeout(() => {
+                                                    processItalicPatterns();
+                                                }, 100);
+                                            }
+                                        });
+
+                                        // Handle paste to convert old footnote formats and convert br sequences to paragraphs
                                         editor.on('paste', (e) => {
                                             setTimeout(() => {
                                                 let content = editor.getContent();
                                                 const originalContent = content;
 
+                                                // Convert old footnote formats
                                                 content = content.replace(
                                                     /<sup class="footnote-marker" data-footnote="(\w+)">\[[\w\d]+\]<\/sup>/g,
                                                     '[valnote_$1]'
@@ -1682,7 +1749,51 @@ const ChapterDashboard = () => {
                                                     '[valnote_$1]'
                                                 );
 
-                                                if (content !== originalContent) {
+                                                // Convert <br> sequences to proper paragraphs
+                                                let hasChanges = false;
+                                                
+                                                // Handle content that's already wrapped in a single <p> tag with many <br> tags
+                                                if (content.match(/<p[^>]*>[\s\S]*?<br[\s\/]*>[\s\S]*?<\/p>/i)) {
+                                                    content = content.replace(/<p([^>]*)>([\s\S]*?)<\/p>/gi, (match, attrs, innerContent) => {
+                                                        // Split the inner content by <br> tags to create separate paragraphs
+                                                        const paragraphs = innerContent
+                                                            .split(/<br\s*\/?>/gi)
+                                                            .map(para => para.trim())
+                                                            .filter(para => para && para.length > 0)
+                                                            .map(para => `<p${attrs}>${para}</p>`)
+                                                            .join('');
+                                                        
+                                                        if (paragraphs !== match) {
+                                                            hasChanges = true;
+                                                        }
+                                                        return paragraphs;
+                                                    });
+                                                }
+                                                
+                                                // Also handle loose <br> sequences (double or more)
+                                                if (content.includes('<br>') || content.includes('<br/>')) {
+                                                    let paragraphContent = content
+                                                        .split(/(<br\s*\/?>){2,}/gi)
+                                                        .filter(block => block && block.trim() && !block.match(/^(<br\s*\/?>)+$/gi))
+                                                        .map(block => {
+                                                            // Clean up single <br> tags within paragraphs and wrap in <p> if not already wrapped
+                                                            let cleanBlock = block.trim().replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, '');
+                                                            if (cleanBlock && !cleanBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+                                                                return `<p>${cleanBlock}</p>`;
+                                                            }
+                                                            return cleanBlock;
+                                                        })
+                                                        .filter(block => block)
+                                                        .join('');
+
+                                                    // If we processed paragraph content and it's different, use it
+                                                    if (paragraphContent && paragraphContent !== content) {
+                                                        content = paragraphContent;
+                                                        hasChanges = true;
+                                                    }
+                                                }
+
+                                                if (content !== originalContent || hasChanges) {
                                                     editor.setContent(content);
                                                 }
                                             }, 100);

@@ -823,6 +823,11 @@
   border-bottom-color: #2c2c2c;
 }
 
+/* TinyMCE Toolbar Group Padding - Reduce horizontal spacing */
+.tox .tox-toolbar__group {
+  padding: 0 8px 0 !important;
+}
+
 /* Responsive adjustments for larger screens */
 @media (min-width: 768px) {
   .chapter-title-status-group {
