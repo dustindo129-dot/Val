@@ -2368,9 +2368,32 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             {comment.replies.length > maxVisibleReplies && !expandedReplies.has(comment._id) && (
               <button 
                 className="show-more-replies-btn"
-                onClick={() => setExpandedReplies(prev => new Set([...prev, comment._id]))}
+                onClick={(e) => {
+                  // Preserve scroll position to prevent jumping
+                  const rect = e.target.getBoundingClientRect();
+                  const scrollY = window.scrollY;
+                  const elementTop = rect.top + scrollY;
+                  
+                  setExpandedReplies(prev => new Set([...prev, comment._id]));
+                  
+                  // Restore scroll position after DOM update
+                  requestAnimationFrame(() => {
+                    window.scrollTo({
+                      top: scrollY,
+                      behavior: 'auto'
+                    });
+                  });
+                }}
               >
-                Xem thêm {comment.replies.length - maxVisibleReplies} trả lời
+                Xem thêm {(() => {
+                  // Calculate total hidden replies including nested ones
+                  const hiddenReplies = comment.replies.slice(maxVisibleReplies);
+                  let totalHidden = hiddenReplies.length;
+                  hiddenReplies.forEach(reply => {
+                    totalHidden += countNestedReplies(reply);
+                  });
+                  return totalHidden;
+                })()} trả lời
               </button>
             )}
             
@@ -2378,11 +2401,24 @@ const CommentSection = React.memo(({ contentId, contentType, user, isAuthenticat
             {comment.replies.length > maxVisibleReplies && expandedReplies.has(comment._id) && (
               <button 
                 className="show-less-replies-btn"
-                onClick={() => setExpandedReplies(prev => {
-                  const newSet = new Set(prev);
-                  newSet.delete(comment._id);
-                  return newSet;
-                })}
+                onClick={(e) => {
+                  // Preserve scroll position to prevent jumping
+                  const scrollY = window.scrollY;
+                  
+                  setExpandedReplies(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(comment._id);
+                    return newSet;
+                  });
+                  
+                  // Restore scroll position after DOM update
+                  requestAnimationFrame(() => {
+                    window.scrollTo({
+                      top: scrollY,
+                      behavior: 'auto'
+                    });
+                  });
+                }}
               >
                 Thu gọn trả lời
               </button>
