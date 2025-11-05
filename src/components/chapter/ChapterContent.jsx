@@ -494,6 +494,9 @@ const ChapterContent = React.memo(({
 
         let processedContent = content;
 
+        // Preserve content-frame themed-container classes - don't convert these to inline styles
+        // They should remain as classes since they have complex styling that works better with CSS
+
         // Convert text alignment classes back to inline styles for paragraphs
         processedContent = processedContent.replace(
             /<p([^>]*?)class="([^"]*)"([^>]*?)>/gi,
@@ -2273,6 +2276,51 @@ const ChapterContent = React.memo(({
       .footnote-marker:hover { text-decoration: underline; }
       em, i { font-style: italic; }
       strong, b { font-weight: bold; }
+      
+      /* Content frame styles for editor */
+      .content-frame.themed-container {
+        border: 2px solid rgba(216, 180, 254, 0.8);
+        border-radius: 12px;
+        padding: 28px;
+        margin: 30px auto;
+        max-width: 1700px;
+        position: relative;
+        background: linear-gradient(135deg,
+          rgba(248, 240, 255, 0.8),
+          rgba(227, 242, 253, 0.8),
+          rgba(255, 240, 245, 0.8)
+        );
+        box-shadow: 0 0 15px rgba(215, 190, 255, 0.3);
+        backdrop-filter: blur(2px);
+      }
+      
+      .content-frame.themed-container h1,
+      .content-frame.themed-container h2,
+      .content-frame.themed-container h3 {
+        color: inherit;
+        text-align: center;
+        margin: 0 0 20px 0;
+      }
+      
+      .content-frame.themed-container h2 {
+        font-size: 1.5em;
+        font-weight: bold;
+      }
+      
+      .content-frame.themed-container p {
+        margin: 1.2em 0;
+        text-align: justify;
+        color: inherit;
+      }
+      
+      /* Responsive adjustments for mobile */
+      @media (max-width: 768px) {
+        .content-frame.themed-container {
+          margin: 20px auto;
+          padding: 20px;
+          max-width: 95%;
+        }
+      }
     `,
         setup: (editor) => {
             // Override getContent to remove trailing empty paragraphs at source

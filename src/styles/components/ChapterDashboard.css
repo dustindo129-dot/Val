@@ -87,13 +87,17 @@
 /* Chapter form styles */
 .chapter-form {
   background-color: var(--card-bg);
-  padding: 30px;
+  padding: 25px;
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
 }
 
 .chapter-form-section {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+}
+
+.form-section-title {
+  margin-bottom: 10px;
 }
 
 .chapter-form-row {
@@ -238,16 +242,11 @@
 .form-actions {
   display: flex;
   gap: 15px;
-  margin-top: 30px;
   padding-top: 20px;
   border-top: 1px solid var(--border-color);
 }
 
 /* Chapter staff section styles */
-.chapter-staff-section {
-  margin-bottom: 30px;
-}
-
 .chapter-staff-section .chapter-form-section-title {
   margin-bottom: 15px;
   color: var(--secondary-color);
@@ -833,4 +832,150 @@
   .chapter-title-status-group {
     grid-template-columns: 2fr 1fr auto;
   }
+}
+
+/* Multi-chapter form styles */
+.chapter-form-container.additional-form {
+  border-top: 2px solid var(--border-color);
+  padding-top: 30px;
+  position: relative;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background: var(--accent-bg);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.form-header h4 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.remove-form-btn {
+  background: var(--danger-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed);
+  font-size: 0.9em;
+}
+
+.remove-form-btn:hover {
+  background: var(--danger-hover-color);
+  transform: scale(1.1);
+}
+
+.add-chapter-section {
+  text-align: center;
+  margin: 20px 0;
+  padding: 30px;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--card-bg);
+}
+
+.add-multiple-chapter-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 12px 24px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-multiple-chapter-btn:hover {
+  background: var(--primary-hover-color);
+  transform: translateY(-2px);
+}
+
+.add-multiple-chapter-btn:disabled {
+  background: var(--muted-color);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.add-chapter-help {
+  margin-top: 10px;
+  color: var(--muted-text-color);
+  font-size: 0.9em;
+}
+
+/* Dark mode adjustments */
+:root.dark-mode .form-header {
+  background: var(--dark-accent-bg);
+  border-color: var(--dark-border-color);
+}
+
+:root.dark-mode .form-header h4 {
+  color: var(--dark-text-color);
+}
+
+:root.dark-mode .add-chapter-section {
+  border-color: var(--dark-border-color);
+  background: var(--dark-card-bg);
+}
+
+    :root.dark-mode .add-chapter-help {
+      color: var(--dark-muted-text-color);
+    }
+    
+    /* Footnote header and toggle styles */
+    .footnote-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--text-color);
+    }
+    
+    .footnote-toggle-arrow {
+      font-size: 0.8em;
+      transition: transform var(--transition-speed);
+      color: var(--primary-color);
+      font-weight: bold;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 3px;
+      user-select: none;
+    }
+    
+    .footnote-toggle-arrow:hover {
+      background: var(--primary-hover-bg);
+    }
+    
+    .footnote-toggle-arrow.expanded {
+      transform: rotate(90deg);
+    }
+    
+    /* Dark mode footnote header styles */
+    :root.dark-mode .footnote-title {
+      color: var(--dark-text-color);
+    }
+    
+    :root.dark-mode .footnote-toggle-arrow {
+      color: var(--primary-color);
+    }
+    
+    :root.dark-mode .footnote-toggle-arrow:hover {
+      background: var(--dark-primary-hover-bg);
 }

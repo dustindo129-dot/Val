@@ -62,35 +62,67 @@ const ChapterDashboard = () => {
     const [module, setModule] = useState(null);
     const [resolvedNovelId, setResolvedNovelId] = useState(null);
     const [resolvedModuleId, setResolvedModuleId] = useState(null);
-    const [chapterTitle, setChapterTitle] = useState('');
-    const [chapterContent, setChapterContent] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [moduleError, setModuleError] = useState(false);
 
-    // State for mode selection
-    const [mode, setMode] = useState('published'); // Default to published
-    const [chapterBalance, setChapterBalance] = useState(0);
+    // State for multiple chapter forms
+    const [chapterForms, setChapterForms] = useState([
+        {
+            id: 1,
+            chapterTitle: '',
+            chapterContent: '',
+            mode: 'published',
+            chapterBalance: 0,
+            translator: '',
+            editor: '',
+            proofreader: '',
+            footnotes: [],
+            nextFootnoteId: 1
+        }
+    ]);
 
-    // State for staff selection
-    const [translator, setTranslator] = useState('');
-    const [editor, setEditor] = useState('');
-    const [proofreader, setProofreader] = useState('');
+    // State for footnote instructions visibility (one per form)
+    const [footnoteInstructionsExpanded, setFootnoteInstructionsExpanded] = useState({});
 
     // Check if this is a Vietnamese novel (no active translators)
     const isVietnameseNovel = !novel?.novel?.active?.translator?.length;
 
-    // State for footnotes
-    const [footnotes, setFootnotes] = useState([]);
-    const [nextFootnoteId, setNextFootnoteId] = useState(1);
-
-    // Reference to the editor
-    const editorRef = useRef(null);
+    // References to the editors (one for each form)
+    const editorRefs = useRef({});
 
     // Flag to track if component has finished initializing
     const isInitializedRef = useRef(false);
+
+    // Get current form data (for single form or edit mode)
+    const getCurrentForm = () => {
+        if (isEditMode) {
+            return {
+                chapterTitle: chapterForms[0].chapterTitle,
+                chapterContent: chapterForms[0].chapterContent,
+                mode: chapterForms[0].mode,
+                chapterBalance: chapterForms[0].chapterBalance,
+                translator: chapterForms[0].translator,
+                editor: chapterForms[0].editor,
+                proofreader: chapterForms[0].proofreader,
+                footnotes: chapterForms[0].footnotes,
+                nextFootnoteId: chapterForms[0].nextFootnoteId
+            };
+        }
+        return chapterForms[0];
+    };
+
+    // Legacy getters for backward compatibility
+    const chapterTitle = getCurrentForm().chapterTitle;
+    const chapterContent = getCurrentForm().chapterContent;
+    const mode = getCurrentForm().mode;
+    const chapterBalance = getCurrentForm().chapterBalance;
+    const translator = getCurrentForm().translator;
+    const editor = getCurrentForm().editor;
+    const proofreader = getCurrentForm().proofreader;
+    const footnotes = getCurrentForm().footnotes;
 
     // In-memory cache for pending module resolution promises to prevent duplicate API calls
     const pendingModuleResolutions = useRef(new Map());
@@ -256,7 +288,7 @@ const ChapterDashboard = () => {
     }, []);
 
     // Handle mode change with validation
-    const handleModeChange = (e) => {
+    const handleModeChange = (e, formIndex = 0) => {
         const newMode = e.target.value;
 
         if (newMode === 'paid' && isModulePaid) {
@@ -267,55 +299,140 @@ const ChapterDashboard = () => {
         }
 
         startTransition(() => {
-            setMode(newMode);
+            setChapterForms(prev => prev.map((form, index) => {
+                if (index !== formIndex) return form;
+                
+                let updatedForm = {...form, mode: newMode};
             
             // Set default chapter balance when switching to paid mode
             if (newMode === 'paid') {
-                const currentBalance = Number(chapterBalance) || 0;
+                    const currentBalance = Number(form.chapterBalance) || 0;
                 if (currentBalance < 1) {
-                    setChapterBalance(1); // Set minimum value
+                        updatedForm.chapterBalance = 1; // Set minimum value
                 }
             }
             // Reset chapter balance when switching away from paid mode
             if (newMode !== 'paid') {
-                setChapterBalance(0);
+                    updatedForm.chapterBalance = 0;
             }
+                
+                return updatedForm;
+            }));
+            
             setError(''); // Clear any previous errors
         });
     };
 
     // Effect to handle when module becomes paid - automatically change chapter mode
     useEffect(() => {
-        if (isModulePaid && mode === 'paid') {
+        if (isModulePaid) {
+            setChapterForms(prev => {
+                let hasChanges = false;
+                const updated = prev.map(form => {
+                    if (form.mode === 'paid') {
+                        hasChanges = true;
+                        return {...form, mode: 'published', chapterBalance: 0};
+                    }
+                    return form;
+                });
+                
+                if (hasChanges) {
             startTransition(() => {
-                setMode('published');
-                setChapterBalance(0);
                 setError('Chương đã được chuyển về chế độ công khai vì tập hiện tại đã ở chế độ trả phí.');
             });
+                    return updated;
+                }
+                return prev;
+            });
         }
-    }, [isModulePaid, mode]);
+    }, [isModulePaid]);
 
-    // Effect to ensure proper chapterBalance when switching to paid mode
-    useEffect(() => {
-        if (mode === 'paid' && (chapterBalance === 0 || chapterBalance === '')) {
-            setChapterBalance(1);
-        }
-    }, [mode, chapterBalance]);
+    // Function to add new chapter form (max 5 total)
+    const addNewChapterForm = useCallback(() => {
+        if (chapterForms.length >= 5) return;
+        
+        const newId = Math.max(...chapterForms.map(f => f.id)) + 1;
+        const newForm = {
+            id: newId,
+            chapterTitle: '',
+            chapterContent: '',
+            mode: 'published',
+            chapterBalance: 0,
+            translator: chapterForms[0].translator, // Copy default staff from first form
+            editor: chapterForms[0].editor,
+            proofreader: chapterForms[0].proofreader,
+            footnotes: [],
+            nextFootnoteId: 1
+        };
+        
+        setChapterForms(prev => [...prev, newForm]);
+    }, [chapterForms]);
+
+    // Function to remove a chapter form (must have at least one form remaining)
+    const removeChapterForm = useCallback((formIndex) => {
+        if (chapterForms.length <= 1) return;
+        
+        // Clean up editor reference
+        delete editorRefs.current[formIndex];
+        
+        setChapterForms(prev => prev.filter((_, index) => index !== formIndex));
+        
+        // Reindex editor references
+        const newEditorRefs = {};
+        Object.keys(editorRefs.current).forEach(key => {
+            const index = parseInt(key);
+            if (index < formIndex) {
+                newEditorRefs[index] = editorRefs.current[index];
+            } else if (index > formIndex) {
+                newEditorRefs[index - 1] = editorRefs.current[index];
+            }
+        });
+        editorRefs.current = newEditorRefs;
+    }, [chapterForms]);
+
+    // Update form field function
+    const updateFormField = useCallback((formIndex, field, value) => {
+        setChapterForms(prev => prev.map((form, index) => 
+            index === formIndex ? {...form, [field]: value} : form
+        ));
+    }, []);
+
+    // Toggle footnote instructions visibility
+    const toggleFootnoteInstructions = useCallback((formIndex) => {
+        setFootnoteInstructionsExpanded(prev => ({
+            ...prev,
+            [formIndex]: !prev[formIndex]
+        }));
+    }, []);
 
     // Insert footnote marker at cursor position using new valnote format
-    const insertFootnoteAtCursor = useCallback((footnoteName) => {
-        if (!editorRef.current) return;
-        const editor = editorRef.current;
+    const insertFootnoteAtCursor = useCallback((footnoteName, formIndex = 0) => {
+        const editor = editorRefs.current[formIndex];
+        if (!editor) return;
+
+        // Store current scroll position
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+        // Temporarily disable scrolling during content insertion
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
 
         // Insert [valnote_X] at cursor position
         editor.insertContent(`[valnote_${footnoteName}]`);
-        editor.focus(); // Keep focus on editor
+        
+        // Immediately restore scroll position and re-enable scrolling
+        window.scrollTo(scrollLeft, scrollTop);
+        document.body.style.overflow = originalOverflow;
     }, []);
 
     // Add footnote with smart numbering (fill gaps)
-    const addFootnote = useCallback(() => {
+    const addFootnote = useCallback((formIndex = 0) => {
+        const currentForm = chapterForms[formIndex];
+        const formFootnotes = currentForm.footnotes;
+        
         // Get all existing footnote numbers
-        const existingNumbers = footnotes
+        const existingNumbers = formFootnotes
             .map(f => {
                 const name = f.name || f.id.toString();
                 const match = name.match(/\d+/);
@@ -332,32 +449,39 @@ const ChapterDashboard = () => {
             newNumber++;
         }
 
-        const newFootnoteId = Math.max(...footnotes.map(f => f.id).concat([0])) + 1;
+        const newFootnoteId = Math.max(...formFootnotes.map(f => f.id).concat([0])) + 1;
         const newFootnoteName = newNumber.toString();
 
-        // Add to footnotes list
-        setFootnotes(prev => [
-            ...prev,
-            {id: newFootnoteId, name: newFootnoteName, content: ''}
-        ]);
-        setNextFootnoteId(newFootnoteId + 1);
+        // Update the specific form's footnotes
+        setChapterForms(prev => prev.map((form, index) => 
+            index === formIndex ? {
+                ...form,
+                footnotes: [...form.footnotes, {id: newFootnoteId, name: newFootnoteName, content: ''}],
+                nextFootnoteId: newFootnoteId + 1
+            } : form
+        ));
 
         // Auto-insert marker at cursor position
-        insertFootnoteAtCursor(newFootnoteName);
-    }, [footnotes, insertFootnoteAtCursor]);
+        insertFootnoteAtCursor(newFootnoteName, formIndex);
+    }, [chapterForms, insertFootnoteAtCursor]);
 
     // Update footnote content with stability check
-    const updateFootnote = useCallback((id, content) => {
-        setFootnotes(prev => {
-            const existing = prev.find(f => f.id === id);
+    const updateFootnote = useCallback((id, content, formIndex = 0) => {
+        setChapterForms(prev => prev.map((form, index) => {
+            if (index !== formIndex) return form;
+            
+            const existing = form.footnotes.find(f => f.id === id);
             if (existing && existing.content === content) {
-                return prev; // No change needed
+                return form; // No change needed
             }
 
-            return prev.map(footnote =>
+            return {
+                ...form,
+                footnotes: form.footnotes.map(footnote =>
                 footnote.id === id ? {...footnote, content} : footnote
-            );
-        });
+                )
+            };
+        }));
     }, []);
 
     // Helper function to renumber footnotes
@@ -391,18 +515,20 @@ const ChapterDashboard = () => {
     }, []);
 
     // Move footnote up/down - Proper bidirectional mapping
-    const moveFootnote = useCallback((id, direction) => {
-        if (!editorRef.current) return;
+    const moveFootnote = useCallback((id, direction, formIndex = 0) => {
+        const editor = editorRefs.current[formIndex];
+        if (!editor) return;
 
-        const editor = editorRef.current;
-        const currentIndex = footnotes.findIndex(f => f.id === id);
+        const currentForm = chapterForms[formIndex];
+        const formFootnotes = currentForm.footnotes;
+        const currentIndex = formFootnotes.findIndex(f => f.id === id);
 
         if (currentIndex === -1) return;
         if (direction === 'up' && currentIndex === 0) return;
-        if (direction === 'down' && currentIndex === footnotes.length - 1) return;
+        if (direction === 'down' && currentIndex === formFootnotes.length - 1) return;
 
         const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-        const reorderedFootnotes = [...footnotes];
+        const reorderedFootnotes = [...formFootnotes];
 
         // Get the two footnotes that will swap positions
         const footnote1 = reorderedFootnotes[currentIndex];
@@ -440,15 +566,18 @@ const ChapterDashboard = () => {
 
         // Update editor and state
         editor.setContent(content);
-        setFootnotes(reorderedFootnotes);
-    }, [footnotes]);
+        setChapterForms(prev => prev.map((form, index) => 
+            index === formIndex ? {...form, footnotes: reorderedFootnotes} : form
+        ));
+    }, [chapterForms]);
 
     // Delete footnote with renumbering
-    const deleteFootnote = useCallback((id) => {
-        if (!editorRef.current) return;
+    const deleteFootnote = useCallback((id, formIndex = 0) => {
+        const editor = editorRefs.current[formIndex];
+        if (!editor) return;
 
-        const editor = editorRef.current;
-        const footnoteToDelete = footnotes.find(f => f.id === id);
+        const currentForm = chapterForms[formIndex];
+        const footnoteToDelete = currentForm.footnotes.find(f => f.id === id);
 
         if (!footnoteToDelete) return;
 
@@ -464,7 +593,7 @@ const ChapterDashboard = () => {
         content = content.replace(valnotePattern, '');
 
         // Remove footnote from list
-        const updatedFootnotes = footnotes.filter(footnote => footnote.id !== id);
+        const updatedFootnotes = currentForm.footnotes.filter(footnote => footnote.id !== id);
 
         // Renumber footnotes to maintain sequence
         const renumberedResult = renumberFootnotes(updatedFootnotes, content);
@@ -475,8 +604,576 @@ const ChapterDashboard = () => {
         editor.setContent(finalContent);
 
         // Update local state
-        setFootnotes(finalFootnotes);
-    }, [footnotes, renumberFootnotes]);
+        setChapterForms(prev => prev.map((form, index) => 
+            index === formIndex ? {...form, footnotes: finalFootnotes} : form
+        ));
+    }, [chapterForms, renumberFootnotes]);
+
+    // Render single chapter form component
+    const renderChapterForm = useCallback((form, formIndex) => {
+        const currentMode = form.mode;
+        const currentChapterBalance = form.chapterBalance;
+        const currentTranslator = form.translator;
+        const currentEditor = form.editor;
+        const currentProofreader = form.proofreader;
+        const currentFootnotes = form.footnotes;
+        const currentTitle = form.chapterTitle;
+
+        return (
+            <div key={`chapter-form-${form.id}`} className={`chapter-form-container ${formIndex > 0 ? 'additional-form' : ''}`}>
+                {chapterForms.length > 1 && (
+                    <div className="form-header">
+                        <h4>Chương {formIndex + 1}</h4>
+                        <button 
+                            type="button" 
+                            className="remove-form-btn" 
+                            onClick={() => removeChapterForm(formIndex)}
+                            title="Xóa chương này"
+                        >
+                            <FontAwesomeIcon icon={faTimes} />
+                        </button>
+                    </div>
+                )}
+                
+                {/* Status section */}
+                <div className="chapter-form-section">
+                    <div className="chapter-title-status-group">
+                        <div className="chapter-title-input">
+                            <label>Tiêu đề chương:</label>
+                            <input
+                                type="text"
+                                value={currentTitle}
+                                onChange={(e) => updateFormField(formIndex, 'chapterTitle', e.target.value)}
+                                placeholder="Nhập tiêu đề chương"
+                                required
+                            />
+                        </div>
+                        <div className="chapter-mode-input">
+                            <label>Chế độ chương:</label>
+                            <select
+                                value={currentMode}
+                                onChange={(e) => handleModeChange(e, formIndex)}
+                                className="chapter-dashboard-mode-dropdown"
+                            >
+                                <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất cả)</option>
+                                <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ dành cho nhân sự)</option>
+                                <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng nhập)</option>
+                                {user?.role === 'admin' && (
+                                    <option value="paid" disabled={isModulePaid}>
+                                        {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
+                                    </option>
+                                )}
+                            </select>
+                        </div>
+                        <div className="chapter-balance-input">
+                            {user?.role === 'admin' && currentMode === 'paid' && (
+                                <>
+                                    <label>Số lúa chương (Tối thiểu 1 🌾):</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={currentChapterBalance}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value === '' || parseInt(value) >= 1) {
+                                                updateFormField(formIndex, 'chapterBalance', value);
+                                            }
+                                        }}
+                                        onBlur={(e) => {
+                                            const value = e.target.value;
+                                            if (value === '' || parseInt(value) < 1) {
+                                                updateFormField(formIndex, 'chapterBalance', 1);
+                                            }
+                                        }}
+                                        placeholder="Nhập số lúa chương (tối thiểu 1)"
+                                    />
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Staff section */}
+                <div className="chapter-form-section chapter-staff-section">
+                    <div className="chapter-form-row">
+                        {isVietnameseNovel ? (
+                            /* Vietnamese novel - author, editor, proofreader */
+                            <>
+                                {/* Author dropdown (using translator field) */}
+                                <div className="chapter-form-group">
+                                    <label className="chapter-form-label">Tác giả:</label>
+                                    <select
+                                        className="chapter-staff-dropdown mode-dropdown"
+                                        value={currentTranslator}
+                                        onChange={(e) => updateFormField(formIndex, 'translator', e.target.value)}
+                                    >
+                                        <option value="">Không có</option>
+                                        {novel?.novel?.author && (
+                                            <option value={typeof novel.novel.author === 'object' ? (novel.novel.author.userNumber || novel.novel.author._id) : novel.novel.author}>
+                                                {typeof novel.novel.author === 'object' ? (novel.novel.author.displayName || novel.novel.author.userNumber || novel.novel.author.username) : novel.novel.author}
+                                            </option>
+                                        )}
+                                    </select>
+                                </div>
+
+                                {/* Editor dropdown */}
+                                <div className="chapter-form-group">
+                                    <label className="chapter-form-label">Biên tập viên:</label>
+                                    <select
+                                        className="chapter-staff-dropdown mode-dropdown"
+                                        value={currentEditor}
+                                        onChange={(e) => updateFormField(formIndex, 'editor', e.target.value)}
+                                    >
+                                        <option value="">Không có</option>
+                                        {novel?.novel?.active?.editor?.map((staff, index) => {
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                            return (
+                                                <option key={`editor-${index}`} value={staffValue}>
+                                                    {staffDisplay}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+
+                                {/* Proofreader dropdown */}
+                                <div className="chapter-form-group">
+                                    <label className="chapter-form-label">Hiệu đính:</label>
+                                    <select
+                                        className="chapter-staff-dropdown mode-dropdown"
+                                        value={currentProofreader}
+                                        onChange={(e) => updateFormField(formIndex, 'proofreader', e.target.value)}
+                                    >
+                                        <option value="">Không có</option>
+                                        {novel?.novel?.active?.proofreader?.map((staff, index) => {
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                            return (
+                                                <option key={`proofreader-${index}`} value={staffValue}>
+                                                    {staffDisplay}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+                            </>
+                        ) : (
+                            /* Non-Vietnamese novel - translator, editor, proofreader */
+                            <>
+                                {/* Translator dropdown */}
+                                <div className="chapter-form-group">
+                                    <label className="chapter-form-label">Dịch giả:</label>
+                                    <select
+                                        className="chapter-staff-dropdown mode-dropdown"
+                                        value={currentTranslator}
+                                        onChange={(e) => updateFormField(formIndex, 'translator', e.target.value)}
+                                    >
+                                        <option value="">Không có</option>
+                                        {novel?.novel?.active?.translator?.map((staff, index) => {
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                            return (
+                                                <option key={`translator-${index}`} value={staffValue}>
+                                                    {staffDisplay}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+
+                                {/* Editor dropdown */}
+                                <div className="chapter-form-group">
+                                    <label className="chapter-form-label">Biên tập viên:</label>
+                                    <select
+                                        className="chapter-staff-dropdown mode-dropdown"
+                                        value={currentEditor}
+                                        onChange={(e) => updateFormField(formIndex, 'editor', e.target.value)}
+                                    >
+                                        <option value="">Không có</option>
+                                        {novel?.novel?.active?.editor?.map((staff, index) => {
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                            return (
+                                                <option key={`editor-${index}`} value={staffValue}>
+                                                    {staffDisplay}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+
+                                {/* Proofreader dropdown */}
+                                <div className="chapter-form-group">
+                                    <label className="chapter-form-label">Hiệu đính:</label>
+                                    <select
+                                        className="chapter-staff-dropdown mode-dropdown"
+                                        value={currentProofreader}
+                                        onChange={(e) => updateFormField(formIndex, 'proofreader', e.target.value)}
+                                    >
+                                        <option value="">Không có</option>
+                                        {novel?.novel?.active?.proofreader?.map((staff, index) => {
+                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
+                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
+                                            return (
+                                                <option key={`proofreader-${index}`} value={staffValue}>
+                                                    {staffDisplay}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Chapter content editor */}
+                <div className="chapter-form-section">
+                    <h3 className="form-section-title">Nội dung chương</h3>
+                    <div className="chapter-content-group">
+                        <div className="chapter-content-editor">
+                            <Editor
+                                key={`editor-${form.id}`}
+                                onInit={(evt, editor) => {
+                                    editorRefs.current[formIndex] = editor;
+                                    // Set content if in edit mode
+                                    if (isEditMode && form.chapterContent) {
+                                        let editableContent = form.chapterContent;
+                                        editableContent = convertClassesToInlineStyles(editableContent);
+                                        editableContent = editableContent.replace(
+                                            /<sup><a[^>]*href="#note-(\w+)"[^>]*>\[\w+\]<\/a><\/sup>/g,
+                                            '[valnote_$1]'
+                                        );
+                                        editableContent = editableContent.replace(
+                                            /<sup class="footnote-marker" data-footnote="(\w+)">\[[\w\d]+\]<\/sup>/g,
+                                            '[valnote_$1]'
+                                        );
+                                        editor.setContent(editableContent);
+                                    }
+                                }}
+                                scriptLoading={{async: true, load: "domainBased"}}
+                                init={{
+                                    script_src: config.tinymce.scriptPath,
+                                    license_key: 'gpl',
+                                    height: 600,
+                                    menubar: false,
+                                    remove_empty_elements: false,
+                                    forced_root_block: 'p',
+                                    plugins: [
+                                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+                                        'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                                        'insertdatetime', 'media', 'table', 'help', 'wordcount',
+                                        'preview'
+                                    ],
+                                    toolbar: 'undo redo | formatselect | ' +
+                                        'bold italic underline strikethrough | processitalics | ' +
+                                        'alignleft aligncenter alignright alignjustify | ' +
+                                        'bullist numlist outdent indent | ' +
+                                        'link image | code preview | removeformat | help',
+                                    contextmenu: 'cut copy paste | link image | removeformat',
+                                    content_style: `
+                                        body { font-family:Helvetica,Arial,Georgia,sans-serif; font-size:16px; line-height:1.6; }
+                                        .footnote-ref { color: #0066cc; text-decoration: none; cursor: pointer; }
+                                        .footnote-ref:hover { text-decoration: underline; }
+                                        em, i { font-style: italic; }
+                                        strong, b { font-weight: bold; }
+                                    `,
+                                    skin: 'oxide',
+                                    content_css: 'default',
+                                    placeholder: 'Nhập nội dung chương...',
+                                    statusbar: true,
+                                    resize: true,
+                                    branding: false,
+                                    promotion: false,
+                                    paste_data_images: true,
+                                    paste_as_text: false,
+                                    paste_auto_cleanup_on_paste: false,
+                                    paste_remove_styles: false,
+                                    paste_remove_spans: false,
+                                    paste_strip_class_attributes: 'none',
+                                    paste_merge_formats: false,
+                                    paste_webkit_styles: 'all',
+                                    valid_elements: '*[*]',
+                                    valid_children: '*[*]',
+                                    extended_valid_elements: '*[*]',
+                                    setup: function (editor) {
+                                        editor.on('init', () => {
+                                            if (isEditMode && form.chapterContent) {
+                                                let editableContent = form.chapterContent;
+                                                editableContent = convertClassesToInlineStyles(editableContent);
+                                                editableContent = convertHTMLToFootnotes(editableContent);
+                                                editor.setContent(editableContent);
+                                            }
+                                        });
+
+                                        editor.ui.registry.addButton('footnote', {
+                                            text: 'Add Footnote',
+                                            tooltip: 'Insert a footnote',
+                                            onAction: function () {
+                                                addFootnote(formIndex);
+                                            }
+                                        });
+
+                                        editor.ui.registry.addMenuButton('insert', {
+                                            text: 'Insert',
+                                            tooltip: 'Insert content',
+                                            fetch: function (callback) {
+                                                const items = [
+                                                    {
+                                                        type: 'menuitem',
+                                                        text: 'Footnote',
+                                                        onAction: function () {
+                                                            addFootnote(formIndex);
+                                                        }
+                                                    }
+                                                ];
+                                                callback(items);
+                                            }
+                                        });
+
+                                        // Add process italics functionality
+                                        const processItalicPatterns = () => {
+                                            let content = editor.getContent();
+                                            const originalContent = content;
+                                            
+                                            const textNodes = content.split(/(<[^>]*>)/);
+                                            let hasChanges = false;
+                                            
+                                            for (let i = 0; i < textNodes.length; i++) {
+                                                if (!textNodes[i].startsWith('<')) {
+                                                    const originalNode = textNodes[i];
+                                                    textNodes[i] = textNodes[i].replace(/\*([^*\n]+?)\*/g, '<em>$1</em>');
+                                                    if (textNodes[i] !== originalNode) {
+                                                        hasChanges = true;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if (hasChanges) {
+                                                content = textNodes.join('');
+                                                editor.setContent(content);
+                                                return true;
+                                            }
+                                            return false;
+                                        };
+
+                                        editor.addCommand('ProcessItalicPatterns', processItalicPatterns);
+
+                                        editor.ui.registry.addButton('processitalics', {
+                                            text: '*→In nghiêng',
+                                            tooltip: 'Convert *text* to italics',
+                                            onAction: function () {
+                                                const processed = processItalicPatterns();
+                                                if (processed) {
+                                                    editor.notificationManager.open({
+                                                        text: 'Italic patterns processed!',
+                                                        type: 'success',
+                                                        timeout: 2000
+                                                    });
+                                                } else {
+                                                    editor.notificationManager.open({
+                                                        text: 'No *text* patterns found to convert.',
+                                                        type: 'info',
+                                                        timeout: 2000
+                                                    });
+                                                }
+                                            }
+                                        });
+
+                                        editor.addShortcut('ctrl+shift+i', 'Process italic patterns', 'ProcessItalicPatterns');
+
+                                        editor.on('ExecCommand', (e) => {
+                                            if (e.command === 'mceReplace' || e.command === 'SearchReplace') {
+                                                setTimeout(() => {
+                                                    processItalicPatterns();
+                                                }, 100);
+                                            }
+                                        });
+
+                                        // Handle paste events
+                                        editor.on('paste', (e) => {
+                                            setTimeout(() => {
+                                                let content = editor.getContent();
+                                                const originalContent = content;
+
+                                                // Convert old footnote formats
+                                                content = content.replace(
+                                                    /<sup class="footnote-marker" data-footnote="(\w+)">\[[\w\d]+\]<\/sup>/g,
+                                                    '[valnote_$1]'
+                                                );
+
+                                                content = content.replace(
+                                                    /<sup[^>]*data-footnote="(\w+)"[^>]*>\[[\w\d]+\]<\/sup>/g,
+                                                    '[valnote_$1]'
+                                                );
+
+                                                content = content.replace(
+                                                    /<sup><a[^>]*href="#note-(\w+)"[^>]*>\[[\w\d]+\]<\/a><\/sup>/g,
+                                                    '[valnote_$1]'
+                                                );
+
+                                                // Handle paragraph processing
+                                                let hasChanges = false;
+                                                
+                                                if (content.match(/<p[^>]*>[\s\S]*?<br[\s\/]*>[\s\S]*?<\/p>/i)) {
+                                                    content = content.replace(/<p([^>]*)>([\s\S]*?)<\/p>/gi, (match, attrs, innerContent) => {
+                                                        const paragraphs = innerContent
+                                                            .split(/<br\s*\/?>/gi)
+                                                            .map(para => para.trim())
+                                                            .filter(para => para && para.length > 0)
+                                                            .map(para => `<p${attrs}>${para}</p>`)
+                                                            .join('');
+                                                        
+                                                        if (paragraphs !== match) {
+                                                            hasChanges = true;
+                                                        }
+                                                        return paragraphs;
+                                                    });
+                                                }
+                                                
+                                                if (content.includes('<br>') || content.includes('<br/>')) {
+                                                    let paragraphContent = content
+                                                        .split(/(<br\s*\/?>){2,}/gi)
+                                                        .filter(block => block && block.trim() && !block.match(/^(<br\s*\/?>) +$/gi))
+                                                        .map(block => {
+                                                            let cleanBlock = block.trim().replace(/^(<br\s*\/?>)+|(<br\s*\/?>) +$/gi, '');
+                                                            if (cleanBlock && !cleanBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
+                                                                return `<p>${cleanBlock}</p>`;
+                                                            }
+                                                            return cleanBlock;
+                                                        })
+                                                        .filter(block => block)
+                                                        .join('');
+
+                                                    if (paragraphContent && paragraphContent !== content) {
+                                                        content = paragraphContent;
+                                                        hasChanges = true;
+                                                    }
+                                                }
+
+                                                if (content !== originalContent || hasChanges) {
+                                                    editor.setContent(content);
+                                                }
+                                            }, 100);
+                                        });
+                                    },
+                                    images_upload_handler: (blobInfo) => {
+                                        return new Promise((resolve, reject) => {
+                                            const file = blobInfo.blob();
+                                            bunnyUploadService.uploadFile(file, 'illustrations')
+                                                .then(url => {
+                                                    resolve(url);
+                                                })
+                                                .catch(error => {
+                                                    console.error('Image upload error:', error);
+                                                    reject('Image upload failed');
+                                                });
+                                        });
+                                    },
+                                    images_upload_base_path: '/',
+                                    automatic_uploads: true
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footnotes section */}
+                <div className="footnote-section">
+                    <div className="footnote-header">
+                        <h3 className="footnote-title">
+                            Chú thích
+                            <span 
+                                className={`footnote-toggle-arrow ${footnoteInstructionsExpanded[formIndex] ? 'expanded' : ''}`}
+                                onClick={() => toggleFootnoteInstructions(formIndex)}
+                                title="Click to toggle instructions"
+                            >
+                                ▶
+                            </span>
+                        </h3>
+                    </div>
+
+                    {/* Always show footnote list if there are footnotes */}
+                    {currentFootnotes.length > 0 && (
+                        <div className="footnote-list">
+                            {currentFootnotes.map((footnote) => (
+                                <div key={`footnote-${footnote.id}-${formIndex}`} className="footnote-item-improved">
+                                    <div className="footnote-input-container">
+                                        <textarea
+                                            value={footnote.content}
+                                            onChange={(e) => updateFootnote(footnote.id, e.target.value, formIndex)}
+                                            className="footnote-textarea"
+                                            placeholder=" "
+                                            id={`footnote-${footnote.id}-${formIndex}`}
+                                        />
+                                        <label
+                                            htmlFor={`footnote-${footnote.id}-${formIndex}`}
+                                            className="footnote-float-label"
+                                        >
+                                            [{footnote.name || footnote.id}]
+                                        </label>
+                                    </div>
+                                    <div className="footnote-controls">
+                                        <div className="footnote-move-controls">
+                                            <button
+                                                type="button"
+                                                className="footnote-move-btn up"
+                                                onClick={() => moveFootnote(footnote.id, 'up', formIndex)}
+                                                disabled={currentFootnotes.findIndex(f => f.id === footnote.id) === 0}
+                                                title="Di chuyển lên"
+                                            >
+                                                ▲
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="footnote-move-btn down"
+                                                onClick={() => moveFootnote(footnote.id, 'down', formIndex)}
+                                                disabled={currentFootnotes.findIndex(f => f.id === footnote.id) === currentFootnotes.length - 1}
+                                                title="Di chuyển xuống"
+                                            >
+                                                ▼
+                                            </button>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="footnote-delete-btn"
+                                            onClick={() => deleteFootnote(footnote.id, formIndex)}
+                                            title="Xóa chú thích"
+                                        >
+                                            <FontAwesomeIcon icon={faTrash}/>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Collapsible instructions */}
+                    {footnoteInstructionsExpanded[formIndex] && (
+                        <div className="footnote-instructions">
+                            <h4>Hướng dẫn sử dụng chú thích:</h4>
+                            <ol>
+                                <li><strong>Thêm chú thích mới:</strong> Nhấn nút "Thêm chú thích" sẽ tự động tạo chú thích tại vị trí con trỏ trong editor; Hoặc gõ trực tiếp <code>[valnote_1]</code>, <code>[valnote_2]</code>... trong nội dung chương.</li>
+                                <li><strong>Thay đổi thứ tự:</strong> Sử dụng nút <strong>▲</strong> (lên) và <strong>▼</strong> (xuống) để thay đổi số thứ tự các chú thích.</li>
+                                <li><strong>Xóa chú thích:</strong> Nhấn nút xóa sẽ loại bỏ chú thích và tất cả marker liên quan trong nội dung.</li>
+                            </ol>
+                        </div>
+                    )}
+
+                    <button
+                        type="button"
+                        className="add-footnote-btn"
+                        onClick={() => addFootnote(formIndex)}
+                    >
+                        <FontAwesomeIcon icon={faPlus}/> Thêm chú thích
+                    </button>
+                </div>
+            </div>
+        );
+    }, [chapterForms, novel, user, isModulePaid, translateChapterModuleStatus, updateFormField, handleModeChange, removeChapterForm, 
+        convertClassesToInlineStyles, convertHTMLToFootnotes, addFootnote, updateFootnote, moveFootnote, deleteFootnote, 
+        isEditMode, config.tinymce.scriptPath, bunnyUploadService, isVietnameseNovel, toggleFootnoteInstructions, footnoteInstructionsExpanded]);
 
     /**
      * Fetches novel and module data when component mounts
@@ -560,12 +1257,16 @@ const ChapterDashboard = () => {
                 if (dashboardData.novel?.active && !isEditMode) {
                     const {active} = dashboardData.novel;
 
+                    let defaultTranslator = '';
+                    let defaultEditor = '';
+                    let defaultProofreader = '';
+
                     // For Vietnamese novels, set author as default translator
                     if (!active.translator?.length && dashboardData.novel.author) {
                         const authorValue = typeof dashboardData.novel.author === 'object' ? 
                             (dashboardData.novel.author.userNumber || dashboardData.novel.author._id) : 
                             dashboardData.novel.author;
-                        setTranslator(authorValue);
+                        defaultTranslator = authorValue;
                     } else {
                         // Set first translator as default for non-Vietnamese novels
                         if (active.translator?.length > 0) {
@@ -573,7 +1274,7 @@ const ChapterDashboard = () => {
                             const translatorValue = typeof firstTranslator === 'object' ? 
                                 (firstTranslator.userNumber || firstTranslator._id) : 
                                 firstTranslator;
-                            setTranslator(translatorValue);
+                            defaultTranslator = translatorValue;
                         }
                     }
                     
@@ -583,7 +1284,7 @@ const ChapterDashboard = () => {
                         const editorValue = typeof firstEditor === 'object' ? 
                             (firstEditor.userNumber || firstEditor._id) : 
                             firstEditor;
-                        setEditor(editorValue);
+                        defaultEditor = editorValue;
                     }
                     
                     // Set first proofreader as default
@@ -592,8 +1293,18 @@ const ChapterDashboard = () => {
                         const proofreaderValue = typeof firstProofreader === 'object' ? 
                             (firstProofreader.userNumber || firstProofreader._id) : 
                             firstProofreader;
-                        setProofreader(proofreaderValue);
+                        defaultProofreader = proofreaderValue;
                     }
+
+                    // Update the first chapter form with default staff values
+                    setChapterForms(prev => prev.map((form, index) => 
+                        index === 0 ? {
+                            ...form,
+                            translator: defaultTranslator,
+                            editor: defaultEditor,
+                            proofreader: defaultProofreader
+                        } : form
+                    ));
                 }
 
                 // Set module data if available
@@ -609,11 +1320,21 @@ const ChapterDashboard = () => {
                     }
                 }
 
-                // Initialize footnotes for new chapter creation
-                if (!isEditMode) {
+                // Initialize footnotes for new chapter creation (only if not already handled above)
+                if (!isEditMode && !dashboardData.novel?.active) {
                     startTransition(() => {
-                        setFootnotes([]);
-                        setNextFootnoteId(1);
+                        setChapterForms([{
+                            id: 1,
+                            chapterTitle: '',
+                            chapterContent: '',
+                            mode: 'published',
+                            chapterBalance: 0,
+                            translator: '',
+                            editor: '',
+                            proofreader: '',
+                            footnotes: [],
+                            nextFootnoteId: 1
+                        }]);
                         isInitializedRef.current = true;
                     });
                 }
@@ -623,78 +1344,66 @@ const ChapterDashboard = () => {
                     try {
                         const response = await axios.get(`${config.backendUrl}/api/chapters/${chapterId}`);
                         const chapterData = response.data.chapter;
-
-                        setChapterTitle(chapterData.title || '');
-                        setChapterContent(chapterData.content || '');
-                        setMode(chapterData.mode || 'published');
                         
                         // Set staff with defaults if not already assigned
                         const {active} = dashboardData.novel;
                         
+                        let translatorValue = chapterData.translator || '';
+                        let editorValue = chapterData.editor || '';
+                        let proofreaderValue = chapterData.proofreader || '';
+                        
                         // Set translator with default
-                        if (chapterData.translator) {
-                            setTranslator(chapterData.translator);
-                        } else if (!active?.translator?.length && dashboardData.novel.author) {
+                        if (!translatorValue) {
+                            if (!active?.translator?.length && dashboardData.novel.author) {
                             // Vietnamese novel - use author as default
-                            const authorValue = typeof dashboardData.novel.author === 'object' ? 
+                                translatorValue = typeof dashboardData.novel.author === 'object' ? 
                                 (dashboardData.novel.author.userNumber || dashboardData.novel.author._id) : 
                                 dashboardData.novel.author;
-                            setTranslator(authorValue);
                         } else if (active?.translator?.length > 0) {
                             // Non-Vietnamese novel - use first translator as default
                             const firstTranslator = active.translator[0];
-                            const translatorValue = typeof firstTranslator === 'object' ? 
+                                translatorValue = typeof firstTranslator === 'object' ? 
                                 (firstTranslator.userNumber || firstTranslator._id) : 
                                 firstTranslator;
-                            setTranslator(translatorValue);
+                            }
                         }
                         
                         // Set editor with default
-                        if (chapterData.editor) {
-                            setEditor(chapterData.editor);
-                        } else if (active?.editor?.length > 0) {
+                        if (!editorValue && active?.editor?.length > 0) {
                             const firstEditor = active.editor[0];
-                            const editorValue = typeof firstEditor === 'object' ? 
+                            editorValue = typeof firstEditor === 'object' ? 
                                 (firstEditor.userNumber || firstEditor._id) : 
                                 firstEditor;
-                            setEditor(editorValue);
                         }
                         
                         // Set proofreader with default
-                        if (chapterData.proofreader) {
-                            setProofreader(chapterData.proofreader);
-                        } else if (active?.proofreader?.length > 0) {
+                        if (!proofreaderValue && active?.proofreader?.length > 0) {
                             const firstProofreader = active.proofreader[0];
-                            const proofreaderValue = typeof firstProofreader === 'object' ? 
+                            proofreaderValue = typeof firstProofreader === 'object' ? 
                                 (firstProofreader.userNumber || firstProofreader._id) : 
                                 firstProofreader;
-                            setProofreader(proofreaderValue);
                         }
-                        
-                        setChapterBalance(chapterData.chapterBalance || 0);
 
-                        // Use existing footnotes from chapter data if available
-                        if (chapterData.footnotes && Array.isArray(chapterData.footnotes)) {
+                        // Initialize chapter form for edit mode
+                        const editForm = {
+                            id: 1,
+                            chapterTitle: chapterData.title || '',
+                            chapterContent: chapterData.content || '',
+                            mode: chapterData.mode || 'published',
+                            chapterBalance: chapterData.chapterBalance || 0,
+                            translator: translatorValue,
+                            editor: editorValue,
+                            proofreader: proofreaderValue,
+                            footnotes: chapterData.footnotes && Array.isArray(chapterData.footnotes) ? chapterData.footnotes : [],
+                            nextFootnoteId: chapterData.footnotes && Array.isArray(chapterData.footnotes) ? 
+                                Math.max(...chapterData.footnotes.map(f => f.id), 0) + 1 : 1
+                        };
+
                             startTransition(() => {
-                                setFootnotes(chapterData.footnotes);
-
-                                // Find the highest ID to set next footnote ID
-                                const maxId = Math.max(...chapterData.footnotes.map(f => f.id), 0);
-                                setNextFootnoteId(maxId + 1);
-
-                                // Mark as initialized after footnote loading
+                            setChapterForms([editForm]);
+                            // Mark as initialized after chapter loading
                                 isInitializedRef.current = true;
                             });
-                        } else {
-                            // If no footnotes in chapter data, start fresh
-                            startTransition(() => {
-                                setFootnotes([]);
-                                setNextFootnoteId(1);
-
-                                // Mark as initialized after footnote initialization
-                                isInitializedRef.current = true;
-                            });
-                        }
                     } catch (err) {
                         console.error('Error loading chapter data:', err);
                         setError('Không thể tải dữ liệu chương. Vui lòng thử lại.');
@@ -729,63 +1438,34 @@ const ChapterDashboard = () => {
 
     // Provide access to current footnotes for TinyMCE editor
     useEffect(() => {
-        window.getChapterDashboardFootnotes = () => footnotes;
+        window.getChapterDashboardFootnotes = (formIndex = 0) => {
+            return chapterForms[formIndex]?.footnotes || [];
+        };
         return () => {
             delete window.getChapterDashboardFootnotes;
         };
-    }, [footnotes]);
+    }, [chapterForms]);
 
     /**
-     * Handles chapter form submission
-     * Creates a new chapter or updates an existing one
-     *
-     * @param {React.FormEvent<HTMLFormElement>} e - Form submission event
+     * Process a single chapter form data into chapter object
      */
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setError('');
-        setSuccess('');
-
-        // Validate moduleSlugOrId
-        if (!moduleSlugOrId) {
-            startTransition(() => {
-                setError('Không có module được chọn. Vui lòng chọn module trước.');
-                setSaving(false);
-            });
-            return;
-        }
-
-        // Validate that we have a resolved module ID
-        if (!resolvedModuleId) {
-            startTransition(() => {
-                setError('Không thể xác định ID của module. Vui lòng thử lại.');
-                setSaving(false);
-            });
-            return;
-        }
-
+    const processChapterForm = useCallback(async (form, formIndex) => {
         // Validate that paid chapters cannot be created in paid modules
-        if (mode === 'paid' && isModulePaid) {
-            startTransition(() => {
-                setError('Không thể tạo chương trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
-                setSaving(false);
-            });
-            return;
+        if (form.mode === 'paid' && isModulePaid) {
+            throw new Error('Không thể tạo chương trả phí trong tập đã trả phí. Tập trả phí đã bao gồm tất cả chương bên trong.');
         }
 
         // Validate minimum chapter balance for paid chapters
-        if (mode === 'paid' && parseInt(chapterBalance) < 1) {
-            startTransition(() => {
-                setError('Số lúa chương tối thiểu là 1 🌾 cho chương trả phí.');
-                setSaving(false);
-            });
-            return;
+        if (form.mode === 'paid' && parseInt(form.chapterBalance) < 1) {
+            throw new Error('Số lúa chương tối thiểu là 1 🌾 cho chương trả phí.');
         }
 
-        try {
-            // Get content from TinyMCE editor and process it
-            const content = editorRef.current.getContent();
+        // Get content from TinyMCE editor
+        const editor = editorRefs.current[formIndex];
+        if (!editor) {
+            throw new Error(`Editor không tìm thấy cho chương ${formIndex + 1}.`);
+        }
+        const content = editor.getContent();
 
             // Process content - Convert [valnote_X] to HTML footnote links for storage
             let processedContent = convertFootnotesToHTML(content);
@@ -798,6 +1478,39 @@ const ChapterDashboard = () => {
 
             // Clean up br tags
             processedContent = processedContent.replace(/<br\s*\/?>/gi, '<br>');
+
+        // Helper function to convert colors to hex
+        function convertToHex(color) {
+            if (color.startsWith('#')) {
+                return color;
+            }
+
+            if (color.startsWith('rgb')) {
+                const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                if (rgbMatch) {
+                    const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+                    const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+                    const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+                    return `#${r}${g}${b}`;
+                }
+            }
+
+            // Named colors to hex conversion
+            const namedColors = {
+                'red': '#ff0000',
+                'blue': '#0000ff',
+                'green': '#008000',
+                'yellow': '#ffff00',
+                'purple': '#800080',
+                'orange': '#ffa500',
+                'pink': '#ffc0cb',
+                'brown': '#a52a2a',
+                'gray': '#808080',
+                'grey': '#808080'
+            };
+
+            return namedColors[color.toLowerCase()] || null;
+        }
 
             // COLOR DETECTION - Preserve intentional colors, remove default colors
             processedContent = processedContent.replace(
@@ -991,47 +1704,9 @@ const ChapterDashboard = () => {
                 ALLOW_EMPTY_TAGS: ['p'],
             });
 
-            // Helper function to convert colors to hex
-            function convertToHex(color) {
-                if (color.startsWith('#')) {
-                    return color;
-                }
-
-                if (color.startsWith('rgb')) {
-                    const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-                    if (rgbMatch) {
-                        const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
-                        const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
-                        const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
-                        return `#${r}${g}${b}`;
-                    }
-                }
-
-                // Named colors to hex conversion
-                const namedColors = {
-                    'red': '#ff0000',
-                    'blue': '#0000ff',
-                    'green': '#008000',
-                    'yellow': '#ffff00',
-                    'purple': '#800080',
-                    'orange': '#ffa500',
-                    'pink': '#ffc0cb',
-                    'brown': '#a52a2a',
-                    'gray': '#808080',
-                    'grey': '#808080'
-                };
-
-                return namedColors[color.toLowerCase()] || null;
-            }
-
             // Check content size
-            const contentSizeMB = (cleanedContent.length / (1024 * 1024)).toFixed(2);
             if (cleanedContent.length > 40 * 1024 * 1024) {
-                startTransition(() => {
-                    setError('Nội dung quá lớn. Vui lòng giảm độ định dạng hoặc chia thành nhiều chương.');
-                    setSaving(false);
-                });
-                return;
+            throw new Error(`Nội dung chương "${form.chapterTitle}" quá lớn. Vui lòng giảm độ định dạng hoặc chia thành nhiều chương.`);
             }
 
             // Validate that all footnote markers in the content have corresponding footnotes
@@ -1043,49 +1718,88 @@ const ChapterDashboard = () => {
                 marker.getAttribute('data-footnote')
             );
 
-            const footnoteNamesInState = footnotes.map(footnote => footnote.name || footnote.id.toString());
+        const footnoteNamesInState = form.footnotes.map(footnote => footnote.name || footnote.id.toString());
 
             // Check for markers without footnotes
             const missingFootnotes = footnoteMarkersInContent.filter(marker => !footnoteNamesInState.includes(marker));
             if (missingFootnotes.length > 0) {
+            throw new Error(`Chương "${form.chapterTitle}" có chú thích không có nội dung ([${missingFootnotes.join('], [')}]). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
+        }
+
+        // Check for footnotes without markers
+        const orphanedFootnotes = footnoteNamesInState.filter(name => !footnoteMarkersInContent.includes(name));
+        if (orphanedFootnotes.length > 0) {
+            throw new Error(`Chương "${form.chapterTitle}" có chú thích không có dấu chú thích ([${orphanedFootnotes.join('], [')}]). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
+        }
+
+        // Return the processed chapter data
+        return {
+            novelId: resolvedNovelId || novelId,
+            moduleId: resolvedModuleId || moduleSlugOrId,
+            title: form.chapterTitle,
+            content: cleanedContent,
+            mode: form.mode,
+            translator: form.translator,
+            editor: form.editor,
+            proofreader: form.proofreader,
+            footnotes: form.footnotes,
+            chapterBalance: form.mode === 'paid' ? parseInt(form.chapterBalance) || 0 : 0
+        };
+    }, [chapterForms, convertFootnotesToHTML, isModulePaid, editorRefs, resolvedNovelId, novelId, resolvedModuleId, moduleSlugOrId]);
+
+    /**
+     * Handles chapter form submission - supports both single and multiple chapters
+     * Creates new chapters or updates an existing one
+     *
+     * @param {React.FormEvent<HTMLFormElement>} e - Form submission event
+     */
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setError('');
+        setSuccess('');
+
+        // Validate moduleSlugOrId
+        if (!moduleSlugOrId) {
                 startTransition(() => {
-                    setError(`Có chú thích trong chương không có nội dung ([${missingFootnotes.join('], [')}]). Vui lòng thêm nội dung chú thích hoặc xóa các dấu chú thích.`);
+                setError('Không có module được chọn. Vui lòng chọn module trước.');
                     setSaving(false);
                 });
                 return;
             }
 
-            // Check for footnotes without markers
-            const orphanedFootnotes = footnoteNamesInState.filter(name => !footnoteMarkersInContent.includes(name));
-            if (orphanedFootnotes.length > 0) {
+        // Validate that we have a resolved module ID
+        if (!resolvedModuleId) {
                 startTransition(() => {
-                    setError(`Có chú thích trong chương không có dấu chú thích ([${orphanedFootnotes.join('], [')}]). Vui lòng thêm dấu chú thích hoặc xóa các chú thích.`);
+                setError('Không thể xác định ID của module. Vui lòng thử lại.');
                     setSaving(false);
                 });
                 return;
             }
 
-            // Create the chapter data object
-            const chapterData = {
-                novelId: resolvedNovelId || novelId, // Use resolved ID if available, fallback to original
-                moduleId: resolvedModuleId || moduleSlugOrId, // Use resolved module ID if available
-                title: chapterTitle,
-                content: cleanedContent,
-                mode: mode,
-                translator: translator,
-                editor: editor,
-                proofreader: proofreader,
-                footnotes: footnotes,
-                chapterBalance: mode === 'paid' ? parseInt(chapterBalance) || 0 : 0
-            };
+        // Validate chapter forms
+        const emptyTitles = chapterForms.filter(form => !form.chapterTitle.trim());
+        if (emptyTitles.length > 0) {
+            startTransition(() => {
+                setError('Vui lòng nhập tiêu đề cho tất cả các chương.');
+                setSaving(false);
+            });
+            return;
+        }
 
-            // Simplified cache invalidation - avoid overlapping operations
+        try {
+            // Process all chapter forms
+            const processedChapters = [];
+            for (let i = 0; i < chapterForms.length; i++) {
+                const processedChapter = await processChapterForm(chapterForms[i], i);
+                processedChapters.push(processedChapter);
+            }
+
+            // Invalidate cache for optimistic updates
             if (isEditMode) {
-                // For edit mode, invalidate both query keys to ensure consistency
                 queryClient.invalidateQueries({queryKey: ['completeNovel', novelId]});
                 queryClient.invalidateQueries({queryKey: ['novel', novelId]});
             } else {
-                // For new chapter, invalidate the correct query keys
                 await Promise.all([
                     queryClient.invalidateQueries({queryKey: ['completeNovel', novelId]}),
                     queryClient.invalidateQueries({queryKey: ['completeNovel', resolvedNovelId || novelId]}),
@@ -1094,14 +1808,11 @@ const ChapterDashboard = () => {
                 ]);
             }
 
-            // Get current novel data for optimistic update
-            const currentNovelData = queryClient.getQueryData(['completeNovel', novelId]);
-
             if (isEditMode) {
-                // Update existing chapter
+                // Update existing chapter (only single chapter in edit mode)
                 await axios.put(
                     `${config.backendUrl}/api/chapters/${chapterId}`,
-                    chapterData,
+                    processedChapters[0],
                     {
                         headers: {
                             'Content-Type': 'application/json',
@@ -1113,50 +1824,34 @@ const ChapterDashboard = () => {
                 startTransition(() => {
                     setSuccess('Chương đã được cập nhật thành công!');
                 });
+
+                // Clear success message after timeout and stay on page
+                setTimeout(() => {
+                    startTransition(() => {
+                        setSuccess('');
+                    });
+                }, 3000);
+                startTransition(() => {
+                    setSaving(false);
+                });
             } else {
-                // Optimistically update the UI before the API call completes
-                if (currentNovelData) {
-                    // Add a temporary optimistic chapter to the novel's chapters list
-                    const optimisticNovel = {...currentNovelData};
-                    const timestamp = new Date().toISOString();
-
-                    // Find the target module and add chapter to it
-                    if (optimisticNovel.modules) {
-                        const targetModule = optimisticNovel.modules.find(m => m._id === (resolvedModuleId || moduleSlugOrId));
-                        if (targetModule) {
-                            // Create optimistic chapter with temporary ID
-                            const optimisticChapter = {
-                                _id: `temp-${Date.now()}`,
-                                title: chapterTitle,
-                                content: cleanedContent,
-                                novelId: resolvedNovelId || novelId,
-                                moduleId: resolvedModuleId || moduleSlugOrId,
-                                mode,
-                                translator,
-                                editor,
-                                proofreader,
-                                footnotes,
-                                chapterBalance: mode === 'paid' ? parseInt(chapterBalance) || 0 : 0,
-                                createdAt: timestamp,
-                                updatedAt: timestamp
-                            };
-
-                            // Add to module's chapters if it exists
-                            if (!targetModule.chapters) {
-                                targetModule.chapters = [];
+                // Create multiple chapters
+                if (processedChapters.length === 1) {
+                    // Single chapter - use existing endpoint
+                    await axios.post(
+                        `${config.backendUrl}/api/chapters`,
+                        processedChapters[0],
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
                             }
-                            targetModule.chapters.push(optimisticChapter);
-
-                            // Update the novel's update timestamp
-                            optimisticNovel.updatedAt = timestamp;
-
-                            // Set the optimistic data in cache
-                            queryClient.setQueryData(['completeNovel', novelId], optimisticNovel);
                         }
-                    }
-                }
-
-                // Make the actual API call to create new chapter
+                    );
+                } else {
+                    // Multiple chapters - use batch endpoint or create individually
+                    // For now, create them individually - could be optimized with batch endpoint
+                    for (const chapterData of processedChapters) {
                 await axios.post(
                     `${config.backendUrl}/api/chapters`,
                     chapterData,
@@ -1167,34 +1862,25 @@ const ChapterDashboard = () => {
                         }
                     }
                 );
-
-                startTransition(() => {
-                    setSuccess('Chương đã được tạo thành công!');
-                });
+                    }
             }
 
-            // For edit mode, clear success message after timeout and stay on page
-            if (isEditMode) {
-                setTimeout(() => {
                     startTransition(() => {
-                        setSuccess('');
-                    });
-                }, 3000);
-                startTransition(() => {
-                    setSaving(false);
+                    const successMsg = processedChapters.length === 1 ? 
+                        'Chương đã được tạo thành công!' : 
+                        `${processedChapters.length} chương đã được tạo thành công!`;
+                    setSuccess(successMsg);
                 });
-            } else {
-                // For new chapter, manually invalidate cache and navigate back
-                // This ensures the novel page shows the new chapter immediately
+
+                // Navigate back to novel page
                 queryClient.invalidateQueries(['completeNovel', novelId]);
                 queryClient.invalidateQueries(['novel', novelId]);
                 
-                // Give a shorter delay to allow the success message to be seen
                 setTimeout(() => {
                     navigate(generateNovelUrl({_id: novelId, title: novel?.novel?.title || ''}), {
                         replace: true
                     });
-                }, 800); // Reduced timeout since we manually invalidated cache
+                }, 800);
             }
         } catch (err) {
             console.error('Error details:', err);
@@ -1335,586 +2021,43 @@ const ChapterDashboard = () => {
                 </div>
             )}
 
-            {/* Chapter creation form */}
+            {/* Multiple Chapter creation form */}
             <form onSubmit={handleSubmit} className="chapter-form">
-                {/* Main details section */}
+                {/* Render all chapter forms */}
+                {chapterForms.map((form, index) => renderChapterForm(form, index))}
 
-                {/* Status section */}
-                <div className="chapter-form-section">
-                    <div className="chapter-title-status-group">
-                        <div className="chapter-title-input">
-                            <label>Tiêu đề chương:</label>
-                            <input
-                                type="text"
-                                value={chapterTitle}
-                                onChange={(e) => setChapterTitle(e.target.value)}
-                                placeholder="Nhập tiêu đề chương"
-                                required
-                            />
-                        </div>
-                        <div className="chapter-mode-input">
-                            <label>Chế độ chương:</label>
-                            <select
-                                value={mode}
-                                onChange={handleModeChange}
-                                className="chapter-dashboard-mode-dropdown"
-                            >
-                                <option value="published">{translateChapterModuleStatus('Published')} (Hiển thị cho tất
-                                    cả)
-                                </option>
-                                <option value="draft">{translateChapterModuleStatus('Draft')} (Chỉ dành cho nhân sự)</option>
-                                <option value="protected">{translateChapterModuleStatus('Protected')} (Yêu cầu đăng
-                                    nhập)
-                                </option>
-                                {user?.role === 'admin' && (
-                                    <option value="paid" disabled={isModulePaid}>
-                                        {isModulePaid ? `${translateChapterModuleStatus('Paid')} (Không khả dụng - Tập đã trả phí)` : translateChapterModuleStatus('Paid')}
-                                    </option>
-                                )}
-                            </select>
-                        </div>
-                        <div className="chapter-balance-input">
-                            {user?.role === 'admin' && mode === 'paid' && (
-                                <>
-                                    <label>Số lúa chương (Tối thiểu 1 🌾):</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={chapterBalance}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            // Allow empty input for better UX, but ensure minimum on blur
-                                            if (value === '' || parseInt(value) >= 1) {
-                                                setChapterBalance(value);
-                                            }
-                                        }}
-                                        onBlur={(e) => {
-                                            const value = e.target.value;
-                                            // Ensure minimum value on blur if input is empty or invalid
-                                            if (value === '' || parseInt(value) < 1) {
-                                                setChapterBalance(1);
-                                            }
-                                        }}
-                                        placeholder="Nhập số lúa chương (tối thiểu 1)"
-                                    />
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Staff section */}
-                <div className="chapter-form-section chapter-staff-section">
-                    <div className="chapter-form-row">
-                        {isVietnameseNovel ? (
-                            /* Vietnamese novel - author, editor, proofreader */
-                            <>
-                                {/* Author dropdown (using translator field) */}
-                                <div className="chapter-form-group">
-                                    <label className="chapter-form-label">Tác giả:</label>
-                                    <select
-                                        className="chapter-staff-dropdown mode-dropdown"
-                                        value={translator}
-                                        onChange={(e) => setTranslator(e.target.value)}
-                                    >
-                                        <option value="">Không có</option>
-                                        {novel?.novel?.author && (
-                                            <option value={typeof novel.novel.author === 'object' ? (novel.novel.author.userNumber || novel.novel.author._id) : novel.novel.author}>
-                                                {typeof novel.novel.author === 'object' ? (novel.novel.author.displayName || novel.novel.author.userNumber || novel.novel.author.username) : novel.novel.author}
-                                            </option>
-                                        )}
-                                    </select>
-                                </div>
-
-                                {/* Editor dropdown */}
-                                <div className="chapter-form-group">
-                                    <label className="chapter-form-label">Biên tập viên:</label>
-                                    <select
-                                        className="chapter-staff-dropdown mode-dropdown"
-                                        value={editor}
-                                        onChange={(e) => setEditor(e.target.value)}
-                                    >
-                                        <option value="">Không có</option>
-                                        {novel?.novel?.active?.editor?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
-                                            return (
-                                                <option key={`editor-${index}`} value={staffValue}>
-                                                    {staffDisplay}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
-
-                                {/* Proofreader dropdown */}
-                                <div className="chapter-form-group">
-                                    <label className="chapter-form-label">Hiệu đính:</label>
-                                    <select
-                                        className="chapter-staff-dropdown mode-dropdown"
-                                        value={proofreader}
-                                        onChange={(e) => setProofreader(e.target.value)}
-                                    >
-                                        <option value="">Không có</option>
-                                        {novel?.novel?.active?.proofreader?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
-                                            return (
-                                                <option key={`proofreader-${index}`} value={staffValue}>
-                                                    {staffDisplay}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
-                            </>
-                        ) : (
-                            /* Non-Vietnamese novel - translator, editor, proofreader */
-                            <>
-                                {/* Translator dropdown */}
-                                <div className="chapter-form-group">
-                                    <label className="chapter-form-label">Dịch giả:</label>
-                                    <select
-                                        className="chapter-staff-dropdown mode-dropdown"
-                                        value={translator}
-                                        onChange={(e) => setTranslator(e.target.value)}
-                                    >
-                                        <option value="">Không có</option>
-                                        {novel?.novel?.active?.translator?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
-                                            return (
-                                                <option key={`translator-${index}`} value={staffValue}>
-                                                    {staffDisplay}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
-
-                                {/* Editor dropdown */}
-                                <div className="chapter-form-group">
-                                    <label className="chapter-form-label">Biên tập viên:</label>
-                                    <select
-                                        className="chapter-staff-dropdown mode-dropdown"
-                                        value={editor}
-                                        onChange={(e) => setEditor(e.target.value)}
-                                    >
-                                        <option value="">Không có</option>
-                                        {novel?.novel?.active?.editor?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
-                                            return (
-                                                <option key={`editor-${index}`} value={staffValue}>
-                                                    {staffDisplay}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
-
-                                {/* Proofreader dropdown */}
-                                <div className="chapter-form-group">
-                                    <label className="chapter-form-label">Hiệu đính:</label>
-                                    <select
-                                        className="chapter-staff-dropdown mode-dropdown"
-                                        value={proofreader}
-                                        onChange={(e) => setProofreader(e.target.value)}
-                                    >
-                                        <option value="">Không có</option>
-                                        {novel?.novel?.active?.proofreader?.map((staff, index) => {
-                                            const staffValue = typeof staff === 'object' ? (staff.userNumber || staff._id) : staff;
-                                            const staffDisplay = typeof staff === 'object' ? (staff.displayName || staff.userNumber || staff.username) : staff;
-                                            return (
-                                                <option key={`proofreader-${index}`} value={staffValue}>
-                                                    {staffDisplay}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                {/* Chapter content editor */}
-                <div className="chapter-form-section">
-                    <h3 className="form-section-title">Nội dung chương</h3>
-
-                    <div className="chapter-content-group">
-                        <div className="chapter-content-editor">
-                            <Editor
-                                onInit={(evt, editor) => {
-                                    editorRef.current = editor;
-                                    // Set content if in edit mode - convert HTML footnotes back to [valnote_X] format for editing
-                                    if (isEditMode && chapterContent) {
-                                        let editableContent = chapterContent;
-
-                                        // Convert CSS classes back to inline styles for TinyMCE editing
-                                        editableContent = convertClassesToInlineStyles(editableContent);
-
-                                        // Convert HTML footnote links back to [valnote_X] format for editing
-                                        editableContent = editableContent.replace(
-                                            /<sup><a[^>]*href="#note-(\w+)"[^>]*>\[\w+\]<\/a><\/sup>/g,
-                                            '[valnote_$1]'
-                                        );
-
-                                        // Handle old format for backward compatibility
-                                        editableContent = editableContent.replace(
-                                            /<sup class="footnote-marker" data-footnote="(\w+)">\[[\w\d]+\]<\/sup>/g,
-                                            '[valnote_$1]'
-                                        );
-
-                                        editor.setContent(editableContent);
-                                    }
-                                }}
-                                scriptLoading={{async: true, load: "domainBased"}}
-                                init={{
-                                    script_src: config.tinymce.scriptPath,
-                                    license_key: 'gpl',
-                                    height: 600,
-                                    menubar: false,
-                                    remove_empty_elements: false,
-                                    forced_root_block: 'p',
-                                    plugins: [
-                                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
-                                        'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                                        'insertdatetime', 'media', 'table', 'help', 'wordcount',
-                                        'preview'
-                                    ],
-                                    toolbar: 'undo redo | formatselect | ' +
-                                        'bold italic underline strikethrough | processitalics | ' +
-                                        'alignleft aligncenter alignright alignjustify | ' +
-                                        'bullist numlist outdent indent | ' +
-                                        'link image | code preview | removeformat | help',
-                                    contextmenu: 'cut copy paste | link image | removeformat',
-                                    content_style: `
-                    body { font-family:Helvetica,Arial,Georgia,sans-serif; font-size:16px; line-height:1.6; }
-                    .footnote-ref { color: #0066cc; text-decoration: none; cursor: pointer; }
-                    .footnote-ref:hover { text-decoration: underline; }
-                    em, i { font-style: italic; }
-                    strong, b { font-weight: bold; }
-                  `,
-                                    skin: 'oxide',
-                                    content_css: 'default',
-                                    placeholder: 'Nhập nội dung chương...',
-                                    statusbar: true,
-                                    resize: true,
-                                    branding: false,
-                                    promotion: false,
-                                    // Completely disable TinyMCE's paste processing - preserve HTML exactly as-is
-                                    paste_data_images: true,
-                                    paste_as_text: false,
-                                    paste_auto_cleanup_on_paste: false,
-                                    paste_remove_styles: false,
-                                    paste_remove_spans: false,
-                                    paste_strip_class_attributes: 'none',
-                                    paste_merge_formats: false,
-                                    paste_webkit_styles: 'all',
-                                    // Allow all HTML elements and attributes without restriction
-                                    valid_elements: '*[*]',
-                                    valid_children: '*[*]',
-                                    extended_valid_elements: '*[*]',
-                                    setup: function (editor) {
-                                        // Load content when editor is ready
-                                        editor.on('init', () => {
-                                            // Set content if in edit mode - convert HTML footnotes back to [valnote_X] format for editing
-                                            if (isEditMode && chapterContent) {
-                                                let editableContent = chapterContent;
-                                                
-                                                // Convert CSS classes back to inline styles for TinyMCE editing
-                                                editableContent = convertClassesToInlineStyles(editableContent);
-                                                
-                                                // Convert HTML footnotes back to [valnote_X] format for editing
-                                                editableContent = convertHTMLToFootnotes(editableContent);
-                                                
-                                                editor.setContent(editableContent);
-                                            }
-                                        });
-
-                                        // Add custom button for inserting footnotes
-                                        editor.ui.registry.addButton('footnote', {
-                                            text: 'Add Footnote',
-                                            tooltip: 'Insert a footnote',
-                                            onAction: function () {
-                                                addFootnote();
-                                            }
-                                        });
-
-                                        // Add the custom button to the toolbar
-                                        editor.ui.registry.addMenuButton('insert', {
-                                            text: 'Insert',
-                                            tooltip: 'Insert content',
-                                            fetch: function (callback) {
-                                                const items = [
-                                                    {
-                                                        type: 'menuitem',
-                                                        text: 'Footnote',
-                                                        onAction: function () {
-                                                            addFootnote();
-                                                        }
-                                                    }
-                                                ];
-                                                callback(items);
-                                            }
-                                        });
-
-                                        // Add custom function to process *text* patterns manually
-                                        const processItalicPatterns = () => {
-                                            let content = editor.getContent();
-                                            const originalContent = content;
-                                            
-                                            // Convert *text* patterns to <em>text</em>, but avoid already formatted text
-                                            // Use a more compatible regex approach
-                                            const textNodes = content.split(/(<[^>]*>)/);
-                                            let hasChanges = false;
-                                            
-                                            for (let i = 0; i < textNodes.length; i++) {
-                                                // Only process text nodes (not HTML tags)
-                                                if (!textNodes[i].startsWith('<')) {
-                                                    const originalNode = textNodes[i];
-                                                    // Convert *text* to <em>text</em>, avoiding nested asterisks
-                                                    textNodes[i] = textNodes[i].replace(/\*([^*\n]+?)\*/g, '<em>$1</em>');
-                                                    if (textNodes[i] !== originalNode) {
-                                                        hasChanges = true;
-                                                    }
-                                                }
-                                            }
-                                            
-                                            if (hasChanges) {
-                                                content = textNodes.join('');
-                                                editor.setContent(content);
-                                                return true;
-                                            }
-                                            return false;
-                                        };
-
-                                        // Add custom command for processing italic patterns
-                                        editor.addCommand('ProcessItalicPatterns', processItalicPatterns);
-
-                                        // Add custom button for processing patterns
-                                        editor.ui.registry.addButton('processitalics', {
-                                            text: '*→In nghiêng',
-                                            tooltip: 'Convert *text* to italics',
-                                            onAction: function () {
-                                                const processed = processItalicPatterns();
-                                                if (processed) {
-                                                    editor.notificationManager.open({
-                                                        text: 'Italic patterns processed!',
-                                                        type: 'success',
-                                                        timeout: 2000
-                                                    });
-                                                } else {
-                                                    editor.notificationManager.open({
-                                                        text: 'No *text* patterns found to convert.',
-                                                        type: 'info',
-                                                        timeout: 2000
-                                                    });
-                                                }
-                                            }
-                                        });
-
-                                        // Add keyboard shortcut (Ctrl+Shift+I) for processing italic patterns
-                                        editor.addShortcut('ctrl+shift+i', 'Process italic patterns', 'ProcessItalicPatterns');
-
-                                        // Auto-process patterns after find/replace operations
-                                        editor.on('ExecCommand', (e) => {
-                                            if (e.command === 'mceReplace' || e.command === 'SearchReplace') {
-                                                setTimeout(() => {
-                                                    processItalicPatterns();
-                                                }, 100);
-                                            }
-                                        });
-
-                                        // Handle paste to convert old footnote formats and convert br sequences to paragraphs
-                                        editor.on('paste', (e) => {
-                                            setTimeout(() => {
-                                                let content = editor.getContent();
-                                                const originalContent = content;
-
-                                                // Convert old footnote formats
-                                                content = content.replace(
-                                                    /<sup class="footnote-marker" data-footnote="(\w+)">\[[\w\d]+\]<\/sup>/g,
-                                                    '[valnote_$1]'
-                                                );
-
-                                                content = content.replace(
-                                                    /<sup[^>]*data-footnote="(\w+)"[^>]*>\[[\w\d]+\]<\/sup>/g,
-                                                    '[valnote_$1]'
-                                                );
-
-                                                content = content.replace(
-                                                    /<sup><a[^>]*href="#note-(\w+)"[^>]*>\[[\w\d]+\]<\/a><\/sup>/g,
-                                                    '[valnote_$1]'
-                                                );
-
-                                                // Convert <br> sequences to proper paragraphs
-                                                let hasChanges = false;
-                                                
-                                                // Handle content that's already wrapped in a single <p> tag with many <br> tags
-                                                if (content.match(/<p[^>]*>[\s\S]*?<br[\s\/]*>[\s\S]*?<\/p>/i)) {
-                                                    content = content.replace(/<p([^>]*)>([\s\S]*?)<\/p>/gi, (match, attrs, innerContent) => {
-                                                        // Split the inner content by <br> tags to create separate paragraphs
-                                                        const paragraphs = innerContent
-                                                            .split(/<br\s*\/?>/gi)
-                                                            .map(para => para.trim())
-                                                            .filter(para => para && para.length > 0)
-                                                            .map(para => `<p${attrs}>${para}</p>`)
-                                                            .join('');
-                                                        
-                                                        if (paragraphs !== match) {
-                                                            hasChanges = true;
-                                                        }
-                                                        return paragraphs;
-                                                    });
-                                                }
-                                                
-                                                // Also handle loose <br> sequences (double or more)
-                                                if (content.includes('<br>') || content.includes('<br/>')) {
-                                                    let paragraphContent = content
-                                                        .split(/(<br\s*\/?>){2,}/gi)
-                                                        .filter(block => block && block.trim() && !block.match(/^(<br\s*\/?>)+$/gi))
-                                                        .map(block => {
-                                                            // Clean up single <br> tags within paragraphs and wrap in <p> if not already wrapped
-                                                            let cleanBlock = block.trim().replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, '');
-                                                            if (cleanBlock && !cleanBlock.match(/^<(p|div|h[1-6]|blockquote|pre|ul|ol|li)/i)) {
-                                                                return `<p>${cleanBlock}</p>`;
-                                                            }
-                                                            return cleanBlock;
-                                                        })
-                                                        .filter(block => block)
-                                                        .join('');
-
-                                                    // If we processed paragraph content and it's different, use it
-                                                    if (paragraphContent && paragraphContent !== content) {
-                                                        content = paragraphContent;
-                                                        hasChanges = true;
-                                                    }
-                                                }
-
-                                                if (content !== originalContent || hasChanges) {
-                                                    editor.setContent(content);
-                                                }
-                                            }, 100);
-                                        });
-                                    },
-                                    images_upload_handler: (blobInfo) => {
-                                        return new Promise((resolve, reject) => {
-                                            const file = blobInfo.blob();
-
-                                            // Use bunny CDN service
-                                            bunnyUploadService.uploadFile(file, 'illustrations')
-                                                .then(url => {
-                                                    resolve(url);
-                                                })
-                                                .catch(error => {
-                                                    console.error('Image upload error:', error);
-                                                    reject('Image upload failed');
-                                                });
-                                        });
-                                    },
-                                    images_upload_base_path: '/',
-                                    automatic_uploads: true
-                                }}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footnotes section */}
-                <div className="footnote-section">
-                    <h3>Chú thích</h3>
-                    {footnotes.length > 0 ? (
-                        <div className="footnote-list">
-                            {footnotes.map((footnote) => (
-                                <div key={`footnote-${footnote.id}`} className="footnote-item-improved">
-                                    <div className="footnote-input-container">
-                          <textarea
-                              value={footnote.content}
-                              onChange={(e) => updateFootnote(footnote.id, e.target.value)}
-                              className="footnote-textarea"
-                              placeholder=" "
-                              id={`footnote-${footnote.id}`}
-                          />
-                                        <label
-                                            htmlFor={`footnote-${footnote.id}`}
-                                            className="footnote-float-label"
-                                        >
-                                            [{footnote.name || footnote.id}]
-                                        </label>
-                                    </div>
-                                    <div className="footnote-controls">
-                                        <div className="footnote-move-controls">
+                {/* Add new chapter button - only show if not in edit mode and less than 5 forms */}
+                {!isEditMode && chapterForms.length < 5 && (
+                    <div className="add-chapter-section">
                                             <button
                                                 type="button"
-                                                className="footnote-move-btn up"
-                                                onClick={() => moveFootnote(footnote.id, 'up')}
-                                                disabled={footnotes.findIndex(f => f.id === footnote.id) === 0}
-                                                title="Di chuyển lên"
-                                            >
-                                                ▲
+                            className="add-multiple-chapter-btn"
+                            onClick={addNewChapterForm}
+                        >
+                            <FontAwesomeIcon icon={faPlus}/> Thêm (Tối đa: 5)
                                             </button>
-                                            <button
-                                                type="button"
-                                                className="footnote-move-btn down"
-                                                onClick={() => moveFootnote(footnote.id, 'down')}
-                                                disabled={footnotes.findIndex(f => f.id === footnote.id) === footnotes.length - 1}
-                                                title="Di chuyển xuống"
-                                            >
-                                                ▼
-                                            </button>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="footnote-delete-btn"
-                                            onClick={() => deleteFootnote(footnote.id)}
-                                            title="Xóa chú thích"
-                                        >
-                                            <FontAwesomeIcon icon={faTrash}/>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="footnote-instructions">
-                            <h4>Hướng dẫn sử dụng chú thích:</h4>
-                            <ol>
-                                <li><strong>Thêm chú thích mới:</strong> Nhấn nút "Thêm chú thích" sẽ tự động tạo chú
-                                    thích tại vị trí con trỏ trong editor; Hoặc gõ trực
-                                    tiếp <code>[valnote_1]</code>, <code>[valnote_2]</code>... trong nội dung chương.
-                                </li>
-                                <li><strong>Thay đổi thứ tự:</strong> Sử dụng nút <strong>▲</strong> (lên)
-                                    và <strong>▼</strong> (xuống) để thay đổi số thứ tự các chú thích.
-                                </li>
-                                <li><strong>Xóa chú thích:</strong> Nhấn nút xóa sẽ loại bỏ chú thích và tất cả marker
-                                    liên quan trong nội dung.
-                                </li>
-                            </ol>
+                        <p className="add-chapter-help">
+                            Có thể thêm tối đa {5 - chapterForms.length} chương nữa
+                        </p>
                         </div>
                     )}
-
-                    <button
-                        type="button"
-                        className="add-footnote-btn"
-                        onClick={addFootnote}
-                    >
-                        <FontAwesomeIcon icon={faPlus}/> Thêm chú thích
-                    </button>
-                </div>
 
                 {/* Form action buttons */}
                 <div className="form-actions">
                     <button type="submit" disabled={saving} className="submit-btn">
                         {saving ? (
                             <>
-                                <FontAwesomeIcon icon={faSpinner}
-                                                 spin/> {isEditMode ? 'Đang cập nhật...' : 'Đang lưu...'}
+                                <FontAwesomeIcon icon={faSpinner} spin/> 
+                                {isEditMode ? 'Đang cập nhật...' : 
+                                 chapterForms.length === 1 ? 'Đang lưu...' : 
+                                 `Đang lưu  ${chapterForms.length} chương...`}
                             </>
                         ) : (
                             <>
-                                <FontAwesomeIcon icon={faSave}/> {isEditMode ? 'Cập nhật chương' : 'Lưu chương'}
+                                <FontAwesomeIcon icon={faSave}/> 
+                                {isEditMode ? 'Cập nhật chương' : 
+                                 chapterForms.length === 1 ? ' Lưu chương' : 
+                                 ` Lưu ${chapterForms.length} chương`}
                             </>
                         )}
                     </button>
