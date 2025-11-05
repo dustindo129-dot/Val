@@ -2049,8 +2049,8 @@ const ChapterDashboard = () => {
                             <>
                                 <FontAwesomeIcon icon={faSpinner} spin/> 
                                 {isEditMode ? 'Đang cập nhật...' : 
-                                 chapterForms.length === 1 ? 'Đang lưu...' : 
-                                 `Đang lưu  ${chapterForms.length} chương...`}
+                                 chapterForms.length === 1 ? ' Đang lưu...' : 
+                                 ` Đang lưu  ${chapterForms.length} chương...`}
                             </>
                         ) : (
                             <>
