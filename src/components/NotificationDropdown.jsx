@@ -648,18 +648,18 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         }
         return '#';
       case 'forum_post_approved':
-      case 'forum_post_declined':
-        // Navigate to the forum post if it was approved, otherwise go to forum main
-        if (notification.type === 'forum_post_approved' && notification.data?.postId) {
-          // We would need the post slug for proper navigation, for now go to forum
-          return '/thao-luan';
+        // Navigate to the approved forum post
+        if (notification.data?.postSlug) {
+          return `/thao-luan/${notification.data.postSlug}`;
         }
+        return '/thao-luan';
+      case 'forum_post_declined':
+        // Declined posts should go to forum main since they may not be accessible
         return '/thao-luan';
       case 'forum_post_comment':
         // Navigate to the forum post
-        if (notification.data?.postId) {
-          // We would need the post slug for proper navigation, for now go to forum
-          return '/thao-luan';
+        if (notification.data?.postSlug) {
+          return `/thao-luan/${notification.data.postSlug}`;
         }
         return '/thao-luan';
       case 'forum_post_deleted':
