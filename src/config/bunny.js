@@ -117,7 +117,7 @@ const cdnConfig = {
 
   // Helper function to get avatar URL with proper class
   getAvatarUrl: (avatarPath) => {
-    if (!avatarPath) return cdnConfig.defaultImages.avatar + '?class=avatar';
+    if (!avatarPath || avatarPath.trim() === '') return cdnConfig.defaultImages.avatar + '?class=avatar';
     
     // If it's already a full URL, check if it needs class parameter
     if (avatarPath.startsWith('http')) {
@@ -137,7 +137,7 @@ const cdnConfig = {
 
   // Helper function to get illustration URL with proper class
   getIllustrationUrl: (illustrationPath) => {
-    if (!illustrationPath) return cdnConfig.defaultImages.novel + '?class=illustration';
+    if (!illustrationPath || illustrationPath.trim() === '') return cdnConfig.defaultImages.novel + '?class=illustration';
     
     // If it's already a full URL, check if it needs class parameter
     if (illustrationPath.startsWith('http')) {
@@ -157,7 +157,7 @@ const cdnConfig = {
 
   // Helper function to get request image URL with proper class
   getRequestImageUrl: (requestImagePath) => {
-    if (!requestImagePath) return cdnConfig.defaultImages.novel + '?class=request-img';
+    if (!requestImagePath || requestImagePath.trim() === '') return cdnConfig.defaultImages.novel + '?class=request-img';
     
     // If it's already a full URL, check if it needs class parameter
     if (requestImagePath.startsWith('http')) {
