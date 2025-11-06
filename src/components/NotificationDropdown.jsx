@@ -601,6 +601,9 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
           // Handle novel-level comment replies
           const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
           return `/truyen/${novelSlug}#comment-${notification.data.originalCommentId}`;
+        } else if (notification.data?.postSlug) {
+          // Handle forum post comment replies
+          return `/thao-luan/${notification.data.postSlug}#comment-${notification.data.originalCommentId}`;
         }
         return '#';
       case 'new_chapter':
