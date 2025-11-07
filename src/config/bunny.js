@@ -175,6 +175,20 @@ const cdnConfig = {
     return `${BUNNY_CDN_URL}/${normalizedPath}?class=request-img`;
   },
 
+  // Helper function to get TTS audio URL
+  getTTSAudioUrl: (ttsPath) => {
+    if (!ttsPath || ttsPath.trim() === '') return null;
+    
+    // If it's already a full URL, return as is
+    if (ttsPath.startsWith('http')) {
+      return ttsPath;
+    }
+    
+    // It's a relative path, build the full URL
+    const normalizedPath = ttsPath.startsWith('/') ? ttsPath.substring(1) : ttsPath;
+    return `${BUNNY_CDN_URL}/${normalizedPath}`;
+  },
+
   // Helper function to check if URL is from bunny.net
   isBunnyUrl: (url) => {
     return url && url.includes('valvrareteam.b-cdn.net');
