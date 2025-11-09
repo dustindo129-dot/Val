@@ -24,7 +24,6 @@ const TopUp = lazy(() => import('../pages/TopUp'));
 const TopUpManagement = lazy(() => import('../pages/TopUpManagement'));
 const Forum = lazy(() => import('../pages/Forum'));
 const ForumPostDetail = lazy(() => import('../pages/ForumPostDetail'));
-const Contest2025 = lazy(() => import('../components/Contest2025'));
 const SlugWrapper = lazy(() => import('../components/SlugWrapper'));
 
 // Wrapper component for lazy-loaded routes with Suspense
@@ -54,7 +53,6 @@ function AppRoutes() {
         <Route path="/bang-quan-tri" element={<LazyRoute><ProtectedRoute><AdminDashboard /></ProtectedRoute></LazyRoute>} />
         <Route path="/thao-luan" element={<LazyRoute><Forum /></LazyRoute>} />
         <Route path="/thao-luan/:slug" element={<LazyRoute><ForumPostDetail /></LazyRoute>} />
-        <Route path="/val-light-novel-contest-2025" element={<LazyRoute><Contest2025 /></LazyRoute>} />
         <Route path="/truyen-xu-huong" element={<LazyRoute><NovelList filter="trending" /></LazyRoute>} />
         <Route path="/phuc-hoi-mat-khau/:token" element={<LazyRoute><ResetPassword /></LazyRoute>} />
         <Route path="/xac-nhan-email/:token" element={<LazyRoute><EmailConfirmation /></LazyRoute>} />

@@ -23,24 +23,66 @@ const ModuleChapters = lazy(() => import('./ModuleChapters'));
 const DeleteModuleConfirmationModal = ({ module, onConfirm, onCancel }) => {
   const [confirmText, setConfirmText] = useState('');
   const [isMatch, setIsMatch] = useState(false);
-  
+
+  // Function to normalize text for comparison
+  const normalizeText = (text) => {
+    if (!text) return '';
+    
+    return text
+      .trim() // Remove leading/trailing whitespace
+      .toLowerCase() // Convert to lowercase
+      .normalize('NFD') // Unicode normalization
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
+      .replace(/[^\w\s\u00C0-\u017F\u1EA0-\u1EF9]/g, '') // Keep only letters, numbers, spaces, and Vietnamese chars
+      .trim(); // Final trim
+  };
+
   useEffect(() => {
+    // Robust comparison with normalization
     const moduleTitle = module.title || 'Tập không có tên';
-    setIsMatch(confirmText === moduleTitle);
+    const normalizedConfirmText = normalizeText(confirmText);
+    const normalizedModuleTitle = normalizeText(moduleTitle);
+    
+    setIsMatch(normalizedConfirmText === normalizedModuleTitle);
   }, [confirmText, module.title]);
+
+  const copyTitle = () => {
+    const titleToCopy = module.title || 'Tập không có tên';
+    navigator.clipboard.writeText(titleToCopy).then(() => {
+      // Optional: Add a temporary success indicator
+    }).catch(err => {
+      console.error('Failed to copy title:', err);
+    });
+  };
   
   return (
     <div className="delete-confirmation-modal-overlay">
       <div className="delete-confirmation-modal">
         <h3>Xác nhận xóa tập</h3>
-        <p>Hành động này không thể hoàn tác. Để xác nhận, hãy nhập chính xác tiêu đề tập: <strong className="non-selectable-text">{module.title || 'Tập không có tên'}</strong></p>
+        <p>Hành động này không thể hoàn tác. Để xác nhận, hãy nhập chính xác tiêu đề tập:</p>
         
+        <div className="title-display-container">
+          <div className="copyable-title" onClick={copyTitle} title="Nhấp để sao chép">
+            {module.title || 'Tập không có tên'}
+          </div>
+          <button 
+            type="button" 
+            className="copy-title-btn" 
+            onClick={copyTitle}
+            title="Sao chép tiêu đề"
+          >
+            📋
+          </button>
+        </div>
+
         <input
           type="text"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
           placeholder="Nhập tiêu đề tập"
-          className="confirmation-input"
+          className={`confirmation-input ${isMatch ? 'match-success' : ''}`}
+          autoComplete="off"
         />
         
         <div className="confirmation-actions">

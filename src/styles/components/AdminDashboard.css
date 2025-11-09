@@ -1546,6 +1546,33 @@
   color: #e2e8f0;
 }
 
+:root.dark-mode .title-display-container {
+  background-color: #4a5568;
+  border-color: #718096;
+}
+
+:root.dark-mode .copyable-title {
+  background-color: #1a202c;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .copyable-title:hover {
+  background-color: #2d3748;
+  border-color: #718096;
+}
+
+:root.dark-mode .copy-title-btn {
+  border-color: #718096;
+  color: #e2e8f0;
+}
+
+:root.dark-mode .copy-title-btn:hover {
+  background-color: #4299e1;
+  border-color: #4299e1;
+  color: white;
+}
+
 :root.dark-mode .confirmation-input {
   background: #1a202c;
   border-color: #4a5568;
@@ -1554,8 +1581,14 @@
 
 :root.dark-mode .confirmation-input:focus {
   border-color: #63b3ed;
-  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.25);
 }
+
+:root.dark-mode .confirmation-input.match-success {
+  border-color: #38a169;
+  box-shadow: 0 0 0 2px rgba(56, 161, 105, 0.25);
+}
+
 
 :root.dark-mode .confirm-delete-btn.enabled {
   background-color: #e53e3e;
@@ -1631,14 +1664,75 @@
   line-height: 1.5;
 }
 
+/* Title display with copy functionality */
+.title-display-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.copyable-title {
+  flex: 1;
+  padding: 8px;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  word-break: break-all;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: all;
+}
+
+.copyable-title:hover {
+  background-color: #e9ecef;
+  border-color: #6c757d;
+}
+
+.copy-title-btn {
+  background: none;
+  border: 1px solid #6c757d;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.copy-title-btn:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
 .confirmation-input {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
 }
+
+.confirmation-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.confirmation-input.match-success {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+}
+
 
 .confirmation-actions {
   display: flex;
@@ -1654,6 +1748,11 @@
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.confirm-delete-btn:hover:not(:disabled) {
+  background-color: #d32f2f;
 }
 
 .confirm-delete-btn.disabled {
@@ -1672,6 +1771,12 @@
   padding: 10px 16px;
   border-radius: 4px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-delete-btn:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
 }
 
 /* Non-selectable text in confirmation modals */
