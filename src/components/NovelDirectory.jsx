@@ -50,7 +50,7 @@ const genreCategories = {
 const statusOptions = [
     { value: 'Ongoing', label: 'Đang tiến hành' },
     { value: 'Completed', label: 'Hoàn thành' },
-    { value: 'Hiatus', label: 'Tạm dừng' }
+    { value: 'Hiatus', label: 'Tạm ngưng' }
 ];
 
 // Sort options (removed latest-update)
