@@ -1528,15 +1528,19 @@ const AdminDashboard = () => {
                 status: editingNovel ? editingNovel.status : "Ongoing"
             };
 
-            // If editing, preserve timestamp for all changes except status changes
+            // If editing, preserve timestamp for non-status changes that don't publish drafts
             if (editingNovel) {
                 const hasStatusChange = novelData.status !== editingNovel.status;
+                const draftToPublished =
+                    editingNovel.mode === 'draft' &&
+                    (novelData.mode || 'published') === 'published';
 
-                if (!hasStatusChange) {
-                    // Preserve the original updatedAt timestamp for all non-status changes
-                    // This includes title, note, illustration, and staff changes
+                if (!hasStatusChange && !draftToPublished) {
+                    // Preserve the original updatedAt timestamp for cosmetic changes
                     novelData.updatedAt = editingNovel.updatedAt;
                     novelData.preserveTimestamp = true; // Flag for backend
+                } else {
+                    novelData.preserveTimestamp = false;
                 }
             }
 
