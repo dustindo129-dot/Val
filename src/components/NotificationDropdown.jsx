@@ -50,17 +50,25 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
   const [activeCategory, setActiveCategory] = useState('general'); // 'general' or 'followed'
 
   // Separate notifications by category
-  const generalNotifications = allNotifications.filter(notification => 
-    ['report_feedback', 'comment_reply', 'new_chapter', 'liked_comment', 'liked_chapter', 'comment_deleted'].includes(notification.type)
-  );
+  const generalNotifications = allNotifications.filter(notification => {
+    // Exclude forum comment likes from general (they go to forum category)
+    if (notification.type === 'liked_comment' && notification.data?.postSlug) {
+      return false;
+    }
+    return ['report_feedback', 'comment_reply', 'new_chapter', 'liked_comment', 'liked_chapter', 'comment_deleted'].includes(notification.type);
+  });
   
   const followedNotifications = allNotifications.filter(notification => 
     notification.type === 'follow_comment'
   );
 
-  const forumNotifications = allNotifications.filter(notification => 
-    ['forum_post_approved', 'forum_post_declined', 'forum_post_comment', 'forum_post_deleted', 'liked_blog_post'].includes(notification.type)
-  );
+  const forumNotifications = allNotifications.filter(notification => {
+    // Include forum comment likes in forum category
+    if (notification.type === 'liked_comment' && notification.data?.postSlug) {
+      return true;
+    }
+    return ['forum_post_approved', 'forum_post_declined', 'forum_post_comment', 'forum_post_deleted', 'liked_blog_post'].includes(notification.type);
+  });
 
   // Get current category notifications
   const currentNotifications = activeCategory === 'general' 
@@ -624,7 +632,12 @@ const NotificationDropdown = ({ isOpen, onClose, user }) => {
         }
         return '#';
       case 'liked_comment':
-        if (notification.data?.chapterId && notification.data?.novelId) {
+        // Handle forum comment likes
+        if (notification.data?.postSlug) {
+          return `/thao-luan/${notification.data.postSlug}#comment-${notification.data.commentId}`;
+        }
+        // Handle novel/chapter comment likes
+        else if (notification.data?.chapterId && notification.data?.novelId) {
           const chapterSlug = createUniqueSlug(notification.data.chapterTitle, notification.data.chapterId);
           const novelSlug = createUniqueSlug(notification.data.novelTitle, notification.data.novelId);
           return `/truyen/${novelSlug}/chuong/${chapterSlug}#comment-${notification.data.commentId}`;
